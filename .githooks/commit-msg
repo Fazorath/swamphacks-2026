@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Strip AI-tool attribution from commit messages (Claude Code adds these by
+# default; .claude/settings.json turns them off, this catches any that slip
+# through or come from other tools). Human co-authors are kept.
+
+msg="$1"
+tmp="$msg.strip"
+
+grep -viE '^(co-authored-by:.*(claude|anthropic\.com)|claude-session:|.*generated with \[?claude code|https://claude\.ai/code/session_)' "$msg" \
+  | awk '{ line[NR] = $0 } NF { last = NR } END { for (i = 1; i <= last; i++) print line[i] }' > "$tmp"
+
+mv "$tmp" "$msg"

@@ -1,0 +1,24 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# agent scratch (handoffs, throwaway notes)
+.scratch/
+.claude/settings.local.json
+
+# deps / builds (common stacks)
+node_modules/
+dist/
+build/
+.next/
+.venv/
+__pycache__/
+*.pyc
+
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

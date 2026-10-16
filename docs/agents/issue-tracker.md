@@ -1,0 +1,32 @@
+# Issue tracker: local markdown files
+
+No GitHub Issues. Specs and tickets are files in this repo, versioned with the code.
+
+- **Specs:** `docs/specs/<feature-slug>.md`, one per feature.
+- **Tickets:** `docs/tickets/<NNNN>-<slug>.md`, numbered repo-wide (`0001`, `0002`…). Take the next number after the highest existing file. If two people grab the same number at once, whoever merges second renumbers.
+
+Every ticket carries these lines:
+
+```
+**Blocked by:** 0002, 0003   (or "None (can start immediately)")
+**Status:** ready-for-agent | in-progress | done
+**Owner:** unclaimed | <name>
+**Spec:** docs/specs/<feature-slug>.md
+```
+
+## Claiming
+
+1. Pick a ticket whose status is `ready-for-agent` and whose blockers are all `done`.
+2. Set `Owner` to your name and `Status` to `in-progress` on its branch, commit, push. Post "taking 0004" in the group chat.
+3. Seeing someone else's name on a ticket means hands off.
+
+## Finding work
+
+- Ready tickets: `grep -l "Status:\*\* ready-for-agent" docs/tickets/*.md`
+- What's in progress: `grep -H "Owner:" docs/tickets/*.md | grep -v unclaimed`
+
+## Status vocabulary
+
+- `ready-for-agent` — fully specified, anyone (or any agent) can pick it up.
+- `in-progress` — claimed; see Owner.
+- `done` — merged into `main`.
