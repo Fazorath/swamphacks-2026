@@ -30,7 +30,7 @@ Run these before calling any ticket done. An agent must not claim "done" without
 
 Idea → spec → tickets → build → review → merge.
 
-1. **Grill** the idea until it's sharp (`grilling` skill). Opus.
+1. **Grill** the idea until it's sharp (`grilling` skill, or `/grill-with-docs` to also update `CONTEXT.md` and ADRs as you go). Opus.
 2. **Spec** it: `to-spec` writes `docs/specs/<feature>.md`. Opus.
 3. **Slice** it: `to-tickets` writes `docs/tickets/NNNN-<slug>.md` — thin vertical slices, each one demoable. Opus.
 4. **Build** one ticket per session: `implement`. Sonnet.
