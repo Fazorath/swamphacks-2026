@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import type { CachePackContents } from "./evacuationPlan";
+import { deepestTileZoom } from "./mapTiles";
 import type { RouteGrid } from "./routeGrid";
 
 const RETRY_EVERY_MS = 5000;
@@ -23,10 +24,7 @@ async function fetchCachePack(): Promise<CachePackContents | null> {
   ]);
   // A pack built without Routes has no grid.
   const routeGrid = status.manifest?.route_grid ?? null;
-  const tileZooms = Object.keys(status.manifest?.files ?? {})
-    .filter((path) => path.startsWith("tiles/"))
-    .map((path) => Number(path.split("/")[1]));
-  const tileMaxZoom = tileZooms.length > 0 ? Math.max(...tileZooms) : null;
+  const tileMaxZoom = deepestTileZoom(status.manifest?.files ?? {});
   return { shelters, floodProne, routeGrid, tileMaxZoom } as CachePackContents;
 }
 

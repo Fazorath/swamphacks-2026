@@ -11,7 +11,7 @@
 **Spec:** `docs/specs/cache-pack.md`
 
 - [x] The tile source is one setting the map reads: the Node's own `/api/cache-pack/files/tiles/{z}/{x}/{y}.png` when the pack is available, the online tiles 0005 uses (`/api/tiles/...`) when it is not
-- [x] A tile the pack does not hold (outside the box, or above zoom 16) still loads from the online tiles when there is internet
+- [x] A tile the pack does not hold (outside the box, or above zoom 16) still loads from the online tiles when there is internet (Departure: a tile deeper than the pack's top zoom is the pack's deepest tile stretched, not an online tile, because the valley pack stops at z14 and there is no CARTO key offline.)
 - [x] The data credit "© OpenStreetMap contributors © CARTO" is always shown on the map
 - [x] Vitest tests with a fixture pack: the map reads tiles from the pack when available and falls back when not
 - [ ] Manual check: zooming and panning inside the box shows no multi-second stalls, and with the internet off the map tiles still draw on a phone (NOT DONE: no phone or browser run yet; software paths covered by Vitest only)

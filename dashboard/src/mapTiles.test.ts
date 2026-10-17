@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { onlineUrlForMissingPackTile, tileUrlTemplate } from "./mapTiles";
+import { deepestTileZoom, onlineUrlForMissingPackTile, tileUrlTemplate } from "./mapTiles";
+
+describe("deepest tile zoom", () => {
+  it("is the highest zoom among the pack's tiles", () => {
+    expect(
+      deepestTileZoom({
+        "shelters.json": "x",
+        "tiles/10/754/427.png": "x",
+        "tiles/14/12072/6866.png": "x",
+        "tiles/9/377/213.png": "x",
+      }),
+    ).toBe(14);
+  });
+
+  it("is null for a pack without tiles", () => {
+    expect(deepestTileZoom({ "shelters.json": "x" })).toBeNull();
+  });
+});
 
 describe("map tile source", () => {
   it("reads tiles from the Cache Pack when the Node has one", () => {

@@ -120,8 +120,8 @@ export function NodeMap({
           eventHandlers={{
             tileerror: ({ tile }) => {
               const image = tile as HTMLImageElement;
-              const online = onlineUrlForMissingPackTile(image.src);
-              if (online) image.src = online;
+              const onlineUrl = onlineUrlForMissingPackTile(image.src);
+              if (onlineUrl) image.src = onlineUrl;
             },
           }}
         />
