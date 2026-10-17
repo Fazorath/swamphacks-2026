@@ -282,3 +282,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Three boxes were left open on purpose.** `store_reading_from` is now `hear_community_reading` because the listener still needs its `isinstance` filter; the only other `datetime.now(UTC)` is the default clock and the Scenario's own stamp; the Mesh listeners take any `Message`, so no parameter says Community Reading. The ticket is done on the other four bullets.
 - **`Position` is a distinct NamedTuple**, so tests build `Position(lat, lon)` and mypy rejects a bare tuple. The six test files changed only for that.
 - The sequence, the `publishing` lock from 0020 and `share()` now live in `reading_publisher.py` (`publisher.lock`); `create_app` only wires them up.
+
+## Silent Nodes stop counting and drop off (ticket 0021)
+
+- **The reading store does the dropping, not Flood Risk**: `snapshot().recent` leaves out a Node silent for 60 s and `nodes` leaves out one silent for 10 min, so `_counts` and the Community Warning (which reads `surged`) needed no change. A Node's history stays in the store, so it reappears the moment it speaks. `NodeSnapshot.counts` is the 60 s flag for the dashboard.
+- `InMemoryNetwork.join` now raises on a taken name; `leave` makes that mesh's `publish` a quiet no-op. A Node that `leave`d may rejoin under its name.
+- `test_reticulum_nodes.py` errored (not failed) in a full run while another `pytest` was still going in the background; it passed alone. Run one `pytest` at a time.
