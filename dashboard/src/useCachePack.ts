@@ -1,0 +1,50 @@
+import { useEffect, useState } from "react";
+
+import type { CachePackContents } from "./evacuationPlan";
+
+const RETRY_EVERY_MS = 5000;
+
+async function getJson(url: string): Promise<unknown> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Node API returned ${response.status} for ${url}`);
+  return response.json();
+}
+
+async function fetchCachePack(): Promise<CachePackContents | null> {
+  const status = (await getJson("/api/cache-pack")) as { available?: boolean };
+  if (status.available !== true) return null;
+  const [shelters, floodProne] = await Promise.all([
+    getJson("/api/cache-pack/files/shelters.json"),
+    getJson("/api/cache-pack/files/flood_prone.geojson"),
+  ]);
+  return { shelters, floodProne } as CachePackContents;
+}
+
+// The pack never changes once a Node holds a valid one, so it is read once and then kept.
+export function useCachePack(): CachePackContents | null {
+  const [pack, setPack] = useState<CachePackContents | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const retryLater = () => {
+      if (!cancelled) timer = setTimeout(load, RETRY_EVERY_MS);
+    };
+    const load = () =>
+      fetchCachePack()
+        .then((loaded) => {
+          if (cancelled) return;
+          if (loaded) setPack(loaded);
+          else retryLater();
+        })
+        .catch((error) => {
+          console.error(error);
+          retryLater();
+        });
+    load();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+  return pack;
+}

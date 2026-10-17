@@ -45,6 +45,10 @@ class ScenarioState(BaseModel):
     step: str
 
 
+class OpenShelters(BaseModel):
+    open: list[str]
+
+
 class CachePackStatus(BaseModel):
     available: bool
     manifest: dict[str, Any] | None
@@ -169,6 +173,11 @@ def create_app(
         if file is None:
             raise HTTPException(status_code=404, detail="not in the Cache Pack")
         return FileResponse(file)
+
+    @app.get("/api/shelters")
+    def open_shelters() -> OpenShelters:
+        # Demo placeholder until 0015: every Shelter in this Node's own pack counts as open.
+        return OpenShelters(open=cache_pack.shelter_ids())
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:

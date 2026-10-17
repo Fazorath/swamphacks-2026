@@ -47,3 +47,5 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - **Every Shelter is open at startup, on purpose.** Until 0015 adds the Hub operator toggle, each Node seeds its open-Shelter list with every Shelter in its own Cache Pack. That is demo scaffolding, not real shelter data; the wire format says nothing counts as open until listed.
 - **"Nearest" Shelter is straight-line distance** until 0010 ranks by road distance.
 - **Map tiles stutter** because every tile is fetched live from CARTO through the Node; ticket 0026 serves them from the Cache Pack first.
+- **The open-Shelter list is read from the pack on every request** (`CachePack.shelter_ids()`), not copied at startup, so a Node whose pack arrives late still lists its Shelters. It is empty until a valid pack is on disk.
+- Dashboard checks in a fresh worktree: symlink the main checkout's `dashboard/node_modules` into it and run `node_modules/.bin/{tsc,eslint,prettier,vitest}` directly (Node 22 here). Remove the symlink before committing; it shows up as untracked.

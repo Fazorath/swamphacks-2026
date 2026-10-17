@@ -1,14 +1,18 @@
 import { useState } from "react";
 
+import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { FloodRiskChip } from "./FloodRiskPanel";
+import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import type { Home } from "./householdProfile";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
+import { useCachePack } from "./useCachePack";
 import { useFloodRisk } from "./useFloodRisk";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeIdentity } from "./useNodeIdentity";
+import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useReadings } from "./useReadings";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
@@ -19,7 +23,7 @@ const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
   unsaved: "Your household profile will not be remembered after you close this page.",
 };
 
-const PLACEHOLDER_AREAS = ["Alerts", "Evacuation Plan"];
+const PLACEHOLDER_AREAS = ["Alerts"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
@@ -28,6 +32,12 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
+  const plan = evacuationPlan({
+    profile,
+    pack: useCachePack(),
+    openShelterIds: useOpenShelterIds(),
+    floodRisk,
+  });
   const [panelOpen, setPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
@@ -87,11 +97,13 @@ export function App() {
           onSelect={toggleSelected}
           stormSignal={floodRisk?.storm_signal ?? null}
           home={profile?.home ?? null}
+          shelter={plan.shelter}
           draftHome={panelOpen ? draftHome : null}
           picking={picking}
           onPickHome={setDraftHome}
           onDonePicking={() => setPicking(false)}
         />
+        <EvacuationPlanPanel plan={plan} />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>
             <h2>{title}</h2>

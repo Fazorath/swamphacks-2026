@@ -177,6 +177,43 @@ button:disabled {
   border-style: dashed;
 }
 
+.shelter-marker {
+  display: grid;
+  place-items: center;
+  background: var(--low);
+  border: 2px solid var(--surface);
+  border-radius: 0.25rem;
+  color: var(--surface);
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.plan-risk h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.plan-risk ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+.plan-risk.low h3 {
+  color: var(--low);
+}
+
+.plan-risk.elevated h3 {
+  color: var(--elevated);
+}
+
+.plan-risk.high h3 {
+  color: var(--high);
+}
+
+.official-line {
+  font-weight: bold;
+}
+
 .areas {
   display: contents;
 }

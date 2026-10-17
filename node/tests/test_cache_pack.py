@@ -115,3 +115,11 @@ def test_sensor_downloads_the_pack_from_a_hub_node(tmp_path: Path) -> None:
         with _node(tmp_path, hub, name="sensor", url="/api/cache-pack.zip") as sensor:
             _wait_until(lambda: _has_pack(sensor))
             assert sensor.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE
+
+
+def test_every_shelter_in_the_pack_is_open_at_startup(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack())
+    with _node(tmp_path, source.client) as node:
+        assert node.get("/api/shelters").json() == {"open": []}
+        _wait_until(lambda: _has_pack(node))
+        assert node.get("/api/shelters").json() == {"open": [s["id"] for s in SHELTERS]}

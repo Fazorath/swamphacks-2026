@@ -14,6 +14,7 @@ import {
 
 import { NodeTags } from "./NodeTags";
 import { stormSignalSentence } from "./floodRiskSentences";
+import type { Shelter } from "./evacuationPlan";
 import type { Home } from "./householdProfile";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { FloodRisk } from "./useFloodRisk";
@@ -22,6 +23,8 @@ const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
 const DRAFT_HOME_ICON = divIcon({ className: "home-draft-marker", html: "⌂", iconSize: [28, 28] });
 const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
+
+const SHELTER_ICON = divIcon({ className: "shelter-marker", html: "+", iconSize: [28, 28] });
 
 function PickHomeOnClick({ onPick }: { onPick: (home: Home) => void }) {
   useMapEvents({ click: (event) => onPick({ lat: event.latlng.lat, lon: event.latlng.lng }) });
@@ -63,6 +66,8 @@ type Props = {
   onSelect: (id: string) => void;
   stormSignal: FloodRisk["storm_signal"] | null;
   home: Home | null;
+  // Only the Shelter the Evacuation Plan chose.
+  shelter: Shelter | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
   picking: boolean;
@@ -76,6 +81,7 @@ export function NodeMap({
   onSelect,
   stormSignal,
   home,
+  shelter,
   draftHome,
   picking,
   onPickHome,
@@ -111,6 +117,7 @@ export function NodeMap({
           />
         )}
         {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
+        {shelter && <Marker position={shelter.pos} icon={SHELTER_ICON} interactive={false} />}
         {nodes.map((node) => {
           const selected = node.id === selectedId;
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.

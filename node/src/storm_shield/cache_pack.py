@@ -71,6 +71,13 @@ class CachePack:
             return None
         return self._unpacked / path
 
+    def shelter_ids(self) -> list[str]:
+        """The id of every Shelter in the pack, or an empty list when this Node has no valid pack."""
+        shelters = self.file("shelters.json")
+        if shelters is None:
+            return []
+        return [shelter["id"] for shelter in json.loads(shelters.read_bytes())]
+
     def _verify_disk(self) -> dict[str, Any] | None:
         if not self._unpacked.exists() and not self.zip_path.exists():
             return None
