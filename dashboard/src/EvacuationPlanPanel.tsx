@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { agoWords } from "./agoWords";
 import type { EvacuationPlan } from "./evacuationPlan";
 import { officialTag, SOURCE_LABELS } from "./officialAlerts";
+import type { WaveArrival } from "./waveEta";
+import { WaveEtaLine } from "./WaveEtaLine";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 
@@ -23,15 +25,20 @@ function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
 
 export function EvacuationPlanPanel({
   plan,
+  waveArrival,
+  eventT,
   shelterStatusConfirmedAt,
 }: {
   plan: EvacuationPlan;
+  waveArrival: WaveArrival | null;
+  eventT: number | null;
   // Set only while the Node is unreachable: when its last answer arrived.
   shelterStatusConfirmedAt: number | null;
 }) {
   return (
     <section aria-label="Evacuation Plan">
       <h2>Evacuation Plan</h2>
+      <WaveEtaLine arrival={waveArrival} eventT={eventT} />
       {plan.risk && (
         <div className={`plan-risk ${plan.risk.level}`}>
           <h3>Flood Risk: {LEVEL_WORDS[plan.risk.level]}</h3>

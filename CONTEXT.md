@@ -86,6 +86,10 @@ _Avoid_: chainage, mile marker, distance
 How long the Surge in a Community Warning takes to reach a Viewer's home, counted down on the Event clock. Worked out on the Viewer from the home snapped to the river line (never on the Hub, and the home never leaves the device); with several warnings it follows the earliest arrival; a home upstream of the origin, or more than 2 km from the river line, has none.
 _Avoid_: countdown, arrival time, ETA (alone)
 
+**Measured wave speed**:
+The speed of a Surge between the first two Registered Nodes that surged, worked out by the Hub from their River kms and Surge times and carried on the Community Warning; it replaces the reconstructed speed for the reaches below the second Node.
+_Avoid_: actual speed, live speed
+
 **Official Alert**:
 A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
 _Avoid_: warning, notification
@@ -119,6 +123,10 @@ _Avoid_: storm warning, storm alert, pressure alarm
 **Evacuation Plan**:
 What a resident should do and where to go: their risk, and either the nearest open Shelter they can walk to before the wave or, if there is none, higher ground away from the river. Their risk is the Mesh-wide Flood Risk (the worst level across the Nodes that count), not a level tied to where their home is.
 _Avoid_: evac info, escape route
+
+**Reachable Shelter**:
+An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Wave ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
+_Avoid_: safe Shelter, nearest Shelter (the nearest need not be reachable)
 
 **Household Profile**:
 A resident's home location, housing type (site-built or mobile home/RV), and whether they need a special-needs or pet-friendly Shelter; kept only on their own device. The one thing it reveals is the Grid point nearest home, when the Viewer asks its connected Node for the Route; never to the rest of the Mesh.

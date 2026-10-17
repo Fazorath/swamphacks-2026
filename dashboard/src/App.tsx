@@ -23,7 +23,9 @@ import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile"
 import { useNodeState } from "./useNodeState";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
+import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
+import { waveArrival } from "./waveEta";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
@@ -55,6 +57,7 @@ export function App() {
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
   const roadGraph = useRoadGraph(cachePack !== null);
+  const river = useRiverLine(cachePack !== null);
   const [blockedRoads, toggleBlockedRoad] = useBlockedRoads();
   const [blocking, setBlocking] = useState(false);
   const blockedLines = useMemo(
@@ -78,6 +81,12 @@ export function App() {
     rerouting: roadGraph && { graph: roadGraph, blocked: blockedRoads },
     officialAlerts,
   });
+  // The home never leaves the device: the profile's, or else where the connected Node sits.
+  const thisNode = lastAnswer?.state.nodes.find((node) => node.id === lastAnswer.state.id);
+  const waveHome: Home | null =
+    profile?.home ?? (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
+  const eventT = eventClock.clock?.event_t ?? null;
+  const arrival = river && waveHome && waveArrival(river, waveHome, communityWarnings);
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [nodePanelOpen, setNodePanelOpen] = useState(false);
@@ -208,6 +217,8 @@ export function App() {
         />
         <EvacuationPlanPanel
           plan={plan}
+          waveArrival={arrival}
+          eventT={eventT}
           shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
         />
         <AlertsPanel
@@ -217,6 +228,8 @@ export function App() {
           thisNodeId={lastAnswer?.state.id ?? ""}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
           firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
+          waveArrival={arrival}
+          eventT={eventT}
           online={state?.status === "online"}
         />
       </div>
