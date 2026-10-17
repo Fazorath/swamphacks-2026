@@ -8,9 +8,8 @@ import {
   type OfficialAlert,
 } from "./officialAlerts";
 import { OFFICIAL_SOURCE, warningSentence, type CommunityWarning } from "./communityWarnings";
-import type { Home } from "./householdProfile";
 import type { NodeSnapshot } from "./nodeState";
-import { waveArrival, type RiverLine } from "./waveEta";
+import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
 // "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
@@ -25,8 +24,7 @@ export function AlertsPanel({
   thisNodeId,
   appliesToYouIds,
   firstCommunityWarningAt,
-  river,
-  home,
+  waveArrival,
   eventT,
   online,
 }: {
@@ -36,9 +34,7 @@ export function AlertsPanel({
   thisNodeId: string;
   appliesToYouIds: string[];
   firstCommunityWarningAt: number | null;
-  // Where the wave goes and where this Viewer is; each card counts down to its own Surge.
-  river: RiverLine | null;
-  home: Home | null;
+  waveArrival: WaveArrival | null;
   eventT: number | null;
   online: boolean;
 }) {
@@ -78,12 +74,9 @@ export function AlertsPanel({
       ))}
       {[...warnings].reverse().map((warning) => (
         <article key={warning.id} className="community-warning" aria-label="Community Warning">
+          <WaveEtaLine arrival={waveArrival} eventT={eventT} />
           <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
           <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
-          <WaveEtaLine
-            arrival={river && home && waveArrival(river, home, [warning])}
-            eventT={eventT}
-          />
           <p>Signed by the Hub · verified</p>
           <p>Check official sources for any evacuation decision.</p>
           {online ? (

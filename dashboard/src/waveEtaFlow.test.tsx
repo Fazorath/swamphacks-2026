@@ -80,8 +80,8 @@ function stubNode({ eventT, river = RIVER }: { eventT: number; river?: object | 
   };
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (url: string) => {
-      requests.push(url);
+    vi.fn(async (url: string, init?: RequestInit) => {
+      requests.push(JSON.stringify([url, init ?? null]));
       return answers[url] ? Response.json(answers[url]) : new Response(null, { status: 404 });
     }),
   );
@@ -129,7 +129,7 @@ test("a home upstream of the origin gets no ETA", async () => {
   render(<App />);
 
   await screen.findByRole("article", { name: "Community Warning" });
-  await waitFor(() => expect(requests).toContain("/api/cache-pack/files/river.geojson"));
+  await waitFor(() => expect(requests.join()).toContain("river.geojson"));
   expect(screen.queryByText(/Wave expected/)).toBeNull();
 });
 
@@ -139,7 +139,7 @@ test("a pack with no river line gives no ETA and no error", async () => {
   render(<App />);
 
   await screen.findByRole("article", { name: "Community Warning" });
-  await waitFor(() => expect(requests).toContain("/api/cache-pack/files/river.geojson"));
+  await waitFor(() => expect(requests.join()).toContain("river.geojson"));
   expect(screen.queryByText(/Wave expected/)).toBeNull();
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("river");
 });

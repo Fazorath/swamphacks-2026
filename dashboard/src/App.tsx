@@ -86,6 +86,7 @@ export function App() {
   const waveHome: Home | null =
     profile?.home ?? (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
   const eventT = eventClock.clock?.event_t ?? null;
+  const arrival = river && waveHome && waveArrival(river, waveHome, communityWarnings);
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [nodePanelOpen, setNodePanelOpen] = useState(false);
@@ -213,7 +214,7 @@ export function App() {
         />
         <EvacuationPlanPanel
           plan={plan}
-          waveArrival={river && waveHome && waveArrival(river, waveHome, communityWarnings)}
+          waveArrival={arrival}
           eventT={eventT}
           shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
         />
@@ -224,8 +225,7 @@ export function App() {
           thisNodeId={lastAnswer?.state.id ?? ""}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
           firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
-          river={river}
-          home={waveHome}
+          waveArrival={arrival}
           eventT={eventT}
           online={state?.status === "online"}
         />
