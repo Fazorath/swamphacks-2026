@@ -13,7 +13,6 @@ SIGNATURE_BYTES = 64
 NODE_NAME_MAX_LENGTH = 32
 
 RegistrationState = Literal["unverified", "waiting", "registered"]
-RegistryRowStatus = Literal["registered", "waiting", "unverified"]
 
 
 class SignUp(BaseModel):
@@ -56,7 +55,7 @@ class WaitingSignUp(BaseModel):
 class RegistryRow(BaseModel):
     id: str
     name: str | None
-    status: RegistryRowStatus
+    status: RegistrationState
     last_heard_s: float | None
 
 
@@ -69,7 +68,7 @@ class RegistryFull(Exception):
     """The registry would no longer fit one signed packet."""
 
 
-class NoWaitingSignUp(KeyError):
+class NoWaitingSignUp(Exception):
     """No Node with this id is waiting to be accepted."""
 
 

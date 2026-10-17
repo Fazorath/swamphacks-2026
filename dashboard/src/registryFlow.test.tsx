@@ -156,3 +156,27 @@ test("Accept posts the Node's id and the change shows before the next poll", asy
   expect(within(panel).queryByRole("button", { name: "Accept kitchen" })).toBeNull();
   expect(within(panel).getAllByText(/REGISTERED/)).toHaveLength(2);
 });
+
+test("an Unverified this-Node stays on top and the divider appears once, above the others", async () => {
+  state = fakeNodeState({
+    nodes: [
+      fakeNodeSnapshot("porch", { registered: false, name: null }),
+      fakeNodeSnapshot("91c2e0b47a3d", { name: "kitchen" }),
+      fakeNodeSnapshot("c0ffee000000", { registered: false, name: null }),
+    ],
+  });
+  stubNode();
+  render(<App />);
+
+  const readings = await screen.findByRole("region", { name: "Readings" });
+  expect(await within(readings).findAllByText("Not counted")).toHaveLength(1);
+  const cards = within(readings)
+    .getAllByRole("region")
+    .map((card) => card.getAttribute("aria-label"));
+  expect(cards).toEqual(["Node porch", "Node kitchen", "Node c0ffee000000"]);
+  const divider = within(readings).getByText("Not counted");
+  const lastCard = within(readings).getByRole("region", { name: "Node c0ffee000000" });
+  expect(divider.compareDocumentPosition(lastCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const kitchen = within(readings).getByRole("region", { name: "Node kitchen" });
+  expect(kitchen.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});

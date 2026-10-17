@@ -2,6 +2,8 @@ import type { Measurement, NodeLevel, NodeState, ReadingKind } from "./nodeState
 
 export type NodeOnMap = {
   id: string;
+  // This Node's own entry; it stays above the "Not counted" divider even when Unverified.
+  isThisNode: boolean;
   label: string;
   position: [number, number];
   waterLevelCm: number | null;
@@ -21,6 +23,7 @@ export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
   if (!state) return [];
   const nodes = state.nodes.map((node) => ({
     id: node.id,
+    isThisNode: node.id === state.id,
     label: node.id === state.id ? state.name : (node.name ?? node.id),
     position: node.position,
     waterLevelCm: node.measurements.water_level?.value ?? null,
@@ -33,6 +36,6 @@ export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
       ([kind, measurement]) => ({ kind, ...measurement }),
     ),
   }));
-  const rank = (node: NodeOnMap) => (node.id === state.id ? 0 : node.registered ? 1 : 2);
+  const rank = (node: NodeOnMap) => (node.isThisNode ? 0 : node.registered ? 1 : 2);
   return nodes.sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label));
 }

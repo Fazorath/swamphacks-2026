@@ -236,3 +236,17 @@ def test_a_hub_whose_registry_file_is_unreadable_refuses_to_start(tmp_path: Path
     )
     with pytest.raises(RuntimeError, match="registry.json"):
         create_app(settings, InMemoryNetwork().join("hub", "hub"))
+
+
+def test_a_sensor_that_serves_the_dashboard_still_answers_404_on_the_hub_routes(
+    tmp_path: Path,
+) -> None:
+    dashboard = tmp_path / "dist"
+    dashboard.mkdir()
+    (dashboard / "index.html").write_text("<html></html>")
+    settings = Settings(
+        name="porch", data_dir=tmp_path / "data", dashboard_dir=dashboard, hub_identity="hub"
+    )
+    client = TestClient(create_app(settings, InMemoryNetwork().join("porch", "hub")))
+    assert client.get("/api/registry").status_code == 404
+    assert client.post("/api/registry/accept", json={"id": "x"}).status_code == 404

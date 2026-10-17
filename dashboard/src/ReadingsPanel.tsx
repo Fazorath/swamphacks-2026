@@ -51,9 +51,11 @@ export function ReadingsPanel({
       <FloodRiskCard floodRisk={floodRisk} />
       {nodes.map((node, index) => (
         <Fragment key={node.id}>
-          {!node.registered && (index === 0 || nodes[index - 1].registered) && (
-            <p className="not-counted-divider">Not counted</p>
-          )}
+          {!node.registered &&
+            !node.isThisNode &&
+            (nodes[index - 1].registered || nodes[index - 1].isThisNode) && (
+              <p className="not-counted-divider">Not counted</p>
+            )}
           <section
             aria-label={`Node ${node.label}`}
             aria-current={node.id === selectedId}

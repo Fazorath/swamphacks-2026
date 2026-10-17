@@ -30,6 +30,7 @@ from storm_shield.internet_connection import (
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
 from storm_shield.node_registry import (
+    NODE_NAME_MAX_LENGTH,
     HeardRegistry,
     HubRegistry,
     NodeRegistryMessage,
@@ -210,7 +211,7 @@ def create_app(
 
     def send_sign_up() -> None:
         try:
-            mesh.publish(SignUp(node=mesh.identity, name=settings.name))
+            mesh.publish(SignUp(node=mesh.identity, name=settings.name[:NODE_NAME_MAX_LENGTH]))
         except Exception:
             # Nothing is lost: the next repeat sends it again.
             logger.exception("could not send the Sign-up")
@@ -528,6 +529,13 @@ def create_app(
                 ) from None
             announce_shelters(status)
             return OpenShelters(open=status.open)
+
+    if not hub_registry:
+        # Not defined, these would fall through to the dashboard's static mount and answer 405.
+        @app.get("/api/registry")
+        @app.post("/api/registry/accept")
+        def not_on_a_sensor() -> None:
+            raise HTTPException(status_code=404, detail="only the Hub keeps the registry")
 
     if hub_registry:
 
