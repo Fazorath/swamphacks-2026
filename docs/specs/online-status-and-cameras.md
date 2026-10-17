@@ -2,6 +2,8 @@
 
 **Status:** ready-for-agent
 
+> **Camera source superseded.** The FL511 cameras give way to one replay camera on the Hub (`docs/specs/flash-flood-replay.md`, ticket 0038). Online / Mesh-only status is unchanged.
+
 Ticket: `docs/tickets/0011-online-status-and-camera-tiles.md`. Parent spec: `docs/specs/storm-shield.md`. Formats: `docs/specs/wire-formats.md`. Words follow `CONTEXT.md`.
 
 ## Problem Statement

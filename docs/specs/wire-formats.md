@@ -103,6 +103,26 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 - A Shelter that was in the previous snapshot and is gone now shows as closed. If none are open, the plan says "No open Shelter announced yet. Follow official sources." and draws no route.
 - Shelter ids are short slugs fixed in the Cache Pack.
 
+## Proposed for the flash flood replay (team to confirm)
+
+From `docs/specs/flash-flood-replay.md`; nothing below is built yet. Confirm in the group chat before the first ticket that uses it (0013, 0044) merges.
+
+- **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
+
+  ```json
+  { "v": 1, "kind": "warning", "id": 7, "t": 1760650928, "nodes": ["b7e1f40a92c5"],
+    "reasons": ["water_surge"], "origin": "b7e1f40a92c5", "origin_km": -12.0, "surge_t": 1787716020 }
+  ```
+- **Replay clock** (`kind: "replay"`), Hub only, sent on every change and every 10 s:
+
+  ```json
+  { "v": 1, "kind": "replay", "state": "playing", "event_t": 1787716020, "rate": 30 }
+  ```
+
+  `state` is `playing`, `paused` or `stopped`. `event_t` is the event time when the message was sent; a receiver anchors it on its own clock at receipt, like reading age.
+- **Official Alert** `source` gains `dhm`, `ndrrma` and `district`.
+- **Cache Pack** gains `river.geojson`: the river line with River km along it and a wave speed (km/h) for each reach.
+
 ## Flood Risk is not a message
 
 Every Node computes Flood Risk from the Community Readings it holds plus the registry. The Hub computes each Registered Node's risk the same way to decide when to issue a warning. In calm weather there is no Flood Risk, so the level in the API is `null` and the reasons list is empty. Thresholds live in one module on the Node (first pass in ticket 0006).
