@@ -152,6 +152,7 @@ cache-pack.zip
 │                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
 ├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
+├── weather_replay.json   the recorded weather of 25 to 27 Aug 2026 as a Weather Grid (below); packs built before the Weather layers lack it
 ├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
 ├── roads.json            the Road graph, only when built: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
 └── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
@@ -162,3 +163,24 @@ cache-pack.zip
 - `roads.json` lists junctions and bends as `nodes`; an `edge` joins node indexes `a` and `b` in both directions (a one-way road is treated as two-way: a resident on foot or in a hurry ignores it), with `length_m` along the road and an optional list of in-between vertices to draw. Service roads are left out; the file stays under about 2 MB.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.
+
+### Weather Grid (`weather_replay.json`, and later the Hub's forecast file)
+
+One file, the same shape for the recorded weather and the forecast. Fixed in ticket 0052; spec: `docs/specs/weather-layers.md`.
+
+```
+{
+  "source": "Open-Meteo archive (reanalysis), roughly 10 to 25 km per cell",
+  "credit": "Weather data by Open-Meteo.com (CC BY 4.0)",
+  "grid":   { "south": 27.86, "west": 85.08, "rows": 7, "cols": 5, "step_deg": 0.1 },
+  "times":  ["2026-08-25T00:00Z", "2026-08-25T01:00Z", ...],
+  "units":  { "temperature_2m": "°C", "cloud_cover": "%", "precipitation": "mm/h", "wind_speed_10m": "m/s", "wind_direction_10m": "°" },
+  "variables": { "temperature_2m": [[...], ...], "cloud_cover": ..., "precipitation": ..., "wind_speed_10m": ..., "wind_direction_10m": ... }
+}
+```
+
+- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid covers the pack box and may run up to one step past its north and east edges (the valley file ends at 85.48 E, box edge 85.47).
+- `times` are hourly, UTC, ISO 8601 with a `Z`. The recorded file holds 72 hours (25 to 27 Aug 2026; 08:37 NPT on the 26th is `2026-08-26T02:52Z`).
+- Each variable is a list with one flat array per entry of `times`, each of `rows * cols` numbers in row-major order (index `row * cols + col`). The wind direction is where the wind blows from, in degrees clockwise from north. Precipitation is the hour's total, so mm/h.
+- The values are reanalysis at model resolution: context for the valley, not a measurement at a village.
+- `GET /api/weather/replay` serves the file from the Cache Pack, or answers 404 with a message when this Node's pack has none. The manifest lists its checksum like any other file, so a wrong one discards the whole pack.

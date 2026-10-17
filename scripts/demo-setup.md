@@ -5,7 +5,7 @@ loopback, then prints the dashboard addresses. Ctrl-C stops all of it.
 
 ## Before the demo (once, with internet)
 
-1. `gh auth login`. The repo is private, so the first start downloads Release `cache-pack-v3`
+1. `gh auth login`. The repo is private, so the first start downloads Release `cache-pack-v4`
    through `gh` into `.demo/pack/` (2.4 MB, but it took about 6 minutes once; do it at home).
 2. Run `scripts/run-demo.sh` once and stop it. That first start also installs and builds what is
    missing (`pnpm install`, `pnpm build`, `uv sync`). Later starts need no internet: they rebuild

@@ -5,6 +5,8 @@ from typing import Any
 import pytest
 from meshed_nodes import MeshedNodes
 
+from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
+
 # 08:30 NPT on 26 Aug 2026, the first moment of the replay timeline.
 REPLAY_START = 1787712300
 RATE = 30
@@ -247,3 +249,34 @@ def test_resume_at_the_end_is_refused(meshed_nodes: MeshedNodes) -> None:
     response = meshed_nodes["hub"].post("/api/replay/resume")
     assert response.status_code == 409
     assert "ended" in response.json()["detail"]
+
+
+def _wait_until_heard_just_now(meshed_nodes: MeshedNodes, node: str) -> None:
+    _wait_until(lambda: _heard_from(meshed_nodes, "hub", node)["age_s"] == 0)
+
+
+SENSORS_AND_SILENCE = {"S0": 8 * 60, "S1": 15 * 60, "S2": 20 * 60, "S3": 80 * 60}
+
+
+@pytest.mark.parametrize("first_publish_event_seconds", [0, 30, 60])
+def test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start(
+    meshed_nodes: MeshedNodes, first_publish_event_seconds: int
+) -> None:
+    meshed_nodes.start_hub()
+    for track in SENSORS_AND_SILENCE:
+        meshed_nodes.start_sensor(track.lower(), replay_track=track)
+    _start_replay(meshed_nodes)
+    # Where a Sensor's publishes fall against the ramp depends on when it joined, so try several.
+    meshed_nodes.advance(first_publish_event_seconds / RATE)
+    surged: set[str] = set()
+    elapsed = first_publish_event_seconds
+    # One step is one real publish interval, which is 30 event seconds at x30.
+    while elapsed < max(SENSORS_AND_SILENCE.values()):
+        meshed_nodes.advance(REPLAY_PUBLISH_EVERY_SECONDS)
+        elapsed += REPLAY_PUBLISH_EVERY_SECONDS * RATE
+        for track, silent_after in SENSORS_AND_SILENCE.items():
+            if elapsed < silent_after:
+                _wait_until_heard_just_now(meshed_nodes, track.lower())
+        state = meshed_nodes["hub"].get("/api/state").json()
+        surged.update(state["flood_risk"]["surged"])
+    assert surged == {"s0", "s1", "s2", "s3"}
