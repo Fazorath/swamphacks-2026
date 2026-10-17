@@ -143,7 +143,7 @@ A Node whose last Community Reading arrived more than 15 seconds ago by the rece
 _Avoid_: offline node, dead node, timed out
 
 **Node unreachable**:
-The dashboard's state when a Viewer gets no answer from the Node it is connected to. It is about the Viewer's link to its own Node, not the Mesh: a Node can be Mesh-only or have Stale peers and still be reachable. While it lasts, live readings and Flood Risk are not shown, and what the Cache Pack holds stays.
+The dashboard's state when a Viewer gets no answer from the Node it is connected to. It is about the Viewer's link to its own Node, not the Mesh: a Node can be Mesh-only or have Stale peers and still be reachable. While it lasts, live readings, Flood Risk, online status and camera pictures are not shown; what is already on the Viewer's device (the Cache Pack, the Household Profile) stays.
 _Avoid_: offline, disconnected, down
 
 **Layer rail**:
