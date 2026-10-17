@@ -17,7 +17,7 @@ test("this Node is labeled with its name and every other Node with its id", () =
     name: "porch",
     nodes: [fakeNodeSnapshot("91c2e0b47a3d"), fakeNodeSnapshot("b7e1f40a92c5")],
   });
-  expect(nodesOnMap(state).map((node) => node.label)).toEqual(["91c2e0b47a3d", "porch"]);
+  expect(nodesOnMap(state).map((node) => node.label)).toEqual(["porch", "91c2e0b47a3d"]);
 });
 
 test("a Node is stale and old exactly as the Node says, with no threshold of its own", () => {
@@ -37,9 +37,34 @@ test("a Node carries its level from Flood Risk, and no level when Flood Risk has
     flood_risk: { ...fakeNodeState().flood_risk, nodes: { garage: "high" } },
     nodes: [fakeNodeSnapshot("garage"), fakeNodeSnapshot("porch")],
   });
-  expect(nodesOnMap(state).map((node) => node.level)).toEqual(["high", null]);
+  expect(nodesOnMap(state).map((node) => node.level)).toEqual([null, "high"]);
 });
 
 test("before the first answer there are no Nodes on the map", () => {
   expect(nodesOnMap(null)).toEqual([]);
+});
+
+test("a Registered Node is labeled with its registry name, an Unverified one with its id", () => {
+  const state = fakeNodeState({
+    id: "b7e1f40a92c5",
+    nodes: [
+      fakeNodeSnapshot("91c2e0b47a3d", { name: "kitchen" }),
+      fakeNodeSnapshot("c0ffee000000", { registered: false, name: null }),
+    ],
+  });
+  expect(nodesOnMap(state).map((node) => node.label)).toEqual(["kitchen", "c0ffee000000"]);
+});
+
+test("this Node comes first, then Registered Nodes A to Z, then Unverified Nodes", () => {
+  const state = fakeNodeState({
+    id: "bbb",
+    name: "porch",
+    nodes: [
+      fakeNodeSnapshot("ccc", { registered: false, name: null }),
+      fakeNodeSnapshot("aaa", { name: "shed" }),
+      fakeNodeSnapshot("bbb", { name: "porch" }),
+      fakeNodeSnapshot("ddd", { name: "garage" }),
+    ],
+  });
+  expect(nodesOnMap(state).map((node) => node.label)).toEqual(["porch", "garage", "shed", "ccc"]);
 });

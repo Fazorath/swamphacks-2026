@@ -4,7 +4,7 @@
 
 **Blocked by:** 0006, and the registry format (decided, `docs/specs/wire-formats.md`).
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** amitathik7
 
@@ -12,16 +12,16 @@
 
 **Design:** `docs/design/ui.md` ("Hub Panel", "Node Panel"); canvas artboards `D-Hub-Registry`, `D-Node-Registration`, `D-StaleUnverified`.
 
-- [ ] Node sign-up through the API: `POST /api/registry/signup` starts a signed `signup` broadcast every announce until this Node is in the registry; the Hub records it as waiting, and `POST /api/registry/accept` makes it Registered
-- [ ] The Hub publishes the registry over Mesh, signed with its identity, always listing itself, on every change and every 30 s; it saves it in `NODE_DATA_DIR/registry.json`; Nodes keep the highest valid `ver`
-- [ ] Flood Risk counts only readings from Registered Nodes (`flood_risk._counts`); before any registry arrives nothing counts
-- [ ] `/api/state` gives each Node entry `registered` and `name`, and this Node's `registration`
-- [ ] The dashboard greys out Unverified Nodes and marks them "not counted"
-- [ ] A localhost-only Node Panel with the Registration section ("Sign up with the Hub")
-- [ ] The Hub dashboard shows the Node registry (Registry tab, `GET /api/registry`)
-- [ ] Seam A tests: an Unverified Node pushed to High does not change Flood Risk; after registration it does; a registry not signed by the Hub is ignored; a lower `ver` and a registry with `of` above 1 are ignored; an accept that would not fit one packet gets 409; the Hub restarts at saved `ver` + 1
-- [ ] `scripts/run-demo.sh` signs up S0 to S3 and accepts them on the Hub, so the demo still counts every Node
-- [ ] All **Commands** pass
+- [x] Node sign-up through the API: `POST /api/registry/signup` starts a signed `signup` broadcast every announce until this Node is in the registry; the Hub records it as waiting, and `POST /api/registry/accept` makes it Registered
+- [x] The Hub publishes the registry over Mesh, signed with its identity, always listing itself, on every change and every 30 s; it saves it in `NODE_DATA_DIR/registry.json`; Nodes keep the highest valid `ver`
+- [x] Flood Risk counts only readings from Registered Nodes (`flood_risk._counts`); before any registry arrives nothing counts
+- [x] `/api/state` gives each Node entry `registered` and `name`, and this Node's `registration`
+- [x] The dashboard greys out Unverified Nodes and marks them "not counted"
+- [x] A localhost-only Node Panel with the Registration section ("Sign up with the Hub")
+- [x] The Hub dashboard shows the Node registry (Registry tab, `GET /api/registry`)
+- [x] Seam A tests: an Unverified Node pushed to High does not change Flood Risk; after registration it does; a registry not signed by the Hub is ignored; a lower `ver` and a registry with `of` above 1 are ignored; an accept that would not fit one packet gets 409; the Hub restarts at saved `ver` + 1
+- [x] `scripts/run-demo.sh` signs up S0 to S3 and accepts them on the Hub, so the demo still counts every Node
+- [x] All **Commands** pass
 
 ## Decisions (grilling, 2026-10-17)
 

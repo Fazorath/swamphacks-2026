@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 
 import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
@@ -49,27 +49,33 @@ export function ReadingsPanel({
     <section aria-label="Readings">
       <h2>Readings</h2>
       <FloodRiskCard floodRisk={floodRisk} />
-      {nodes.map((node) => (
-        <section
-          key={node.id}
-          aria-label={`Node ${node.label}`}
-          aria-current={node.id === selectedId}
-          className={node.stale ? "node-card stale" : "node-card"}
-          onClick={() => onSelect(node.id)}
-        >
-          <h3>
-            {/* Clicks reach the card; the button only makes the card reachable by keyboard. */}
-            <button>{node.label}</button>
-            <NodeTags node={node} />
-          </h3>
-          <ul>
-            {node.measurements.map((measurement) => (
-              <li key={measurement.kind}>
-                {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
-              </li>
-            ))}
-          </ul>
-        </section>
+      {nodes.map((node, index) => (
+        <Fragment key={node.id}>
+          {!node.registered && (index === 0 || nodes[index - 1].registered) && (
+            <p className="not-counted-divider">Not counted</p>
+          )}
+          <section
+            aria-label={`Node ${node.label}`}
+            aria-current={node.id === selectedId}
+            className={["node-card", node.stale && "stale", !node.registered && "unverified"]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={() => onSelect(node.id)}
+          >
+            <h3>
+              {/* Clicks reach the card; the button only makes the card reachable by keyboard. */}
+              <button>{node.label}</button>
+              <NodeTags node={node} />
+            </h3>
+            <ul>
+              {node.measurements.map((measurement) => (
+                <li key={measurement.kind}>
+                  {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </Fragment>
       ))}
       <button onClick={() => post("/api/scenario/step", onScenarioChanged)}>
         Step scenario (n)

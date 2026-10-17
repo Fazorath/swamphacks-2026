@@ -128,6 +128,7 @@ export function NodeMap({
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
           const state = [
             node.stale ? "stale" : "fresh",
+            !node.registered && "unverified",
             node.level,
             selected && "selected",
             picking && "picking",

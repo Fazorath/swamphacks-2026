@@ -7,6 +7,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
     name: "porch",
     role: "hub",
     status: "online",
+    registration: "registered",
     scenario: { step: "normal_day" },
     flood_risk: {
       level: null,
@@ -28,6 +29,8 @@ export function fakeNodeSnapshot(id: string, overrides: Partial<NodeSnapshot> = 
     age_s: 2,
     stale: false,
     measurements: { pressure: { value: 1015, unit: "hPa" } },
+    registered: true,
+    name: id,
     ...overrides,
   };
 }

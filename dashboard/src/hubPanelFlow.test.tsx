@@ -84,6 +84,7 @@ test("the Hub Panel lists every Shelter and closing one posts the right body", a
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
+  fireEvent.click(within(panel).getByRole("tab", { name: "Shelters" }));
   expect(await within(panel).findByText("Far Hall")).toBeVisible();
   expect(within(panel).getAllByText("Open")).toHaveLength(2);
 
@@ -101,6 +102,7 @@ test("a closed Shelter can be opened again", async () => {
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
+  fireEvent.click(within(panel).getByRole("tab", { name: "Shelters" }));
   fireEvent.click(await within(panel).findByRole("button", { name: "Open Far Hall" }));
 
   expect(await within(panel).findByRole("button", { name: "Close Far Hall" })).toBeVisible();
@@ -113,6 +115,7 @@ test("a poll that began before a change does not bring back the old list", async
   render(<App />);
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
+  fireEvent.click(within(panel).getByRole("tab", { name: "Shelters" }));
   expect(await within(panel).findByText("Far Hall")).toBeVisible();
 
   let releasePolls = () => {};
@@ -155,6 +158,7 @@ test("a refused change is shown in the panel and leaves the list as it was", asy
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
+  fireEvent.click(within(panel).getByRole("tab", { name: "Shelters" }));
   fireEvent.click(await within(panel).findByRole("button", { name: "Close Far Hall" }));
 
   expect(await within(panel).findByRole("alert")).toHaveTextContent(
