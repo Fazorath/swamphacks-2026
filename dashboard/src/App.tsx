@@ -46,9 +46,15 @@ export function App() {
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
+  // Both panels slide in over the same edge, so only one is open at a time.
   const openPanel = () => {
+    setHubPanelOpen(false);
     setDraftHome(profile?.home ?? null);
     setPanelOpen(true);
+  };
+  const openHubPanel = () => {
+    closePanel();
+    setHubPanelOpen(true);
   };
   const closePanel = () => {
     setPanelOpen(false);
@@ -74,7 +80,7 @@ export function App() {
           My household
         </button>
         {identity?.role === "hub" && (
-          <button type="button" onClick={() => setHubPanelOpen(true)}>
+          <button type="button" onClick={openHubPanel}>
             Hub
           </button>
         )}

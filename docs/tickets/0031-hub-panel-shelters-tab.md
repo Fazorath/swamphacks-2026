@@ -4,7 +4,7 @@
 
 **Blocked by:** 0029
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -15,5 +15,5 @@
 - [x] Only the Shelters tab is built; no placeholder tabs for the registry or warning log (0012 and 0013)
 - [x] Closed Shelters show as closed in the dashboard's Shelter list
 - [x] Vitest flow tests: the button is absent on a Sensor Node; toggling calls the endpoint with the right body; a closed nearest Shelter changes the plan on the next poll
-- [ ] Rehearsed on loopback with a phone over Tailscale: close the nearest Shelter on the Hub and watch the phone reroute (not a Pi check)
+- [x] Rehearsed on loopback with a phone over Tailscale: close the nearest Shelter on the Hub and watch the phone reroute (not a Pi check)
 - [x] All **Commands** pass

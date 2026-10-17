@@ -94,6 +94,6 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Hub Panel (ticket 0031)
 
-- **`evacuationFlow.test.tsx` failed once in a full parallel `vitest run`** (no `.shelter-marker` yet) and passed alone and in three later full runs. Marker rendering can lag the plan text under load; rerun before suspecting your change.
-- `useOpenShelterIds` now returns `[ids, setIds]` so the Hub Panel shows a change at once; the 5 s poll still overwrites it.
-- The phone-over-Tailscale reroute rehearsal is not done yet (needs a person with a phone).
+- **`evacuationFlow.test.tsx` failed once in a full parallel `vitest run`** (no `.shelter-marker` yet) and passed alone and in three later full runs. Cause not found; rerun before suspecting your change.
+- `useOpenShelterIds` now returns `[ids, setIds]` so the Hub Panel shows a change at once; a poll already in flight when a change is shown is ignored, so the old list cannot come back, and later polls overwrite it as usual.
+- Rehearsed locally on loopback (Hub 8210, Sensor 8211) with a phone over Tailscale: closing the nearest Shelter on the Hub rerouted the phone. Not a Pi check.

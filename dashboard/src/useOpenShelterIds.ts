@@ -1,29 +1,40 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const POLL_EVERY_MS = 5000;
 
-// The setter lets the Hub Panel show a change at once instead of waiting for the next poll.
+// The second value lets the Hub Panel show a change at once instead of waiting for the next poll.
 export function useOpenShelterIds(): [string[], (openIds: string[]) => void] {
   const [openIds, setOpenIds] = useState<string[]>([]);
+  // A poll that began before a change would bring back the list the change replaced.
+  const changesShown = useRef(0);
   useEffect(() => {
-    const poll = () =>
-      fetch("/api/shelters")
+    const poll = () => {
+      const changesBeforePoll = changesShown.current;
+      const showIfCurrent = (ids: string[]) => {
+        if (changesShown.current === changesBeforePoll) setOpenIds(ids);
+      };
+      return fetch("/api/shelters")
         .then((response) => {
           if (!response.ok) throw new Error(`Node API returned ${response.status}`);
           return response.json();
         })
         .then(({ open }) => {
           if (!Array.isArray(open)) throw new Error("Node API sent no open Shelter list");
-          setOpenIds(open);
+          showIfCurrent(open);
         })
         .catch((error) => {
           console.error(error);
           // Nothing counts as open until listed.
-          setOpenIds([]);
+          showIfCurrent([]);
         });
+    };
     poll();
     const timer = setInterval(poll, POLL_EVERY_MS);
     return () => clearInterval(timer);
   }, []);
-  return [openIds, setOpenIds];
+  const showChange = useCallback((ids: string[]) => {
+    changesShown.current += 1;
+    setOpenIds(ids);
+  }, []);
+  return [openIds, showChange];
 }

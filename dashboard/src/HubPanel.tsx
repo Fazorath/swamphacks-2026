@@ -23,11 +23,11 @@ async function setShelterOpen(id: string, open: boolean): Promise<string[]> {
 }
 
 export function HubPanel({ shelters, openShelterIds, onOpenShelterIdsChanged, onClose }: Props) {
-  const [changing, setChanging] = useState<string | null>(null);
+  const [changingShelterId, setChangingShelterId] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
-  const change = async (shelter: Shelter, open: boolean) => {
-    setChanging(shelter.id);
+  const setStatus = async (shelter: Shelter, open: boolean) => {
+    setChangingShelterId(shelter.id);
     setProblem(null);
     try {
       onOpenShelterIdsChanged(await setShelterOpen(shelter.id, open));
@@ -37,7 +37,7 @@ export function HubPanel({ shelters, openShelterIds, onOpenShelterIdsChanged, on
         `Could not ${open ? "open" : "close"} ${shelter.name}: ${(error as Error).message}`,
       );
     } finally {
-      setChanging(null);
+      setChangingShelterId(null);
     }
   };
 
@@ -57,9 +57,9 @@ export function HubPanel({ shelters, openShelterIds, onOpenShelterIdsChanged, on
               </span>
               <button
                 type="button"
-                disabled={changing !== null}
+                disabled={changingShelterId !== null}
                 aria-label={`${open ? "Close" : "Open"} ${shelter.name}`}
-                onClick={() => change(shelter, !open)}
+                onClick={() => setStatus(shelter, !open)}
               >
                 {open ? "Close" : "Open"}
               </button>
