@@ -32,7 +32,7 @@ from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
-from storm_shield.shelter_status import ShelterStatus
+from storm_shield.shelter_status import HeardShelterStatus, ShelterStatus
 
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
@@ -99,17 +99,14 @@ def create_app(
         if isinstance(message, CommunityReading):
             store.record(sender, message, clock())
 
-    announced: ShelterStatus | None = None
+    shelter_status = HeardShelterStatus()
 
-    def keep_newest_shelter_status(_: str, message: Message) -> None:
-        nonlocal announced
-        if isinstance(message, ShelterStatus) and (
-            announced is None or message.ver > announced.ver
-        ):
-            announced = message
+    def hear_shelter_status(_: str, message: Message) -> None:
+        if isinstance(message, ShelterStatus):
+            shelter_status.hear(message)
 
     mesh.subscribe(store_reading_from)
-    mesh.subscribe(keep_newest_shelter_status)
+    mesh.subscribe(hear_shelter_status)
     share_own_readings()
 
     @asynccontextmanager
@@ -243,8 +240,7 @@ def create_app(
     @app.get("/api/shelters")
     def open_shelters() -> OpenShelters:
         # Nothing counts as open until the Hub says so; an id this Node's pack lacks is ignored.
-        hub_says_open = set(announced.open) if announced else set()
-        return OpenShelters(open=[id for id in cache_pack.shelter_ids() if id in hub_says_open])
+        return OpenShelters(open=shelter_status.open_among(cache_pack.shelter_ids()))
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:
