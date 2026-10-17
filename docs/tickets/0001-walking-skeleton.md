@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] One command starts a Node (Python FastAPI, uv); a config value picks the role, Sensor Node or Hub
-- [ ] The Node serves the built dashboard (React + Vite + TypeScript, pnpm) as static files
-- [ ] The Node HTTP API returns this Node's identity and role, and the dashboard shows them
-- [ ] The dashboard has placeholder areas for map, readings, alerts and Evacuation Plan
-- [ ] One pytest test hits the Node API through the FastAPI test client (seed of seam A)
-- [ ] One Vitest test runs in the dashboard (seed of seam B)
-- [ ] Lint, format and typecheck are set up for both sides
-- [ ] **Stack** and **Commands** in `AGENTS.md` are filled in, and every command passes
+- [x] One command starts a Node (Python FastAPI, uv); a config value picks the role, Sensor Node or Hub
+- [x] The Node serves the built dashboard (React + Vite + TypeScript, pnpm) as static files
+- [x] The Node HTTP API returns this Node's identity and role, and the dashboard shows them
+- [x] The dashboard has placeholder areas for map, readings, alerts and Evacuation Plan
+- [x] One pytest test hits the Node API through the FastAPI test client (seed of seam A)
+- [x] One Vitest test runs in the dashboard (seed of seam B)
+- [x] Lint, format and typecheck are set up for both sides
+- [x] **Stack** and **Commands** in `AGENTS.md` are filled in, and every command passes

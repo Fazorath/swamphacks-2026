@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f7fa;
+  color: #1a2433;
+}
+
+header,
+.areas {
+  padding: 1rem;
+}
+
+.areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+section {
+  background: white;
+  border: 1px solid #d5dce6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-height: 8rem;
+}

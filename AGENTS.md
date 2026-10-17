@@ -8,11 +8,10 @@ Rules for every coding agent on this repo (Claude Code, Cursor, Copilot, Codexâ€
 
 ## Stack
 
-TBD at kickoff. When it's chosen, fill this in and fill in **Commands**.
-
-- Language / framework:
-- Package manager:
-- Hosting for the demo:
+- Node service: Python 3.12+, FastAPI, managed with uv (`node/`)
+- Dashboard: React + Vite + TypeScript, managed with pnpm (`dashboard/`), built to `dashboard/dist` and served by every Node
+- Tests: pytest (Node API seam), Vitest (dashboard seam)
+- Hosting for the demo: laptops and Raspberry Pis on the local Wi-Fi, no cloud
 
 ## Commands
 
@@ -20,11 +19,13 @@ Run these before calling any ticket done. An agent must not claim "done" without
 
 | Task | Command |
 |---|---|
-| Install | TBD |
-| Dev server | TBD |
-| Typecheck | TBD |
-| Lint + format | TBD |
-| Tests | TBD |
+| Install | `cd node && uv sync` and `cd dashboard && pnpm install` |
+| Build dashboard | `cd dashboard && pnpm build` |
+| Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
+| Dashboard dev server | `cd dashboard && pnpm dev` (proxies `/api` to port 8000) |
+| Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |
+| Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |
+| Tests | `cd node && uv run pytest` and `cd dashboard && pnpm test` |
 
 ## Workflow
 
