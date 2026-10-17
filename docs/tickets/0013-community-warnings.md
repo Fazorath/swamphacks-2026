@@ -4,9 +4,9 @@
 
 **Blocked by:** 0012, 0044, 0046, and the warning format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/flash-flood-replay.md` (replaces the "two Registered Nodes High" rule in `docs/specs/storm-shield.md`)
 

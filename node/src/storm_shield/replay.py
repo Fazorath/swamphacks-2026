@@ -61,13 +61,29 @@ class Track(BaseModel):
     keyframes: list[Keyframe]
 
 
+class Phase(BaseModel):
+    id: str
+    at: str
+    label: str
+
+
+class InternetCue(BaseModel):
+    at: str
+
+
 class ReplayTimeline(BaseModel):
     """The one replay file, `replay_timeline.json`; each fact in it names its source."""
 
     start: str
     start_unix: int
     rate: int
+    phases: list[Phase]
+    internet_cue: InternetCue
     tracks: dict[str, Track]
+
+    def event_t_at(self, clock_time: str) -> int:
+        """The Event clock's Unix seconds when the replay reads `clock_time`."""
+        return self.start_unix + self._seconds_after_start(clock_time)
 
     def readings_at(
         self, track_name: str, event_t: int, timestamp: datetime

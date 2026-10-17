@@ -1,8 +1,11 @@
 import { useState } from "react";
 
 import type { Shelter } from "./evacuationPlan";
+import { ReplayControls } from "./ReplayControls";
+import type { EventClock } from "./useEventClock";
 
 type Props = {
+  eventClock: EventClock | null;
   shelters: Shelter[];
   openShelterIds: string[];
   onOpenShelterIdsChanged: (openIds: string[]) => void;
@@ -22,7 +25,13 @@ async function setShelterOpen(id: string, open: boolean): Promise<string[]> {
   return (await response.json()).open;
 }
 
-export function HubPanel({ shelters, openShelterIds, onOpenShelterIdsChanged, onClose }: Props) {
+export function HubPanel({
+  eventClock,
+  shelters,
+  openShelterIds,
+  onOpenShelterIdsChanged,
+  onClose,
+}: Props) {
   const [changingShelterId, setChangingShelterId] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -44,6 +53,7 @@ export function HubPanel({ shelters, openShelterIds, onOpenShelterIdsChanged, on
   return (
     <aside role="dialog" aria-label="Hub Panel" className="slide-over">
       <h2>Hub</h2>
+      <ReplayControls clock={eventClock} />
       <h3>Shelters</h3>
       {shelters.length === 0 && <p>No Shelters yet: this Hub has no Cache Pack.</p>}
       <ul className="shelter-list">

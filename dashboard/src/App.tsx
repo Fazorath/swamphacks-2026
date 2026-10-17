@@ -109,6 +109,7 @@ export function App() {
       )}
       {hubPanelOpen && (
         <HubPanel
+          eventClock={eventClock}
           shelters={cachePack?.shelters ?? []}
           openShelterIds={openShelterIds}
           onOpenShelterIdsChanged={showOpenShelterIds}

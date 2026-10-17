@@ -4,9 +4,9 @@
 
 **Blocked by:** 0041
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** leonardorofaDV
 
 **Spec:** `docs/specs/state-snapshot.md`
 
