@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class NodeIdentity(BaseModel):
+    id: str
     name: str
     role: Role
 
@@ -74,17 +75,19 @@ def create_app(settings: Settings, mesh: Mesh | None = None) -> FastAPI:
 
     @app.get("/api/node")
     def node_identity() -> NodeIdentity:
-        return NodeIdentity(name=settings.name, role=settings.role)
+        return NodeIdentity(id=mesh.identity, name=settings.name, role=settings.role)
 
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:
-        return store.latest()
+        return store.latest(datetime.now(UTC))
 
     @app.get("/api/readings/stream")
     async def readings_stream() -> StreamingResponse:
         async def events() -> AsyncIterator[str]:
             while True:
-                payload = ",".join(reading.model_dump_json() for reading in store.latest())
+                payload = ",".join(
+                    reading.model_dump_json() for reading in store.latest(datetime.now(UTC))
+                )
                 yield f"data: [{payload}]\n\n"
                 await asyncio.sleep(READINGS_PUSH_SECONDS)
 

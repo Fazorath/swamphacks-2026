@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-import { useReadings, type Reading } from "./useReadings";
+import { formatAge, type NodeOnMap } from "./nodesOnMap";
+import type { Reading } from "./useReadings";
 
 const KIND_LABELS: Record<Reading["kind"], string> = {
   pressure: "Pressure",
@@ -13,17 +14,13 @@ function post(path: string) {
   fetch(path, { method: "POST" }).catch(console.error);
 }
 
-function groupByNode(readings: Reading[]): [string, Reading[]][] {
-  const byNode = new Map<string, Reading[]>();
-  for (const reading of readings) {
-    byNode.set(reading.node, [...(byNode.get(reading.node) ?? []), reading]);
-  }
-  return [...byNode];
-}
+type Props = {
+  nodes: NodeOnMap[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+};
 
-export function ReadingsPanel() {
-  const readings = useReadings();
-
+export function ReadingsPanel({ nodes, selectedId, onSelect }: Props) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "n") post("/api/scenario/step");
@@ -36,14 +33,23 @@ export function ReadingsPanel() {
   return (
     <section aria-label="Readings">
       <h2>Readings</h2>
-      {groupByNode(readings).map(([node, nodeReadings]) => (
-        <section key={node} aria-label={`Node ${node}`}>
-          <h3>{node}</h3>
+      {nodes.map((node) => (
+        <section
+          key={node.id}
+          aria-label={`Node ${node.label}`}
+          aria-current={node.id === selectedId}
+          className={node.stale ? "node-card stale" : "node-card"}
+          onClick={() => onSelect(node.id)}
+        >
+          <h3>
+            {node.label}
+            {node.simulated && <span className="tag simulated">SIMULATED</span>}
+            {node.stale && <span className="tag stale">STALE · {formatAge(node.ageSeconds)}</span>}
+          </h3>
           <ul>
-            {nodeReadings.map((reading) => (
+            {node.readings.map((reading) => (
               <li key={reading.kind}>
                 {KIND_LABELS[reading.kind]}: {reading.value} {reading.unit}
-                {reading.simulated && <span className="simulated"> (simulated)</span>}
               </li>
             ))}
           </ul>
