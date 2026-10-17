@@ -33,7 +33,7 @@ class NodeSnapshot(BaseModel):
 
 
 @dataclass
-class StoreView:
+class StoreSnapshot:
     """Every Node's latest readings and the histories Flood Risk needs, from one instant."""
 
     nodes: list[NodeSnapshot]
@@ -67,13 +67,13 @@ class ReadingStore:
         with self._lock:
             return self._recent_locked(now)
 
-    def view(self, now: datetime) -> StoreView:
+    def snapshot(self, now: datetime) -> StoreSnapshot:
         with self._lock:
             nodes = [
                 _node_snapshot(sender, history[-1], now)
                 for sender, history in sorted(self._history.items())
             ]
-            return StoreView(nodes=nodes, recent=self._recent_locked(now))
+            return StoreSnapshot(nodes=nodes, recent=self._recent_locked(now))
 
     def _recent_locked(self, now: datetime) -> dict[str, list[CommunityReading]]:
         since = now - self._history_window
@@ -99,9 +99,9 @@ class ReadingStore:
 
 
 def _node_snapshot(
-    sender: str, latest: tuple[CommunityReading, datetime], now: datetime
+    sender: str, last_heard: tuple[CommunityReading, datetime], now: datetime
 ) -> NodeSnapshot:
-    reading, received_at = latest
+    reading, received_at = last_heard
     age_s = (now - received_at).total_seconds()
     return NodeSnapshot(
         id=sender,

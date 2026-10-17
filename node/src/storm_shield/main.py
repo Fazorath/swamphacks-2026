@@ -223,15 +223,15 @@ def create_app(
 
     @app.get("/api/state")
     def node_state() -> NodeState:
-        view = store.view(clock())
+        snapshot = store.snapshot(clock())
         return NodeState(
             id=mesh.identity,
             name=settings.name,
             role=settings.role,
             status=internet.status,
             scenario=ScenarioState(step=scenario.step_name),
-            flood_risk=flood_risk(view.recent),
-            nodes=view.nodes,
+            flood_risk=flood_risk(snapshot.recent),
+            nodes=snapshot.nodes,
         )
 
     @app.get("/api/cameras")

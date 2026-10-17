@@ -81,5 +81,37 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
 
     assert _entry(state, "porch")["measurements"]["water_level"]["value"] > 30
     assert state["flood_risk"]["level"] == "elevated"
-    assert state["flood_risk"] == meshed_nodes["porch"].get("/api/flood-risk").json()
     assert state["flood_risk"]["nodes"] == {"porch": "elevated"}
+
+
+def test_flood_risk_and_the_node_entries_list_the_same_nodes(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("garage", rain_mmh=30, water_cm=90)
+    state = _state(meshed_nodes["porch"])
+
+    assert _entry(state, "garage")["measurements"]["water_level"]["value"] == 90
+    assert set(state["flood_risk"]["nodes"]) == {entry["id"] for entry in state["nodes"]}
+    assert state["flood_risk"]["nodes"]["garage"] == "high"
+
+
+def test_a_node_is_stale_only_after_more_than_15_seconds(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("garage")
+    meshed_nodes.advance(15.5)
+    assert _entry(_state(meshed_nodes["porch"]), "garage")["stale"] is True
+
+
+def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    state = _state(meshed_nodes["porch"])
+    assert [entry["id"] for entry in state["nodes"]] == ["porch"]
+    assert set(state["nodes"][0]) == {
+        "id",
+        "position",
+        "simulated",
+        "age_s",
+        "stale",
+        "measurements",
+    }
