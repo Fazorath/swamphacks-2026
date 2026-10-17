@@ -32,6 +32,6 @@
 | [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | ready-for-agent | unclaimed |
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
-| [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | ready-for-agent | unclaimed |
+| [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | in-progress | Fazorath |
 | [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | ready-for-agent | unclaimed |
 | [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | ready-for-agent | unclaimed |
