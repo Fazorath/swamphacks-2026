@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { FloodRiskPanel } from "./FloodRiskPanel";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
+import { useFloodRisk } from "./useFloodRisk";
 import { useNodeIdentity } from "./useNodeIdentity";
 import { useReadings } from "./useReadings";
 
@@ -12,6 +14,7 @@ const PLACEHOLDER_AREAS = ["Alerts", "Evacuation Plan"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
+  const floodRisk = useFloodRisk();
   const nodes = nodesOnMap(useReadings(), identity);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
@@ -28,6 +31,7 @@ export function App() {
         </p>
       </header>
       <div className="areas">
+        <FloodRiskPanel floodRisk={floodRisk} />
         <ReadingsPanel nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
         <NodeMap nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
         {PLACEHOLDER_AREAS.map((title) => (

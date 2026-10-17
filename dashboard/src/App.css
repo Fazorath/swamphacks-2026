@@ -32,9 +32,10 @@ main {
   display: grid;
   height: 100vh;
   grid-template-columns: 16rem 1fr 22rem;
-  grid-template-rows: auto 1fr 1fr;
+  grid-template-rows: auto auto 1fr 1fr;
   grid-template-areas:
     "top top top"
+    "risk risk risk"
     "readings map alerts"
     "readings map plan";
   gap: 0.75rem;
@@ -179,6 +180,44 @@ section[aria-label="Map"] {
   padding-left: 1.1rem;
 }
 
+section[aria-label="Flood Risk"] {
+  grid-area: risk;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1.5rem;
+}
+
+section[aria-label="Flood Risk"] h2 {
+  margin: 0;
+}
+
+section[aria-label="Flood Risk"] ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+section p.flood-risk-level {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+section p.flood-risk-level.low {
+  color: var(--low);
+}
+
+section p.flood-risk-level.elevated {
+  color: var(--elevated);
+}
+
+section p.flood-risk-level.high {
+  color: var(--high);
+}
+
+section p.storm-signal {
+  color: var(--elevated);
+}
+
 section[aria-label="Readings"] {
   grid-area: readings;
 }
@@ -198,6 +237,7 @@ section[aria-label="Evacuation Plan"] {
     grid-template-rows: none;
     grid-template-areas:
       "top"
+      "risk"
       "map"
       "alerts"
       "plan"

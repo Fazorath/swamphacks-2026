@@ -38,15 +38,27 @@ class FakeEventSource {
   close() {}
 }
 
+const HIGH_FLOOD_RISK = {
+  level: "high",
+  reasons: [
+    { code: "water_rising", nodes: ["porch", "garage"], text: "water level rising at 2 Nodes" },
+  ],
+  storm_signal: { falling: true, text: "pressure falling at 2 Nodes" },
+};
+
 beforeEach(() => {
-  vi.stubGlobal("fetch", async () => Response.json({ id: "porch", name: "porch", role: "hub" }));
+  vi.stubGlobal("fetch", async (path: string) =>
+    Response.json(
+      path === "/api/flood-risk" ? HIGH_FLOOD_RISK : { id: "porch", name: "porch", role: "hub" },
+    ),
+  );
   vi.stubGlobal("EventSource", FakeEventSource);
 });
 
 test("shows the Node's name and role and the placeholder areas", async () => {
   render(<App />);
   expect(await screen.findByText("porch · Hub")).toBeInTheDocument();
-  for (const area of ["Map", "Readings", "Alerts", "Evacuation Plan"]) {
+  for (const area of ["Flood Risk", "Map", "Readings", "Alerts", "Evacuation Plan"]) {
     expect(screen.getByRole("region", { name: area })).toBeInTheDocument();
   }
 });
@@ -91,4 +103,14 @@ test("selecting the selected card again clears the selection", async () => {
   fireEvent.click(garage);
   fireEvent.click(garage);
   expect(garage).toHaveAttribute("aria-current", "false");
+});
+
+test("shows Flood Risk with its reasons and the storm signal", async () => {
+  render(<App />);
+  const floodRisk = screen.getByRole("region", { name: "Flood Risk" });
+  expect(await within(floodRisk).findByText("High")).toBeInTheDocument();
+  expect(within(floodRisk).getByText("water level rising at 2 Nodes")).toBeInTheDocument();
+  expect(
+    within(floodRisk).getByText("Storm signal · pressure falling at 2 Nodes"),
+  ).toBeInTheDocument();
 });

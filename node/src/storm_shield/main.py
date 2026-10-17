@@ -20,6 +20,7 @@ from storm_shield.cache_pack import (
     CachePack,
 )
 from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.flood_risk import COUNTING_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.scenario import Scenario
@@ -114,6 +115,10 @@ def create_app(
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:
         return store.latest(datetime.now(UTC))
+
+    @app.get("/api/flood-risk")
+    def current_flood_risk() -> FloodRisk:
+        return flood_risk(store.recent(datetime.now(UTC), COUNTING_WINDOW_SECONDS))
 
     @app.get("/api/readings/stream")
     async def readings_stream() -> StreamingResponse:

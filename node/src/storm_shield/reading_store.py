@@ -1,5 +1,6 @@
 import threading
-from datetime import datetime
+from collections import deque
+from datetime import datetime, timedelta
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.scenario import Reading, ReadingKind
@@ -11,24 +12,41 @@ class NodeReading(Reading):
     age_s: float
 
 
+# Enough for a minute of readings at the 3 s publish cadence, with room for Scenario steps.
+HISTORY_PER_NODE = 30
+
+
 class ReadingStore:
-    """The latest Community Reading from each Node, this Node's own included."""
+    """The latest Community Readings from each Node, this Node's own included."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._latest: dict[str, tuple[CommunityReading, datetime]] = {}
+        self._history: dict[str, deque[tuple[CommunityReading, datetime]]] = {}
 
     def record(self, sender: str, reading: CommunityReading, received_at: datetime) -> None:
         with self._lock:
-            known = self._latest.get(sender)
+            history = self._history.setdefault(sender, deque(maxlen=HISTORY_PER_NODE))
             # A repeated or relayed-late copy must not overwrite a newer reading.
-            if known and reading.seq <= known[0].seq:
+            if history and reading.seq <= history[-1][0].seq:
                 return
-            self._latest[sender] = (reading, received_at)
+            history.append((reading, received_at))
+
+    def recent(self, now: datetime, within_s: float) -> dict[str, list[CommunityReading]]:
+        """Each Node's readings received in the last `within_s` seconds, oldest first.
+
+        A Node that has been silent for longer is left out.
+        """
+        since = now - timedelta(seconds=within_s)
+        with self._lock:
+            kept = {
+                sender: [reading for reading, received_at in history if received_at >= since]
+                for sender, history in sorted(self._history.items())
+            }
+        return {sender: readings for sender, readings in kept.items() if readings}
 
     def latest(self, now: datetime) -> list[NodeReading]:
         with self._lock:
-            latest = sorted(self._latest.items())
+            latest = sorted((sender, history[-1]) for sender, history in self._history.items())
         return [
             NodeReading(
                 node=sender,

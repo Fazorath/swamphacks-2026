@@ -22,3 +22,8 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.
+
+## Flood Risk (ticket 0006)
+
+- **`pnpm test` could not start on Node 20.20**: vitest's jsdom worker dies loading `undici@8` (`Cannot read properties of undefined (reading 'bind')`). Typecheck, lint and build pass; run the dashboard tests on a newer Node before trusting the new `App.test.tsx` case.
+- Trend rules (`water_rising`, `pressure_falling`) compare the oldest and newest reading in the last 60 s, so a trend lingers up to a minute after the Scenario stops moving, and a Scenario step shows at once because it publishes immediately.
