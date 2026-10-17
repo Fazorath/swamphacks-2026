@@ -8,12 +8,14 @@ ReadingKind = Literal["pressure", "rain_rate", "water_level", "soil_moisture"]
 
 SCENARIO_STEPS = ["normal_day", "pressure_drop", "rain", "water_rising"]
 
-# Base values per step: pressure hPa, rain rate mm/h, water level cm, soil moisture %.
+# Base values per step: pressure hPa, rain rate mm/h, water level cm, soil moisture %. Water and
+# pressure are scaled to the levels in flood_risk.py. The last step is High from heavy rain on
+# rising water and stays under the Surge size, so a quick run of steps is not a Surge.
 _STEP_VALUES: dict[str, dict[ReadingKind, float]] = {
-    "normal_day": {"pressure": 1015, "rain_rate": 0, "water_level": 20, "soil_moisture": 30},
-    "pressure_drop": {"pressure": 1002, "rain_rate": 0, "water_level": 20, "soil_moisture": 32},
-    "rain": {"pressure": 998, "rain_rate": 12, "water_level": 35, "soil_moisture": 55},
-    "water_rising": {"pressure": 995, "rain_rate": 30, "water_level": 90, "soil_moisture": 85},
+    "normal_day": {"pressure": 1015, "rain_rate": 0, "water_level": 100, "soil_moisture": 30},
+    "pressure_drop": {"pressure": 990, "rain_rate": 0, "water_level": 100, "soil_moisture": 32},
+    "rain": {"pressure": 985, "rain_rate": 12, "water_level": 350, "soil_moisture": 55},
+    "water_rising": {"pressure": 980, "rain_rate": 30, "water_level": 390, "soil_moisture": 85},
 }
 
 _UNITS: dict[ReadingKind, str] = {

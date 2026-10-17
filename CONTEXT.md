@@ -95,7 +95,7 @@ The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and R
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
-A community estimate of flooding danger (Low, Elevated or High) that every Node derives from the Community Readings it can see. Low is shown only while it is Raining or the Storm Signal is on. Elevated and High come from a Node's own water level and rain rate, so water at 30 cm or more shows Elevated even on a calm day. With none of these, no Flood Risk is shown at all.
+A community estimate of flooding danger (Low, Elevated or High) that every Node derives from the Community Readings it can see. Low is shown only while it is Raining or the Storm Signal is on. Elevated and High come from a Node's own water level and rain rate, so water at 300 cm or more shows Elevated even on a calm day. With none of these, no Flood Risk is shown at all.
 _Avoid_: flood score, danger level, threat level
 
 **Raining**:

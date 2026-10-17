@@ -1,7 +1,12 @@
+import json
+import time
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
+
+from storm_shield.flood_risk import STORM_PRESSURE_HPA
 
 
 def _step(client: TestClient, times: int = 1) -> None:
@@ -126,10 +131,10 @@ def test_water_that_stays_high_after_the_rain_stops_stays_elevated(
 ) -> None:
     meshed_nodes.start("porch")
     meshed_nodes.register("creek", "porch")
-    meshed_nodes.hear_from("creek", water_cm=20)
-    meshed_nodes.hear_from("creek", water_cm=45)
+    meshed_nodes.hear_from("creek", water_cm=200)
+    meshed_nodes.hear_from("creek", water_cm=450)
     meshed_nodes.advance(121)
-    meshed_nodes.hear_from("creek", water_cm=45)
+    meshed_nodes.hear_from("creek", water_cm=450)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["level"] == "elevated"
     assert _reason_codes(meshed_nodes["porch"]) == {"water_high"}
@@ -176,8 +181,8 @@ def test_a_node_with_a_single_reading_is_not_rising(meshed_nodes: MeshedNodes) -
 def test_reasons_show_tidy_values(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
     meshed_nodes.register("creek", "porch")
-    meshed_nodes.hear_from("creek", water_cm=29)
-    meshed_nodes.hear_from("creek", water_cm=41.7)
+    meshed_nodes.hear_from("creek", water_cm=290)
+    meshed_nodes.hear_from("creek", water_cm=417.3)
     values = [reason["value"] for reason in _flood_risk(meshed_nodes["porch"])["reasons"]]
     assert all(value == round(value, 1) for value in values)
 
@@ -191,7 +196,7 @@ def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: Mes
     meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
     meshed_nodes.advance(8)
-    meshed_nodes.hear_from("creek", water_cm=340)
+    meshed_nodes.hear_from("creek", water_cm=700)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["level"] == "high"
     assert flood_risk["nodes"]["creek"] == "high"
@@ -199,7 +204,7 @@ def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: Mes
     assert _surge_reason_of(meshed_nodes["porch"]) == {
         "code": "water_surge",
         "nodes": 1,
-        "value": 320,
+        "value": 680,
         "seconds": 8,
     }
 
@@ -209,7 +214,7 @@ def test_the_same_rise_spread_over_a_long_time_is_not_a_surge(meshed_nodes: Mesh
     meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
     meshed_nodes.advance(61)
-    meshed_nodes.hear_from("creek", water_cm=340)
+    meshed_nodes.hear_from("creek", water_cm=700)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["surged"] == []
     assert _surge_reason_of(meshed_nodes["porch"]) is None
@@ -219,7 +224,7 @@ def test_the_same_rise_spread_over_a_long_time_is_not_a_surge(meshed_nodes: Mesh
 def test_a_rise_just_under_the_surge_size_is_not_a_surge(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
     meshed_nodes.hear_from("creek", water_cm=10)
-    meshed_nodes.hear_from("creek", water_cm=109.9)
+    meshed_nodes.hear_from("creek", water_cm=309.9)
     assert _flood_risk(meshed_nodes["porch"])["surged"] == []
 
 
@@ -227,13 +232,13 @@ def test_a_rise_of_exactly_the_surge_size_is_a_surge(meshed_nodes: MeshedNodes) 
     meshed_nodes.start("porch")
     meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=10)
-    meshed_nodes.hear_from("creek", water_cm=110)
+    meshed_nodes.hear_from("creek", water_cm=310)
     assert _flood_risk(meshed_nodes["porch"])["surged"] == ["creek"]
 
 
 def test_a_node_with_a_single_reading_cannot_surge(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.hear_from("creek", water_cm=500)
+    meshed_nodes.hear_from("creek", water_cm=700)
     assert _flood_risk(meshed_nodes["porch"])["surged"] == []
 
 
@@ -245,13 +250,13 @@ def test_only_the_node_that_surged_is_listed_and_the_reason_reports_its_rise(
     for sender in ["creek", "garage"]:
         meshed_nodes.hear_from(sender, water_cm=20)
     meshed_nodes.advance(5)
-    meshed_nodes.hear_from("creek", water_cm=200)
+    meshed_nodes.hear_from("creek", water_cm=500)
     meshed_nodes.hear_from("garage", water_cm=25)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["surged"] == ["creek"]
     assert flood_risk["nodes"] == {"creek": "high", "garage": None, "porch": None}
     surge = _surge_reason_of(meshed_nodes["porch"])
-    assert surge is not None and surge["nodes"] == 1 and surge["value"] == 180
+    assert surge is not None and surge["nodes"] == 1 and surge["value"] == 480
 
 
 def test_the_reason_reports_the_biggest_rise_when_several_nodes_surge(
@@ -262,11 +267,11 @@ def test_the_reason_reports_the_biggest_rise_when_several_nodes_surge(
     for sender in ["creek", "garage"]:
         meshed_nodes.hear_from(sender, water_cm=20)
     meshed_nodes.advance(6)
-    meshed_nodes.hear_from("creek", water_cm=150)
-    meshed_nodes.hear_from("garage", water_cm=400)
+    meshed_nodes.hear_from("creek", water_cm=450)
+    meshed_nodes.hear_from("garage", water_cm=800)
     surge = _surge_reason_of(meshed_nodes["porch"])
     assert surge is not None
-    assert (surge["nodes"], surge["value"], surge["seconds"]) == (2, 380, 6)
+    assert (surge["nodes"], surge["value"], surge["seconds"]) == (2, 780, 6)
 
 
 def test_the_surge_ends_once_the_jump_leaves_the_window_but_the_high_water_stays(
@@ -275,10 +280,45 @@ def test_the_surge_ends_once_the_jump_leaves_the_window_but_the_high_water_stays
     meshed_nodes.start("porch")
     meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
-    meshed_nodes.hear_from("creek", water_cm=340)
+    meshed_nodes.hear_from("creek", water_cm=700)
     meshed_nodes.advance(61)
-    meshed_nodes.hear_from("creek", water_cm=340)
+    meshed_nodes.hear_from("creek", water_cm=700)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["surged"] == []
     assert flood_risk["level"] == "high"
     assert "water_high" in _reason_codes(meshed_nodes["porch"])
+
+
+def test_the_replays_calm_phase_is_low_with_no_storm_signal(meshed_nodes: MeshedNodes) -> None:
+    tracks = ["S0", "S1", "S2", "S3"]
+    meshed_nodes.start_hub()
+    for track in tracks:
+        meshed_nodes.start_sensor(track.lower(), replay_track=track)
+    assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
+    # 12 s is 08:36 on the Event clock, a minute before S0's Surge.
+    meshed_nodes.advance(12)
+    deadline = time.monotonic() + 5
+    while True:
+        state = meshed_nodes["hub"].get("/api/state").json()
+        heard = {node["id"] for node in state["nodes"]}
+        if {track.lower() for track in tracks} <= heard:
+            break
+        assert time.monotonic() < deadline, "the Sensors were never heard"
+        time.sleep(0.01)
+    flood_risk = state["flood_risk"]
+    assert flood_risk["level"] is None
+    assert flood_risk["reasons"] == []
+    assert flood_risk["storm_signal"]["on"] is False
+    assert set(flood_risk["nodes"].values()) == {None}
+
+
+def test_no_replay_keyframe_is_below_the_storm_signal_pressure() -> None:
+    timeline = json.loads(
+        (Path(__file__).parents[1] / "src/storm_shield/replay_timeline.json").read_text()
+    )
+    lowest = min(
+        keyframe["pressure_hpa"]
+        for track in timeline["tracks"].values()
+        for keyframe in track["keyframes"]
+    )
+    assert lowest >= STORM_PRESSURE_HPA

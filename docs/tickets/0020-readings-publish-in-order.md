@@ -4,14 +4,14 @@
 
 **Blocked by:** 0003
 
-**Status:** ready-for-agent
+**Status:** done
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] Reading the Scenario and taking the next `seq` happen as one step that two threads cannot interleave
-- [ ] Stepping and resetting the Scenario cannot race with a publish
-- [ ] Registering a listener on the in-memory Mesh is safe while messages are being delivered
-- [ ] Seam A test: many steps and ticks from several threads never leave another Node showing a reading older than the Scenario step it was last told about
-- [ ] All **Commands** pass
+- [x] Reading the Scenario and taking the next `seq` happen as one step that two threads cannot interleave
+- [x] Stepping and resetting the Scenario cannot race with a publish
+- [x] Registering a listener on the in-memory Mesh is safe while messages are being delivered
+- [x] Seam A test: many steps and ticks from several threads never leave another Node showing a reading older than the Scenario step it was last told about
+- [x] All **Commands** pass

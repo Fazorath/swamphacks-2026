@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately; use a hand-made grid until 0052 fixes the file layout, then match it)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/weather-layers.md`
 

@@ -148,6 +148,9 @@ def create_app(
     position = fuzz_position(settings.latitude, settings.longitude)
     # Starting from the clock keeps a restarted Node ahead of the seq others last saw from it.
     sequence = itertools.count(int(time.time()))
+    # A tick and a Scenario step run on different threads; without this a tick that read the old
+    # Scenario could take its seq after the step and hide the step's reading from other Nodes.
+    publishing = threading.RLock()
 
     timeline = load_timeline()
     if settings.replay_track and settings.replay_track not in timeline.tracks:
@@ -165,19 +168,20 @@ def create_app(
         return timeline.readings_at(settings.replay_track, event.event_t, clock())
 
     def share_own_readings() -> None:
-        measurements = own_measurements()
-        if measurements is None:
-            return
-        reading = CommunityReading.from_measurements(
-            node=mesh.identity,
-            seq=next(sequence),
-            position=position,
-            readings=measurements,
-            river_km=settings.river_km,
-        )
-        store.record(mesh.identity, reading, clock())
-        warn_about_new_surges()
-        mesh.publish(reading)
+        with publishing:
+            measurements = own_measurements()
+            if measurements is None:
+                return
+            reading = CommunityReading.from_measurements(
+                node=mesh.identity,
+                seq=next(sequence),
+                position=position,
+                readings=measurements,
+                river_km=settings.river_km,
+            )
+            store.record(mesh.identity, reading, clock())
+            warn_about_new_surges()
+            mesh.publish(reading)
 
     def store_reading_from(sender: str, message: Message) -> None:
         if isinstance(message, CommunityReading):
@@ -526,15 +530,17 @@ def create_app(
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:
-        scenario.step()
-        share_own_readings()
-        return ScenarioState(step=scenario.step_name)
+        with publishing:
+            scenario.step()
+            share_own_readings()
+            return ScenarioState(step=scenario.step_name)
 
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
-        scenario.reset()
-        share_own_readings()
-        return ScenarioState(step=scenario.step_name)
+        with publishing:
+            scenario.reset()
+            share_own_readings()
+            return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")
     def replay_clock() -> ReplayClockMessage:

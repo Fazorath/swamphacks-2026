@@ -127,13 +127,15 @@ class InMemoryMesh:
         self.identity = identity
         self._hub_identity = hub_identity
         self._network = network
+        self._listeners_lock = threading.Lock()
         self._listeners: list[MessageListener] = []
 
     def publish(self, message: Message) -> None:
         self._network.deliver(self.identity, message)
 
     def subscribe(self, listener: MessageListener) -> None:
-        self._listeners.append(listener)
+        with self._listeners_lock:
+            self._listeners.append(listener)
 
     def receive(self, sender: str, message: Message) -> None:
         # Same rule as the radio: readings and Sign-ups may come from any Node, and only as
@@ -143,4 +145,6 @@ class InMemoryMesh:
                 return
         elif sender != self._hub_identity:
             return
-        deliver_to_listeners(self._listeners, sender, message)
+        with self._listeners_lock:
+            listeners = list(self._listeners)
+        deliver_to_listeners(listeners, sender, message)

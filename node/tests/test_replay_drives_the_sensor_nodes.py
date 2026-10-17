@@ -101,7 +101,7 @@ def test_a_node_with_no_track_keeps_the_scenario(meshed_nodes: MeshedNodes) -> N
     meshed_nodes.start_sensor("porch")
     _start_replay(meshed_nodes)
     meshed_nodes.advance(20)
-    assert _water_cm(meshed_nodes, "porch", "porch") == pytest.approx(20, abs=1)
+    assert _water_cm(meshed_nodes, "porch", "porch") == pytest.approx(100, abs=1)
 
 
 def test_a_replay_message_not_from_the_hub_is_ignored(meshed_nodes: MeshedNodes) -> None:

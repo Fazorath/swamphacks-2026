@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
+from storm_shield.scenario import Reading, Scenario
+
 
 def _values_by_node_and_kind(client: TestClient) -> dict[tuple[str, str], float]:
     return {
@@ -74,3 +76,24 @@ def test_a_restarted_node_is_heard_again(
     meshed_nodes["porch"].post("/api/scenario/reset")
     pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
     assert pressure > 1010
+
+
+def test_a_step_is_never_hidden_by_a_tick_that_read_the_old_scenario(
+    meshed_nodes: MeshedNodes, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    read_scenario = Scenario.readings
+
+    def readings_after_a_pause(scenario: Scenario) -> list[Reading]:
+        # A tick that is preempted between reading the Scenario and taking its seq.
+        readings = read_scenario(scenario)
+        time.sleep(0.002)
+        return readings
+
+    monkeypatch.setattr(Scenario, "readings", readings_after_a_pause)
+    meshed_nodes.start("garage")
+    meshed_nodes.start_sensor("porch", publish_every_seconds=0.001)
+    for _ in range(100):
+        for path, normal in [("/api/scenario/reset", True), ("/api/scenario/step", False)]:
+            meshed_nodes["porch"].post(path)
+            pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
+            assert (pressure > 1010) == normal, f"{path} left garage showing {pressure} hPa"
