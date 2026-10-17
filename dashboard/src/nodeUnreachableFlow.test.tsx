@@ -87,6 +87,7 @@ beforeEach(() => {
             reasons: [{ code: "water_high", nodes: 1, value: 40 }],
             storm_signal: { on: false, nodes: 0, pressure_hpa: null },
             nodes: {},
+            surged: [],
           },
           nodes: [fakeNodeSnapshot("porch")],
           official_alerts: [NOTICE],
