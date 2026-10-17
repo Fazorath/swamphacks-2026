@@ -1,3 +1,5 @@
+import { TriangleAlert } from "lucide-react";
+
 import {
   issuedUnix,
   leadTimeLine,
@@ -28,7 +30,14 @@ export function AlertsPanel({
     <section aria-label="Alerts">
       <h2>Alerts</h2>
       {leadTime && <p className="lead-time">{leadTime}</p>}
-      {newestFirst.length === 0 && <p>No Official Alert has reached this Node yet.</p>}
+      {newestFirst.length === 0 && (
+        <div className="empty-panel">
+          <span className="empty-panel-icon">
+            <TriangleAlert size={20} aria-hidden="true" />
+          </span>
+          <p>No Official Alerts or Community Warnings right now.</p>
+        </div>
+      )}
       {newestFirst.map((alert) => (
         <article key={alert.id} className="official-alert" aria-label="Official Alert">
           <p className="official-alert-tags">

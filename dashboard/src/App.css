@@ -273,6 +273,32 @@ section .official-alert p,
   list-style: none;
 }
 
+/* The canvas's empty Panel (C-States): an icon in a raised circle above one line saying why. */
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.1rem 0.5rem;
+  text-align: center;
+}
+
+.empty-panel-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+section .empty-panel p {
+  max-width: 16rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
 .lead-time {
   margin-bottom: 0.5rem;
   font-weight: bold;

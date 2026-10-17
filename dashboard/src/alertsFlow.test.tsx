@@ -136,5 +136,7 @@ test("with no Official Alert the panel says why it is empty", async () => {
   stubNode("online", []);
   render(<App />);
 
-  expect(await screen.findByText("No Official Alert has reached this Node yet.")).toBeVisible();
+  expect(
+    await screen.findByText("No Official Alerts or Community Warnings right now."),
+  ).toBeVisible();
 });
