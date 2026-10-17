@@ -7,7 +7,7 @@
 | [0001-walking-skeleton](0001-walking-skeleton.md) | done | Fazorath |
 | [0002-simulated-readings-on-one-node](0002-simulated-readings-on-one-node.md) | done | Fazorath |
 | [0003-readings-shared-between-nodes](0003-readings-shared-between-nodes.md) | done | refloow-0 |
-| [0004-readings-over-reticulum](0004-readings-over-reticulum.md) | ready-for-agent | unclaimed |
+| [0004-readings-over-reticulum](0004-readings-over-reticulum.md) | in-progress | amitathik7 |
 | [0005-readings-on-the-map](0005-readings-on-the-map.md) | done | leonardorofaDV |
 | [0006-flood-risk-and-storm-signal](0006-flood-risk-and-storm-signal.md) | done | leonardorofaDV |
 | [0007-cache-pack-shelters-flood-prone-areas-tiles](0007-cache-pack-shelters-flood-prone-areas-tiles.md) | done | Fazorath |
