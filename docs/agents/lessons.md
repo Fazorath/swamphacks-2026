@@ -269,3 +269,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`pkill -f storm-shield-node` over SSH kills the remote shell too** (its command line holds the pattern; ssh exits 255). Use `pkill -f "[s]torm-shield-node"`.
 - **Start a Node over SSH with only the Node in the background**: `cd dir || exit 1; setsid nohup <node> > log 2>&1 < /dev/null &`. Backgrounding a whole `cd && ... &` chain kept the ssh session open until it timed out.
 - A Pi user's `uv` is in `~/.local/bin`, which a non-interactive SSH command does not have on its `PATH`; call `node/.venv/bin/storm-shield-node` directly.
+
+## Hub forecast (ticket 0058)
+
+- **`weather_forecast.json` is the Weather Grid plus `fetched_at`**, kept in `NODE_DATA_DIR`. The grid helpers live in `storm_shield/weather_grid.py` (the Node needs them at run time; `scripts/pack_weather.py` imports them from there). A Sensor needs `NODE_WEATHER_FORECAST_URL` (the Hub's `/api/weather/forecast`; `run-demo.sh` sets it); without it the Sensor never gets a forecast.
+- **A Node with no copy retries every 30 s** (the Hub may not have fetched yet), and hourly once it has one. Tests that wait on a retry patch `storm_shield.main.RETRY_EVERY_SECONDS`.
+- **A Hub started with its lifespan in a test would call the real api.open-meteo.com**: `MeshedNodes.start_hub` injects an offline `weather_source`; do the same for any new test that enters a Hub as `with TestClient(app)`.
+- Rehearsed on loopback (Hub 8710 / slot 30, Sensor 8711 / slot 31) against the real Open-Meteo: both served 120 KB of forecast, and after the Hub was stopped the Sensor still served it. Software path only, not a Pi check.

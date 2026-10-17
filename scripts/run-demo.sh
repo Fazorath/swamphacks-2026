@@ -94,6 +94,7 @@ start_node() {
     NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \
+    NODE_WEATHER_FORECAST_URL="http://127.0.0.1:$base_port/api/weather/forecast" \
     node/.venv/bin/storm-shield-node >"$demo_dir/logs/$name.log" 2>&1 &
   pids+=($!)
 }
