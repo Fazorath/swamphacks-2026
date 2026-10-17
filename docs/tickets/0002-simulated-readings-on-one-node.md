@@ -15,6 +15,6 @@
 - [x] The Scenario can be stepped and reset over the Node HTTP API and from the keyboard on a laptop
 - [x] The API returns the Node's current Community Readings with timestamps and the simulated flag
 - [x] The dashboard readings area lists them, labeled simulated, and updates live
-- [x] The reading shape stays inside the Node; no mesh wire format is decided here (the format is in `docs/specs/wire-formats.md`)
+- [x] The reading shape stays inside the Node; the mesh wire format was decided afterwards in `docs/specs/wire-formats.md`, and the Node's reading now follows its field names and units
 - [x] Seam A tests: stepping the Scenario changes the readings the API returns; reset returns to normal day
 - [x] All **Commands** pass

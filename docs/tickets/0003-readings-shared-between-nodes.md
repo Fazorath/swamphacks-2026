@@ -13,7 +13,7 @@
 - [ ] Mesh offers publish-a-message and subscribe-to-messages, and hands subscribers the sender identity
 - [ ] The in-memory Mesh connects several Node instances inside one test process
 - [ ] Community Readings follow `docs/specs/wire-formats.md`
-- [ ] Each Node's Reading store keeps the latest Community Readings per Node, with timestamps
+- [ ] Each Node's Reading store keeps the latest Community Reading (one whole message) per Node, with timestamps
 - [ ] The API and dashboard show readings from other Nodes as well as this Node's own
 - [ ] Seam A test setup: a reusable way to start N Nodes on the in-memory Mesh and drive them through their APIs
 - [ ] Seam A tests: a reading stepped on Node A shows up on Node B; removing a Node leaves the others working

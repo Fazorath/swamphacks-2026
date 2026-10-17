@@ -2,12 +2,14 @@ import { useEffect } from "react";
 
 import { useReadings, type Reading } from "./useReadings";
 
-const KIND_LABELS: Record<Reading["kind"], string> = {
-  pressure: "Pressure",
-  rain_rate: "Rain rate",
-  water_level: "Water level",
-  soil_moisture: "Soil moisture",
-};
+function measurements(reading: Reading): [label: string, text: string][] {
+  return [
+    ["Pressure", `${reading.pressure_hpa} hPa`],
+    ["Rain rate", `${reading.rain_mmh} mm/h`],
+    ["Water level", `${reading.water_m} m`],
+    ["Soil moisture", `${reading.soil_pct} %`],
+  ];
+}
 
 function post(path: string) {
   fetch(path, { method: "POST" }).catch(console.error);
@@ -28,14 +30,16 @@ export function ReadingsPanel() {
   return (
     <section aria-label="Readings">
       <h2>Readings</h2>
-      <ul>
-        {readings.map((reading) => (
-          <li key={reading.kind}>
-            {KIND_LABELS[reading.kind]}: {reading.value} {reading.unit}
-            {reading.simulated && <span className="simulated"> (simulated)</span>}
-          </li>
-        ))}
-      </ul>
+      {readings.map((reading) => (
+        <ul key={reading.t}>
+          {measurements(reading).map(([label, text]) => (
+            <li key={label}>
+              {label}: {text}
+              {reading.sim && <span className="simulated"> (simulated)</span>}
+            </li>
+          ))}
+        </ul>
+      ))}
       <button onClick={() => post("/api/scenario/step")}>Step scenario (n)</button>{" "}
       <button onClick={() => post("/api/scenario/reset")}>Reset (r)</button>
     </section>

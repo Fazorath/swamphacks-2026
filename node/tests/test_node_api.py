@@ -14,31 +14,28 @@ def test_hub_reports_the_hub_role() -> None:
     assert client.get("/api/node").json() == {"name": "hub", "role": "hub"}
 
 
-def _readings_by_kind(client: TestClient) -> dict[str, float]:
-    return {reading["kind"]: reading["value"] for reading in client.get("/api/readings").json()}
+def _reading(client: TestClient) -> dict[str, float]:
+    [reading] = client.get("/api/readings").json()
+    return dict(reading)
 
 
-def test_readings_are_timestamped_and_labeled_simulated() -> None:
+def test_reading_follows_the_wire_format_and_is_labeled_simulated() -> None:
     client = TestClient(create_app(Settings()))
-    readings = client.get("/api/readings").json()
-    assert {reading["kind"] for reading in readings} == {
-        "pressure",
-        "rain_rate",
-        "water_level",
-        "soil_moisture",
-    }
-    assert all(reading["simulated"] and reading["timestamp"] for reading in readings)
+    reading = _reading(client)
+    assert reading["sim"] is True
+    assert reading["t"] > 0
+    assert {"pressure_hpa", "water_m", "rain_mmh", "soil_pct"} <= reading.keys()
 
 
-def test_stepping_the_scenario_changes_the_readings() -> None:
+def test_stepping_the_scenario_changes_the_reading() -> None:
     client = TestClient(create_app(Settings()))
-    normal_day = _readings_by_kind(client)
+    normal_day = _reading(client)
     assert client.post("/api/scenario/step").json() == {"step": "pressure_drop"}
-    assert _readings_by_kind(client)["pressure"] < normal_day["pressure"] - 5
+    assert _reading(client)["pressure_hpa"] < normal_day["pressure_hpa"] - 5
     client.post("/api/scenario/step")
-    assert _readings_by_kind(client)["rain_rate"] > 5
+    assert _reading(client)["rain_mmh"] > 5
     client.post("/api/scenario/step")
-    assert _readings_by_kind(client)["water_level"] > normal_day["water_level"] + 50
+    assert _reading(client)["water_m"] > normal_day["water_m"] + 0.5
 
 
 def test_stepping_past_water_rising_stays_there() -> None:
@@ -53,4 +50,4 @@ def test_reset_returns_the_scenario_to_normal_day() -> None:
     client.post("/api/scenario/step")
     client.post("/api/scenario/step")
     assert client.post("/api/scenario/reset").json() == {"step": "normal_day"}
-    assert _readings_by_kind(client)["rain_rate"] < 1
+    assert _reading(client)["rain_mmh"] < 1
