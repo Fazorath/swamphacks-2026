@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
+from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
 
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class NodeIdentity(BaseModel):
+    id: str
     name: str
     role: Role
 
@@ -33,9 +35,7 @@ class ScenarioState(BaseModel):
     step: str
 
 
-def create_app(settings: Settings, mesh: Mesh | None = None) -> FastAPI:
-    # Until the Reticulum Mesh lands, a Node started on its own hears only itself.
-    mesh = mesh or InMemoryNetwork().join(settings.name)
+def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
     scenario = Scenario()
     store = ReadingStore()
     position = fuzz_position(settings.latitude, settings.longitude)
@@ -74,7 +74,7 @@ def create_app(settings: Settings, mesh: Mesh | None = None) -> FastAPI:
 
     @app.get("/api/node")
     def node_identity() -> NodeIdentity:
-        return NodeIdentity(name=settings.name, role=settings.role)
+        return NodeIdentity(id=mesh.identity, name=settings.name, role=settings.role)
 
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:
@@ -113,6 +113,15 @@ def create_app(settings: Settings, mesh: Mesh | None = None) -> FastAPI:
     return app
 
 
+def build_mesh(settings: Settings) -> Mesh:
+    if settings.mesh == "memory":
+        return InMemoryNetwork().join(settings.name)
+    return ReticulumMesh(settings.data_dir, settings.mesh_interface, settings.loopback_slot)
+
+
 def run() -> None:
+    logging.basicConfig(level=logging.INFO)
     settings = Settings()
-    uvicorn.run(create_app(settings), host="0.0.0.0", port=settings.port)
+    mesh = build_mesh(settings)
+    logger.info("Node %s (%s) is up as %s", mesh.identity, settings.name, settings.role)
+    uvicorn.run(create_app(settings, mesh), host="0.0.0.0", port=settings.port)

@@ -89,7 +89,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
 
 ### Shape of the system
 
-- **One Node program, two roles.** Every Node runs the same Python (FastAPI) service, managed with uv. Configuration says whether it is a Sensor Node or the Hub. The Hub is also a Node (ADR 0002); it adds the registry, Community Warning issuing, the official feeds and the Cache Pack download. A Relay Node is a Node with no Scenario attached; it is not built separately.
+- **One Node program, two roles.** Every Node runs the same Python (FastAPI) service, managed with uv. Configuration says whether it is a Sensor Node or the Hub. The Hub is also a Node (ADR 0002); it adds the registry, Community Warning issuing, the official feeds and the Cache Pack download.
 - **One dashboard, served by every Node.** A React + Vite + TypeScript + Leaflet app, managed with pnpm, built once and served as static files by every Node. Viewers load it from whichever Node they connect to. On the Hub the same app also shows the Node registry and the Community Warning log.
 - **Network layout.** The Pi runs its own Wi-Fi hotspot with no internet; every laptop and phone joins it. The Hub laptop gets internet only through a USB-tethered phone, and "internet off" on stage means unplugging that cable. The Pi is never the Node that gets shut down, because it is the network.
 - **Mesh: Reticulum from ticket one** (ADR 0001), using AutoInterface over the hotspot Wi-Fi to discover peers. Every Node has a Reticulum identity, which provides Node registration and Community Warning signatures.

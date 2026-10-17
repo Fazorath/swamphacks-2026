@@ -2,7 +2,12 @@
 name = "storm-shield-node"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["fastapi", "uvicorn", "pydantic-settings"]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic-settings",
+    "rns>=1.5.7",
+]
 
 [dependency-groups]
 dev = ["pytest", "httpx", "ruff", "mypy"]
@@ -22,3 +27,7 @@ line-length = 100
 
 [tool.mypy]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["RNS", "RNS.*"]
+ignore_missing_imports = true

@@ -1,17 +1,22 @@
 from fastapi.testclient import TestClient
 
 from storm_shield.main import create_app
+from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
 
 
-def test_sensor_node_reports_its_name_and_role() -> None:
-    client = TestClient(create_app(Settings(name="porch", role="sensor")))
-    assert client.get("/api/node").json() == {"name": "porch", "role": "sensor"}
+def _client(settings: Settings) -> TestClient:
+    return TestClient(create_app(settings, InMemoryNetwork().join(settings.name)))
+
+
+def test_sensor_node_reports_its_id_name_and_role() -> None:
+    client = _client(Settings(name="porch", role="sensor"))
+    assert client.get("/api/node").json() == {"id": "porch", "name": "porch", "role": "sensor"}
 
 
 def test_hub_reports_the_hub_role() -> None:
-    client = TestClient(create_app(Settings(name="hub", role="hub")))
-    assert client.get("/api/node").json() == {"name": "hub", "role": "hub"}
+    client = _client(Settings(name="hub", role="hub"))
+    assert client.get("/api/node").json() == {"id": "hub", "name": "hub", "role": "hub"}
 
 
 def _readings_by_kind(client: TestClient) -> dict[str, float]:
@@ -19,7 +24,7 @@ def _readings_by_kind(client: TestClient) -> dict[str, float]:
 
 
 def test_readings_are_timestamped_and_labeled_simulated() -> None:
-    client = TestClient(create_app(Settings()))
+    client = _client(Settings())
     readings = client.get("/api/readings").json()
     assert {reading["kind"] for reading in readings} == {
         "pressure",
@@ -31,7 +36,7 @@ def test_readings_are_timestamped_and_labeled_simulated() -> None:
 
 
 def test_stepping_the_scenario_changes_the_readings() -> None:
-    client = TestClient(create_app(Settings()))
+    client = _client(Settings())
     normal_day = _readings_by_kind(client)
     assert client.post("/api/scenario/step").json() == {"step": "pressure_drop"}
     assert _readings_by_kind(client)["pressure"] < normal_day["pressure"] - 5
@@ -42,14 +47,14 @@ def test_stepping_the_scenario_changes_the_readings() -> None:
 
 
 def test_stepping_past_water_rising_stays_there() -> None:
-    client = TestClient(create_app(Settings()))
+    client = _client(Settings())
     for _ in range(6):
         client.post("/api/scenario/step")
     assert client.get("/api/scenario").json() == {"step": "water_rising"}
 
 
 def test_reset_returns_the_scenario_to_normal_day() -> None:
-    client = TestClient(create_app(Settings()))
+    client = _client(Settings())
     client.post("/api/scenario/step")
     client.post("/api/scenario/step")
     assert client.post("/api/scenario/reset").json() == {"step": "normal_day"}
