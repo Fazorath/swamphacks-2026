@@ -17,7 +17,7 @@
 | [0011-online-status-and-camera-tiles](0011-online-status-and-camera-tiles.md) | done | leonardorofaDV |
 | [0012-node-registry-and-unverified-nodes](0012-node-registry-and-unverified-nodes.md) | ready-for-agent | unclaimed |
 | [0013-community-warnings](0013-community-warnings.md) | ready-for-agent | unclaimed |
-| [0014-official-alerts-helene-replay](0014-official-alerts-helene-replay.md) | ready-for-agent | unclaimed |
+| [0014-official-alerts-helene-replay](0014-official-alerts-helene-replay.md) | in-progress | Fazorath |
 | [0015-shelter-status-updates](0015-shelter-status-updates.md) | done | Fazorath |
 | [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | ready-for-agent | unclaimed |
 | [0017-live-nws-and-nhc-feeds](0017-live-nws-and-nhc-feeds.md) | ready-for-agent | unclaimed |

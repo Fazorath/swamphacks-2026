@@ -4,9 +4,9 @@
 
 **Blocked by:** 0003, 0009, and the Official Alert format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
