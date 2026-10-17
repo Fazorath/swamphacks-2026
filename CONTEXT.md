@@ -82,6 +82,10 @@ _Avoid_: replay time, sim time
 A Node's or home's distance along the river from the Lhende–Kyirong confluence at the border, positive downstream; set in each Node's config and measured on the river line in the Cache Pack.
 _Avoid_: chainage, mile marker, distance
 
+**Wave ETA**:
+How long the Surge in a Community Warning takes to reach a Viewer's home, counted down on the Event clock. Worked out on the Viewer from the home snapped to the river line (never on the Hub, and the home never leaves the device); with several warnings it follows the earliest arrival; a home upstream of the origin, or more than 2 km from the river line, has none.
+_Avoid_: countdown, arrival time, ETA (alone)
+
 **Official Alert**:
 A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
 _Avoid_: warning, notification
