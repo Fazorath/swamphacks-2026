@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 
 const POLL_EVERY_MS = 5000;
 
-export function useOpenShelterIds(): string[] {
+// The setter lets the Hub Panel show a change at once instead of waiting for the next poll.
+export function useOpenShelterIds(): [string[], (openIds: string[]) => void] {
   const [openIds, setOpenIds] = useState<string[]>([]);
   useEffect(() => {
     const poll = () =>
@@ -24,5 +25,5 @@ export function useOpenShelterIds(): string[] {
     const timer = setInterval(poll, POLL_EVERY_MS);
     return () => clearInterval(timer);
   }, []);
-  return openIds;
+  return [openIds, setOpenIds];
 }

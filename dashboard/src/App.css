@@ -481,3 +481,27 @@ section p.storm-signal {
 .node-dot.high {
   fill: var(--high);
 }
+
+.shelter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shelter-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shelter-status.open {
+  color: var(--low);
+}
+
+.shelter-status.closed {
+  color: var(--high);
+}

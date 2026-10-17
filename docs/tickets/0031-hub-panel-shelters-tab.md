@@ -10,10 +10,10 @@
 
 **Spec:** `docs/specs/shelter-status.md`
 
-- [ ] The "Hub" button appears only when the Node's role is Hub; it opens a slide-over styled like the Household panel
-- [ ] The Shelters tab lists every Shelter from the Cache Pack with its name and current status, and an open/closed control that calls `POST /api/shelters/open` and shows the result
-- [ ] Only the Shelters tab is built; no placeholder tabs for the registry or warning log (0012 and 0013)
-- [ ] Closed Shelters show as closed in the dashboard's Shelter list
-- [ ] Vitest flow tests: the button is absent on a Sensor Node; toggling calls the endpoint with the right body; a closed nearest Shelter changes the plan on the next poll
+- [x] The "Hub" button appears only when the Node's role is Hub; it opens a slide-over styled like the Household panel
+- [x] The Shelters tab lists every Shelter from the Cache Pack with its name and current status, and an open/closed control that calls `POST /api/shelters/open` and shows the result
+- [x] Only the Shelters tab is built; no placeholder tabs for the registry or warning log (0012 and 0013)
+- [x] Closed Shelters show as closed in the dashboard's Shelter list
+- [x] Vitest flow tests: the button is absent on a Sensor Node; toggling calls the endpoint with the right body; a closed nearest Shelter changes the plan on the next poll
 - [ ] Rehearsed on loopback with a phone over Tailscale: close the nearest Shelter on the Hub and watch the phone reroute (not a Pi check)
-- [ ] All **Commands** pass
+- [x] All **Commands** pass

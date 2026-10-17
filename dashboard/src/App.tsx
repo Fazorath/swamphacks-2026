@@ -5,6 +5,7 @@ import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { FloodRiskChip } from "./FloodRiskPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
+import { HubPanel } from "./HubPanel";
 import type { Home } from "./householdProfile";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
@@ -39,9 +40,10 @@ export function App() {
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const cachePack = useCachePack();
-  const openShelterIds = useOpenShelterIds();
+  const [openShelterIds, setOpenShelterIds] = useOpenShelterIds();
   const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk });
   const [panelOpen, setPanelOpen] = useState(false);
+  const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
   const openPanel = () => {
@@ -71,6 +73,11 @@ export function App() {
         <button type="button" onClick={openPanel}>
           My household
         </button>
+        {identity?.role === "hub" && (
+          <button type="button" onClick={() => setHubPanelOpen(true)}>
+            Hub
+          </button>
+        )}
       </header>
       {storageProblem && (
         <p role="alert" className="banner">
@@ -86,6 +93,14 @@ export function App() {
           onSave={save}
           onDelete={remove}
           onClose={closePanel}
+        />
+      )}
+      {hubPanelOpen && (
+        <HubPanel
+          shelters={cachePack?.shelters ?? []}
+          openShelterIds={openShelterIds}
+          onOpenShelterIdsChanged={setOpenShelterIds}
+          onClose={() => setHubPanelOpen(false)}
         />
       )}
       <div className="areas">
