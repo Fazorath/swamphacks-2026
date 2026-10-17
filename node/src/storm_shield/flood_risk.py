@@ -81,14 +81,18 @@ class _NodeView:
 
 def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
     """Flood Risk for everything this Node can see, from each counted Node's recent readings."""
-    views = {node: _NodeView.of(readings) for node, readings in recent.items()}
+    views = {
+        node: _NodeView.of(readings) for node, readings in recent.items() if _counts(node, readings)
+    }
     node_levels = {node: view.level for node, view in views.items()}
 
-    storm = [view for view in views.values() if view.pressure_hpa < STORM_PRESSURE_HPA]
-    storm_on = bool(storm) and len(storm) * 2 >= len(views)
+    low_pressure = [view for view in views.values() if view.pressure_hpa < STORM_PRESSURE_HPA]
+    storm_on = bool(low_pressure) and len(low_pressure) * 2 >= len(views)
+    storm = low_pressure if storm_on else []
     soil_rising = [view for view in views.values() if view.soil_rising]
     # One odd sensor cannot make it rain, but a lone Node is believed on its own.
-    raining = len(soil_rising) >= min(2, len(views)) > 0
+    needed = min(2, len(views))
+    raining = bool(views) and len(soil_rising) >= needed
 
     reasons = [
         reason
@@ -106,7 +110,7 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
                 max,
                 [v.rain_mmh for v in views.values() if v.rain_mmh >= RAIN_ELEVATED_MMH],
             ),
-            _reason("pressure_falling", min, [v.pressure_hpa for v in storm] if storm_on else []),
+            _reason("pressure_falling", min, [v.pressure_hpa for v in storm]),
             _reason("raining", max, [v.soil_gain_points for v in soil_rising] if raining else []),
         ]
         if reason
@@ -125,11 +129,17 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
         reasons=reasons,
         storm_signal=StormSignal(
             on=storm_on,
-            nodes=len(storm) if storm_on else 0,
-            pressure_hpa=min((v.pressure_hpa for v in storm), default=None) if storm_on else None,
+            nodes=len(storm),
+            pressure_hpa=min((v.pressure_hpa for v in storm), default=None),
         ),
         nodes=node_levels,
     )
+
+
+def _counts(node: str, readings: list[CommunityReading]) -> bool:
+    # The one place that decides whether a Node's readings count. Only registered Nodes (0012)
+    # and Nodes not silent for 60 s (0021) will count, and they will change this check alone.
+    return True
 
 
 def _reason(

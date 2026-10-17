@@ -37,12 +37,11 @@ class ReadingStore:
         nothing yet drops silent Nodes (ticket 0021).
         """
         since = now - self._history_window
-        with self._lock:
-            histories = sorted(self._history.items())
         recent: dict[str, list[CommunityReading]] = {}
-        for sender, history in histories:
-            in_window = [reading for reading, received_at in history if received_at >= since]
-            recent[sender] = in_window or [history[-1][0]]
+        with self._lock:
+            for sender, history in self._history.items():
+                in_window = [reading for reading, received_at in history if received_at >= since]
+                recent[sender] = in_window or [history[-1][0]]
         return recent
 
     def latest(self, now: datetime) -> list[NodeReading]:
