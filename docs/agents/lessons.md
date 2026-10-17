@@ -80,10 +80,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **The Road graph builder (`pack_routes.build_road_graph`, `build_cache_pack.py --roads-pbf`) has only run on a toy graph.** The real Nepal extract and `pyrosm` were not run, so `cache-pack-v3` still has no `roads.json` and the valley demo cannot block a road until a pack is rebuilt with it.
 - **A "route is affected" check that measures distance to the blocked road's points fires at every junction** (the Route's first point is the blocked side road's end). The check uses the blocked segment's middle instead.
-- **The plan is rebuilt every second**, so `rerouteHome` and `routeIsAffected` keep their last answer and only search again when their inputs change (same objects). Tests that call them with fresh objects each time are unaffected.
+- **The plan is rebuilt every second**, so `rerouteHome` and `routeIsAffected` (via `rememberLastAnswer`) keep their last answer and only search again when their inputs change (same objects). Tests that call them with fresh objects each time are unaffected.
 - **Leaflet taps in jsdom have no usable position**, so tapping a specific road is tested on `roadNear` directly; the flow tests start from a stored Blocked Road.
 - `test_reticulum_nodes.py::...[loopback]` failed once in a full `pytest` run (101 s) and passed alone; no stray Node was listening. Rerun it alone before chasing it.
-- `ruff format` from `node/` re-wraps `scripts/*.py` at 100 columns although they were written at 88; use `ruff format --isolated --line-length 88` on them.
+- **Do not run `ruff format` on `scripts/*.py`**: they are not formatted by it, and it rewraps lines you did not touch (and hides the real diff). Write new lines at 100 columns by hand.
 
 ## Reviews
 
@@ -204,6 +204,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **macOS ships bash 3.2, where `"${arr[@]}"` on an empty array is "unbound variable" under `set -u`**; use `${arr[@]+"${arr[@]}"}` in traps that may run before anything starts.
 - "Cut the internet" has two halves: stop the pack server and take away the laptop's upstream. Nodes decide online/Mesh-only by probing gstatic themselves; there is no switch.
 
+## Map tiles from the Cache Pack (ticket 0026)
+
+- **The map picks its tile URL from the pack's deepest tile zoom (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
+- **The valley pack's tiles stop at z14**, so zooming past it asked the Node for tiles that do not exist and the map went blank (no CARTO key to fall back on). `TileLayer` now gets `maxNativeZoom` from the highest `tiles/{z}` in the manifest and stretches the z14 tiles. Found on a phone.
+
 ## Surge (ticket 0046)
 
 - **On Windows two Node tests fail on a clean `main`**: the identity-file tests assert mode `0o600`, which Windows cannot report (it shows `0o666`). The two `test_reticulum_nodes.py` loopback tests also failed until the Nodes left running from other worktrees were stopped (they held ports 4250 and 4251); they pass once those ports are free. A change that leaves exactly the two identity-file tests failing has not broken anything.
@@ -213,3 +218,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - The Scenario cannot produce a Surge (its largest water step is 35 cm), so Surge tests hand-feed readings with `hear_from`.
 - **Running a Hub and a Replay sensor on one laptop**: a sensor follows the Replay clock only with `HUB_IDENTITY` set to the Hub's id (printed at startup as `Node <id> (hub-1) is up as hub`); the id changes if `NODE_DATA_DIR` is wiped. Without it the sensor publishes the Scenario and the Hub's Flood Risk never moves. Start the Hub first, then the sensor, and make sure no Node from another worktree still holds loopback ports 4250 and 4251, or the sensor dials that one instead (`Get-NetTCPConnection -State Listen -LocalPort 4250`).
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
+
+## Replay weather in the Cache Pack (ticket 0052)
+
+- **Open-Meteo answers with its own model-cell coordinates** (asked 27.86, 85.08; got 27.873, 85.034), so `weather_replay.json` stores the grid we asked for, not the answer's `latitude`/`longitude`. A multi-point request returns a list, a single point a dict.
+- **Rain is flat before the flood on 26 Aug 2026**: mean 0.03 to 0.12 mm/h across the 08:30 to 10:30 NPT Replay window, wet only from about 10:45 NPT onward (numbers in ticket 0052). The Rain layer looks nearly empty during the Replay; do not "fix" it by scaling the colours.
+- Real build helper run: 35 points, 72 hours, 54 KB of JSON, one request. The full `build_cache_pack.py` was not rerun (needs `CARTO_API_KEY`), so no `cache-pack-v4` with weather exists yet; a Node whose pack lacks weather answers 404 on `/api/weather/replay` and still works.
+- `pack_weather.py` sits in `scripts/` beside `pack_routes.py`, so the Node tests import it through the same `../scripts` path.

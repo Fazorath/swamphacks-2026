@@ -29,7 +29,7 @@ The build script adds `roads.json` to the pack for the demo area. Ticket 0051 (v
 11. As a resident, I want a clear message when my blocks cut me off from every Shelter, so that I know to follow official sources rather than a line that does not exist.
 12. As a resident, I want rerouting to work with no internet, so that it works in the storm.
 13. As a resident, I want rerouting to start from my actual home, so that the line begins at my door.
-14. As a resident, I want no Route file request when the plan reroutes, so that my home is revealed to nobody.
+14. As a resident, I want rerouting to reveal nothing beyond what ADR 0003 already allows (the Route file of my Grid point, asked for to see whether the Route is affected), so that my home and my Blocked Roads reach nobody.
 15. As the pack builder, I want the build to write the Road graph into the pack with checksums, so that Nodes verify it like any other file.
 16. As the pack builder, I want the graph to stay under about 2 MB, so that phones download it quickly.
 17. As a developer, I want the search to be a plain function on a small graph, so that tests need no map or network.
@@ -40,13 +40,14 @@ The build script adds `roads.json` to the pack for the demo area. Ticket 0051 (v
 - **Rerouting module (deep, small interface).** `dashboard/src/rerouting.ts`: `rerouteHome({ graph, home, shelters, blocked, floodProne })` returns the open Shelters ranked by road length with their lines, or null when none is reachable. It hides graph indexing, nearest-node and nearest-edge lookup, edge removal for Blocked Roads, the Flood-Prone penalty and one Dijkstra from home to every Shelter. Edges whose midpoint lies inside a Flood-Prone polygon cost 10 times their length. Blocked Roads are removed outright.
 - **Trigger.** The plan keeps the precomputed Route when it crosses neither a Blocked Road nor a Flood-Prone Area. Otherwise it calls `rerouteHome`, and the result replaces the Route and the Shelter ranking. A segment counts as on the Route when its middle lies within 15 m of it, so a side road that only meets the Route at a junction does not trigger a reroute. When the nearest Shelter has no Route at all and the resident has marked a road, the plan also reroutes, so the valley (which has no precomputed Routes) gets a line once a road is blocked. If there is no Road graph, nothing changes from today.
 - **Blocked Road storage.** An array of edge identities (the two end-node coordinates) in the browser's local storage, next to the Household Profile, by the same pattern. It is never sent to a Node; the "no request carries the profile" test also asserts no request carries a Blocked Road.
+- **A Blocked Road is a whole graph segment**, junction to junction, because bends are folded into it; two parallel segments between the same junctions share one identity.
 - **Marking.** A "Block a road" mode on the map, like the home-pick mode: a tap blocks the nearest edge within about 50 m; a tap on a Blocked Road unblocks it. Blocked Roads draw as a heavy red dashed line.
 - **Plan text.** "Rerouted around N blocked road(s)." and, when the line still crosses a Flood-Prone Area, "This route still crosses a Flood-Prone Area." When no Shelter is reachable: "Roads you marked as blocked cut off every Shelter. Follow official sources." The plan then falls back to the straight-line ranking with no line, as today for a Shelter without a Route.
 - **Not built.** Live traffic, one-way rules, turn costs, sharing Blocked Roads over the Mesh, a different travel mode.
 
 ## Testing Decisions
 
-- **Seam B (Vitest, dashboard):** `rerouting.test.ts` on a small hand-made graph: a Blocked Road on the precomputed path gives a Route that avoids it; a Flood-Prone Area is avoided when another way exists and still crossed when none does; a different Shelter wins when blocks make it quicker; blocks that cut off everything return null. A flow test: tap a Blocked Road, the line and text change, a reload keeps it, no request carries it, and no Route file is requested while rerouting.
+- **Seam B (Vitest, dashboard):** `rerouting.test.ts` on a small hand-made graph: a Blocked Road on the precomputed path gives a Route that avoids it; a Flood-Prone Area is avoided when another way exists and still crossed when none does; a different Shelter wins when blocks make it quicker; blocks that cut off everything return null. A flow test: tap a Blocked Road, the line and text change, a reload keeps it, no request carries it, and no request carries a Blocked Road or the home.
 - **Python (pytest):** `build_road_graph` on a tiny `Roads`: service roads dropped, edge lengths right, the file is listed in the manifest and passes the Node's checksum check. The real Nepal extract is not run in tests.
 - Existing seams only: the dashboard flow tests and `test_pack_routes.py`.
 

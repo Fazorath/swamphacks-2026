@@ -18,6 +18,8 @@ export type CachePackContents = {
   shelters: Shelter[];
   floodProne: FloodProneAreas;
   routeGrid: RouteGrid | null;
+  // The deepest zoom the pack holds tiles for; null when it holds none.
+  tileMaxZoom: number | null;
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.
@@ -145,7 +147,8 @@ function reroutedPlan(
     blocked,
     floodProne: pack.floodProne,
   });
-  if (reached === null) return null;
+  // Without Blocked Roads, "nothing reachable" is the graph's doing, so the warning would be wrong.
+  if (reached === null || (reached.length === 0 && blocked.length === 0)) return null;
   if (reached.length === 0) {
     return {
       shelter: nearest.shelter,

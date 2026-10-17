@@ -10,9 +10,7 @@ from typing import Any
 
 Point = tuple[float, float]  # (lat, lon)
 BBox = tuple[float, float, float, float]  # (south, west, north, east)
-Routes = dict[
-    str, dict[str, list[list[float]]]
-]  # file path -> Shelter id -> [[lat, lon], ...]
+Routes = dict[str, dict[str, list[list[float]]]]  # file path -> Shelter id -> [[lat, lon], ...]
 
 COORDINATE_DECIMALS = 5
 METERS_PER_DEGREE_LAT = 111_320
@@ -39,8 +37,7 @@ class RouteGrid:
             south=south,
             west=west,
             lat_step=spacing_m / METERS_PER_DEGREE_LAT,
-            lon_step=spacing_m
-            / (METERS_PER_DEGREE_LAT * math.cos(math.radians(middle_lat))),
+            lon_step=spacing_m / (METERS_PER_DEGREE_LAT * math.cos(math.radians(middle_lat))),
         )
 
     def cell_of(self, point: Point) -> tuple[int, int]:
@@ -181,9 +178,7 @@ def build_routes(
     for shelter_id, shelter_pos in shelters.items():
         shelter_node = roads.nearest_node(shelter_pos, MAX_SHELTER_TO_ROAD_M)
         if shelter_node is None:
-            raise ValueError(
-                f"Shelter {shelter_id} has no road within {MAX_SHELTER_TO_ROAD_M} m"
-            )
+            raise ValueError(f"Shelter {shelter_id} has no road within {MAX_SHELTER_TO_ROAD_M} m")
         next_hop = roads.next_hops_toward(shelter_node)
         for (gx, gy), start in grid_points.items():
             if start != shelter_node and start not in next_hop:
@@ -229,9 +224,7 @@ def build_road_graph(roads: Roads, keep_near: Iterable[Point]) -> dict[str, list
         if node not in index_of:
             index_of[node] = len(nodes)
             lat, lon = roads.coords[node]
-            nodes.append(
-                [round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)]
-            )
+            nodes.append([round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)])
         return index_of[node]
 
     edges: list[list[Any]] = []

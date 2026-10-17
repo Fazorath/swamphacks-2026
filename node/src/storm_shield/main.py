@@ -395,6 +395,15 @@ def create_app(
             raise HTTPException(status_code=404, detail="not in the Cache Pack")
         return FileResponse(file)
 
+    @app.get("/api/weather/replay")
+    def weather_replay() -> FileResponse:
+        file = cache_pack.file("weather_replay.json")
+        if file is None:
+            raise HTTPException(
+                status_code=404, detail="no recorded weather in this Node's Cache Pack"
+            )
+        return FileResponse(file, media_type="application/json")
+
     @app.get("/api/shelters")
     def open_shelters() -> OpenShelters:
         # Nothing counts as open until the Hub says so; an id this Node's pack lacks is ignored.

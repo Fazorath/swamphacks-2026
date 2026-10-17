@@ -20,6 +20,14 @@ export type ReroutedShelter = {
   crossesFloodProneArea: boolean;
 };
 
+type RerouteInput = {
+  graph: RoadGraph;
+  home: Home;
+  shelters: Shelter[];
+  blocked: BlockedRoad[];
+  floodProne: FloodProneAreas;
+};
+
 const METERS_PER_DEGREE_LAT = 111_320;
 const FLOOD_PRONE_COST_FACTOR = 10;
 const MAX_HOME_TO_ROAD_M = 500;
@@ -132,25 +140,29 @@ function sampled(route: LatLon[]): LatLon[] {
   return points;
 }
 
-// Whether a Route should be replaced: it runs along a Blocked Road or through a Flood-Prone Area.
-let lastAffected: { key: unknown[]; result: boolean } | null = null;
-
-export function routeIsAffected(
-  route: LatLon[],
-  graph: RoadGraph,
-  blocked: BlockedRoad[],
-  floodProne: FloodProneAreas,
-): boolean {
-  const key = [route, graph, blocked, floodProne];
-  if (lastAffected?.key.every((part, index) => Object.is(part, key[index]))) {
-    return lastAffected.result;
-  }
-  const result = routeIsAffectedUncached(route, graph, blocked, floodProne);
-  lastAffected = { key, result };
-  return result;
+// The plan is rebuilt every second, but these searches only have to run again when their inputs
+// are different objects or values, so each keeps the answer to its last call.
+function rememberLastAnswer<Args extends unknown[], Answer>(
+  compute: (...args: Args) => Answer,
+  inputsOf: (...args: Args) => unknown[],
+): (...args: Args) => Answer {
+  let last: { inputs: unknown[]; answer: Answer } | null = null;
+  return (...args) => {
+    const inputs = inputsOf(...args);
+    if (last?.inputs.every((input, index) => Object.is(input, inputs[index]))) return last.answer;
+    const answer = compute(...args);
+    last = { inputs, answer };
+    return answer;
+  };
 }
 
-function routeIsAffectedUncached(
+// Whether a Route should be replaced: it runs along a Blocked Road or through a Flood-Prone Area.
+export const routeIsAffected = rememberLastAnswer(
+  routeIsAffectedBy,
+  (route, graph, blocked, floodProne) => [route, graph, blocked, floodProne],
+);
+
+function routeIsAffectedBy(
   route: LatLon[],
   graph: RoadGraph,
   blocked: BlockedRoad[],
@@ -257,25 +269,16 @@ function cheapestReach(arcs: Arc[][], start: number): Map<number, Reach> {
   return reach;
 }
 
-// The plan is rebuilt every second, but the search only has to run again when its inputs change.
-let lastReroute: { key: unknown[]; result: ReroutedShelter[] | null } | null = null;
-
 // The open Shelters a resident can still reach from home, quickest first. Blocked Roads are gone
 // from the map; a road inside a Flood-Prone Area is only costly, so a Shelter ringed by water stays
 // reachable. Null when home is too far from any road to start from.
-function rerouteHomeUncached({
+function reroute({
   graph,
   home,
   shelters,
   blocked,
   floodProne,
-}: {
-  graph: RoadGraph;
-  home: Home;
-  shelters: Shelter[];
-  blocked: BlockedRoad[];
-  floodProne: FloodProneAreas;
-}): ReroutedShelter[] | null {
+}: RerouteInput): ReroutedShelter[] | null {
   const homePoint: LatLon = [home.lat, home.lon];
   const start = nearestNode(graph, homePoint, MAX_HOME_TO_ROAD_M);
   if (start === null) return null;
@@ -310,15 +313,14 @@ function rerouteHomeUncached({
     }));
 }
 
-export function rerouteHome(
-  input: Parameters<typeof rerouteHomeUncached>[0],
-): ReroutedShelter[] | null {
-  const { graph, home, shelters, blocked, floodProne } = input;
-  const key = [graph, home.lat, home.lon, shelters.map(({ id }) => id).join(), blocked, floodProne];
-  if (lastReroute?.key.every((part, index) => Object.is(part, key[index]))) {
-    return lastReroute.result;
-  }
-  const result = rerouteHomeUncached(input);
-  lastReroute = { key, result };
-  return result;
-}
+export const rerouteHome = rememberLastAnswer(
+  reroute,
+  ({ graph, home, shelters, blocked, floodProne }: RerouteInput) => [
+    graph,
+    home.lat,
+    home.lon,
+    shelters.map(({ id }) => id).join(),
+    blocked,
+    floodProne,
+  ],
+);

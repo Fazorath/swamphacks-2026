@@ -8,7 +8,7 @@
 
 **Blocked by:** 0010
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
@@ -18,4 +18,4 @@
 - [x] The resident can mark a road as blocked on the map
 - [x] The Evacuation Plan reroutes around blocked roads and, where possible, Flood-Prone Areas
 - [x] Seam B tests: a blocked segment on the precomputed route produces a route that avoids it
-- [ ] All **Commands** pass
+- [x] All **Commands** pass

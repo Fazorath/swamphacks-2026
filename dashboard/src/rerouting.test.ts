@@ -88,6 +88,7 @@ function planFor({
     shelters: [SHELTER_A, SHELTER_B],
     floodProne: { features: floodProne },
     routeGrid: null,
+    tileMaxZoom: null,
   };
   return evacuationPlan({
     profile: PROFILE,
@@ -145,7 +146,12 @@ test("blocks that cut home off from every Shelter keep the straight-line plan an
 test("a pack with no Road graph keeps the precomputed Route", () => {
   const result = evacuationPlan({
     profile: PROFILE,
-    pack: { shelters: [SHELTER_A], floodProne: { features: [] }, routeGrid: null },
+    pack: {
+      shelters: [SHELTER_A],
+      floodProne: { features: [] },
+      routeGrid: null,
+      tileMaxZoom: null,
+    },
     openShelterIds: ["shelter-a"],
     floodRisk: null,
     routes: { "shelter-a": PRECOMPUTED },
@@ -158,7 +164,12 @@ test("a pack with no Road graph keeps the precomputed Route", () => {
 test("a home far from any road keeps the precomputed Route", () => {
   const result = evacuationPlan({
     profile: { ...PROFILE, home: { lat: 29.7, lon: -82.4 } },
-    pack: { shelters: [SHELTER_A], floodProne: { features: [] }, routeGrid: null },
+    pack: {
+      shelters: [SHELTER_A],
+      floodProne: { features: [] },
+      routeGrid: null,
+      tileMaxZoom: null,
+    },
     openShelterIds: ["shelter-a"],
     floodRisk: null,
     routes: { "shelter-a": PRECOMPUTED },

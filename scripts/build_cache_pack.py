@@ -13,6 +13,7 @@ from pathlib import Path
 
 import httpx
 from pack_routes import Roads, build_road_graph
+from pack_weather import fetch_weather_replay
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 # [south, west, north, east]: the Lhende Khola down to below Trishuli, about 66 x 40 km.
@@ -22,6 +23,9 @@ ZOOMS = range(10, 15)
 OSM_EXTRACT_URL = "https://download.geofabrik.de/asia/nepal-latest.osm.pbf"
 TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_DELAY_SECONDS = 0.15
+# The recorded weather around the flood (UTC days), for the Weather layers.
+WEATHER_FIRST_DAY = "2026-08-25"
+WEATHER_LAST_DAY = "2026-08-27"
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
 
 
@@ -75,9 +79,7 @@ def carto_key() -> str:
 
 
 def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
-    response = client.get(
-        TILE_URL.format(z=zoom, x=x, y=y), params={"key": carto_key()}
-    )
+    response = client.get(TILE_URL.format(z=zoom, x=x, y=y), params={"key": carto_key()})
     if response.status_code != 200:
         # Not raise_for_status: its message would print the URL, and the URL carries the key.
         sys.exit(f"CARTO answered {response.status_code} for tile {zoom}/{x}/{y}")
@@ -91,22 +93,18 @@ def load_roads(osm_extract: Path) -> Roads:
     from pyrosm import OSM  # build-only dependency: `uv run --with pyrosm`
 
     south, west, north, east = BBOX
-    nodes, edges = OSM(
-        str(osm_extract), bounding_box=[west, south, east, north]
-    ).get_network(network_type="driving", nodes=True)
+    nodes, edges = OSM(str(osm_extract), bounding_box=[west, south, east, north]).get_network(
+        network_type="driving", nodes=True
+    )
     coords = {
         int(node_id): (lat, lon)
-        for node_id, lat, lon in zip(
-            nodes["id"], nodes["lat"], nodes["lon"], strict=True
-        )
+        for node_id, lat, lon in zip(nodes["id"], nodes["lat"], nodes["lon"], strict=True)
     }
     # pyrosm cuts every way into one edge per pair of consecutive OSM nodes. The Road graph
     # ignores one-way rules, and a driveway or parking aisle is no way to a Shelter.
     segments = [
         (int(start), int(end), False)
-        for start, end, kind in zip(
-            edges["u"], edges["v"], edges["highway"], strict=True
-        )
+        for start, end, kind in zip(edges["u"], edges["v"], edges["highway"], strict=True)
         if start in coords and end in coords and kind != "service"
     ]
     return Roads(coords, segments)
@@ -115,21 +113,19 @@ def load_roads(osm_extract: Path) -> Roads:
 def build(output: Path, osm_extract: Path | None) -> None:
     files: dict[str, bytes] = {
         "shelters.json": json.dumps(load_shelters(), indent=1).encode(),
-        "flood_prone.geojson": (
-            SOURCE_DIR / "flood_corridor.source.geojson"
-        ).read_bytes(),
+        "flood_prone.geojson": (SOURCE_DIR / "flood_corridor.source.geojson").read_bytes(),
         "river.geojson": (SOURCE_DIR / "river.source.geojson").read_bytes(),
     }
     if osm_extract is not None:
         shelter_points = [tuple(shelter["pos"]) for shelter in load_shelters()]
         graph = build_road_graph(load_roads(osm_extract), shelter_points)
         files["roads.json"] = json.dumps(graph, separators=(",", ":")).encode()
-        print(
-            f"road graph: {len(graph['nodes'])} junctions, {len(graph['edges'])} segments"
-        )
+        print(f"road graph: {len(graph['nodes'])} junctions, {len(graph['edges'])} segments")
     tile_list = tiles_covering(BBOX)
-    print(f"fetching {len(tile_list)} tiles", flush=True)
+    print(f"fetching the recorded weather and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
+        weather = fetch_weather_replay(client, BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
+        files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 
