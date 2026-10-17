@@ -101,6 +101,10 @@ class MeshedNodes:
             **overrides,
         )
 
+    def data_dir(self, name: str) -> Path:
+        """Where a Node keeps its saved files."""
+        return self._directory / name / "data"
+
     def stop_hub(self) -> None:
         """Stop the Hub as a power cut would; `start_hub` with the same directory brings it back."""
         client = self._clients.pop(HUB)

@@ -250,3 +250,20 @@ def test_a_sensor_that_serves_the_dashboard_still_answers_404_on_the_hub_routes(
     client = TestClient(create_app(settings, InMemoryNetwork().join("porch", "hub")))
     assert client.get("/api/registry").status_code == 404
     assert client.post("/api/registry/accept", json={"id": "x"}).status_code == 404
+
+
+def test_a_hub_that_starts_over_without_its_file_still_beats_the_ver_nodes_hold(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.start_hub()
+    meshed_nodes["porch"].post("/api/registry/signup")
+    _accept(meshed_nodes, "porch")
+    meshed_nodes.stop_hub()
+    (meshed_nodes.data_dir("hub") / "registry.json").unlink()
+    meshed_nodes.advance(60)
+
+    meshed_nodes.start_hub()
+
+    assert _state(meshed_nodes["porch"])["registration"] != "registered"
+    assert _registry(meshed_nodes)["ver"] > 1_000_000_000

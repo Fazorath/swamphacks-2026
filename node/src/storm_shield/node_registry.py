@@ -133,7 +133,9 @@ class HubRegistry:
             # Nodes already hold the saved `ver`, and only a higher one replaces it.
             self._commit(saved.ver + 1, saved.nodes)
         else:
-            self._commit(1, [hub])
+            # Starts from the clock like a reading's `seq`, so a Hub whose file was deleted still
+            # beats the `ver` the running Nodes hold.
+            self._commit(unix_seconds(), [hub])
 
     def snapshot(self) -> NodeRegistryMessage:
         with self._lock:
