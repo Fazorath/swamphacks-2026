@@ -118,6 +118,12 @@ button:disabled {
   margin: 0;
 }
 
+/* The slide-over scrolls as a whole; a squeezed section would scroll on its own and hide the
+   Replay buttons and the internet cue at the top of it. */
+.slide-over section {
+  flex-shrink: 0;
+}
+
 .slide-over p {
   margin: 0;
 }
