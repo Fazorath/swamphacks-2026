@@ -22,11 +22,11 @@
 | [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | in-progress | amitathik7 |
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | done | leonardorofaDV |
 | [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | done | leonardorofaDV |
-| [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | ready-for-agent | unclaimed |
+| [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | in-progress | refloow-0 |
 | [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | ready-for-agent | unclaimed |
 | [0022-restarted-node-is-heard-again](0022-restarted-node-is-heard-again.md) | ready-for-agent | unclaimed |
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
-| [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | ready-for-agent | unclaimed |
+| [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | in-progress | refloow-0 |
 | [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | ready-for-agent | unclaimed |
 | [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | done | Fazorath |
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
