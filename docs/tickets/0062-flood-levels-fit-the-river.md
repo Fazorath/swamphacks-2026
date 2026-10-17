@@ -6,9 +6,9 @@ Suggested levels, to be checked against the tracks: water Elevated at 3 m and Hi
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/flash-flood-replay.md` (demo story: "08:30 calm"; Surge "High before any fixed level is reached")
 
