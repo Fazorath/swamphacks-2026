@@ -9,6 +9,7 @@ const CALM: FloodRisk = {
   reasons: [],
   storm_signal: { on: false, nodes: 0, pressure_hpa: null },
   nodes: { porch: null, garage: null },
+  surged: [],
 };
 
 const HIGH: FloodRisk = {
@@ -20,6 +21,7 @@ const HIGH: FloodRisk = {
   ],
   storm_signal: { on: true, nodes: 2, pressure_hpa: 995 },
   nodes: { porch: "high", garage: null },
+  surged: [],
 };
 
 const LOW_FROM_STORM_SIGNAL: FloodRisk = {
@@ -27,6 +29,19 @@ const LOW_FROM_STORM_SIGNAL: FloodRisk = {
   reasons: [{ code: "pressure_falling", nodes: 3, value: 1002 }],
   storm_signal: { on: true, nodes: 3, pressure_hpa: 1002 },
   nodes: { porch: null, garage: null },
+  surged: [],
+};
+
+const SURGE: FloodRisk = {
+  level: "high",
+  reasons: [
+    { code: "water_surge", nodes: 1, value: 320, seconds: 8 },
+    { code: "water_high", nodes: 1, value: 340 },
+    { code: "water_rising", nodes: 1, value: 320 },
+  ],
+  storm_signal: { on: false, nodes: 0, pressure_hpa: null },
+  nodes: { porch: "high", garage: null },
+  surged: ["porch"],
 };
 
 const GARAGE_AGE_SECONDS = 40;
@@ -131,6 +146,25 @@ test("High Flood Risk shows its level in the top bar and its reasons on the card
   expect(within(card).getByText("water level 90 cm at 1 Node")).toBeInTheDocument();
   expect(within(card).getByText("heavy rain: 30 mm/h at 2 Nodes")).toBeInTheDocument();
   expect(screen.getAllByText("Flood Risk · High")).toHaveLength(2);
+});
+
+test("a Surge says how far the water rose and how long it took, without repeating that it is rising", async () => {
+  stubFloodRisk(SURGE);
+  render(<App />);
+  const card = await screen.findByRole("region", { name: "Flood Risk" });
+  expect(within(card).getByText("water rose 3.2 m in 8 s")).toBeInTheDocument();
+  expect(within(card).getByText("water level 340 cm at 1 Node")).toBeInTheDocument();
+  expect(within(card).queryByText(/rising/)).not.toBeInTheDocument();
+});
+
+test("a Surge seen within one reading interval says the water rose at once", async () => {
+  stubFloodRisk({
+    ...SURGE,
+    reasons: [{ code: "water_surge", nodes: 1, value: 150, seconds: 0 }],
+  });
+  render(<App />);
+  const card = await screen.findByRole("region", { name: "Flood Risk" });
+  expect(within(card).getByText("water rose 1.5 m at once")).toBeInTheDocument();
 });
 
 test("the Storm Signal sits on the map and the card leaves it out when other reasons exist", async () => {

@@ -14,6 +14,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
       reasons: [],
       storm_signal: { on: false, nodes: 0, pressure_hpa: null },
       nodes: {},
+      surged: [],
     },
     nodes: [],
     official_alerts: [],

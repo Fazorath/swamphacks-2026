@@ -47,7 +47,7 @@ Sent by the Hub only, when two or more Registered Nodes are High.
 
 - `id`: Hub-issued counter. Used for deduplication and for the once-per-warning modal on each device.
 - `nodes`: Node ids, the same 12-character ids readings use; the dashboard looks up names in the registry.
-- `reasons`: codes from a small fixed list (`water_high`, `water_rising`, `rain_heavy`, `pressure_falling`). The dashboard writes the sentence.
+- `reasons`: codes from a small fixed list (`water_surge`, `water_high`, `water_rising`, `rain_heavy`, `pressure_falling`). The dashboard writes the sentence.
 - There is **no text field**. The "Community Warning · not official" label and the "check official sources for any evacuation decision" line are fixed UI and cannot be dropped or altered by a message.
 - Only the Hub identity configured on the receiving Node may send this kind.
 
