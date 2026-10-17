@@ -292,3 +292,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **`_counts` already kept an Unverified Node's Surge out of Flood Risk and warnings**; 0061 only added the missing Seam A test (`test_unverified_surge.py`). Breaking `_counts` to `return True` makes it fail.
 - **The ticket's "100 cm jump" predates 0062**: a Surge is 300 cm or more now, so the test jumps 20 to 340 cm.
+
+## Silent Nodes stop counting and drop off (ticket 0021)
+
+- **The reading store does the dropping, not Flood Risk**: `snapshot().recent` leaves out a Node silent for 60 s and `nodes` leaves out one silent for 10 min, so `_counts` and the Community Warning (which reads `surged`) needed no change. A Node's history stays in the store, so it reappears the moment it speaks. `NodeSnapshot.counts` is the 60 s flag for the dashboard.
+- `InMemoryNetwork.join` now raises on a taken name; `leave` makes that mesh's `publish` a quiet no-op. A Node that `leave`d may rejoin under its name.
+- `test_reticulum_nodes.py` errored (not failed) in a full run while another `pytest` was still going in the background; it passed alone. Run one `pytest` at a time.

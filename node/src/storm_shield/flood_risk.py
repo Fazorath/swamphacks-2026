@@ -170,8 +170,8 @@ def flood_risk(
 
 
 def _counts(node: str, registered_ids: Collection[str]) -> bool:
-    # The one place that decides whether a Node's readings count. Nodes not silent for 60 s (0021)
-    # will count too, and will change this check alone.
+    # The one place that decides whether a Node's readings count. Silent Nodes never reach it:
+    # the reading store leaves them out of `recent` (0021).
     return node in registered_ids
 
 

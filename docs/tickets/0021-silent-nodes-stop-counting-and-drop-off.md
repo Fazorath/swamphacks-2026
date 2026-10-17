@@ -21,7 +21,8 @@
 ## Decisions (2026-10-17, grilled)
 
 - No new spec: the Timing table in `docs/specs/wire-formats.md` already holds the 15 s, 60 s and 10 min values.
-- `NodeSnapshot` gains `counts` (true within 60 s of silence); Flood Risk's `_counts` reads it, so Community Warnings follow without extra code.
+- `NodeSnapshot` gains `counts` (true within 60 s of silence). Built: the reading store leaves silent Nodes out of `recent` with the same rule, so Flood Risk and Community Warnings skip them and `_counts` is unchanged.
 - Past 10 min a Node leaves the snapshot's `nodes` and `recent` but its history stays in the store, so it reappears the moment it speaks; the registry is untouched.
 - Joining a taken name raises `ValueError`; a Node that has left may rejoin. `publish` on a mesh that has left is a quiet no-op.
 - `DROPS_OFF_AFTER_SECONDS = 600` joins the other two in `timing.py`. No `CONTEXT.md` or ADR change.
+- A Registered Node silent past 10 min shows "not heard" in the Hub Panel registry (its age comes from the snapshot); the row itself stays.

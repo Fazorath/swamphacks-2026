@@ -10,6 +10,10 @@ def _state(client: TestClient) -> dict[str, Any]:
     return response.json()  # type: ignore[no-any-return]
 
 
+def _flood_risk(client: TestClient) -> dict[str, Any]:
+    return _state(client)["flood_risk"]  # type: ignore[no-any-return]
+
+
 def _entry(state: dict[str, Any], node: str) -> dict[str, Any]:
     return next(entry for entry in state["nodes"] if entry["id"] == node)
 
@@ -116,6 +120,7 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
         "simulated",
         "age_s",
         "stale",
+        "counts",
         "measurements",
         "registered",
         "name",
@@ -132,3 +137,53 @@ def test_the_endpoints_the_state_replaced_are_gone(meshed_nodes: MeshedNodes) ->
         "/api/scenario",
     ):
         assert meshed_nodes["porch"].get(path).status_code == 404, path
+
+
+def test_a_node_silent_for_a_minute_stops_counting_then_drops_off_after_ten(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
+    meshed_nodes.hear_from("creek", water_cm=700)
+    meshed_nodes.hear_from("garage")
+
+    meshed_nodes.advance(60)
+    creek = _entry(_state(meshed_nodes["porch"]), "creek")
+    assert creek["stale"] is True
+    assert creek["counts"] is True
+    assert _flood_risk(meshed_nodes["porch"])["nodes"]["creek"] == "high"
+
+    meshed_nodes.advance(1)
+    assert _entry(_state(meshed_nodes["porch"]), "creek")["counts"] is False
+    assert "creek" not in _flood_risk(meshed_nodes["porch"])["nodes"]
+    assert _flood_risk(meshed_nodes["porch"])["level"] is None
+
+    meshed_nodes.advance(539)
+    assert _entry(_state(meshed_nodes["porch"]), "creek")["counts"] is False
+    meshed_nodes.advance(1)
+    assert "creek" not in {n["id"] for n in _state(meshed_nodes["porch"])["nodes"]}
+
+
+def test_a_dropped_node_that_speaks_again_is_listed_and_counts(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("garage")
+    meshed_nodes.advance(601)
+    meshed_nodes.hear_from("garage")
+    garage = _entry(_state(meshed_nodes["porch"]), "garage")
+    assert garage["counts"] is True
+    assert garage["age_s"] == 0
+
+
+def test_a_node_that_left_goes_stale_then_stops_counting_while_the_others_keep_working(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch", "garage")
+    meshed_nodes.remove("garage")
+    meshed_nodes.advance(20)
+    meshed_nodes.hear_from("shed")
+    assert _entry(_state(meshed_nodes["porch"]), "garage")["stale"] is True
+    meshed_nodes.advance(45)
+    meshed_nodes.hear_from("shed")
+    state = _state(meshed_nodes["porch"])
+    assert _entry(state, "garage")["counts"] is False
+    assert _entry(state, "shed")["counts"] is True
