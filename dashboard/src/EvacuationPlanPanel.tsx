@@ -1,9 +1,34 @@
+import { useEffect, useState } from "react";
+
+import { agoWords } from "./agoWords";
 import type { EvacuationPlan } from "./evacuationPlan";
 import { officialTag, SOURCE_LABELS } from "./officialAlerts";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 
-export function EvacuationPlanPanel({ plan }: { plan: EvacuationPlan }) {
+// Nothing can check Shelter status while the Node is unreachable, so the plan says how old it is.
+function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const ageSeconds = Math.max(0, (now - confirmedAt) / 1000);
+  return (
+    <p className="shelter-status-age">
+      Shelter status last confirmed {agoWords(ageSeconds)}; it may have changed since.
+    </p>
+  );
+}
+
+export function EvacuationPlanPanel({
+  plan,
+  shelterStatusConfirmedAt,
+}: {
+  plan: EvacuationPlan;
+  // Set only while the Node is unreachable: when its last answer arrived.
+  shelterStatusConfirmedAt: number | null;
+}) {
   return (
     <section aria-label="Evacuation Plan">
       <h2>Evacuation Plan</h2>
@@ -30,6 +55,9 @@ export function EvacuationPlanPanel({ plan }: { plan: EvacuationPlan }) {
       {plan.lines.map((line) => (
         <p key={line}>{line}</p>
       ))}
+      {shelterStatusConfirmedAt !== null && (
+        <ShelterStatusAge confirmedAt={shelterStatusConfirmedAt} />
+      )}
       <p className="official-line">{plan.officialLine}</p>
     </section>
   );

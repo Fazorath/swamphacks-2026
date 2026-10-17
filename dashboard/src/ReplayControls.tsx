@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { EventClock } from "./useEventClock";
+import type { EventClockFeed } from "./useEventClock";
 import { usePolledJson } from "./usePolledJson";
 
 type Phase = { id: string; label: string; event_t: number };
@@ -20,9 +20,20 @@ async function sendToReplay(action: string, body?: object): Promise<void> {
 
 // The Hub Panel's Replay section. The Event clock it shows arrives by the header's poll, so a
 // press shows up within a second.
-export function ReplayControls({ clock }: { clock: EventClock | null }) {
+export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
+  const { clock, heard } = eventClock;
   const replayPhases = usePolledJson<ReplayPhases>("/api/replay/phases");
   const [problem, setProblem] = useState<string | null>(null);
+
+  // Until the clock is heard, a Start button would suggest no replay is running when one may be.
+  if (!heard) {
+    return (
+      <section aria-label="Replay controls">
+        <h3>Replay</h3>
+        <p role="status">Waiting for the Hub to answer</p>
+      </section>
+    );
+  }
 
   const send = async (action: string, body?: object) => {
     setProblem(null);

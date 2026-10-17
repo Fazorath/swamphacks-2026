@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 export const POLL_EVERY_MS = 3000;
 
 // Keeps the last answer when a poll fails. Camera tiles, the Event clock and Replay controls use
-// it; what this Node knows about the Mesh comes from useNodeState.
-export function usePolledJson<T>(path: string, everyMs = POLL_EVERY_MS): T | null {
+// it; what this Node knows about the Mesh comes from useNodeState. A null path stops polling and
+// drops the last answer, so it is never shown again as if it were current.
+export function usePolledJson<T>(path: string | null, everyMs = POLL_EVERY_MS): T | null {
   const [latest, setLatest] = useState<T | null>(null);
   useEffect(() => {
+    if (path === null) return;
     let stopped = false;
     const poll = () =>
       fetch(path)
@@ -23,6 +25,7 @@ export function usePolledJson<T>(path: string, everyMs = POLL_EVERY_MS): T | nul
     return () => {
       stopped = true;
       clearInterval(timer);
+      setLatest(null);
     };
   }, [path, everyMs]);
   return latest;

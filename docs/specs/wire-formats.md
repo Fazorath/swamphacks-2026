@@ -132,7 +132,7 @@ Every Node computes Flood Risk from the Community Readings it holds plus the reg
 
 ## Node HTTP API (dashboard seam)
 
-The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering. This replaces the server-sent events in the spec's Node HTTP API paragraph.
+The dashboard polls **one snapshot** every second and shows "Node unreachable" after 5 s with no good answer. This replaces the server-sent events in the spec's Node HTTP API paragraph.
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 

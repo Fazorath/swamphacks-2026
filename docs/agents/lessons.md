@@ -175,6 +175,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `MeshedNodes.send_bytes(body)` puts raw bytes on the in-memory Mesh; `join_with_failing_listener(name)` adds a Node whose listener raises.
 - Not proven: a bad packet sent to a live Reticulum Node (only `verify` is tested with signed bad bodies).
 
+## Node unreachable (ticket 0042)
+
+- **The 5 s rule is its own timer, restarted by each good answer**, not a check when a poll fails: checked on failure, a Node that hangs from page open was caught only at 6 s (requests end at 2, 4, 6 s). Found in review.
+- **A null Event clock means "no replay" only once `/api/replay` has answered**; `useEventClock` returns `heard`, and the Replay controls wait until it is true, or Start flashes on first load and after every reconnect.
+- **To test the 2 s request timeout on fake timers**, spy on `AbortSignal.timeout` and return a controller aborted by a (faked) `setTimeout(ms)`; the real one runs on a clock fake timers cannot move (`nodeUnreachableFlow.test.tsx`).
+- `usePolledJson(null)` stops a poll and drops its last answer; cameras and the Event clock use it while unreachable. `useNodeState` returns `state` (null while unreachable) and `lastAnswer` (kept, for name, role and Official Alerts).
+- **`evacuationFlow.test.tsx` "the Route request names a Grid point" failed about 1 full parallel run in 3**: it read the requests as soon as "Nearest open Shelter" showed, which the straight-line plan does before the Route file is asked for. It now waits for the request with `waitFor`. This may be the 0031 flake whose cause was not found.
+
 ## One-laptop demo script (ticket 0049)
 
 - **`scripts/run-demo.sh` rehearsed on loopback** (Hub 8600, S0 to S3 8601 to 8604, `DEMO_SLOT_BASE=20` because a teammate's Node held slot 0 and port 8000): all four Sensors took `HUB_IDENTITY`, fetched the pack from the Hub, followed Start, and the Hub dashboard answered on the hotspot and Tailscale addresses. Software path only, not a Pi or Wi-Fi check.

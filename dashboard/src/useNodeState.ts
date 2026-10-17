@@ -4,23 +4,40 @@ import type { NodeState } from "./nodeState";
 
 export const STATE_POLL_MS = 1000;
 const REQUEST_TIMEOUT_MS = 2000;
+// Long enough for a Wi-Fi blip to reconnect before the resident is warned.
+const UNREACHABLE_AFTER_MS = 5000;
+
+type Connection = "connecting" | "connected" | "unreachable";
 
 type NodeStateFeed = {
-  // Null until the first answer; a failed poll keeps the last answer.
+  // Null before the first answer and while unreachable, so nothing live is ever shown frozen.
   state: NodeState | null;
+  // Kept while unreachable, for what an old answer can still say truthfully: the Node's name and
+  // role, and Official Alerts, which carry their own issue time.
+  lastAnswer: { state: NodeState; at: number } | null;
+  connection: Connection;
   // Polls now, e.g. after a Scenario button, so the screen shows the change without waiting.
   refresh: () => void;
 };
 
 // Chained timeouts, not an interval: the next poll starts only after the last one has ended.
 export function useNodeState(): NodeStateFeed {
-  const [state, setState] = useState<NodeState | null>(null);
+  const [lastAnswer, setLastAnswer] = useState<NodeStateFeed["lastAnswer"]>(null);
+  const [connection, setConnection] = useState<Connection>("connecting");
   const pollNow = useRef<() => void>(() => {});
   useEffect(() => {
     let stopped = false;
     let polling = false;
     let askedWhilePolling = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // Its own timer rather than a check when a poll fails, so a Node that hangs from the start is
+    // caught at 5 s like any other, not at the end of whichever 2 s request is in flight.
+    let unreachableTimer: ReturnType<typeof setTimeout> | undefined;
+    const startUnreachableWait = () => {
+      clearTimeout(unreachableTimer);
+      unreachableTimer = setTimeout(() => setConnection("unreachable"), UNREACHABLE_AFTER_MS);
+    };
+    startUnreachableWait();
 
     const poll = async () => {
       clearTimeout(timer);
@@ -32,7 +49,11 @@ export function useNodeState(): NodeStateFeed {
         });
         if (!response.ok) throw new Error(`Node API returned ${response.status}`);
         const answer: NodeState = await response.json();
-        if (!stopped) setState(answer);
+        if (!stopped) {
+          startUnreachableWait();
+          setLastAnswer({ state: answer, at: Date.now() });
+          setConnection("connected");
+        }
       } catch (error) {
         console.error(error);
       }
@@ -56,8 +77,10 @@ export function useNodeState(): NodeStateFeed {
     return () => {
       stopped = true;
       clearTimeout(timer);
+      clearTimeout(unreachableTimer);
     };
   }, []);
   const refresh = useCallback(() => pollNow.current(), []);
-  return { state, refresh };
+  const state = connection === "connected" ? (lastAnswer?.state ?? null) : null;
+  return { state, lastAnswer, connection, refresh };
 }
