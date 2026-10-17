@@ -30,10 +30,13 @@ const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
 };
 
 export function App() {
-  const { state, refresh } = useNodeState();
+  const { state, lastAnswer, connection, refresh } = useNodeState();
+  const unreachable = connection === "unreachable";
+  // Still true of the Node while it is unreachable, unlike its readings.
+  const identity = lastAnswer?.state ?? null;
   const floodRisk = state?.flood_risk ?? null;
-  const eventClock = useEventClock();
-  const cameras = useCameras();
+  const eventClock = useEventClock(!unreachable);
+  const cameras = useCameras(!unreachable);
   const nodes = nodesOnMap(state);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
@@ -41,7 +44,9 @@ export function App() {
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
-  const officialAlerts = state?.official_alerts ?? [];
+  // Kept while unreachable: each carries its own issue time, and losing an evacuation order to a
+  // Wi-Fi drop is worse than showing one a few seconds old.
+  const officialAlerts = lastAnswer?.state.official_alerts ?? [];
   const plan = evacuationPlan({
     profile,
     pack: cachePack,
@@ -72,11 +77,17 @@ export function App() {
     <main>
       <header>
         <h1>Storm Shield</h1>
-        <p>{state ? `${state.name} · ${ROLE_LABELS[state.role]}` : "Connecting…"}</p>
+        <p>
+          {identity
+            ? `${identity.name} · ${ROLE_LABELS[identity.role]}`
+            : connection === "connecting"
+              ? "Connecting…"
+              : null}
+        </p>
         {state && (
           <span className={`connection-badge ${state.status}`}>{STATUS_LABELS[state.status]}</span>
         )}
-        <EventClockTag clock={eventClock} />
+        <EventClockTag clock={eventClock.clock} />
         <FloodRiskChip floodRisk={floodRisk} />
         <p className="household-status">
           {profile ? "Household profile saved" : "Fill in your household profile"}
@@ -84,12 +95,18 @@ export function App() {
         <button type="button" onClick={openPanel}>
           My household
         </button>
-        {state?.role === "hub" && (
+        {identity?.role === "hub" && (
           <button type="button" onClick={openHubPanel}>
             Hub
           </button>
         )}
       </header>
+      {unreachable && (
+        <p role="alert" className="banner">
+          Node unreachable. Live readings are hidden until it answers again; the map, Shelters and
+          your household profile are still here.
+        </p>
+      )}
       {storageProblem && (
         <p role="alert" className="banner">
           {STORAGE_PROBLEM_MESSAGES[storageProblem]}
@@ -138,7 +155,10 @@ export function App() {
           onPickHome={setDraftHome}
           onDonePicking={() => setPicking(false)}
         />
-        <EvacuationPlanPanel plan={plan} />
+        <EvacuationPlanPanel
+          plan={plan}
+          shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
+        />
         <AlertsPanel
           alerts={officialAlerts}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}

@@ -113,8 +113,16 @@ A resident's home location, housing type (site-built or mobile home/RV), and whe
 _Avoid_: user profile, account, settings
 
 **Route**:
-The driving path from a Grid point to a Shelter, precomputed into the Cache Pack. It is the shortest drive and ignores Flood-Prone Areas and live road conditions; its length ranks Shelters. A Shelter with no Route from the resident's Grid point ranks after every Shelter that has one, by straight-line distance and labelled as such, with no line drawn.
+The driving path from a Grid point to a Shelter, precomputed into the Cache Pack. It is the shortest drive and ignores Flood-Prone Areas and live road conditions; its length ranks Shelters. When it crosses a Blocked Road or a Flood-Prone Area, the phone replaces it with one computed on the device. A Shelter with no Route from the resident's Grid point ranks after every Shelter that has one, by straight-line distance and labelled as such, with no line drawn.
 _Avoid_: directions, navigation, path
+
+**Blocked Road**:
+A road segment a resident marked as impassable by tapping the map; kept only on their own device, never sent over the Mesh. The Evacuation Plan reroutes around it from the Road graph, so the Route is then computed on the phone from the actual home rather than read from the Cache Pack.
+_Avoid_: closure, roadblock, obstruction
+
+**Road graph**:
+The drivable roads of the Cache Pack area as junctions joined by segments with their length, a file in the pack. Rerouting runs on it; it is separate from Routes, which are precomputed lines.
+_Avoid_: road network, map data
 
 **Grid point**:
 One of the evenly spaced points, about 100 m apart, that cover the roads of the Cache Pack area; a home takes the Route of its nearest Grid point. Areas more than about 100 m from a drivable road have none.
@@ -143,7 +151,7 @@ A Node whose last Community Reading arrived more than 15 seconds ago by the rece
 _Avoid_: offline node, dead node, timed out
 
 **Node unreachable**:
-The dashboard's state when a Viewer gets no answer from the Node it is connected to. It is about the Viewer's link to its own Node, not the Mesh: a Node can be Mesh-only or have Stale peers and still be reachable. While it lasts, live readings and Flood Risk are not shown, and what the Cache Pack holds stays.
+The dashboard's state when a Viewer gets no answer from the Node it is connected to. It is about the Viewer's link to its own Node, not the Mesh: a Node can be Mesh-only or have Stale peers and still be reachable. While it lasts, live readings, Flood Risk, online status and camera pictures are not shown; what is already on the Viewer's device (the Cache Pack, the Household Profile) stays.
 _Avoid_: offline, disconnected, down
 
 **Layer rail**:

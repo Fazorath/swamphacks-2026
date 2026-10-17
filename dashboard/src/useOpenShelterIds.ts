@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const POLL_EVERY_MS = 5000;
 
 // The second value lets the Hub Panel show a change at once instead of waiting for the next poll.
+// A failed poll keeps the last list, so a Wi-Fi blip never leaves the plan with nowhere to go;
+// before the first answer nothing counts as open.
 export function useOpenShelterIds(): [string[], (openIds: string[]) => void] {
   const [openIds, setOpenIds] = useState<string[]>([]);
   // A poll that began before a change would bring back the list the change replaced.
@@ -22,11 +24,7 @@ export function useOpenShelterIds(): [string[], (openIds: string[]) => void] {
           if (!Array.isArray(open)) throw new Error("Node API sent no open Shelter list");
           showIfCurrent(open);
         })
-        .catch((error) => {
-          console.error(error);
-          // Nothing counts as open until listed.
-          showIfCurrent([]);
-        });
+        .catch((error) => console.error(error));
     };
     poll();
     const timer = setInterval(poll, POLL_EVERY_MS);

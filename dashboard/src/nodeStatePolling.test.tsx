@@ -63,7 +63,8 @@ test("the screen follows the Node once a second", async () => {
 test("a poll that has not been answered is never joined by another", async () => {
   hungUp = true;
   render(<App />);
-  await act(() => vi.advanceTimersByTimeAsync(5 * STATE_POLL_MS));
+  // Short of the 5 s after which the page says Node unreachable instead of Connecting….
+  await act(() => vi.advanceTimersByTimeAsync(4 * STATE_POLL_MS));
   expect(stateRequests).toBe(1);
   expect(screen.getByText("Connecting…")).toBeInTheDocument();
 });

@@ -47,7 +47,7 @@ Sent by the Hub only, when two or more Registered Nodes are High.
 
 - `id`: Hub-issued counter. Used for deduplication and for the once-per-warning modal on each device.
 - `nodes`: Node ids, the same 12-character ids readings use; the dashboard looks up names in the registry.
-- `reasons`: codes from a small fixed list (`water_high`, `water_rising`, `rain_heavy`, `pressure_falling`). The dashboard writes the sentence.
+- `reasons`: codes from a small fixed list (`water_surge`, `water_high`, `water_rising`, `rain_heavy`, `pressure_falling`). The dashboard writes the sentence.
 - There is **no text field**. The "Community Warning · not official" label and the "check official sources for any evacuation decision" line are fixed UI and cannot be dropped or altered by a message.
 - Only the Hub identity configured on the receiving Node may send this kind.
 
@@ -132,7 +132,7 @@ Every Node computes Flood Risk from the Community Readings it holds plus the reg
 
 ## Node HTTP API (dashboard seam)
 
-The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering. This replaces the server-sent events in the spec's Node HTTP API paragraph.
+The dashboard polls **one snapshot** every second and shows "Node unreachable" after 5 s with no good answer. This replaces the server-sent events in the spec's Node HTTP API paragraph.
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
@@ -153,10 +153,12 @@ cache-pack.zip
 ├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
 ├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
+├── roads.json            the Road graph, only when built: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
 └── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
 ```
 
 - `bbox` is `[south, west, north, east]`, the demo box the pack covers.
 - The valley pack has no `route_grid` and no `routes/` (the plan works without them). When Routes are built, the route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
+- `roads.json` lists junctions and bends as `nodes`; an `edge` joins node indexes `a` and `b` in both directions (a one-way road is treated as two-way: a resident on foot or in a hurry ignores it), with `length_m` along the road and an optional list of in-between vertices to draw. Service roads are left out; the file stays under about 2 MB.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.

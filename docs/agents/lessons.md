@@ -8,6 +8,7 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - **Worktree sessions refuse compound shell commands** (`cd x && VAR=y python ...`, `$(...)` feeding a command name, pipelines with computed operands). Run plain, separate commands, or write a small script under `$CLAUDE_JOB_DIR/tmp` and run it.
 - **Don't edit `node/uv.lock` by hand unless `uv` is missing.** For 0007 it was edited by hand to move `httpx` from the dev group to runtime dependencies; run `uv lock` once on a machine with `uv` and commit any difference.
 - **On Windows with no `uv`, install it from PowerShell**: `irm https://astral.sh/uv/install.ps1 | iex`, then `uv sync` in `node/`. A plain `python -m venv` fails if the system Python is 3.14, because `cryptography` (needed by `rns`) has no wheel for it; `uv` fetches Python 3.12 itself. After the 0004 merge, `node/.venv` from an older checkout lacks `rns`, so `pytest` stops at `import RNS`.
+- **The pre-commit secret scan matches `sk-` plus 20 characters anywhere**, so a ticket slug with "risk-" and a long tail after it (0062's first name, "flood-risk-levels-…") is blocked as an API key, here and wherever the slug is quoted (the README index, this log). Rename the slug (0062 became `flood-levels-fit-the-river`); never `--no-verify`.
 - **Check who owns a ticket right before you claim it.** A claim pushed to your own branch is not visible on `main`; two people claimed 0009 minutes apart and the conflict showed up on `git pull`. Pull `main`, check the Owner line, then claim and push the claim to `main` at once.
 - **A Node left running blocks the Node tests and your next run.** `tests/test_reticulum_nodes.py` binds fixed ports (HTTP 8101 to 8103, TCP 4250 to 4252 and 4350 to 4352), and a stray Node on 8000 keeps serving old code beside a fresh one. A Node on a new port shows what is on disk; check `Get-NetTCPConnection -State Listen -LocalPort 8000` before trusting a browser tab.
 - A branch named after its ticket (`NNNN-<slug>`) may already exist from the claim commit. A worktree starts on `worktree-<name>`; push it with `git push origin HEAD:NNNN-<slug>` rather than renaming.
@@ -175,6 +176,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `MeshedNodes.send_bytes(body)` puts raw bytes on the in-memory Mesh; `join_with_failing_listener(name)` adds a Node whose listener raises.
 - Not proven: a bad packet sent to a live Reticulum Node (only `verify` is tested with signed bad bodies).
 
+## Node unreachable (ticket 0042)
+
+- **The 5 s rule is its own timer, restarted by each good answer**, not a check when a poll fails: checked on failure, a Node that hangs from page open was caught only at 6 s (requests end at 2, 4, 6 s). Found in review.
+- **A null Event clock means "no replay" only once `/api/replay` has answered**; `useEventClock` returns `heard`, and the Replay controls wait until it is true, or Start flashes on first load and after every reconnect.
+- **To test the 2 s request timeout on fake timers**, spy on `AbortSignal.timeout` and return a controller aborted by a (faked) `setTimeout(ms)`; the real one runs on a clock fake timers cannot move (`nodeUnreachableFlow.test.tsx`).
+- `usePolledJson(null)` stops a poll and drops its last answer; cameras and the Event clock use it while unreachable. `useNodeState` returns `state` (null while unreachable) and `lastAnswer` (kept, for name, role and Official Alerts).
+- **`evacuationFlow.test.tsx` "the Route request names a Grid point" failed about 1 full parallel run in 3**: it read the requests as soon as "Nearest open Shelter" showed, which the straight-line plan does before the Route file is asked for. It now waits for the request with `waitFor`. This may be the 0031 flake whose cause was not found.
+
 ## One-laptop demo script (ticket 0049)
 
 - **`scripts/run-demo.sh` rehearsed on loopback** (Hub 8600, S0 to S3 8601 to 8604, `DEMO_SLOT_BASE=20` because a teammate's Node held slot 0 and port 8000): all four Sensors took `HUB_IDENTITY`, fetched the pack from the Hub, followed Start, and the Hub dashboard answered on the hotspot and Tailscale addresses. Software path only, not a Pi or Wi-Fi check.
@@ -188,5 +197,15 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Map tiles from the Cache Pack (ticket 0026)
 
-- **The map picks its tile URL from `packAvailable` (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
+- **The map picks its tile URL from the pack's deepest tile zoom (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
 - **The valley pack's tiles stop at z14**, so zooming past it asked the Node for tiles that do not exist and the map went blank (no CARTO key to fall back on). `TileLayer` now gets `maxNativeZoom` from the highest `tiles/{z}` in the manifest and stretches the z14 tiles. Found on a phone.
+
+## Surge (ticket 0046)
+
+- **On Windows two Node tests fail on a clean `main`**: the identity-file tests assert mode `0o600`, which Windows cannot report (it shows `0o666`). The two `test_reticulum_nodes.py` loopback tests also failed until the Nodes left running from other worktrees were stopped (they held ports 4250 and 4251); they pass once those ports are free. A change that leaves exactly the two identity-file tests failing has not broken anything.
+- **`evacuationFlow.test.tsx` "the Route request names a Grid point, not the home" failed once and passed on the next two runs** with no change near it; rerun before chasing it.
+- **A Surge is judged on the sender's timestamps (`t`), not on when readings arrived**, so two readings that reach a Node together still count as one over time. In tests, `MeshedNodes.advance(seconds)` between two `hear_from` calls is what makes a rise slow. A slow rise to a high level is still High from `water_high`; assert on `surged` and the `water_surge` reason to tell a Surge apart.
+- **`surged` is "surging now", not latched**: it empties about 60 s after the jump even while the water stays high. Ticket 0013 must remember that it already warned for a Node's Surge; it cannot ask Flood Risk.
+- The Scenario cannot produce a Surge (its largest water step is 35 cm), so Surge tests hand-feed readings with `hear_from`.
+- **Running a Hub and a Replay sensor on one laptop**: a sensor follows the Replay clock only with `HUB_IDENTITY` set to the Hub's id (printed at startup as `Node <id> (hub-1) is up as hub`); the id changes if `NODE_DATA_DIR` is wiped. Without it the sensor publishes the Scenario and the Hub's Flood Risk never moves. Start the Hub first, then the sensor, and make sure no Node from another worktree still holds loopback ports 4250 and 4251, or the sensor dials that one instead (`Get-NetTCPConnection -State Listen -LocalPort 4250`).
+- **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.

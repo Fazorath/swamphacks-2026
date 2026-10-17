@@ -127,9 +127,10 @@ test("the Route request names a Grid point, not the home", async () => {
   stubNode({ packAvailable: true, open: ["test-gym"], routeGrid: ROUTE_GRID });
   render(<App />);
 
-  await screen.findByText(/Nearest open Shelter/);
-  const routeRequests = fetchedUrls().filter((url) => url.includes("routes/"));
-  expect(routeRequests).toEqual([HOME_ROUTE_FILE]);
+  // The straight-line plan shows before the Route file is asked for, so wait for the request.
+  await waitFor(() =>
+    expect(fetchedUrls().filter((url) => url.includes("routes/"))).toEqual([HOME_ROUTE_FILE]),
+  );
 });
 
 test("a home with no Route file falls back to straight-line distance and draws no line", async () => {

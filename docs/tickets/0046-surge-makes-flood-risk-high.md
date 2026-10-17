@@ -4,14 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** refloow-0
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [ ] Surge rise and window are named constants beside the existing Flood Risk thresholds
-- [ ] Reason code `water_surge`; the dashboard sentence states the rise and how long it took
-- [ ] The Node API reports which Node surged, so the Hub can act on it (0013)
-- [ ] Seam A tests (with `MeshedNodes.hear_from`): a sudden rise is High with `water_surge`; the same rise spread over a long time is not a Surge; an Unverified Node's Surge does not count once 0012 lands
-- [ ] All **Commands** pass
+- [x] Surge rise and window are named constants beside the existing Flood Risk thresholds
+- [x] Reason code `water_surge`; the dashboard sentence states the rise and how long it took
+- [x] The Node API reports which Node surged, so the Hub can act on it (0013)
+- [x] Seam A tests (with `MeshedNodes.hear_from`): a sudden rise is High with `water_surge`; the same rise spread over a long time is not a Surge; the Unverified Node case moved to 0061, which waits on 0012
+- [x] All **Commands** pass (on Windows `test_reticulum_mesh.py` still fails its two file-permission tests, which assert a Unix mode; see `docs/agents/lessons.md`)
+
+**Found while checking it on one laptop:** a full Replay can skip S0's Surge because the ramp is as short as the publish interval (0060). `surged` is "surging now" and not latched, so 0013 must remember it already warned.

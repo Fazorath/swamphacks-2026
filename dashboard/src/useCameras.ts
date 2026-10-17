@@ -8,6 +8,7 @@ export type CameraTile = {
   age_s: number | null;
 };
 
-export function useCameras(): CameraTile[] {
-  return usePolledJson<CameraTile[]>("/api/cameras") ?? [];
+// Pass false while the Node is unreachable: no tiles, and no polling until it answers again.
+export function useCameras(polling: boolean): CameraTile[] {
+  return usePolledJson<CameraTile[]>(polling ? "/api/cameras" : null) ?? [];
 }
