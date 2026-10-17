@@ -111,6 +111,9 @@ export function NodeMap({
         className={picking ? "node-map picking" : "node-map"}
       >
         <TileLayer
+          // The pack arrives after the map is first drawn, and Leaflet reads maxNativeZoom only when
+          // it creates the layer, so the layer is rebuilt when the pack's depth becomes known.
+          key={packTileMaxZoom ?? "online"}
           url={tileUrlTemplate(packTileMaxZoom !== null)}
           maxNativeZoom={packTileMaxZoom ?? undefined}
           attribution={MAP_CREDIT}
