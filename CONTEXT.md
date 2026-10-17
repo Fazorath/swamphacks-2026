@@ -124,6 +124,10 @@ _Avoid_: storm warning, storm alert, pressure alarm
 What a resident should do and where to go: their risk, and either the nearest open Shelter they can walk to before the wave or, if there is none, higher ground away from the river. Their risk is the Mesh-wide Flood Risk (the worst level across the Nodes that count), not a level tied to where their home is.
 _Avoid_: evac info, escape route
 
+**Reachable Shelter**:
+An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Wave ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
+_Avoid_: safe Shelter, nearest Shelter (the nearest need not be reachable)
+
 **Household Profile**:
 A resident's home location, housing type (site-built or mobile home/RV), and whether they need a special-needs or pet-friendly Shelter; kept only on their own device. The one thing it reveals is the Grid point nearest home, when the Viewer asks its connected Node for the Route; never to the rest of the Mesh.
 _Avoid_: user profile, account, settings

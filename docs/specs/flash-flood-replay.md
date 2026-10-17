@@ -107,6 +107,11 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 - **Shelters** are hand-picked public buildings well above the river (for example the gompa above Syabrubesi, schools on the hillside above Betrawati), each with its height above the river. They stay in the Cache Pack and keep Shelter status from the Hub.
 - **A Shelter is reachable** if it lies outside the Flood-Prone Area and its walking time is less than the ETA minus a safety margin. Walking time is straight-line distance × 1.4 at 4 km/h. The margin (5 min), the detour factor and the speed are named constants in the Evacuation Plan.
 - **With a Community Warning:** the nearest reachable open Shelter, with distance, walking time and height above the river; otherwise "No Shelter you can reach in time. Get to higher ground, away from the river, now." It never sends anyone into a basement or down towards the river. With no warning, the plan shows the nearest open Shelter as it does today.
+- **Decided 2026-10-17 (ticket 0048):**
+  - A warning without a Wave ETA for this home (upstream of the origin, more than 2 km from the river line, or no river line) leaves the plan as if there were no warning.
+  - Fit filters (special-needs, pet-friendly) apply first, then reachability. If no open Shelter is reachable, the plan names the nearest open fitting Shelter by straight line, even inside the Flood-Prone Area ("nearest Shelter 14 min walk, wave in 9 min"), draws no Route and shows the higher-ground text. If an open Shelter exists but none fit, today's "No open Shelter matches this household" line stays.
+  - The choice is re-judged every second against the Event clock; at or past the arrival time it is always higher ground. Minutes of walk and wave are rounded up, as the ETA line does.
+  - The reachable Shelter's card shows its walking time and height above the river (`height_above_river_m` from the pack) beside the distance.
 - **Routes** are not built for the valley in the main path. The plan works without them, as it already does for a pack with no route grid. Road Routes over the Nepal OSM extract are a stretch ticket.
 
 ### Official Alerts
