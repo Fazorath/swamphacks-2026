@@ -1,6 +1,6 @@
 # Dashboard UI design
 
-How the Storm Shield dashboard looks and where things go. Ticket 0001 ships the skeleton of this; each later ticket fills one area. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
+How the Storm Shield dashboard looks and where things go. **The visual source of truth is the design canvas: https://claude.ai/artifact/722U2tKJ78hvbbbNUnx2dQ** (foundations, one artboard per view, shared components). Build from it; if a view is missing, add an artboard there first. Ticket 0001 ships the skeleton of this; each later ticket fills one area. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
 
 ## Reference
 
@@ -41,9 +41,9 @@ What we leave out: the 40 layers, globe, AI analyst, finance, cyber. Storm Shiel
 
 | Thing | Rule |
 |---|---|
-| Theme | Dark by default; colors only through CSS variables in `App.css` |
+| Theme | Dark by default; colors only through the CSS variables in `dashboard/src/App.css` (names match the canvas: `--bg`, `--surface`, `--line`, `--text`, `--muted`, `--community`, `--low`, `--elevated`, `--high`, `--official`, `--warning`) |
 | Panels | Translucent surface, 1 px border, backdrop blur, small radius |
-| Type | System sans; uppercase small caps for labels; tabular numbers for readings |
+| Type | IBM Plex Sans for text; IBM Plex Mono for labels, tags and numbers |
 | Flood Risk | Low green, Elevated amber, High red; always with the word, never color alone |
 | Official Alerts | Their own panel, solid border, "OFFICIAL" tag (and "OFFICIAL · REPLAY" for replays) |
 | Community info | Cool blue/cyan accents, never the official style |

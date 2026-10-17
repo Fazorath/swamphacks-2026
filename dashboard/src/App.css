@@ -1,11 +1,19 @@
 :root {
-  --bg: #0b1220;
-  --map-bg: radial-gradient(circle at 40% 40%, #12203a 0%, #0b1220 70%);
-  --panel: rgb(17 26 45 / 72%);
-  --border: #26344f;
-  --text: #e6edf7;
-  --muted: #8a9bb8;
-  --accent: #38bdf8;
+  --bg: #0a111d;
+  --map-bg: radial-gradient(circle at 40% 40%, #12203a 0%, #0a111d 70%);
+  --surface: #111b2d;
+  --surface-glass: rgb(17 27 45 / 72%);
+  --surface-2: #17243a;
+  --line: #243450;
+  --text: #e8eef8;
+  --muted: #9fb0ca;
+  --community: #4cc9f0;
+  --low: #3dd68c;
+  --elevated: #f5a524;
+  --high: #ff6b6b;
+  --official: #f2f5fa;
+  --official-ink: #0b1f4d;
+  --warning: #b79cff;
 }
 
 * {
@@ -39,8 +47,8 @@ header {
   align-items: baseline;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--surface-glass);
+  border: 1px solid var(--line);
   border-radius: 0.5rem;
   backdrop-filter: blur(8px);
 }
@@ -48,7 +56,7 @@ header {
 h1 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--accent);
+  color: var(--community);
 }
 
 header p {
@@ -61,8 +69,8 @@ header p {
 }
 
 section {
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--surface-glass);
+  border: 1px solid var(--line);
   border-radius: 0.5rem;
   padding: 1rem;
   backdrop-filter: blur(8px);
