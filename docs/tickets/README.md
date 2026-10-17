@@ -15,7 +15,7 @@
 | [0009-evacuation-plan-panel](0009-evacuation-plan-panel.md) | done | Fazorath |
 | [0010-route-to-the-shelter](0010-route-to-the-shelter.md) | done | Fazorath |
 | [0011-online-status-and-camera-tiles](0011-online-status-and-camera-tiles.md) | done | leonardorofaDV |
-| [0012-node-registry-and-unverified-nodes](0012-node-registry-and-unverified-nodes.md) | ready-for-agent | unclaimed |
+| [0012-node-registry-and-unverified-nodes](0012-node-registry-and-unverified-nodes.md) | in-progress | amitathik7 |
 | [0013-community-warnings](0013-community-warnings.md) | ready-for-agent | unclaimed |
 | [0014-official-alerts-dhm-replay](0014-official-alerts-dhm-replay.md) | in-progress | Fazorath |
 | [0015-shelter-status-updates](0015-shelter-status-updates.md) | done | Fazorath |
