@@ -21,7 +21,7 @@ trap 'stop_node; exit 0' INT TERM
 
 start_node() {
   stop_node
-  (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build --silent)
+  (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build >/dev/null)
   (cd node && uv sync --quiet)
   (cd node && exec uv run storm-shield-node) &
   node_pid=$!
