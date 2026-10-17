@@ -1,5 +1,5 @@
-import { officialTag, SOURCE_LABELS } from "./AlertsPanel";
 import type { EvacuationPlan } from "./evacuationPlan";
+import { officialTag, SOURCE_LABELS } from "./officialAlerts";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 

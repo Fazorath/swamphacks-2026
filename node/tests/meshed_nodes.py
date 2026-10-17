@@ -108,21 +108,25 @@ class MeshedNodes:
         self, state: Literal["playing", "paused", "stopped"], event_t: int, *, sender: str = HUB
     ) -> None:
         """Have a Node that is not running an app publish one Event clock message."""
-        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
-        self._hand_fed[sender] = mesh
-        mesh[0].publish(ReplayClockMessage(state=state, event_t=event_t, rate=30))
+        self._hand_fed_mesh(sender).publish(
+            ReplayClockMessage(state=state, event_t=event_t, rate=30)
+        )
 
     def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Shelter status."""
-        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
-        self._hand_fed[sender] = mesh
-        mesh[0].publish(ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids))
+        self._hand_fed_mesh(sender).publish(
+            ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids)
+        )
 
     def announce_official_alert(self, alert: OfficialAlert, *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Official Alert."""
+        self._hand_fed_mesh(sender).publish(alert)
+
+    def _hand_fed_mesh(self, sender: str) -> InMemoryMesh:
+        """The Mesh of a Node that is not running an app, joined on first use."""
         mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
         self._hand_fed[sender] = mesh
-        mesh[0].publish(alert)
+        return mesh[0]
 
     def record_shelter_status(self) -> list[ShelterStatus]:
         """Join a Node that only listens; every Shelter status it hears is appended to the list."""

@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from storm_shield.official_alert import OfficialAlert
+from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
 from storm_shield.scenario import Reading, ReadingKind
 
 TIMELINE_FILE = Path(__file__).with_name("replay_timeline.json")
@@ -77,9 +77,9 @@ class ReplayedAlert(BaseModel):
 
     id: str
     at: str
-    issuer: Literal["dhm", "ndrrma", "district"]
+    issuer: AlertSource
     headline: str
-    applies_to: list[Literal["mobile_home", "rv", "flood_prone_area"]]
+    applies_to: list[AppliesTo]
     source: str
 
 

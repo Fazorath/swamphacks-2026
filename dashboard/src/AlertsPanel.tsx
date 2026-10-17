@@ -1,14 +1,10 @@
-import { issuedUnix, leadTimeLine, type OfficialAlert } from "./officialAlerts";
-
-export const SOURCE_LABELS: Record<OfficialAlert["source"], string> = {
-  dhm: "DHM",
-  ndrrma: "NDRRMA",
-  district: "District authorities",
-};
-
-export function officialTag(alert: OfficialAlert): string {
-  return alert.mode === "replay" ? "OFFICIAL · REPLAY" : "OFFICIAL";
-}
+import {
+  issuedUnix,
+  leadTimeLine,
+  officialTag,
+  SOURCE_LABELS,
+  type OfficialAlert,
+} from "./officialAlerts";
 
 // "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
 function issuedAsGiven(issued: string): string {

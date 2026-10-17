@@ -12,6 +12,16 @@ export type OfficialAlert = {
   url: string;
 };
 
+export const SOURCE_LABELS: Record<OfficialAlert["source"], string> = {
+  dhm: "DHM",
+  ndrrma: "NDRRMA",
+  district: "District authorities",
+};
+
+export function officialTag(alert: OfficialAlert): string {
+  return alert.mode === "replay" ? "OFFICIAL · REPLAY" : "OFFICIAL";
+}
+
 export function issuedUnix(alert: OfficialAlert): number {
   return Date.parse(alert.issued) / 1000;
 }

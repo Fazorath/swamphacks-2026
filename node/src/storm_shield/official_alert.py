@@ -10,6 +10,10 @@ if TYPE_CHECKING:
 
 HEADLINE_MAX_LENGTH = 120
 
+AlertSource = Literal["dhm", "ndrrma", "district"]
+# Tags the Evacuation Plan matches against a household; empty means everyone in the zone.
+AppliesTo = Literal["mobile_home", "rv", "flood_prone_area"]
+
 
 class OfficialAlert(BaseModel):
     """An Official Alert in the mesh format of docs/specs/wire-formats.md; only the Hub sends one."""
@@ -17,13 +21,13 @@ class OfficialAlert(BaseModel):
     v: Literal[1] = 1
     kind: Literal["alert"] = "alert"
     id: str
-    source: Literal["dhm", "ndrrma", "district"]
+    source: AlertSource
     # `replay` is what the dashboard turns into the OFFICIAL · REPLAY label.
     mode: Literal["live", "replay"]
     # The source's own timestamp, shown as given; for a replay it is also the Event time it is due.
     issued: str
     headline: str = Field(max_length=HEADLINE_MAX_LENGTH)
-    applies_to: list[Literal["mobile_home", "rv", "flood_prone_area"]]
+    applies_to: list[AppliesTo]
     url: str
 
     def issued_unix(self) -> int:
@@ -50,10 +54,7 @@ class HeardOfficialAlerts:
         """
         with self._lock:
             alerts = list(self._by_id.values())
-        shown = [
-            alert
-            for alert in alerts
-            if alert.mode == "live"
-            or (event.state != "stopped" and alert.issued_unix() <= event.event_t)
-        ]
+        if event.state == "stopped":
+            return []
+        shown = [alert for alert in alerts if alert.issued_unix() <= event.event_t]
         return sorted(shown, key=OfficialAlert.issued_unix)

@@ -228,7 +228,6 @@ button:disabled {
   border: 2px solid var(--official-blue);
   border-radius: 0.5rem;
   color: var(--official-ink);
-  list-style: none;
 }
 
 .official-alert h3 {
@@ -236,6 +235,7 @@ button:disabled {
   font-size: 0.95rem;
 }
 
+/* `section p` sets the muted color, which is unreadable on the light Official panel. */
 section .official-alert p,
 .official-alert a {
   color: var(--official-ink);
@@ -270,6 +270,7 @@ section .official-alert p,
 .plan-official-alerts {
   margin: 0 0 0.5rem;
   padding: 0;
+  list-style: none;
 }
 
 .lead-time {

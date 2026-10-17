@@ -201,22 +201,28 @@ def create_app(
 
     forwarded_alert_ids: set[str] = set()
 
-    def forward_official_alerts(*, again: bool = False) -> None:
-        """Send each replayed alert once the Event clock reaches it; `again` repeats those due."""
+    def due_official_alerts() -> list[OfficialAlert]:
         event = event_clock.current(clock())
-        if event.state == "stopped":
-            return
-        for alert in timeline.official_alerts_due(event.event_t):
-            if alert.id in forwarded_alert_ids and not again:
-                continue
-            # The Hub does not hear its own broadcasts, so it keeps the alert itself.
-            official_alerts.hear(alert)
-            forwarded_alert_ids.add(alert.id)
-            try:
-                mesh.publish(alert)
-            except Exception:
-                # The Hub already shows it, and the next repeat sends it again.
-                logger.exception("could not forward Official Alert %s", alert.id)
+        return [] if event.state == "stopped" else timeline.official_alerts_due(event.event_t)
+
+    def forward_official_alert(alert: OfficialAlert) -> None:
+        # The Hub does not hear its own broadcasts, so it keeps the alert itself.
+        official_alerts.hear(alert)
+        forwarded_alert_ids.add(alert.id)
+        try:
+            mesh.publish(alert)
+        except Exception:
+            # The Hub already shows it, and the next repeat sends it again.
+            logger.exception("could not forward Official Alert %s", alert.id)
+
+    def forward_newly_due_official_alerts() -> None:
+        for alert in due_official_alerts():
+            if alert.id not in forwarded_alert_ids:
+                forward_official_alert(alert)
+
+    def repeat_due_official_alerts() -> None:
+        for alert in due_official_alerts():
+            forward_official_alert(alert)
 
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_event_clock)
@@ -283,7 +289,7 @@ def create_app(
                     if event.state != "stopped":
                         announce_event_clock(event)
                         # A Node that joined late or missed a packet gets the alerts with the clock.
-                        forward_official_alerts(again=True)
+                        repeat_due_official_alerts()
                 except Exception:
                     logger.exception("could not repeat the Event clock")
 
@@ -291,7 +297,7 @@ def create_app(
             while True:
                 await asyncio.sleep(settings.alert_check_seconds)
                 try:
-                    forward_official_alerts()
+                    forward_newly_due_official_alerts()
                 except Exception:
                     logger.exception("could not forward the Official Alerts")
 

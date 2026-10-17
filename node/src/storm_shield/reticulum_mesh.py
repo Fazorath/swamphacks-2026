@@ -10,10 +10,7 @@ from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.mesh import Message, MessageListener
-from storm_shield.official_alert import OfficialAlert
-from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
-from storm_shield.shelter_status import ShelterStatus
 
 APP_NAME = "storm_shield"
 ANNOUNCE_EVERY_SECONDS = 10
@@ -27,12 +24,7 @@ LOOPBACK_BASE_PORT = 4250
 
 logger = logging.getLogger(__name__)
 
-_MESSAGE: TypeAdapter[Message] = TypeAdapter(
-    Annotated[
-        CommunityReading | ShelterStatus | ReplayClockMessage | OfficialAlert,
-        Field(discriminator="kind"),
-    ]
-)
+_MESSAGE: TypeAdapter[Message] = TypeAdapter(Annotated[Message, Field(discriminator="kind")])
 
 
 def node_id(identity: Any) -> str:
