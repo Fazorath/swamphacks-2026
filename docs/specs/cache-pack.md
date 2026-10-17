@@ -92,3 +92,13 @@ A build script prepares one Cache Pack ahead of the event for a single demo box 
 - The FEMA service and the tile provider are external; the build runs once ahead of the event and the zip is the only thing Nodes depend on.
 - Node settings use the `NODE_` prefix today, while the ticket names `CACHE_PACK_URL` and `CACHE_PACK_DIR` without it. The implementer picks one and updates the ticket and `.env.example` together.
 - Check the final zip's size against the Release asset limit during the manual check.
+
+## Routes (ticket 0010)
+
+Ticket 0010 adds `routes/` to the pack; the manifest lists and checksums those files like any other. Decisions from the 0010 grill:
+
+- **Grid points.** About 100 m apart, kept only within about 100 m of a drivable road, so homes on a road always have one. Coordinates are rounded to 5 decimals. If the zip grows past about 5 MB, the spacing coarsens to about 250 m.
+- **Build.** The script reads the Geofabrik Florida extract clipped to `bbox` with `pyrosm` and runs one Dijkstra per Shelter with `networkx`; both live in a build-only dependency group, never in the Node's runtime dependencies. The extract stays out of git.
+- **Routes are shortest drives.** They ignore Flood-Prone Areas and live road conditions, and the dashboard says so.
+- **No route.** A Shelter with no Route from the resident's Grid point ranks after the routed ones by straight-line distance, labelled as such, with no line drawn.
+- **Privacy.** The Viewer asks its connected Node for the file of its home's Grid point, which reveals the home to about 100 m to that Node only (`docs/adr/0003-routes-reveal-a-grid-point-to-the-connected-node.md`).
