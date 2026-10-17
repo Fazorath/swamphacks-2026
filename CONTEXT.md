@@ -4,16 +4,28 @@ A neighborhood disaster dashboard for Gainesville / Alachua County, Florida. Com
 
 ## Network
 
+**Mesh**:
+The set of Nodes that reach each other peer to peer, directly or through one another, with no internet needed.
+_Avoid_: network, cloud, backend
+
 **Node**:
-Any device taking part in the Storm Shield mesh.
+Any device taking part in the Mesh.
 _Avoid_: peer, device, client
+
+**Node id**:
+The 12-character code taken from a Node's permanent Reticulum identity; it is how Nodes, the registry and the API refer to a Node.
+_Avoid_: identity, address, hash
+
+**Node name**:
+The label an operator gives a Node, such as "garage"; it is shown to people and never used to tell Nodes apart.
+_Avoid_: id, username
 
 **Sensor Node**:
 A Node that produces Community Readings from attached or simulated sensors.
 _Avoid_: station, sensor box
 
 **Registered Node**:
-A Node whose identity the Hub has accepted at sign-up; only its Community Readings count toward Flood Risk and Community Warnings.
+A Node whose Node id the Hub has accepted at sign-up; only its Community Readings count toward Flood Risk and Community Warnings.
 _Avoid_: trusted node, verified device
 
 **Unverified Node**:
@@ -25,11 +37,11 @@ A Node that passes Community Readings along and keeps a copy, without producing 
 _Avoid_: repeater, hop
 
 **Hub**:
-The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the mesh.
+The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend
 
 **Viewer**:
-A phone or browser that shows the dashboard by connecting to a Node, without being part of the mesh itself.
+A phone or browser that shows the dashboard by connecting to a Node, without being part of the Mesh itself.
 _Avoid_: client, user device
 
 ## Information
