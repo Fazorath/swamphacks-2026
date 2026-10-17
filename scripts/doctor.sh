@@ -2,17 +2,22 @@
 # Checks this machine and checkout for every setup problem in docs/agents/lessons.md
 # and prints the fix for each. Takes seconds; run it when something odd happens
 # or at the start of a ticket:  scripts/doctor.sh
+# `--quiet` prints only the problems and always exits 0, for the hooks that run it
+# for you (Claude Code session start, git post-merge), so nobody has to remember.
 set -uo pipefail
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo" || exit 1
 main_checkout="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
 problems=0
+quiet=false
+[ "${1:-}" = "--quiet" ] && quiet=true
 
-ok() { echo "  ok    $1"; }
+section() { $quiet || echo "$1"; }
+ok() { $quiet || echo "  ok    $1"; }
 fix() { echo "  FIX   $1"; echo "        -> $2"; problems=$((problems + 1)); }
 
-echo "tools"
+section "tools"
 if command -v uv >/dev/null 2>&1; then
   ok "uv $(uv --version | awk '{ print $2 }')"
 elif [ -x "$main_checkout/node/.venv/bin/pytest" ]; then
@@ -39,7 +44,7 @@ else
     "install Node 22, or let scripts/check.sh run Vitest under npx node@22"
 fi
 
-echo "checkout"
+section "checkout"
 # Relative from Claude Code's session hook, or absolute to the main checkout's copy.
 hooks_path="$(git config core.hooksPath || true)"
 if [ "${hooks_path%/}" = ".githooks" ] || [ "${hooks_path%/}" = "$main_checkout/.githooks" ]; then
@@ -69,7 +74,7 @@ else
   fix "could not fetch origin" "check the network or your GitHub login"
 fi
 
-echo "running Nodes"
+section "running Nodes"
 if pgrep -f "storm_shield.main import run|storm-shield-node" >/dev/null 2>&1; then
   fix "a Node is running (it may hold test ports or serve old code)" \
     "scripts/stop-nodes.sh, unless you started it on purpose"
@@ -77,6 +82,9 @@ else
   ok "no Node running"
 fi
 
+if $quiet; then
+  exit 0
+fi
 echo
 if [ "$problems" = 0 ]; then
   echo "all good."

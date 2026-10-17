@@ -78,7 +78,8 @@ The repo goes public at submission and judges read it. Write for a teammate seei
 - Branch per ticket: `NNNN-<slug>` from an up-to-date `main`.
 - Small commits, imperative subject: `add trip search endpoint`.
 - Merge into `main` when `code-review` is clean and **Commands** pass, then push. `main` must always be demoable.
-- Pull `main` often; merge it into long branches rather than letting them drift. Claude Code says at session start how far behind you are, and `git push` warns on a branch behind `origin/main`.
+- Pull `main` often; merge it into long branches rather than letting them drift. `scripts/doctor.sh` runs by itself at Claude Code session start and after every `git pull` and says how far behind you are (and any other setup problem); `git push` warns on a branch behind `origin/main`.
+- Claim only with `scripts/claim.sh` (the `implement` skill does it); the pre-commit hook refuses a claim edited by hand on a branch.
 - Pushing Node or dashboard code to `main` runs `scripts/check.sh` first and warns loudly if it fails (it does not block; `SKIP_CHECK=1` skips it).
 - Never force-push, `reset --hard`, or delete someone else's branch (Claude Code blocks these via a hook).
 - No AI attribution in commits or PRs (no `Co-Authored-By: Claude`, no "Generated with" footers). Commits are authored by whoever is driving; the `commit-msg` hook strips any trailer an agent adds.

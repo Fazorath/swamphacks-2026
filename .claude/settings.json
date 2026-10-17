@@ -38,7 +38,7 @@
           },
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/warn-behind-main.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-doctor.sh"
           }
         ]
       }
