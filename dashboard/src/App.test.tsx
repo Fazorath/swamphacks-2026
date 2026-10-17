@@ -38,8 +38,41 @@ class FakeEventSource {
   close() {}
 }
 
+const CALM = {
+  level: null,
+  reasons: [],
+  storm_signal: { on: false, nodes: 0, pressure_hpa: null },
+  nodes: { porch: null, garage: null },
+};
+
+const HIGH = {
+  level: "high",
+  reasons: [
+    { code: "water_high", nodes: 1, value: 90 },
+    { code: "rain_heavy", nodes: 2, value: 30 },
+    { code: "pressure_falling", nodes: 2, value: 995 },
+  ],
+  storm_signal: { on: true, nodes: 2, pressure_hpa: 995 },
+  nodes: { porch: "high", garage: null },
+};
+
+const LOW_FROM_STORM_SIGNAL = {
+  level: "low",
+  reasons: [{ code: "pressure_falling", nodes: 3, value: 1002 }],
+  storm_signal: { on: true, nodes: 3, pressure_hpa: 1002 },
+  nodes: { porch: null, garage: null },
+};
+
+function stubFloodRisk(floodRisk: object) {
+  vi.stubGlobal("fetch", async (path: string) =>
+    Response.json(
+      path === "/api/flood-risk" ? floodRisk : { id: "porch", name: "porch", role: "hub" },
+    ),
+  );
+}
+
 beforeEach(() => {
-  vi.stubGlobal("fetch", async () => Response.json({ id: "porch", name: "porch", role: "hub" }));
+  stubFloodRisk(CALM);
   vi.stubGlobal("EventSource", FakeEventSource);
 });
 
@@ -91,4 +124,48 @@ test("selecting the selected card again clears the selection", async () => {
   fireEvent.click(garage);
   fireEvent.click(garage);
   expect(garage).toHaveAttribute("aria-current", "false");
+});
+
+test("on a calm day no Flood Risk is shown", async () => {
+  render(<App />);
+  await screen.findByText("porch · Hub");
+  expect(screen.queryByRole("region", { name: "Flood Risk" })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Flood Risk ·/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Low pressure/)).not.toBeInTheDocument();
+});
+
+test("High Flood Risk shows its level in the top bar and its reasons on the card", async () => {
+  stubFloodRisk(HIGH);
+  render(<App />);
+  const card = await screen.findByRole("region", { name: "Flood Risk" });
+  expect(within(card).getByText("Flood Risk · High")).toBeInTheDocument();
+  expect(within(card).getByText("water level 90 cm at 1 Node")).toBeInTheDocument();
+  expect(within(card).getByText("heavy rain: 30 mm/h at 2 Nodes")).toBeInTheDocument();
+  expect(screen.getAllByText("Flood Risk · High")).toHaveLength(2);
+});
+
+test("the Storm Signal sits on the map and the card leaves it out when other reasons exist", async () => {
+  stubFloodRisk(HIGH);
+  render(<App />);
+  const map = await screen.findByRole("region", { name: "Map" });
+  expect(await within(map).findByText("Low pressure: 995 hPa at 2 Nodes")).toBeInTheDocument();
+  const card = screen.getByRole("region", { name: "Flood Risk" });
+  expect(within(card).queryByText(/low pressure/)).not.toBeInTheDocument();
+});
+
+test("the card repeats the Storm Signal when it is the only reason for Low", async () => {
+  stubFloodRisk(LOW_FROM_STORM_SIGNAL);
+  render(<App />);
+  const card = await screen.findByRole("region", { name: "Flood Risk" });
+  expect(within(card).getByText("Flood Risk · Low")).toBeInTheDocument();
+  expect(within(card).getByText("low pressure: 1002 hPa at 3 Nodes")).toBeInTheDocument();
+});
+
+test("a Node at High shows its own level word and a Node with no level shows none", async () => {
+  stubFloodRisk(HIGH);
+  render(<App />);
+  const porch = await screen.findByRole("region", { name: "Node porch" });
+  expect(await within(porch).findByText("HIGH")).toBeInTheDocument();
+  const garage = screen.getByRole("region", { name: "Node garage" });
+  expect(within(garage).queryByText("HIGH")).not.toBeInTheDocument();
 });

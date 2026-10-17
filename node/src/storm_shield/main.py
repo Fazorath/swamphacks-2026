@@ -2,7 +2,7 @@ import asyncio
 import itertools
 import logging
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
@@ -20,6 +20,7 @@ from storm_shield.cache_pack import (
     CachePack,
 )
 from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
@@ -53,6 +54,7 @@ def create_app(
     settings: Settings,
     mesh: Mesh,
     pack_source: httpx.Client | None = None,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     tile_source: httpx.Client | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
@@ -63,7 +65,7 @@ def create_app(
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
-    store = ReadingStore()
+    store = ReadingStore(HISTORY_WINDOW_SECONDS)
     position = fuzz_position(settings.latitude, settings.longitude)
     # Starting from the clock keeps a restarted Node ahead of the seq others last saw from it.
     sequence = itertools.count(int(time.time()))
@@ -72,11 +74,11 @@ def create_app(
         reading = CommunityReading.from_measurements(
             node=mesh.identity, seq=next(sequence), position=position, readings=scenario.readings()
         )
-        store.record(mesh.identity, reading, datetime.now(UTC))
+        store.record(mesh.identity, reading, clock())
         mesh.publish(reading)
 
     def store_reading_from(sender: str, reading: CommunityReading) -> None:
-        store.record(sender, reading, datetime.now(UTC))
+        store.record(sender, reading, clock())
 
     mesh.subscribe(store_reading_from)
     share_own_readings()
@@ -118,15 +120,17 @@ def create_app(
 
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:
-        return store.latest(datetime.now(UTC))
+        return store.latest(clock())
+
+    @app.get("/api/flood-risk")
+    def current_flood_risk() -> FloodRisk:
+        return flood_risk(store.recent(clock()))
 
     @app.get("/api/readings/stream")
     async def readings_stream() -> StreamingResponse:
         async def events() -> AsyncIterator[str]:
             while True:
-                payload = ",".join(
-                    reading.model_dump_json() for reading in store.latest(datetime.now(UTC))
-                )
+                payload = ",".join(reading.model_dump_json() for reading in store.latest(clock()))
                 yield f"data: [{payload}]\n\n"
                 await asyncio.sleep(READINGS_PUSH_SECONDS)
 

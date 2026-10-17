@@ -10,7 +10,7 @@ def test_a_reading_ages_on_this_nodes_own_clock() -> None:
     reading = CommunityReading.from_measurements(
         node="garage", seq=1, position=(29.652, -82.324), readings=Scenario().readings()
     )
-    store = ReadingStore()
+    store = ReadingStore(history_seconds=120)
     store.record("garage", reading, received_at)
     ages = {r.age_s for r in store.latest(received_at + timedelta(seconds=23))}
     assert ages == {23.0}

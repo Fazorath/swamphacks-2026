@@ -13,8 +13,10 @@ import {
 } from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
+import { stormSignalSentence } from "./floodRiskSentences";
 import type { Home } from "./householdProfile";
 import type { NodeOnMap } from "./nodesOnMap";
+import type { FloodRisk } from "./useFloodRisk";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
@@ -59,6 +61,7 @@ type Props = {
   nodes: NodeOnMap[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  stormSignal: FloodRisk["storm_signal"] | null;
   home: Home | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
@@ -71,6 +74,7 @@ export function NodeMap({
   nodes,
   selectedId,
   onSelect,
+  stormSignal,
   home,
   draftHome,
   picking,
@@ -79,6 +83,7 @@ export function NodeMap({
 }: Props) {
   return (
     <section aria-label="Map">
+      {stormSignal?.on && <p className="storm-signal">{stormSignalSentence(stormSignal)}</p>}
       {picking && (
         <div className="pick-banner">
           Tap the map to place your home
@@ -111,6 +116,7 @@ export function NodeMap({
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
           const state = [
             node.stale ? "stale" : "fresh",
+            node.level,
             selected && "selected",
             picking && "picking",
           ]

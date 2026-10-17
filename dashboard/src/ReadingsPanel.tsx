@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 
+import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
+import type { FloodRisk } from "./useFloodRisk";
 import type { Reading } from "./useReadings";
 
 const KIND_LABELS: Record<Reading["kind"], string> = {
@@ -17,11 +19,12 @@ function post(path: string) {
 
 type Props = {
   nodes: NodeOnMap[];
+  floodRisk: FloodRisk | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
 };
 
-export function ReadingsPanel({ nodes, selectedId, onSelect }: Props) {
+export function ReadingsPanel({ nodes, floodRisk, selectedId, onSelect }: Props) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "n") post("/api/scenario/step");
@@ -34,6 +37,7 @@ export function ReadingsPanel({ nodes, selectedId, onSelect }: Props) {
   return (
     <section aria-label="Readings">
       <h2>Readings</h2>
+      <FloodRiskCard floodRisk={floodRisk} />
       {nodes.map((node) => (
         <section
           key={node.id}

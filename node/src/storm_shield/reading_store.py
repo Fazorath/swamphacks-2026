@@ -1,5 +1,6 @@
 import threading
-from datetime import datetime
+from collections import deque
+from datetime import datetime, timedelta
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.scenario import Reading, ReadingKind
@@ -12,23 +13,40 @@ class NodeReading(Reading):
 
 
 class ReadingStore:
-    """The latest Community Reading from each Node, this Node's own included."""
+    """The recent Community Readings from each Node, this Node's own included."""
 
-    def __init__(self) -> None:
+    def __init__(self, history_seconds: float) -> None:
+        self._history_window = timedelta(seconds=history_seconds)
         self._lock = threading.Lock()
-        self._latest: dict[str, tuple[CommunityReading, datetime]] = {}
+        self._history: dict[str, deque[tuple[CommunityReading, datetime]]] = {}
 
     def record(self, sender: str, reading: CommunityReading, received_at: datetime) -> None:
         with self._lock:
-            known = self._latest.get(sender)
+            history = self._history.setdefault(sender, deque())
             # A repeated or relayed-late copy must not overwrite a newer reading.
-            if known and reading.seq <= known[0].seq:
+            if history and reading.seq <= history[-1][0].seq:
                 return
-            self._latest[sender] = (reading, received_at)
+            history.append((reading, received_at))
+            while history[0][1] < received_at - self._history_window:
+                history.popleft()
+
+    def recent(self, now: datetime) -> dict[str, list[CommunityReading]]:
+        """Each Node's readings from the history window, oldest first.
+
+        A Node that has said nothing within the window still keeps its last reading, because
+        nothing yet drops silent Nodes (ticket 0021).
+        """
+        since = now - self._history_window
+        recent: dict[str, list[CommunityReading]] = {}
+        with self._lock:
+            for sender, history in self._history.items():
+                in_window = [reading for reading, received_at in history if received_at >= since]
+                recent[sender] = in_window or [history[-1][0]]
+        return recent
 
     def latest(self, now: datetime) -> list[NodeReading]:
         with self._lock:
-            latest = sorted(self._latest.items())
+            latest = sorted((sender, history[-1]) for sender, history in self._history.items())
         return [
             NodeReading(
                 node=sender,

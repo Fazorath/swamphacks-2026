@@ -71,8 +71,16 @@ The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and l
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
-A community estimate of flooding danger (Low, Elevated or High) that every Node derives from the Community Readings it can see.
+A community estimate of flooding danger (Low, Elevated or High) that every Node derives from the Community Readings it can see. It is shown only while it is raining or the Storm Signal is on; in calm weather no Flood Risk is shown at all, not even Low.
 _Avoid_: flood score, danger level, threat level
+
+**Raining**:
+The condition, judged across the Mesh and not from any single Node, that soil moisture is rising at two or more of the Nodes that count (or at the only one that counts). It is what lets Flood Risk appear as Low.
+_Avoid_: wet weather, precipitation
+
+**Storm Signal**:
+The dashboard indicator that air pressure is low across the Nodes that count, a sign a storm is approaching. It stays on while pressure stays low and is separate from Flood Risk, though it makes Flood Risk appear (as Low) when nothing else would.
+_Avoid_: storm warning, storm alert, pressure alarm
 
 ## Evacuation
 
