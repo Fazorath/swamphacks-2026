@@ -168,7 +168,7 @@ def test_reasons_show_tidy_values(meshed_nodes: MeshedNodes) -> None:
     assert all(value == round(value, 1) for value in values)
 
 
-def _surge_reason(client: TestClient) -> dict[str, Any] | None:
+def _surge_reason_of(client: TestClient) -> dict[str, Any] | None:
     return next((r for r in _flood_risk(client)["reasons"] if r["code"] == "water_surge"), None)
 
 
@@ -181,7 +181,7 @@ def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: Mes
     assert flood_risk["level"] == "high"
     assert flood_risk["nodes"]["creek"] == "high"
     assert flood_risk["surged"] == ["creek"]
-    assert _surge_reason(meshed_nodes["porch"]) == {
+    assert _surge_reason_of(meshed_nodes["porch"]) == {
         "code": "water_surge",
         "nodes": 1,
         "value": 320,
@@ -196,7 +196,7 @@ def test_the_same_rise_spread_over_a_long_time_is_not_a_surge(meshed_nodes: Mesh
     meshed_nodes.hear_from("creek", water_cm=340)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["surged"] == []
-    assert _surge_reason(meshed_nodes["porch"]) is None
+    assert _surge_reason_of(meshed_nodes["porch"]) is None
     assert "water_high" in _reason_codes(meshed_nodes["porch"])
 
 
@@ -232,7 +232,7 @@ def test_only_the_node_that_surged_is_listed_and_the_reason_reports_its_rise(
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["surged"] == ["creek"]
     assert flood_risk["nodes"] == {"creek": "high", "garage": None, "porch": None}
-    surge = _surge_reason(meshed_nodes["porch"])
+    surge = _surge_reason_of(meshed_nodes["porch"])
     assert surge is not None and surge["nodes"] == 1 and surge["value"] == 180
 
 
@@ -245,7 +245,7 @@ def test_the_reason_reports_the_biggest_rise_when_several_nodes_surge(
     meshed_nodes.advance(6)
     meshed_nodes.hear_from("creek", water_cm=150)
     meshed_nodes.hear_from("garage", water_cm=400)
-    surge = _surge_reason(meshed_nodes["porch"])
+    surge = _surge_reason_of(meshed_nodes["porch"])
     assert surge is not None
     assert (surge["nodes"], surge["value"], surge["seconds"]) == (2, 380, 6)
 

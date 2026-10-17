@@ -165,6 +165,16 @@ test("a Surge says how far the water rose and how long it took, without repeatin
   expect(within(card).queryByText(/rising/)).not.toBeInTheDocument();
 });
 
+test("a Surge seen within one reading interval says the water rose at once", async () => {
+  stubFloodRisk({
+    ...SURGE,
+    reasons: [{ code: "water_surge", nodes: 1, value: 150, seconds: 0 }],
+  });
+  render(<App />);
+  const card = await screen.findByRole("region", { name: "Flood Risk" });
+  expect(within(card).getByText("water rose 1.5 m at once")).toBeInTheDocument();
+});
+
 test("the Storm Signal sits on the map and the card leaves it out when other reasons exist", async () => {
   stubFloodRisk(HIGH);
   render(<App />);

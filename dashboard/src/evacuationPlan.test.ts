@@ -74,6 +74,7 @@ function floodRisk(level: FloodRisk["level"]): FloodRisk {
     reasons: level ? [{ code: "water_high", nodes: 2, value: 55 }] : [],
     storm_signal: { on: false, nodes: 0, pressure_hpa: null },
     nodes: {},
+    surged: [],
   };
 }
 

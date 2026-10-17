@@ -15,7 +15,7 @@ export type FloodRisk = {
   reasons: FloodRiskReason[];
   storm_signal: { on: boolean; nodes: number; pressure_hpa: number | null };
   nodes: Record<string, NodeLevel | null>;
-  surged?: string[];
+  surged: string[];
 };
 
 const POLL_EVERY_MS = 1000;

@@ -4,9 +4,9 @@ function nodeCount(count: number): string {
   return count === 1 ? "1 Node" : `${count} Nodes`;
 }
 
+// A Surge is judged over at most a minute, so seconds is always enough.
 function howLong(seconds: number): string {
-  if (seconds === 0) return "at once";
-  return seconds < 60 ? `in ${seconds} s` : `in ${Math.round(seconds / 60)} min`;
+  return seconds === 0 ? "at once" : `in ${seconds} s`;
 }
 
 export function reasonSentence({ code, nodes, value, seconds }: FloodRiskReason): string {
