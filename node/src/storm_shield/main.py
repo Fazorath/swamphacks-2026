@@ -49,11 +49,9 @@ class CachePackStatus(BaseModel):
 
 def create_app(
     settings: Settings,
-    mesh: Mesh | None = None,
+    mesh: Mesh,
     pack_source: httpx.Client | None = None,
 ) -> FastAPI:
-    # Until the Reticulum Mesh lands, a Node started on its own hears only itself.
-    mesh = mesh or InMemoryNetwork().join(settings.name)
     cache_pack = CachePack(settings.cache_pack_dir)
     pack_source = pack_source or httpx.Client(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True

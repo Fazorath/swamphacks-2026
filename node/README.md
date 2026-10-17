@@ -39,6 +39,12 @@ $env:NODE_MESH_INTERFACE="tcp"; $env:NODE_TCP_PEERS="100.64.0.2,100.64.0.3"; uv 
 
 Peers are `host` or `host:port` (default port `NODE_TCP_PORT`, 4242); allow that TCP port through the firewall. Nothing is discovered in this mode, so adding a machine means editing the others' `NODE_TCP_PEERS` and restarting them. It is also the fixed-address fallback the ticket asks for if automatic discovery fails on the Pi hotspot.
 
+On Linux (the Pis) or in Git Bash, set the same variables inline instead:
+
+```
+NODE_MESH_INTERFACE=tcp NODE_TCP_PEERS=100.64.0.2,100.64.0.3 uv run storm-shield-node
+```
+
 Two Nodes on one machine cannot use `auto`: AutoInterface ignores the machine's own addresses and its UDP ports collide.
 
 Moving to the Pis: on each Pi leave `NODE_MESH_INTERFACE` unset (it defaults to `auto`) and give it its own `NODE_NAME`. Nothing else changes.
