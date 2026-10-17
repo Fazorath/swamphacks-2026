@@ -22,13 +22,13 @@ def _event_clock(meshed_nodes: MeshedNodes, name: str) -> dict[str, object]:
     return clock
 
 
-def _own_reading(meshed_nodes: MeshedNodes, viewer: str, node: str, kind: str) -> dict[str, float]:
+def _latest_reading(meshed_nodes: MeshedNodes, viewer: str, node: str, kind: str) -> dict[str, float]:
     readings = meshed_nodes[viewer].get("/api/readings").json()
     return next(r for r in readings if r["node"] == node and r["kind"] == kind)
 
 
 def _water_cm(meshed_nodes: MeshedNodes, viewer: str, node: str) -> float:
-    return _own_reading(meshed_nodes, viewer, node, "water_level")["value"]
+    return _latest_reading(meshed_nodes, viewer, node, "water_level")["value"]
 
 
 def _start_replay(meshed_nodes: MeshedNodes) -> None:
@@ -86,7 +86,7 @@ def test_a_sensor_whose_track_ends_goes_stale(meshed_nodes: MeshedNodes) -> None
     meshed_nodes.advance(20)
     time.sleep(0.2)
     for viewer in ("s0", "hub"):
-        age = _own_reading(meshed_nodes, viewer, "s0", "water_level")["age_s"]
+        age = _latest_reading(meshed_nodes, viewer, "s0", "water_level")["age_s"]
         assert age > STALE_AFTER_SECONDS
 
 
