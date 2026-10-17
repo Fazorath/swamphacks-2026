@@ -53,6 +53,7 @@ from storm_shield.shelter_status import (
     ShelterStatus,
     UnknownShelter,
 )
+from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
 
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
@@ -312,9 +313,13 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        publish_every_seconds = settings.publish_every_seconds
+        if settings.replay_track:
+            publish_every_seconds = min(publish_every_seconds, REPLAY_PUBLISH_EVERY_SECONDS)
+
         async def keep_sharing() -> None:
             while True:
-                await asyncio.sleep(settings.publish_every_seconds)
+                await asyncio.sleep(publish_every_seconds)
                 try:
                     share_own_readings()
                 except Exception:

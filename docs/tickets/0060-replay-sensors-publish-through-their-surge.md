@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [ ] Each Sensor track (S0 to S3) puts a reading above its Surge size on the Mesh before its `silent_at`, however the run is phased, and not only when the Replay starts at a phase right before the ramp
-- [ ] The widened ramps keep their sourced times: keyframes that cite a reported time stay where they are, and only reconstructed ones move, each labelled `reconstructed`
-- [ ] Seam A test: start the Replay from the beginning with the Sensors' real publish interval; the Hub's Flood Risk lists the Sensor in `surged` for each Sensor, once its ramp has played
-- [ ] The Hub dashboard shows the "water rose ... m in ... s" reason during the demo's first Surge without a jump to a phase
-- [ ] All **Commands** pass
+- [x] Each Sensor track (S0 to S3) puts a reading above its Surge size on the Mesh before its `silent_at`, however the run is phased, and not only when the Replay starts at a phase right before the ramp
+- [x] The widened ramps keep their sourced times: keyframes that cite a reported time stay where they are, and only reconstructed ones move, each labelled `reconstructed`
+- [x] Seam A test: start the Replay from the beginning with the Sensors' real publish interval; the Hub's Flood Risk lists the Sensor in `surged` for each Sensor, once its ramp has played
+- [x] The Hub dashboard shows the "water rose ... m in ... s" reason during the demo's first Surge without a jump to a phase
+- [x] All **Commands** pass
