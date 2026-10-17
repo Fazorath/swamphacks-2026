@@ -1,8 +1,12 @@
+import json
 import time
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
+
+from storm_shield.flood_risk import STORM_PRESSURE_HPA
 
 
 def _step(client: TestClient, times: int = 1) -> None:
@@ -283,5 +287,18 @@ def test_the_replays_calm_phase_is_low_with_no_storm_signal(meshed_nodes: Meshed
         time.sleep(0.01)
     flood_risk = state["flood_risk"]
     assert flood_risk["level"] is None
+    assert flood_risk["reasons"] == []
     assert flood_risk["storm_signal"]["on"] is False
     assert set(flood_risk["nodes"].values()) == {None}
+
+
+def test_no_replay_keyframe_is_below_the_storm_signal_pressure() -> None:
+    timeline = json.loads(
+        (Path(__file__).parents[1] / "src/storm_shield/replay_timeline.json").read_text()
+    )
+    lowest = min(
+        keyframe["pressure_hpa"]
+        for track in timeline["tracks"].values()
+        for keyframe in track["keyframes"]
+    )
+    assert lowest >= STORM_PRESSURE_HPA
