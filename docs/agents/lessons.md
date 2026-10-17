@@ -287,3 +287,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **`_counts` already kept an Unverified Node's Surge out of Flood Risk and warnings**; 0061 only added the missing Seam A test (`test_unverified_surge.py`). Breaking `_counts` to `return True` makes it fail.
 - **The ticket's "100 cm jump" predates 0062**: a Surge is 300 cm or more now, so the test jumps 20 to 340 cm.
+
+## Wave ETA (ticket 0047)
+
+- **The ETA is `dashboard/src/waveEta.ts`, computed on the Viewer from `river.geojson`** (read once by `useRiverLine`; a pack without it gives no ETA and no error). The home snaps to the nearest river vertex, and a home more than 2 km from the line gets "not near the river" instead of a countdown. By hand, the spec's numbers check out: S0 (km -12.2) to Betrawati (km 45) is 12.2/190 + 45/68 h, about 43.6 min.
+- **The plan's line follows the earliest arrival over all warnings; each warning card counts down to its own Surge.** A second Surge from a node nearer home can therefore beat the first, and a test that expects the later origin to arrive later is wrong (it was, first time).
+- **The Event clock only moves once a second in the dashboard** (`useEventClock` polls `/api/replay`), so at ×30 the minutes drop in steps. Not smoothed between polls.
+- `test_reticulum_nodes.py::test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed again in one full `scripts/check.sh` run and passed alone (`scripts/stop-nodes.sh` first); no Node code changed.
