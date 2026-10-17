@@ -4,7 +4,7 @@
 
 **Blocked by:** 0013, 0043
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
@@ -12,9 +12,9 @@
 
 **Design:** `docs/design/ui.md` ("Evacuation Plan Panel", "Alerts Panel")
 
-- [ ] The Evacuation Plan snaps the home to the river line in the Cache Pack and adds up travel time through each reach from the warning's `origin_km`
-- [ ] The countdown follows the Event clock, pauses when the Replay pauses, and shows "wave expected now" at or past zero, never a negative number
-- [ ] A home upstream of the origin gets no ETA
-- [ ] The ETA leads the Evacuation Plan Panel and the Community Warning card
-- [ ] Seam B tests: ETA from origin River km and reach speeds; countdown reaches "wave expected now"; no ETA upstream; no request carries the home location
-- [ ] All **Commands** pass
+- [x] The Evacuation Plan snaps the home to the river line in the Cache Pack and adds up travel time through each reach from the warning's `origin_km`
+- [x] The countdown follows the Event clock, pauses when the Replay pauses, and shows "wave expected now" at or past zero, never a negative number
+- [x] A home upstream of the origin gets no ETA
+- [x] The ETA leads the Evacuation Plan Panel and the Community Warning card
+- [x] Seam B tests: ETA from origin River km and reach speeds; countdown reaches "wave expected now"; no ETA upstream; no request carries the home location
+- [x] All **Commands** pass

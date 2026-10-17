@@ -311,7 +311,8 @@ section .empty-panel p {
   line-height: 1.45;
 }
 
-.lead-time {
+.lead-time,
+.wave-eta {
   margin-bottom: 0.5rem;
   font-weight: bold;
 }

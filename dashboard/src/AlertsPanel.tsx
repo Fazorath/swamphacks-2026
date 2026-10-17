@@ -9,6 +9,8 @@ import {
 } from "./officialAlerts";
 import { OFFICIAL_SOURCE, warningSentence, type CommunityWarning } from "./communityWarnings";
 import type { NodeSnapshot } from "./nodeState";
+import type { WaveArrival } from "./waveEta";
+import { WaveEtaLine } from "./WaveEtaLine";
 
 // "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
 function issuedAsGiven(issued: string): string {
@@ -22,6 +24,8 @@ export function AlertsPanel({
   thisNodeId,
   appliesToYouIds,
   firstCommunityWarningAt,
+  waveArrival,
+  eventT,
   online,
 }: {
   alerts: OfficialAlert[];
@@ -30,6 +34,8 @@ export function AlertsPanel({
   thisNodeId: string;
   appliesToYouIds: string[];
   firstCommunityWarningAt: number | null;
+  waveArrival: WaveArrival | null;
+  eventT: number | null;
   online: boolean;
 }) {
   const leadTime = leadTimeLine(firstCommunityWarningAt, alerts);
@@ -68,6 +74,7 @@ export function AlertsPanel({
       ))}
       {[...warnings].reverse().map((warning) => (
         <article key={warning.id} className="community-warning" aria-label="Community Warning">
+          <WaveEtaLine arrival={waveArrival} eventT={eventT} />
           <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
           <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
           <p>Signed by the Hub · verified</p>
