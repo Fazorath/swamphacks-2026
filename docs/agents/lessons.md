@@ -189,3 +189,4 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 ## Map tiles from the Cache Pack (ticket 0026)
 
 - **The map picks its tile URL from `packAvailable` (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
+- **The valley pack's tiles stop at z14**, so zooming past it asked the Node for tiles that do not exist and the map went blank (no CARTO key to fall back on). `TileLayer` now gets `maxNativeZoom` from the highest `tiles/{z}` in the manifest and stretches the z14 tiles. Found on a phone.

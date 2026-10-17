@@ -14,7 +14,7 @@ async function getJson(url: string): Promise<unknown> {
 async function fetchCachePack(): Promise<CachePackContents | null> {
   const status = (await getJson("/api/cache-pack")) as {
     available?: boolean;
-    manifest?: { route_grid?: RouteGrid } | null;
+    manifest?: { route_grid?: RouteGrid; files?: Record<string, string> } | null;
   };
   if (status.available !== true) return null;
   const [shelters, floodProne] = await Promise.all([
@@ -23,7 +23,11 @@ async function fetchCachePack(): Promise<CachePackContents | null> {
   ]);
   // A pack built without Routes has no grid.
   const routeGrid = status.manifest?.route_grid ?? null;
-  return { shelters, floodProne, routeGrid } as CachePackContents;
+  const tileZooms = Object.keys(status.manifest?.files ?? {})
+    .filter((path) => path.startsWith("tiles/"))
+    .map((path) => Number(path.split("/")[1]));
+  const tileMaxZoom = tileZooms.length > 0 ? Math.max(...tileZooms) : null;
+  return { shelters, floodProne, routeGrid, tileMaxZoom } as CachePackContents;
 }
 
 // The pack never changes once a Node holds a valid one, so it is read once and then kept.

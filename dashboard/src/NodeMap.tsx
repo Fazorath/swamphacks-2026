@@ -65,7 +65,7 @@ function FitToNodesUntilMoved({ nodes }: { nodes: NodeOnMap[] }) {
 
 type Props = {
   nodes: NodeOnMap[];
-  packAvailable: boolean;
+  packTileMaxZoom: number | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
   stormSignal: FloodRisk["storm_signal"] | null;
@@ -82,7 +82,7 @@ type Props = {
 
 export function NodeMap({
   nodes,
-  packAvailable,
+  packTileMaxZoom,
   selectedId,
   onSelect,
   stormSignal,
@@ -111,7 +111,8 @@ export function NodeMap({
         className={picking ? "node-map picking" : "node-map"}
       >
         <TileLayer
-          url={tileUrlTemplate(packAvailable)}
+          url={tileUrlTemplate(packTileMaxZoom !== null)}
+          maxNativeZoom={packTileMaxZoom ?? undefined}
           attribution={MAP_CREDIT}
           eventHandlers={{
             tileerror: ({ tile }) => {

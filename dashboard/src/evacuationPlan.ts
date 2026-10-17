@@ -21,6 +21,8 @@ export type CachePackContents = {
   shelters: Shelter[];
   floodProne: { features: { geometry: FloodProneGeometry }[] };
   routeGrid: RouteGrid | null;
+  // The deepest zoom the pack holds tiles for; null when it holds none.
+  tileMaxZoom: number | null;
 };
 
 export type EvacuationPlan = {

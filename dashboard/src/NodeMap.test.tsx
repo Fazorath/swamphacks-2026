@@ -13,11 +13,11 @@ vi.mock("react-leaflet", async (importOriginal) => ({
 
 import { NodeMap } from "./NodeMap";
 
-function renderMap(packAvailable: boolean) {
+function renderMap(packTileMaxZoom: number | null) {
   render(
     <NodeMap
       nodes={[]}
-      packAvailable={packAvailable}
+      packTileMaxZoom={packTileMaxZoom}
       selectedId={null}
       onSelect={() => {}}
       stormSignal={null}
@@ -35,16 +35,20 @@ function renderMap(packAvailable: boolean) {
 
 describe("NodeMap tiles", () => {
   it("reads tiles from the Cache Pack when the Node has one", () => {
-    expect(renderMap(true).url).toBe("/api/cache-pack/files/tiles/{z}/{x}/{y}.png");
+    expect(renderMap(14).url).toBe("/api/cache-pack/files/tiles/{z}/{x}/{y}.png");
+  });
+
+  it("stretches the pack's deepest tiles instead of asking for ones it lacks", () => {
+    expect(renderMap(14).maxNativeZoom).toBe(14);
   });
 
   it("falls back to online tiles without a pack", () => {
-    expect(renderMap(false).url).toBe("/api/tiles/{z}/{x}/{y}.png");
+    expect(renderMap(null).url).toBe("/api/tiles/{z}/{x}/{y}.png");
   });
 
   it("always shows the data credit", () => {
-    for (const packAvailable of [true, false]) {
-      expect(renderMap(packAvailable).attribution).toMatch(/OpenStreetMap.*CARTO/);
+    for (const maxZoom of [14, null]) {
+      expect(renderMap(maxZoom).attribution).toMatch(/OpenStreetMap.*CARTO/);
     }
   });
 });
