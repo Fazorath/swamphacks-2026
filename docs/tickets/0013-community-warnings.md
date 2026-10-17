@@ -20,3 +20,5 @@
 - [ ] The Hub dashboard shows the Community Warning log
 - [ ] Seam A tests: exactly one warning for one Registered Node's Surge, with origin, River km and event time; none for an Unverified Node; no repeat while the Surge holds; a badly signed warning is not shown
 - [ ] All **Commands** pass
+
+**On hold (2026-10-17):** no code yet. Claimed, but waiting until 0012 (Node registry, amitathik7) and 0046 (Surge, refloow-0) merge, since a warning fires on a Registered Node's Surge. 0047, 0048, 0039, 0050 and 0051 wait on this ticket.
