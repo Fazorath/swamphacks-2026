@@ -41,3 +41,9 @@ if [ $fail -ne 0 ]; then
   echo "Move secrets into .env (gitignored) and reference them from code. See AGENTS.md > Secrets." >&2
   exit 1
 fi
+
+# 3. Keep the ticket progress table in docs/tickets/README.md current.
+if git diff --cached --name-only --diff-filter=ACMRD | grep -qE '^docs/tickets/[0-9][^/]*\.md$'; then
+  scripts/ticket-status.sh --markdown > docs/tickets/README.md
+  git add docs/tickets/README.md
+fi

@@ -85,7 +85,7 @@ _Avoid_: storm warning, storm alert, pressure alarm
 ## Evacuation
 
 **Evacuation Plan**:
-What a resident should do and where to go: their risk, the nearest open Shelter, and a route to it.
+What a resident should do and where to go: their risk, the nearest open Shelter, and a route to it. Their risk is the Mesh-wide Flood Risk (the worst level across the Nodes that count), not a level tied to where their home is.
 _Avoid_: evac info, escape route
 
 **Household Profile**:

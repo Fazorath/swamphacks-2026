@@ -23,6 +23,7 @@ Every ticket carries these lines:
 ## Finding work
 
 - Ready tickets: `grep -l "Status:\*\* ready-for-agent" docs/tickets/*.md`
+- Everything at a glance: `scripts/ticket-status.sh` prints each ticket's status and owner with a done count. After you change a ticket's status, refresh the table in `docs/tickets/README.md` with `scripts/ticket-status.sh --markdown > docs/tickets/README.md`.
 - What's in progress: `grep -H "Owner:" docs/tickets/*.md | grep -v unclaimed`
 
 ## Status vocabulary

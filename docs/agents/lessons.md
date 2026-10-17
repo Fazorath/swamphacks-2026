@@ -41,3 +41,9 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - **`pnpm test` fails to start on Node 20.20**: vitest's jsdom worker dies loading `undici@8` (`Cannot read properties of undefined (reading 'bind')`). It passes on Node 22: `npx -y node@22 node_modules/vitest/vitest.mjs run` from `dashboard/`.
 - **The Scenario cannot reach "Low from rain" alone**: its rain step also lifts water to 35 cm, which is Elevated. `MeshedNodes.hear_from(sender, water_cm=..., soil_pct=...)` publishes one hand-made reading over the in-memory Mesh to test such rules; `MeshedNodes.advance(seconds)` moves every Node's clock.
 - In `MeshedNodes`, a Node only hears peers that publish after it joins. Post `/api/scenario/reset` on each Node first when a test counts Nodes.
+
+## Evacuation Plan (ticket 0009)
+
+- **Every Shelter is open at startup, on purpose.** Until 0015 adds the Hub operator toggle, each Node seeds its open-Shelter list with every Shelter in its own Cache Pack. That is demo scaffolding, not real shelter data; the wire format says nothing counts as open until listed.
+- **"Nearest" Shelter is straight-line distance** until 0010 ranks by road distance.
+- **Map tiles stutter** because every tile is fetched live from CARTO through the Node; ticket 0026 serves them from the Cache Pack first.
