@@ -27,7 +27,7 @@ from storm_shield.internet_connection import (
     InternetConnection,
     Status,
 )
-from storm_shield.mesh import InMemoryNetwork, Mesh
+from storm_shield.mesh import InMemoryNetwork, Mesh, Message
 from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
@@ -94,8 +94,9 @@ def create_app(
         store.record(mesh.identity, reading, clock())
         mesh.publish(reading)
 
-    def store_reading_from(sender: str, reading: CommunityReading) -> None:
-        store.record(sender, reading, clock())
+    def store_reading_from(sender: str, message: Message) -> None:
+        if isinstance(message, CommunityReading):
+            store.record(sender, message, clock())
 
     mesh.subscribe(store_reading_from)
     share_own_readings()
@@ -262,7 +263,7 @@ def create_app(
 
 def build_mesh(settings: Settings) -> Mesh:
     if settings.mesh == "memory":
-        return InMemoryNetwork().join(settings.name)
+        return InMemoryNetwork().join(settings.name, settings.hub_identity)
     return ReticulumMesh(settings)
 
 

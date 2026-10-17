@@ -3,14 +3,15 @@ import threading
 import time
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import RNS
-from pydantic import ValidationError
+from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
-from storm_shield.mesh import MessageListener
+from storm_shield.mesh import Message, MessageListener
 from storm_shield.settings import Settings
+from storm_shield.shelter_status import ShelterStatus
 
 APP_NAME = "storm_shield"
 ANNOUNCE_EVERY_SECONDS = 10
@@ -23,6 +24,10 @@ SIGNATURE_LENGTH = 64
 LOOPBACK_BASE_PORT = 4250
 
 logger = logging.getLogger(__name__)
+
+_MESSAGE: TypeAdapter[Message] = TypeAdapter(
+    Annotated[CommunityReading | ShelterStatus, Field(discriminator="kind")]
+)
 
 
 def node_id(identity: Any) -> str:
@@ -74,34 +79,43 @@ def _peer_address(entry: str, default_port: int) -> tuple[str, int]:
     return (host, int(port) if port else default_port)
 
 
-def sign(identity: Any, reading: CommunityReading) -> bytes:
+def sign(identity: Any, message: Message) -> bytes:
     """Signature then JSON: Reticulum does not say who sent a data packet, so the Node does."""
-    body = reading.model_dump_json().encode()
+    body = message.model_dump_json().encode()
     return bytes(identity.sign(body)) + body
 
 
-def verify(data: bytes, known_nodes: Mapping[str, Any]) -> CommunityReading | None:
-    """The reading if its Node has announced itself and its signature holds, else None."""
+def verify(
+    data: bytes, known_nodes: Mapping[str, Any], hub_identity: str = ""
+) -> tuple[str, Message] | None:
+    """The verified sender and message, or None if it is unknown, forged or not from who may send it.
+
+    A reading names its Node. Shelter status names nobody, so it must verify against the Hub key.
+    """
     if len(data) <= SIGNATURE_LENGTH:
         return None
     signature, body = data[:SIGNATURE_LENGTH], data[SIGNATURE_LENGTH:]
     try:
-        reading = CommunityReading.model_validate_json(body)
+        message = _MESSAGE.validate_json(body)
     except ValidationError:
-        logger.warning("dropped a mesh packet that is not a Community Reading")
+        # Unknown kinds land here too: a newer Node's message is ignored, not an error.
+        logger.warning("dropped a mesh packet that is not a message this Node understands")
         return None
-    sender = known_nodes.get(reading.node)
+    sender_id = message.node if isinstance(message, CommunityReading) else hub_identity
+    sender = known_nodes.get(sender_id)
     # Nothing to log for an unknown sender: until its announce arrives that is the normal case.
     if sender is None:
         return None
     if not sender.validate(signature, body):
-        logger.warning("dropped a reading whose signature does not match Node %s", reading.node)
+        logger.warning(
+            "dropped a %s whose signature does not match Node %s", message.kind, sender_id
+        )
         return None
-    return reading
+    return sender_id, message
 
 
 class ReticulumMesh:
-    """Readings as signed, unencrypted broadcast packets; Nodes learn each other from announces."""
+    """Mesh messages as signed, unencrypted broadcast packets; Nodes learn each other from announces."""
 
     def __init__(self, settings: Settings) -> None:
         config_dir = settings.data_dir / "reticulum"
@@ -112,6 +126,7 @@ class ReticulumMesh:
 
         self._key = _load_or_create_identity(settings.data_dir / "identity")
         self.identity = node_id(self._key)
+        self._hub_identity = settings.hub_identity
         self._known_nodes: dict[str, Any] = {}
         self._listeners: list[MessageListener] = []
 
@@ -130,26 +145,27 @@ class ReticulumMesh:
 
         threading.Thread(target=self._announce_forever, daemon=True).start()
 
-    def publish(self, message: CommunityReading) -> None:
+    def publish(self, message: Message) -> None:
         packet = sign(self._key, message)
         if len(packet) > RNS.Packet.PLAIN_MDU:
-            raise ValueError(f"signed reading is {len(packet)} bytes, over one Reticulum packet")
+            raise ValueError(f"signed message is {len(packet)} bytes, over one Reticulum packet")
         if not RNS.Packet(self._readings_out, packet).send():
-            logger.warning("Reticulum did not send this Node's reading")
+            logger.warning("Reticulum did not send this Node's %s", message.kind)
 
     def subscribe(self, listener: MessageListener) -> None:
         self._listeners.append(listener)
 
     def _on_packet(self, data: bytes, _packet: Any) -> None:
-        reading = verify(data, self._known_nodes)
-        if reading is None:
+        verified = verify(data, self._known_nodes, self._hub_identity)
+        if verified is None:
             return
+        sender, message = verified
         for listener in self._listeners:
             try:
-                listener(reading.node, reading)
+                listener(sender, message)
             except Exception:
                 # Reticulum would swallow this silently on its own thread.
-                logger.exception("a listener failed on a reading from %s", reading.node)
+                logger.exception("a listener failed on a %s from %s", message.kind, sender)
 
     def _announce_forever(self) -> None:
         while True:

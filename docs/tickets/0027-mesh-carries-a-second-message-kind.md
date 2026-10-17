@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
 **Spec:** `docs/specs/shelter-status.md`
 
-- [ ] The Mesh interface publishes and delivers a Shelter status message (`kind: "shelters"`, format in `docs/specs/wire-formats.md`) next to Community Readings; unknown kinds are still ignored
-- [ ] The in-memory Mesh and the Reticulum Mesh both carry it, signed by the sender and checked before it reaches any listener
-- [ ] `HUB_IDENTITY` is a setting, documented in `.env.example` with a blank value and a note that a wrong or missing one means the Node shows nothing open
-- [ ] Seam A tests: a Shelter status signed by the configured Hub identity is delivered; one signed by any other Node is ignored; Community Readings still flow as before
-- [ ] All **Commands** pass (Pi or two-laptop discovery stays unproven; rehearse on loopback and say so)
+- [x] The Mesh interface publishes and delivers a Shelter status message (`kind: "shelters"`, format in `docs/specs/wire-formats.md`) next to Community Readings; unknown kinds are still ignored
+- [x] The in-memory Mesh and the Reticulum Mesh both carry it, signed by the sender and checked before it reaches any listener
+- [x] `HUB_IDENTITY` is a setting, documented in `.env.example` with a blank value and a note that a wrong or missing one means the Node shows nothing open
+- [x] Seam A tests: a Shelter status signed by the configured Hub identity is delivered; one signed by any other Node is ignored; Community Readings still flow as before
+- [x] All **Commands** pass (Pi or two-laptop discovery stays unproven; rehearse on loopback and say so)
