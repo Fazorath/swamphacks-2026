@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")
+    # Secret: only this Node ever holds it; the dashboard asks the Node for tiles.
+    carto_api_key: str = Field(default="", validation_alias="CARTO_API_KEY")
     cache_pack_dir: Path = Field(
         default=Path(__file__).resolve().parents[3] / "cache-pack",
         validation_alias="CACHE_PACK_DIR",

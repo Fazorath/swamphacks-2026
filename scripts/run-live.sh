@@ -5,6 +5,12 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+# Secrets (CARTO_API_KEY) live in .env; Nodes read the environment, not the file.
+if [ -f .env ]; then
+  set -a
+  . ./.env
+  set +a
+fi
 export NODE_ROLE="${NODE_ROLE:-hub}"
 export NODE_NAME="${NODE_NAME:-hub-1}"
 interval="${INTERVAL:-10}"
