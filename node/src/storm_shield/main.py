@@ -411,7 +411,9 @@ def create_app(
             if phase is None:
                 raise HTTPException(status_code=422, detail=f"unknown phase {jump.phase!r}")
             keeps_paused = event_clock.current(clock()).state == "paused"
-            return set_replay("paused" if keeps_paused else "playing", timeline.event_t_at(phase.at))
+            return set_replay(
+                "paused" if keeps_paused else "playing", timeline.event_t_at(phase.at)
+            )
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:
