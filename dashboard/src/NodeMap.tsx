@@ -50,13 +50,8 @@ export function NodeMap({ nodes, selectedId, onSelect }: Props) {
               className={`node-dot ${state}`}
               eventHandlers={{ click: () => onSelect(node.id) }}
             >
-              <Tooltip
-                permanent
-                interactive
-                direction="right"
-                className={`node-label ${state}`}
-                eventHandlers={{ click: () => onSelect(node.id) }}
-              >
+              {/* An interactive tooltip bubbles its clicks to the marker, so only the marker listens. */}
+              <Tooltip permanent interactive direction="right" className={`node-label ${state}`}>
                 <strong>{node.label}</strong>
                 {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
                 <NodeTags node={node} />
