@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** leonardorofaDV
 
 **Spec:** `docs/specs/storm-shield.md`
 
