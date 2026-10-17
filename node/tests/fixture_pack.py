@@ -17,10 +17,15 @@ TILE = b"\x89PNG fixture tile"
 TILE_PATH = "tiles/11/563/859.png"
 
 
-def build_fixture_pack(*, corrupt_tile: bool = False, leave_out_tile: bool = False) -> bytes:
+def build_fixture_pack(
+    *,
+    corrupt_tile: bool = False,
+    leave_out_tile: bool = False,
+    shelters: list[dict[str, object]] = SHELTERS,
+) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
     files = {
-        "shelters.json": json.dumps(SHELTERS).encode(),
+        "shelters.json": json.dumps(shelters).encode(),
         "flood_prone.geojson": json.dumps(FLOOD_PRONE).encode(),
         TILE_PATH: TILE,
     }

@@ -21,6 +21,7 @@ class MeshedNodes:
         self._clients: dict[str, TestClient] = {}
         self._now = datetime.now(UTC)
         self._hand_fed: dict[str, tuple[InMemoryMesh, int]] = {}
+        self._running: list[TestClient] = []
 
     def start(self, *names: str, cache_pack: tuple[Path, bytes] | None = None) -> None:
         """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
@@ -32,6 +33,25 @@ class MeshedNodes:
                 settings = settings.model_copy(update={"cache_pack_dir": directory / name})
                 CachePack(directory / name).install(pack)
             self._clients[name] = TestClient(create_app(settings, mesh, clock=lambda: self._now))
+
+    def start_hub(
+        self, cache_pack: tuple[Path, bytes] | None = None, *, shelter_repeat_seconds: float = 30
+    ) -> None:
+        """Start the Hub, whose identity is `HUB`, with its background loops running."""
+        settings = Settings(name=HUB, role="hub", shelter_repeat_seconds=shelter_repeat_seconds)
+        if cache_pack:
+            directory, pack = cache_pack
+            settings = settings.model_copy(update={"cache_pack_dir": directory / HUB})
+            CachePack(directory / HUB).install(pack)
+        mesh = self._network.join(HUB, HUB)
+        client = TestClient(create_app(settings, mesh, clock=lambda: self._now))
+        client.__enter__()
+        self._running.append(client)
+        self._clients[HUB] = client
+
+    def close(self) -> None:
+        for client in self._running:
+            client.__exit__(None, None, None)
 
     def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Shelter status."""

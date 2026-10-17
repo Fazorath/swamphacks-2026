@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     # How often this Node checks whether it has internet, and whether a camera picture is due.
     internet_check_seconds: float = 5
+    # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
+    # converges.
+    shelter_repeat_seconds: float = 30
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")

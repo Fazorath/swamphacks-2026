@@ -32,7 +32,12 @@ from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
-from storm_shield.shelter_status import HeardShelterStatus, ShelterStatus
+from storm_shield.shelter_status import (
+    HeardShelterStatus,
+    ShelterRegistry,
+    ShelterStatus,
+    UnknownShelter,
+)
 
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
@@ -55,6 +60,11 @@ class ScenarioState(BaseModel):
 
 class OpenShelters(BaseModel):
     open: list[str]
+
+
+class ShelterChange(BaseModel):
+    id: str
+    open: bool
 
 
 class CachePackStatus(BaseModel):
@@ -105,9 +115,23 @@ def create_app(
         if isinstance(message, ShelterStatus):
             shelter_status.hear(message)
 
+    shelter_registry = ShelterRegistry()
+
+    def announce_shelters(status: ShelterStatus) -> None:
+        # The Hub does not hear its own broadcasts, so it takes the status itself.
+        shelter_status.hear(status)
+        mesh.publish(status)
+
+    def repeat_shelter_status() -> None:
+        status = shelter_registry.snapshot(cache_pack.shelter_ids(), int(clock().timestamp()))
+        if status:
+            announce_shelters(status)
+
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_shelter_status)
     share_own_readings()
+    if settings.role == "hub":
+        repeat_shelter_status()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -149,11 +173,22 @@ def create_app(
                     logger.exception("could not refresh the camera pictures")
                 await asyncio.sleep(settings.internet_check_seconds)
 
+        # Also how a Hub whose pack arrives late starts announcing; it waits at most one period.
+        async def keep_repeating_shelter_status() -> None:
+            while True:
+                await asyncio.sleep(settings.shelter_repeat_seconds)
+                try:
+                    repeat_shelter_status()
+                except Exception:
+                    logger.exception("could not repeat the Shelter status")
+
         tasks = [
             asyncio.create_task(keep_sharing()),
             asyncio.create_task(keep_checking_internet()),
             asyncio.create_task(keep_cameras_fresh()),
         ]
+        if settings.role == "hub":
+            tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -241,6 +276,24 @@ def create_app(
     def open_shelters() -> OpenShelters:
         # Nothing counts as open until the Hub says so; an id this Node's pack lacks is ignored.
         return OpenShelters(open=shelter_status.open_among(cache_pack.shelter_ids()))
+
+    if settings.role == "hub":
+
+        @app.post("/api/shelters/open")
+        def set_shelter_open(change: ShelterChange) -> OpenShelters:
+            shelter_ids = cache_pack.shelter_ids()
+            if not shelter_ids:
+                raise HTTPException(
+                    status_code=503, detail="the Hub has no valid Cache Pack, so no Shelters yet"
+                )
+            try:
+                status = shelter_registry.set_open(
+                    change.id, change.open, shelter_ids, int(clock().timestamp())
+                )
+            except UnknownShelter:
+                raise HTTPException(status_code=422, detail=f"unknown Shelter {change.id!r}")
+            announce_shelters(status)
+            return OpenShelters(open=status.open)
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:
