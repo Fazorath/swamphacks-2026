@@ -54,7 +54,7 @@
 | [0049-one-laptop-demo-script](0049-one-laptop-demo-script.md) | done | Fazorath |
 | [0050-measured-wave-speed](0050-measured-wave-speed.md) | ready-for-agent | unclaimed |
 | [0051-valley-road-routes](0051-valley-road-routes.md) | ready-for-agent | unclaimed |
-| [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | ready-for-agent | unclaimed |
+| [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | in-progress | leonardorofaDV |
 | [0053-weather-grid-lookup](0053-weather-grid-lookup.md) | ready-for-agent | unclaimed |
 | [0054-weather-button-and-picker](0054-weather-button-and-picker.md) | ready-for-agent | unclaimed |
 | [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | ready-for-agent | unclaimed |
