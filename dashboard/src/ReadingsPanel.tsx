@@ -45,17 +45,15 @@ export function ReadingsPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onScenarioChanged]);
 
+  const firstNotCountedId = nodes.find((node) => !node.registered && !node.isThisNode)?.id;
+
   return (
     <section aria-label="Readings">
       <h2>Readings</h2>
       <FloodRiskCard floodRisk={floodRisk} />
-      {nodes.map((node, index) => (
+      {nodes.map((node) => (
         <Fragment key={node.id}>
-          {!node.registered &&
-            !node.isThisNode &&
-            (nodes[index - 1].registered || nodes[index - 1].isThisNode) && (
-              <p className="not-counted-divider">Not counted</p>
-            )}
+          {node.id === firstNotCountedId && <p className="not-counted-divider">Not counted</p>}
           <section
             aria-label={`Node ${node.label}`}
             aria-current={node.id === selectedId}

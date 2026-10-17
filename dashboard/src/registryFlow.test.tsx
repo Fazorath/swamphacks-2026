@@ -180,3 +180,15 @@ test("an Unverified this-Node stays on top and the divider appears once, above t
   const kitchen = within(readings).getByRole("region", { name: "Node kitchen" });
   expect(kitchen.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });
+
+test("an Unverified Node alone, with no card for this Node, gets the divider instead of crashing", async () => {
+  state = fakeNodeState({
+    nodes: [fakeNodeSnapshot("c0ffee000000", { registered: false, name: null })],
+  });
+  stubNode();
+  render(<App />);
+
+  const readings = await screen.findByRole("region", { name: "Readings" });
+  expect(await within(readings).findByText("Not counted")).toBeVisible();
+  expect(within(readings).getByRole("region", { name: "Node c0ffee000000" })).toBeVisible();
+});
