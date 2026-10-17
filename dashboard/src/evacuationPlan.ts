@@ -1,8 +1,10 @@
+import { inFloodProneArea, type FloodProneAreas } from "./floodProne";
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { Home, HouseholdProfile } from "./householdProfile";
 import { appliesToHousehold, type OfficialAlert } from "./officialAlerts";
 import type { LatLon, RouteGrid, Routes } from "./routeGrid";
 import type { FloodRisk } from "./nodeState";
+import { rerouteHome, routeIsAffected, type BlockedRoad, type RoadGraph } from "./rerouting";
 
 export type Shelter = {
   id: string;
@@ -12,18 +14,16 @@ export type Shelter = {
   pet_friendly: boolean;
 };
 
-// GeoJSON order is [lon, lat]; a ring is a closed list of points.
-type Ring = [number, number][];
-type FloodProneGeometry =
-  { type: "Polygon"; coordinates: Ring[] } | { type: "MultiPolygon"; coordinates: Ring[][] };
-
 export type CachePackContents = {
   shelters: Shelter[];
-  floodProne: { features: { geometry: FloodProneGeometry }[] };
+  floodProne: FloodProneAreas;
   routeGrid: RouteGrid | null;
   // The deepest zoom the pack holds tiles for; null when it holds none.
   tileMaxZoom: number | null;
 };
+
+// What the phone needs to find its own way when the precomputed Route will not do.
+export type Rerouting = { graph: RoadGraph; blocked: BlockedRoad[] };
 
 export type EvacuationPlan = {
   risk: { level: NonNullable<FloodRisk["level"]>; reasons: string[] } | null;
@@ -58,31 +58,6 @@ function routeLengthKm(route: LatLon[]): number {
   return total;
 }
 
-function insideRing({ lat, lon }: Home, ring: Ring): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [lonI, latI] = ring[i];
-    const [lonJ, latJ] = ring[j];
-    if (latI > lat !== latJ > lat && lon < ((lonJ - lonI) * (lat - latI)) / (latJ - latI) + lonI) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-// The first ring of a polygon is its outline; any others are holes.
-function insidePolygon(home: Home, [outline, ...holes]: Ring[]): boolean {
-  return insideRing(home, outline) && !holes.some((hole) => insideRing(home, hole));
-}
-
-function inFloodProneArea(home: Home, pack: CachePackContents): boolean {
-  return pack.floodProne.features.some(({ geometry }) =>
-    geometry.type === "Polygon"
-      ? insidePolygon(home, geometry.coordinates)
-      : geometry.coordinates.some((polygon) => insidePolygon(home, polygon)),
-  );
-}
-
 type Candidate = { shelter: Shelter; route: LatLon[] | null; km: number };
 
 function describe({ shelter, route, km }: Candidate): string {
@@ -109,6 +84,7 @@ function nearestFittingShelter(
   pack: CachePackContents,
   openShelterIds: string[],
   routes: Routes | null,
+  rerouting: Rerouting | null,
 ): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } {
   const open = pack.shelters.filter((shelter) => openShelterIds.includes(shelter.id));
   if (open.length === 0) {
@@ -131,7 +107,7 @@ function nearestFittingShelter(
       lines: ["No open Shelter matches this household. Follow official sources."],
     };
   }
-  const [nearest] = fitting
+  const candidates = fitting
     .map((shelter): Candidate => {
       const route = routes?.[shelter.id] ?? null;
       return {
@@ -141,11 +117,59 @@ function nearestFittingShelter(
       };
     })
     .sort(byRoadThenStraightLine);
+  const [nearest] = candidates;
+  const rerouted = rerouting && reroutedPlan(profile, pack, fitting, nearest, rerouting);
+  if (rerouted) return rerouted;
   const lines = [describe(nearest)];
   if (nearest.route) {
     lines.push("The route is the shortest by road and ignores flooding and road closures.");
   }
   return { shelter: nearest.shelter, route: nearest.route, lines };
+}
+
+// A Route is replaced only when it is affected: it runs along a Blocked Road or through a
+// Flood-Prone Area, or a resident has blocked roads and there is no Route to draw at all.
+function reroutedPlan(
+  profile: HouseholdProfile,
+  pack: CachePackContents,
+  fitting: Shelter[],
+  nearest: Candidate,
+  { graph, blocked }: Rerouting,
+): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } | null {
+  const affected = nearest.route
+    ? routeIsAffected(nearest.route, graph, blocked, pack.floodProne)
+    : blocked.length > 0;
+  if (!affected) return null;
+  const reached = rerouteHome({
+    graph,
+    home: profile.home,
+    shelters: fitting,
+    blocked,
+    floodProne: pack.floodProne,
+  });
+  // Without Blocked Roads, "nothing reachable" is the graph's doing, so the warning would be wrong.
+  if (reached === null || (reached.length === 0 && blocked.length === 0)) return null;
+  if (reached.length === 0) {
+    return {
+      shelter: nearest.shelter,
+      route: null,
+      lines: [
+        describe({ ...nearest, route: null, km: distanceKm(profile.home, nearest.shelter.pos) }),
+        "Roads you marked as blocked cut off every Shelter. Follow official sources.",
+      ],
+    };
+  }
+  const [best] = reached;
+  const lines = [describe(best)];
+  if (blocked.length > 0) {
+    lines.push(`Rerouted around ${blocked.length} blocked road${blocked.length === 1 ? "" : "s"}.`);
+  }
+  lines.push(
+    best.crossesFloodProneArea
+      ? "This route still crosses a Flood-Prone Area."
+      : "The route avoids the mapped Flood-Prone Areas.",
+  );
+  return { shelter: best.shelter, route: best.route, lines };
 }
 
 export function evacuationPlan({
@@ -154,6 +178,7 @@ export function evacuationPlan({
   openShelterIds,
   floodRisk,
   routes,
+  rerouting,
   officialAlerts,
 }: {
   profile: HouseholdProfile | null;
@@ -161,6 +186,7 @@ export function evacuationPlan({
   openShelterIds: string[];
   floodRisk: FloodRisk | null;
   routes: Routes | null;
+  rerouting: Rerouting | null;
   officialAlerts: OfficialAlert[];
 }): EvacuationPlan {
   const risk = floodRisk?.level
@@ -192,11 +218,17 @@ export function evacuationPlan({
     };
   }
 
-  const homeInFloodProneArea = inFloodProneArea(profile.home, pack);
+  const homeInFloodProneArea = inFloodProneArea(profile.home, pack.floodProne);
   const area = homeInFloodProneArea
     ? "Your home is inside a mapped Flood-Prone Area."
     : "Your home is outside the mapped Flood-Prone Areas (the river corridor, approximate).";
-  const { shelter, route, lines } = nearestFittingShelter(profile, pack, openShelterIds, routes);
+  const { shelter, route, lines } = nearestFittingShelter(
+    profile,
+    pack,
+    openShelterIds,
+    routes,
+    rerouting,
+  );
   return {
     ...plan,
     officialAlerts: officialAlerts.filter((alert) =>

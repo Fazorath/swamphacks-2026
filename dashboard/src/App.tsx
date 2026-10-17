@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AlertsPanel } from "./AlertsPanel";
 import { CamerasPanel } from "./CamerasPanel";
@@ -13,12 +13,15 @@ import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
+import { blockedRoadLines, roadNear } from "./rerouting";
+import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeState } from "./useNodeState";
 import { useOpenShelterIds } from "./useOpenShelterIds";
+import { useRoadGraph } from "./useRoadGraph";
 import { useRoutes } from "./useRoutes";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
@@ -50,6 +53,17 @@ export function App() {
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
+  const roadGraph = useRoadGraph(cachePack !== null);
+  const [blockedRoads, toggleBlockedRoad] = useBlockedRoads();
+  const [blocking, setBlocking] = useState(false);
+  const blockedLines = useMemo(
+    () => (roadGraph ? blockedRoadLines(roadGraph, blockedRoads) : []),
+    [roadGraph, blockedRoads],
+  );
+  const tapRoad = (point: Home) => {
+    const road = roadGraph && roadNear(roadGraph, point);
+    if (road) toggleBlockedRoad(road);
+  };
   // Kept while unreachable: each carries its own issue time, and losing an evacuation order to a
   // Wi-Fi drop is worse than showing one a few seconds old.
   const officialAlerts = lastAnswer?.state.official_alerts ?? [];
@@ -59,6 +73,7 @@ export function App() {
     openShelterIds,
     floodRisk,
     routes,
+    rerouting: roadGraph && { graph: roadGraph, blocked: blockedRoads },
     officialAlerts,
   });
   const [panelOpen, setPanelOpen] = useState(false);
@@ -180,6 +195,11 @@ export function App() {
           picking={picking}
           onPickHome={setDraftHome}
           onDonePicking={() => setPicking(false)}
+          blockedRoadLines={blockedLines}
+          canBlockRoads={roadGraph !== null}
+          blocking={blocking}
+          onToggleBlocking={() => setBlocking((on) => !on)}
+          onTapRoad={tapRoad}
         />
         <EvacuationPlanPanel
           plan={plan}

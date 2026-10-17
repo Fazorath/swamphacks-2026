@@ -1,5 +1,5 @@
 import pytest
-from pack_routes import BBox, Point, Roads, RouteGrid, build_routes, simplify
+from pack_routes import BBox, Point, Roads, RouteGrid, build_road_graph, build_routes, simplify
 
 # An L-shaped street with a Shelter at the end of it, and an island nobody can drive to it from.
 #
@@ -94,3 +94,26 @@ def test_simplify_drops_points_on_a_straight_line_and_keeps_corners() -> None:
         (29.651, -82.319),
     ]
     assert simplify(line) == [line[0], line[2], line[3]]
+
+
+def test_the_road_graph_folds_bends_into_segments_between_junctions() -> None:
+    graph = build_road_graph(Roads(COORDS, SEGMENTS), keep_near=[])
+    # Only the dead ends (2, 6, 7, 8) are junctions; 1, 3, 4, 5 are bends on the way from 2 to 6.
+    assert {tuple(node) for node in graph["nodes"]} == {COORDS[2], COORDS[6], COORDS[7], COORDS[8]}
+    assert len(graph["edges"]) == 2
+    long_edge = next(edge for edge in graph["edges"] if len(edge) == 4)
+    assert long_edge[2] > 300  # round the L, about 111 + 111 + 111 + 97 + 97 m
+    assert [29.652, -82.32] in long_edge[3]  # the corner at node 4 is kept for drawing
+
+
+def test_the_road_graph_keeps_the_road_node_nearest_a_shelter() -> None:
+    graph = build_road_graph(Roads(COORDS, SEGMENTS), keep_near=[(29.652, -82.3189)])
+    assert [29.652, -82.319] in graph["nodes"]
+    assert len(graph["edges"]) == 3
+
+
+def test_the_road_graph_ignores_one_way_rules() -> None:
+    one_way = [(5, 4, True) if segment[:2] == (4, 5) else segment for segment in SEGMENTS]
+    assert build_road_graph(Roads(COORDS, one_way), []) == build_road_graph(
+        Roads(COORDS, SEGMENTS), []
+    )
