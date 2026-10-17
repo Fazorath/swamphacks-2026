@@ -1,29 +1,47 @@
 [
   {
-    "id": "gainesville-high",
-    "name": "Gainesville High School",
-    "address": "1900 NE 8th Ave, Gainesville, FL",
-    "pos": [29.6636, -82.3068],
+    "id": "syabrubesi-gompa",
+    "name": "Buddhist gompa above Syabrubesi",
+    "pos": [28.16876, 85.34409],
+    "height_above_river_m": 66,
     "special_needs": false,
     "pet_friendly": false,
-    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
+    "source": "OpenStreetMap node 2852823436 (amenity=place_of_worship, religion=buddhist; unnamed in OSM, so the name describes it). Height: SRTM 30 m elevation (OpenTopoData) 1522 m minus 1456 m at the nearest river point, 154 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter. Confirm with Rasuwa District before the event."
   },
   {
-    "id": "eastside-high",
-    "name": "Eastside High School",
-    "address": "1201 SE 43rd St, Gainesville, FL",
-    "pos": [29.6395, -82.2905],
-    "special_needs": true,
-    "pet_friendly": true,
-    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
-  },
-  {
-    "id": "howard-bishop-middle",
-    "name": "Howard W. Bishop Middle School",
-    "address": "1901 NE 9th St, Gainesville, FL",
-    "pos": [29.6590, -82.3135],
+    "id": "komin-school",
+    "name": "Shree Komin Primary School",
+    "pos": [28.16167, 85.33217],
+    "height_above_river_m": 263,
     "special_needs": false,
-    "pet_friendly": true,
-    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
+    "pet_friendly": false,
+    "source": "OpenStreetMap node 4967982080 (amenity=school, hamlet Narkote). Height: SRTM 30 m elevation 1666 m minus 1403 m at the nearest river point, 383 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+  },
+  {
+    "id": "neelkanta-school",
+    "name": "Shree Neelkanta Higher Secondary School",
+    "pos": [27.97857, 85.18407],
+    "height_above_river_m": 96,
+    "special_needs": false,
+    "pet_friendly": false,
+    "source": "OpenStreetMap node 4706138525 (amenity=school), north of Betrawati. Height: SRTM 30 m elevation 711 m minus 615 m at the nearest river point, 241 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+  },
+  {
+    "id": "sundaradevi-school",
+    "name": "Shree Sundaradevi Primary School",
+    "pos": [27.97627, 85.17697],
+    "height_above_river_m": 159,
+    "special_needs": false,
+    "pet_friendly": false,
+    "source": "OpenStreetMap node 5063441826 (amenity=school, Pati ko Chautara-1), on the hillside west of Betrawati. Height: SRTM 30 m elevation 776 m minus 617 m at the nearest river point, 495 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+  },
+  {
+    "id": "karki-manakamana-school",
+    "name": "Shree Karki Manakamana Lower Secondary School",
+    "pos": [27.98826, 85.1742],
+    "height_above_river_m": 265,
+    "special_needs": false,
+    "pet_friendly": false,
+    "source": "OpenStreetMap node 5045819002 (amenity=school, Pokhari Chapdanda), on the hillside above Betrawati. Height: SRTM 30 m elevation 899 m minus 634 m at the nearest river point, 582 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
   }
 ]
