@@ -32,7 +32,7 @@
 - **The Hub persists the registry** like `shelter_status.json` (0030): restart at saved `ver` + 1, an unreadable file stops the Hub with an error naming it, and a failed save changes nothing and returns 500. Pending sign-ups are kept only in memory. Sensors do not save the registry.
 - **One packet only.** The Hub always sends `part: 1, of: 1` and refuses an accept that would not fit (409). Receivers ignore `of` above 1. A test guards the size, as in 0014.
 - **API:** every `/api/state` Node entry gains `registered` and `name` (`null` when Unverified). The Hub-only `GET /api/registry` returns `{ ver, nodes: [{ id, name, status: "registered" | "waiting" | "unverified", last_heard_s }] }`. The tab lists Registered Nodes (the Hub included), waiting sign-ups with Accept, and heard-but-never-signed-up Nodes by id. The badge counts waiting sign-ups. Accept publishes at once.
-- **Names** come from the sign-up as is. Duplicates are allowed; the Node id tells Nodes apart.
+- **Names** come from the sign-up as is. Duplicates are allowed; the Node id tells Nodes apart. The demo keeps names unique by convention, and nothing enforces it.
 - **Order of work:** the Node half and its Seam A tests first; the dashboard half after 0041 merges. If 0041 is still open by then, say so in the group chat and read `registered` through the old hooks for 0041 to fold in.
 - **Demo (0049):** its script calls `POST /api/registry/signup` on S0 to S3 and then `POST /api/registry/accept` on the Hub, reusing one Hub data dir. 0012 keeps those two endpoints stable. 0012 puts no Unverified Node on stage; it proves it with tests and a loopback rehearsal.
 - **Out of scope:** rejecting or removing a Node, renaming a Registered Node, and multi-packet registries.
