@@ -282,3 +282,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Three boxes were left open on purpose.** `store_reading_from` is now `hear_community_reading` because the listener still needs its `isinstance` filter; the only other `datetime.now(UTC)` is the default clock and the Scenario's own stamp; the Mesh listeners take any `Message`, so no parameter says Community Reading. The ticket is done on the other four bullets.
 - **`Position` is a distinct NamedTuple**, so tests build `Position(lat, lon)` and mypy rejects a bare tuple. The six test files changed only for that.
 - The sequence, the `publishing` lock from 0020 and `share()` now live in `reading_publisher.py` (`publisher.lock`); `create_app` only wires them up.
+
+## Unverified Node's Surge (ticket 0061)
+
+- **`_counts` already kept an Unverified Node's Surge out of Flood Risk and warnings**; 0061 only added the missing Seam A test (`test_unverified_surge.py`). Breaking `_counts` to `return True` makes it fail.
+- **The ticket's "100 cm jump" predates 0062**: a Surge is 300 cm or more now, so the test jumps 20 to 340 cm.
