@@ -7,7 +7,7 @@ The messages Nodes exchange over the mesh, the Node HTTP API the dashboard polls
 - JSON, UTF-8, one object per message.
 - Each message stays **under about 350 bytes**, so it always fits one Reticulum packet (single-packet limit is about 500 bytes, about 380 usable after encryption; ticket 0004 confirms this). Anything bigger is split, never grown.
 - Every message has `v` (format version, currently `1`) and `kind`.
-- Sender identity and signature come from Reticulum and are checked by the Mesh module before a message reaches anyone else. They are not repeated in the JSON. A message that fails verification is dropped.
+- Reticulum does not say who sent a data packet, so every message is **signed by the sending Node** with its Reticulum identity: the packet is the 64-byte signature followed by the JSON. The Mesh module checks it against the public key it learned from that Node's announce (sent on start and every 10 s) before a message reaches anyone else, and drops it if the Node has not announced yet, the signature fails, or the JSON is not a message. The signature is not repeated in the JSON, and the 12-character `node` id inside it must match the key that signed it. The signature counts toward the packet limit below (about 465 bytes unencrypted).
 - Receivers ignore unknown `kind` values and unknown fields, so a newer Node never crashes an older one.
 
 ## Community Reading (`kind: "reading"`)

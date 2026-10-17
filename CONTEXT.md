@@ -32,10 +32,6 @@ _Avoid_: trusted node, verified device
 A Node the Hub does not know; its readings are shown but never counted.
 _Avoid_: rogue node, guest
 
-**Relay Node**:
-A Node that passes Community Readings along and keeps a copy, without producing its own.
-_Avoid_: repeater, hop
-
 **Hub**:
 The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend

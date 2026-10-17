@@ -22,6 +22,7 @@ from storm_shield.cache_pack import (
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
+from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
 
@@ -50,12 +51,10 @@ class CachePackStatus(BaseModel):
 
 def create_app(
     settings: Settings,
-    mesh: Mesh | None = None,
+    mesh: Mesh,
     pack_source: httpx.Client | None = None,
     tile_source: httpx.Client | None = None,
 ) -> FastAPI:
-    # Until the Reticulum Mesh lands, a Node started on its own hears only itself.
-    mesh = mesh or InMemoryNetwork().join(settings.name)
     cache_pack = CachePack(settings.cache_pack_dir)
     pack_source = pack_source or httpx.Client(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
@@ -192,6 +191,15 @@ def create_app(
     return app
 
 
+def build_mesh(settings: Settings) -> Mesh:
+    if settings.mesh == "memory":
+        return InMemoryNetwork().join(settings.name)
+    return ReticulumMesh(settings)
+
+
 def run() -> None:
+    logging.basicConfig(level=logging.INFO)
     settings = Settings()
-    uvicorn.run(create_app(settings), host="0.0.0.0", port=settings.port)
+    mesh = build_mesh(settings)
+    logger.info("Node %s (%s) is up as %s", mesh.identity, settings.name, settings.role)
+    uvicorn.run(create_app(settings, mesh), host="0.0.0.0", port=settings.port)
