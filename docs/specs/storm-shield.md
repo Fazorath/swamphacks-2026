@@ -110,7 +110,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
   - Precomputed routes: a grid of points over the area, with a route from every grid point to every Shelter, built from the Geofabrik Florida OSM extract.
 
   Only small updates (Shelter status, Official Alerts) cross the mesh; the pack itself never does.
-- **Node HTTP API.** The dashboard-facing contract and test seam A. It exposes: this Node's identity, role and online/mesh-only status; current Community Readings with Registered/Unverified status, staleness and simulated flags; Flood Risk with reasons; Official Alerts; verified Community Warnings; the Cache Pack and the latest Shelter statuses; Scenario step and reset; and node sign-up. The Hub additionally exposes the registry and the Community Warning log. Live updates are pushed to the dashboard with server-sent events, and every value can also be fetched with a plain GET.
+- **Node HTTP API.** The dashboard-facing contract and test seam A. It exposes: this Node's identity, role and online/mesh-only status; current Community Readings with Registered/Unverified status, staleness and simulated flags; Flood Risk with reasons; Official Alerts; verified Community Warnings; the Cache Pack and the latest Shelter statuses; Scenario step and reset; and node sign-up. The Hub additionally exposes the registry and the Community Warning log. The dashboard polls one `GET /api/state` snapshot every second (`docs/specs/wire-formats.md`).
 
 ### Dashboard modules
 
