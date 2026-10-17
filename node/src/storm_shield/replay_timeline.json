@@ -3,7 +3,7 @@
   "date": "2026-08-26",
   "utc_offset": "+05:45",
   "start": "08:30:00",
-  "end": "10:00:00",
+  "end": "10:30:00",
   "start_unix": 1787712300,
   "rate": 30,
   "sources": {
@@ -18,7 +18,7 @@
     {"id": "dhm-notice", "at": "09:05:00", "label": "Authorities learn of the flood", "basis": "reported", "source": "kathmandu-post-unfolded"},
     {"id": "dhm-sms", "at": "09:15:00", "label": "Official SMS alerts go out", "basis": "reported", "source": "kathmandu-post-unfolded"},
     {"id": "betrawati", "at": "09:20:00", "label": "Betrawati station stops transmitting", "basis": "reported", "source": "kathmandu-post-unfolded"},
-    {"id": "end", "at": "10:00:00", "label": "End of the replay", "basis": "reconstructed"}
+    {"id": "end", "at": "10:30:00", "label": "End of the replay", "basis": "reconstructed", "note": "Just after the 10:28 district warning, so the last Official Alert shows; decided 2026-10-17."}
   ],
   "internet_cue": {
     "at": "09:20:00",
@@ -26,7 +26,7 @@
     "source": "kathmandu-post-unfolded",
     "note": "When the Betrawati station stopped transmitting: the cue to cut the internet on stage."
   },
-  "official_alerts_note": "Times and recipients as reported. The report credits 'authorities' and the Flood Forecasting Division, not DHM by name; `issuer` follows the spec's tagging. Headlines paraphrase the report: it gives no alert wording. 10:28 is after the replay window and only shows if the replay runs on.",
+  "official_alerts_note": "Times and recipients as reported. The report credits 'authorities' and the Flood Forecasting Division, not DHM by name; `issuer` follows the spec's tagging. Headlines paraphrase the report: it gives no alert wording. 10:28 is the last alert; the replay ends at 10:30 so it shows.",
   "official_alerts": [
     {"id": "dhm-notice", "at": "09:05:00", "issuer": "dhm", "headline": "Authorities learn that a major flood has entered the Bhote Koshi", "applies_to": [], "basis": "reported", "source": "kathmandu-post-unfolded"},
     {"id": "dhm-sms", "at": "09:15:00", "issuer": "dhm", "headline": "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert", "applies_to": ["flood_prone_area"], "basis": "reported", "source": "kathmandu-post-unfolded"},

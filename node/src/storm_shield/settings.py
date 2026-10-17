@@ -42,7 +42,8 @@ class Settings(BaseSettings):
     # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
     # converges.
     replay_repeat_seconds: float = 10
-    # How often the Hub checks whether the Event clock has reached a replayed Official Alert.
+    # How often the Hub checks whether the Event clock has reached a replayed Official Alert or
+    # the end of the replay.
     alert_check_seconds: float = 1
     # How often a Node shares its readings.
     publish_every_seconds: float = 3

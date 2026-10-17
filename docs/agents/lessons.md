@@ -139,6 +139,15 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - With no Cache Pack yet, the plan counts the home as possibly in the Flood-Prone Area, so a riverbank alert is still listed: a missed alert is worse than an extra one.
 - Rehearsed on loopback Reticulum (Hub slot 0 / port 8320, Sensor slot 1 / port 8321 with `HUB_IDENTITY`): after a jump to `dhm-sms` the Sensor showed both alerts within 2 s, so the signed alert packet verifies against the Hub key. Software path only, not a Pi check.
 
+## Hub Panel buttons check (2026-10-17)
+
+- **Every Hub Panel button was clicked in Chrome** on a test Hub and Sensor (Start, Pause, Resume, Reset, all eight phases, Shelter Close/Open, Close panel) and reached both Nodes. Use private ports and `NODE_MESH_INTERFACE=tcp` with `NODE_TCP_PORT`/`NODE_TCP_PEERS` so a rehearsal never joins a teammate's running Nodes.
+- **A Hub that shows Gainesville Shelters, all Closed, holds the old Florida pack**: a Node never re-downloads a valid pack, and its saved `shelter_status.json` lists valley ids that pack lacks. Stop it, delete `CACHE_PACK_DIR` and `NODE_DATA_DIR/shelter_status.json`, point `CACHE_PACK_URL` at v3 and restart.
+- **The replay ends at 10:30, just after the 10:28 district warning** (decided 2026-10-17; four minutes at ×30). The Hub pauses there and refuses Resume until a Reset or jump.
+- **Sections inside `.slide-over` must not shrink**: the global `section { overflow: auto }` made the Replay controls scroll inside themselves and hid the internet cue.
+- Closing the last Chrome tab Claude opened can disconnect the extension; leave one tab open until the check is done.
+- Still open from the check: Flood Risk reads High during Calm, because the valley's 1.5 m river levels trip the street-scale water thresholds; the cameras are still the FL511 feeds.
+
 ## Flash flood pivot (ADR 0004)
 
 - **Two floods hit the same river 13 months apart; don't mix their facts.** The 8 July 2025 Purepu GLOF started in Tibet and killed about 11 in Nepal; the 26 August 2026 ice-rock avalanche started on Langtang Lirung, inside Nepal, and killed well over a thousand. Many search results, including ICIMOD pages, cover both. The demo replays 2026; every fact in the replay timeline cites a 2026 source.

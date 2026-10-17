@@ -89,6 +89,7 @@ class ReplayTimeline(BaseModel):
     date: str
     utc_offset: str
     start: str
+    end: str
     start_unix: int
     rate: int
     sources: dict[str, str]
@@ -100,6 +101,11 @@ class ReplayTimeline(BaseModel):
     def event_t_at(self, clock_time: str) -> int:
         """The Event clock's Unix seconds when the replay reads `clock_time`."""
         return self.start_unix + self._seconds_after_start(clock_time)
+
+    @property
+    def end_unix(self) -> int:
+        """The Event clock's Unix seconds at the end of the replay, where the Hub stops it."""
+        return self.event_t_at(self.end)
 
     def official_alerts_due(self, event_t: int) -> list[OfficialAlert]:
         """The Official Alerts the Event clock has reached, in the mesh format."""

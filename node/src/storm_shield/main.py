@@ -220,6 +220,14 @@ def create_app(
             if alert.id not in forwarded_alert_ids:
                 forward_official_alert(alert)
 
+    def pause_at_the_end() -> None:
+        """Hold the clock at the replay's end instead of letting it play on past the timeline."""
+        event = event_clock.current(clock())
+        if event.state == "playing" and event.event_t >= timeline.end_unix:
+            announce_event_clock(
+                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=timeline.rate)
+            )
+
     def repeat_due_official_alerts() -> None:
         for alert in due_official_alerts():
             forward_official_alert(alert)
@@ -293,13 +301,15 @@ def create_app(
                 except Exception:
                     logger.exception("could not repeat the Event clock")
 
-        async def keep_forwarding_official_alerts() -> None:
+        async def keep_following_the_timeline() -> None:
             while True:
                 await asyncio.sleep(settings.alert_check_seconds)
                 try:
+                    # Alerts first, so the last one is sent before the clock stops at the end.
                     forward_newly_due_official_alerts()
+                    pause_at_the_end()
                 except Exception:
-                    logger.exception("could not forward the Official Alerts")
+                    logger.exception("could not follow the replay timeline")
 
         tasks = [
             asyncio.create_task(keep_sharing()),
@@ -309,7 +319,7 @@ def create_app(
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
             tasks.append(asyncio.create_task(keep_repeating_event_clock()))
-            tasks.append(asyncio.create_task(keep_forwarding_official_alerts()))
+            tasks.append(asyncio.create_task(keep_following_the_timeline()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -467,6 +477,10 @@ def create_app(
             heard = event_clock.current(clock())
             if heard.state != "paused":
                 raise HTTPException(status_code=409, detail="the replay is not paused")
+            if heard.event_t >= timeline.end_unix:
+                raise HTTPException(
+                    status_code=409, detail="the replay has ended; Reset or jump to a phase"
+                )
             return set_replay("playing", heard.event_t)
 
         @app.post("/api/replay/reset")

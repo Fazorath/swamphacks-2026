@@ -58,7 +58,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 ### Demo presenter
 
 27. As the presenter, I want an event clock on every screen ("26 Aug 2026 · 08:41 NPT · REPLAY ×30"), so that the audience follows the real timeline.
-28. As the presenter, I want the replay to run about three minutes, so that it fits the demo.
+28. As the presenter, I want the replay to run about four minutes, so that it fits the demo.
 29. As the presenter, I want the upstream Sensors to go silent at the times their real gauges did, so that the audience sees the station that warned everyone destroyed after its warning had already gone out.
 30. As the presenter, I want two phones, one at Syabrubesi and one at Betrawati, to show the two Evacuation Plan outcomes, so that the choice the system makes is visible.
 31. As the presenter, I want one command to start every Node, the Cache Pack server and the replay on one laptop, so that setup takes about two minutes.
@@ -87,7 +87,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 - **Replay** replaces the Scenario as the demo's driver. The Scenario stays in the code for tests and for ticket 0016's breadboard, whose buttons may later drive the Replay controls instead; that is the 0016 owner's call.
 - **One replay timeline file in the repo** holds, against event time: each Sensor's track (water level, rain, soil moisture, pressure; reconstructed and labelled as such), the moment each Sensor goes silent, the named phases, the replayed Official Alerts and the internet cue. Each fact cites its source.
 - **The Hub runs the event clock.** Start, pause, resume, reset and jump-to-phase are Hub Panel actions. The Hub announces the clock over the Mesh (new message kind `replay`, below) when it changes and every 10 s. Each Node anchors the clock on its own wall clock at receipt, plays its own track from it, and publishes readings at the usual cadence. Readings from a track are Simulated Readings.
-- **Compression ×30.** The window 08:30–10:00 NPT plays in three minutes. Phases: calm (08:30), collapse (08:37), border (08:40), Syabrubesi (08:49), DHM notice (09:05), DHM SMS (09:15), Betrawati (09:20), end (10:00).
+- **Compression ×30.** The window 08:30–10:30 NPT plays in four minutes. Phases: calm (08:30), collapse (08:37), border (08:40), Syabrubesi (08:49), DHM notice (09:05), DHM SMS (09:15), Betrawati (09:20), end (10:30). The end sits just after the 10:28 district warning so it shows (decided 2026-10-17); the Hub pauses the clock there, and Resume at the end is refused until a Reset or jump.
 - **Reconstructed values.** Real readings are used where reported (Syabrubesi 1.62 m at 08:40 against a 6 m warning and 9 m danger level; Betrawati last level 3.55 m at 09:20). Surge sizes are invented to clearly trip the Surge rule and are labelled reconstructed.
 
 ### Surge and the Community Warning
@@ -106,7 +106,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 
 ### Official Alerts
 
-- **The Helene replay becomes a DHM replay** on the event clock, tagged OFFICIAL · REPLAY: DHM learns of the flood (09:05), SMS alerts to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan (09:15), warnings for Galchhi, Muglin and the Prithvi Highway (10:28, after the replay window, kept for the Alerts Panel). Sources become `dhm`, `ndrrma` and `district`; `applies_to` keeps `flood_prone_area` for "riverbank residents".
+- **The Helene replay becomes a DHM replay** on the event clock, tagged OFFICIAL · REPLAY: DHM learns of the flood (09:05), SMS alerts to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan (09:15), warnings for Galchhi, Muglin and the Prithvi Highway (10:28, just before the replay ends). Sources become `dhm`, `ndrrma` and `district`; `applies_to` keeps `flood_prone_area` for "riverbank residents".
 - **Live NWS and NHC feeds are dropped** (ticket 0017 removed).
 - **The lead-time line** in the Alerts Panel compares the first Community Warning with the first Official Alert on the event clock.
 
@@ -165,7 +165,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 
 ## Further Notes
 
-- **Demo storyline (about 3 minutes of replay):**
+- **Demo storyline (about 4 minutes of replay):**
   1. 08:30 calm: five Registered Nodes along the valley, camera at Betrawati.
   2. 08:37 S0 surges; the Hub's Community Warning reaches every phone within seconds. Syabrubesi shows about 11 min, Betrawati about 43.
   3. S0, S1 and S2 go silent as the wave passes them; their cards turn Stale.
