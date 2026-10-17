@@ -105,7 +105,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17, not built yet (0013, 0044).
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044); the `warning` additions and the `alert.source` values are not yet (0013).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 

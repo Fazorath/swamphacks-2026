@@ -1,6 +1,7 @@
 import RNS
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.replay import ReplayClockMessage
 from storm_shield.reticulum_mesh import SIGNATURE_LENGTH, node_id, sign, verify
 from storm_shield.shelter_status import ShelterStatus
 
@@ -90,3 +91,14 @@ def test_a_signed_shelter_status_fits_one_unencrypted_packet() -> None:
     hub = RNS.Identity()
     twelve = ShelterStatus(ver=3, t=1_760_650_928, open=[f"shelter-{n:02}" for n in range(12)])
     assert len(sign(hub, twelve)) <= RNS.Packet.PLAIN_MDU
+
+
+def test_the_event_clock_signed_by_the_hub_verifies_and_one_signed_by_another_node_is_dropped() -> (
+    None
+):
+    hub, rogue = RNS.Identity(), RNS.Identity()
+    known = {node_id(hub): hub, node_id(rogue): rogue}
+    clock = ReplayClockMessage(state="playing", event_t=1_787_712_300, rate=30)
+    assert verify(sign(hub, clock), known, node_id(hub)) == (node_id(hub), clock)
+    assert verify(sign(rogue, clock), known, node_id(hub)) is None
+    assert len(sign(hub, clock)) <= RNS.Packet.PLAIN_MDU

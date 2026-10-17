@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
     # converges.
     shelter_repeat_seconds: float = 30
+    # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
+    # converges.
+    replay_repeat_seconds: float = 10
+    # How often a Node shares its readings.
+    publish_every_seconds: float = 3
+    # Which Sensor track of the replay timeline this Node plays (S0 to S3). Blank keeps the Scenario.
+    replay_track: str = ""
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")

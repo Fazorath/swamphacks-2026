@@ -428,6 +428,14 @@ section[aria-label="Evacuation Plan"] {
   font-weight: bold;
 }
 
+.event-clock {
+  padding: 0 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.25rem;
+  color: var(--elevated);
+  font-weight: bold;
+}
+
 .flood-risk-chip.low,
 .flood-risk-card.low h3 {
   color: var(--low);

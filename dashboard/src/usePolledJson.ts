@@ -4,7 +4,7 @@ export const POLL_EVERY_MS = 3000;
 
 // Keeps the last answer when a poll fails: saying the Node is unreachable belongs to the
 // one-second state snapshot (0019), which replaces this.
-export function usePolledJson<T>(path: string): T | null {
+export function usePolledJson<T>(path: string, everyMs = POLL_EVERY_MS): T | null {
   const [latest, setLatest] = useState<T | null>(null);
   useEffect(() => {
     let stopped = false;
@@ -19,11 +19,11 @@ export function usePolledJson<T>(path: string): T | null {
         })
         .catch((error) => console.error(error));
     poll();
-    const timer = setInterval(poll, POLL_EVERY_MS);
+    const timer = setInterval(poll, everyMs);
     return () => {
       stopped = true;
       clearInterval(timer);
     };
-  }, [path]);
+  }, [path, everyMs]);
   return latest;
 }
