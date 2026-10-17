@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
+import httpx
 from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack
@@ -16,6 +17,10 @@ from storm_shield.settings import Settings
 from storm_shield.shelter_status import ShelterStatus
 
 HUB = "hub"
+
+
+def _no_internet(request: httpx.Request) -> httpx.Response:
+    raise httpx.ConnectError("tests never reach Open-Meteo", request=request)
 
 
 class MeshedNodes:
@@ -89,7 +94,10 @@ class MeshedNodes:
             )
             CachePack(directory / HUB).install(pack)
         mesh = self._network.join(HUB, HUB)
-        client = TestClient(create_app(settings, mesh, clock=lambda: self._now))
+        weather_source = httpx.Client(transport=httpx.MockTransport(_no_internet))
+        client = TestClient(
+            create_app(settings, mesh, clock=lambda: self._now, weather_source=weather_source)
+        )
         client.__enter__()
         self._running.append(client)
         self._clients[HUB] = client

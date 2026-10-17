@@ -55,6 +55,7 @@ from storm_shield.shelter_status import (
     UnknownShelter,
 )
 from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
+from storm_shield.weather_forecast import FORECAST_TIMEOUT_SECONDS, WeatherForecast
 
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
@@ -131,8 +132,13 @@ def create_app(
     tile_source: httpx.Client | None = None,
     internet_source: httpx.Client | None = None,
     camera_source: httpx.Client | None = None,
+    weather_source: httpx.Client | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
+    weather_forecast = WeatherForecast(settings.data_dir)
+    weather_source = weather_source or httpx.Client(
+        timeout=FORECAST_TIMEOUT_SECONDS, follow_redirects=True
+    )
     pack_source = pack_source or httpx.Client(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
     )
@@ -382,6 +388,24 @@ def create_app(
                     logger.exception("could not get the Cache Pack, retrying")
                     await asyncio.sleep(RETRY_EVERY_SECONDS)
 
+        async def keep_weather_forecast_fresh() -> None:
+            while True:
+                try:
+                    if settings.role == "hub":
+                        await asyncio.to_thread(weather_forecast.fetch, weather_source, clock())
+                    else:
+                        await asyncio.to_thread(
+                            weather_forecast.download, settings.weather_forecast_url, weather_source
+                        )
+                except Exception:
+                    # The copy on disk stays; the layers say how old it is.
+                    logger.exception("could not refresh the weather forecast")
+                # Without any copy a Node retries soon: the Hub may not have fetched yet.
+                has_copy = weather_forecast.read() is not None
+                await asyncio.sleep(
+                    settings.weather_forecast_seconds if has_copy else RETRY_EVERY_SECONDS
+                )
+
         async def keep_checking_internet() -> None:
             while True:
                 try:
@@ -469,6 +493,8 @@ def create_app(
             tasks.append(asyncio.create_task(keep_following_the_timeline()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
+        if settings.role == "hub" or settings.weather_forecast_url:
+            tasks.append(asyncio.create_task(keep_weather_forecast_fresh()))
         yield
         for task in tasks:
             task.cancel()
@@ -576,6 +602,13 @@ def create_app(
                 status_code=404, detail="no recorded weather in this Node's Cache Pack"
             )
         return FileResponse(file, media_type="application/json")
+
+    @app.get("/api/weather/forecast")
+    def weather_forecast_file() -> Response:
+        forecast = weather_forecast.read()
+        if forecast is None:
+            raise HTTPException(status_code=404, detail="no weather forecast on this Node yet")
+        return Response(forecast, media_type="application/json")
 
     @app.get("/api/shelters")
     def open_shelters() -> OpenShelters:

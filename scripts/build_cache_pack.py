@@ -15,9 +15,10 @@ import httpx
 from pack_routes import Roads, build_road_graph
 from pack_weather import fetch_weather_replay
 
+from storm_shield.weather_grid import VALLEY_BBOX
+
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
-# [south, west, north, east]: the Lhende Khola down to below Trishuli, about 66 x 40 km.
-BBOX = (27.86, 85.08, 28.46, 85.47)
+BBOX = VALLEY_BBOX
 # Few zoom levels on purpose: the box is large and the pack must stay small.
 ZOOMS = range(10, 15)
 OSM_EXTRACT_URL = "https://download.geofabrik.de/asia/nepal-latest.osm.pbf"

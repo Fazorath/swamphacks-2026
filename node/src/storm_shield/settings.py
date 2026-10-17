@@ -63,6 +63,12 @@ class Settings(BaseSettings):
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")
+    # How often a Node refreshes its weather forecast: the Hub from Open-Meteo, others from the Hub.
+    # Open-Meteo's free terms allow no more often than hourly.
+    weather_forecast_seconds: float = 3600
+    # Where a Sensor downloads the Hub's forecast, http://<hub>:8000/api/weather/forecast. Blank on
+    # the Hub, which fetches it itself; a blank Sensor never gets a forecast.
+    weather_forecast_url: str = ""
     # Secret: only this Node ever holds it; the dashboard asks the Node for tiles.
     carto_api_key: str = Field(default="", validation_alias="CARTO_API_KEY")
     cache_pack_dir: Path = Field(

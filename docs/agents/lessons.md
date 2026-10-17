@@ -258,3 +258,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
 - **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.
+
+## Hub forecast (ticket 0058)
+
+- **`weather_forecast.json` is the Weather Grid plus `fetched_at`**, kept in `NODE_DATA_DIR`. The grid helpers live in `storm_shield/weather_grid.py` (the Node needs them at run time; `scripts/pack_weather.py` imports them from there). A Sensor needs `NODE_WEATHER_FORECAST_URL` (the Hub's `/api/weather/forecast`; `run-demo.sh` sets it); without it the Sensor never gets a forecast.
+- **A Node with no copy retries every 30 s** (the Hub may not have fetched yet), and hourly once it has one. Tests that wait on a retry patch `storm_shield.main.RETRY_EVERY_SECONDS`.
+- **A Hub started with its lifespan in a test would call the real api.open-meteo.com**: `MeshedNodes.start_hub` injects an offline `weather_source`; do the same for any new test that enters a Hub as `with TestClient(app)`.
+- Rehearsed on loopback (Hub 8710 / slot 30, Sensor 8711 / slot 31) against the real Open-Meteo: both served 120 KB of forecast, and after the Hub was stopped the Sensor still served it. Software path only, not a Pi check.
