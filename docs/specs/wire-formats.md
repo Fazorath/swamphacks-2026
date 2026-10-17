@@ -63,7 +63,7 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 
 - `ver` goes up on every change; a Node keeps the highest `ver` it has received in full.
 - `part` / `of` are reserved for a list that spans several packets. **For now the Hub always sends `part: 1, of: 1`** and refuses an accept (409) that would no longer fit one signed packet; receivers ignore a registry with `of` above 1 (decided 2026-10-17, ticket 0012).
-- The Hub always lists itself. It saves `ver` and the list in `NODE_DATA_DIR/registry.json` and starts every restart at saved `ver` + 1, as for Shelter status. With no file (first start, or the file deleted) it starts at the current Unix time, like `seq`, so a Hub that starts over still beats the `ver` running Nodes hold.
+- The Hub always lists itself. It saves `ver` and the list in `NODE_DATA_DIR/registry.json` and starts every restart at saved `ver` + 1, as for Shelter status. With no file (first start, or the file deleted) it starts at the current Unix time, so a Hub that starts over still beats the `ver` running Nodes hold.
 - The Hub republishes the current snapshot every 30 s, so late joiners and Nodes that missed a packet converge.
 - A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted. Before any registry has arrived every Node is Unverified, this one included, and nothing counts.
 

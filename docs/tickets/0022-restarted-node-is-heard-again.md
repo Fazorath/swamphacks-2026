@@ -10,8 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] `seq` starts at 0 and goes up by one per reading, as the wire doc says; the clock-seeded start is removed
-- [ ] A repeated or older `seq` from a Node heard within the stale window (15 s) is ignored
-- [ ] A reading from a Node silent for longer than the stale window is accepted whatever its `seq`
-- [ ] Seam A tests: a duplicate `seq` is ignored; an older `seq` is ignored; a Node that restarts after the stale window is heard again; a restart with a lower `seq` than before is heard again
-- [ ] All **Commands** pass
+- [x] `seq` starts at 0 and goes up by one per reading, as the wire doc says; the clock-seeded start is removed
+- [x] A repeated or older `seq` from a Node heard within the stale window (15 s) is ignored
+- [x] A reading from a Node silent for longer than the stale window is accepted whatever its `seq`
+- [x] Seam A tests: a duplicate `seq` is ignored; an older `seq` is ignored; a Node that restarts after the stale window is heard again; a restart with a lower `seq` than before is heard again
+- [x] All **Commands** pass
