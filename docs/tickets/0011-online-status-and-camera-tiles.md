@@ -8,7 +8,7 @@
 
 **Owner:** leonardorofaDV
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/online-status-and-cameras.md` (parent: `docs/specs/storm-shield.md`)
 
 - [x] Pick the public camera source (free and accessible, e.g. FL511 / FDOT) and record the choice in this ticket
 
