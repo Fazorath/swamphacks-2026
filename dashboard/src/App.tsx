@@ -1,8 +1,9 @@
+import { ReadingsPanel } from "./ReadingsPanel";
 import { useNodeIdentity } from "./useNodeIdentity";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 
-const PLACEHOLDER_AREAS = ["Map", "Readings", "Alerts", "Evacuation Plan"];
+const PLACEHOLDER_AREAS = ["Map", "Alerts", "Evacuation Plan"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
@@ -19,6 +20,7 @@ export function App() {
         </p>
       </header>
       <div className="areas">
+        <ReadingsPanel />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>
             <h2>{title}</h2>
