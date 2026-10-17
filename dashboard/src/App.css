@@ -119,6 +119,7 @@ section[aria-label="Map"] {
 }
 
 .leaflet-tooltip.node-label {
+  cursor: pointer;
   background: var(--surface);
   border: 1px solid var(--line);
   color: var(--text);
