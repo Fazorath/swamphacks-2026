@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
-from storm_shield.mesh import InMemoryMesh, InMemoryNetwork
+from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
@@ -121,6 +121,20 @@ class MeshedNodes:
     def announce_official_alert(self, alert: OfficialAlert, *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Official Alert."""
         self._hand_fed_mesh(sender).publish(alert)
+
+    def send_bytes(self, body: bytes, *, sender: str = HUB) -> None:
+        """Put exactly these bytes on the Mesh, as a Node running other software could."""
+        # Joining first means the sender is not among the receivers, as when it publishes.
+        self._hand_fed_mesh(sender)
+        self._network.deliver_bytes(sender, body)
+
+    def join_with_failing_listener(self, name: str) -> None:
+        """Join a Node whose listener raises on every message."""
+
+        def fail(_sender: str, _message: Message) -> None:
+            raise RuntimeError("bug in one listener")
+
+        self._network.join(name, HUB).subscribe(fail)
 
     def _hand_fed_mesh(self, sender: str) -> InMemoryMesh:
         """The Mesh of a Node that is not running an app, joined on first use."""

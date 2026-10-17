@@ -4,13 +4,12 @@ import threading
 import time
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 
 import RNS
-from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
-from storm_shield.mesh import Message, MessageListener
+from storm_shield.mesh import Message, MessageListener, decode_message, deliver_to_listeners
 from storm_shield.settings import Settings
 
 APP_NAME = "storm_shield"
@@ -24,8 +23,6 @@ SIGNATURE_LENGTH = 64
 LOOPBACK_BASE_PORT = 4250
 
 logger = logging.getLogger(__name__)
-
-_MESSAGE: TypeAdapter[Message] = TypeAdapter(Annotated[Message, Field(discriminator="kind")])
 
 
 def node_id(identity: Any) -> str:
@@ -93,11 +90,8 @@ def verify(
     if len(data) <= SIGNATURE_LENGTH:
         return None
     signature, body = data[:SIGNATURE_LENGTH], data[SIGNATURE_LENGTH:]
-    try:
-        message = _MESSAGE.validate_json(body)
-    except ValidationError:
-        # Unknown kinds land here too: a newer Node's message is ignored, not an error.
-        logger.warning("dropped a mesh packet that is not a message this Node understands")
+    message = decode_message(body)
+    if message is None:
         return None
     sender_id = message.node if isinstance(message, CommunityReading) else hub_identity
     sender = known_nodes.get(sender_id)
@@ -167,12 +161,7 @@ class ReticulumMesh:
         if verified is None:
             return
         sender, message = verified
-        for listener in self._listeners:
-            try:
-                listener(sender, message)
-            except Exception:
-                # Reticulum would swallow this silently on its own thread.
-                logger.exception("a listener failed on a %s from %s", message.kind, sender)
+        deliver_to_listeners(self._listeners, sender, message)
 
     def _announce_forever(self) -> None:
         while True:

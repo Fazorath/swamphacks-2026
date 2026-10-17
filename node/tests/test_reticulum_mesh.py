@@ -97,6 +97,28 @@ def test_a_message_kind_this_node_does_not_know_is_ignored() -> None:
     assert verify(packet, {node_id(hub): hub}, node_id(hub)) is None
 
 
+def _signed_by_hub(hub: RNS.Identity, body: bytes) -> bytes:
+    return bytes(hub.sign(body)) + body
+
+
+def test_a_signed_message_of_an_unknown_format_version_is_ignored() -> None:
+    hub = RNS.Identity()
+    body = b'{"v": 2, "kind": "shelters", "ver": 1, "t": 1, "open": []}'
+    assert verify(_signed_by_hub(hub, body), {node_id(hub): hub}, node_id(hub)) is None
+
+
+def test_a_signed_message_with_extra_fields_is_accepted_and_the_extras_ignored() -> None:
+    hub = RNS.Identity()
+    body = b'{"v": 1, "kind": "shelters", "ver": 1, "t": 1, "open": [], "newer": {"a": 1}}'
+    expected = (node_id(hub), ShelterStatus(ver=1, t=1, open=[]))
+    assert verify(_signed_by_hub(hub, body), {node_id(hub): hub}, node_id(hub)) == expected
+
+
+def test_a_signed_message_that_is_not_json_is_ignored() -> None:
+    hub = RNS.Identity()
+    assert verify(_signed_by_hub(hub, b"{nope"), {node_id(hub): hub}, node_id(hub)) is None
+
+
 def test_a_signed_shelter_status_fits_one_unencrypted_packet() -> None:
     hub = RNS.Identity()
     twelve = ShelterStatus(ver=3, t=1_760_650_928, open=[f"shelter-{n:02}" for n in range(12)])
