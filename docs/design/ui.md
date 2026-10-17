@@ -4,7 +4,7 @@ How the Storm Shield dashboard looks and where things go. **The visual source of
 
 ## Reference
 
-The look is borrowed from [Osiris](https://github.com/carbon-evolution/osiris) ([osirisai.live](https://osirisai.live)), an open-source OSINT dashboard that layers cameras, weather and satellite data on one map.
+The look is borrowed from [Osiris](https://github.com/simplifaisoul/osiris) ([osirisai.live](https://osirisai.live)), an open-source OSINT dashboard that layers cameras, weather and satellite data on one map.
 
 What we take from it:
 
@@ -12,7 +12,7 @@ What we take from it:
 - **A rail with live counts** beside the map.
 - **Translucent glass panels** over the map, with pulse dots for live status.
 - **Freshness badges** and an **OFFLINE** state when a source is down.
-- **A dark "ops room" theme**, all colors from CSS variables. (Osiris defaults to light; we chose dark, below.)
+- **A dark "ops room" theme**, all colors from CSS variables. (Osiris is dark too, in gold and cyan; our palette is below.)
 
 What we leave out: the 40 layers, globe, AI analyst, finance, cyber. Storm Shield has one neighborhood and one storm.
 

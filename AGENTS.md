@@ -4,7 +4,7 @@ Rules for every coding agent on this repo (Claude Code, Cursor, Copilot, Codexâ€
 
 ## Project
 
-**Idea:** TBD â€” decided at kickoff (Fri 8:40 pm). Spec: `docs/specs/`.
+**Idea:** Storm Shield, a neighborhood flood dashboard for Gainesville / Alachua County whose Community Readings keep flowing over a local Mesh when the internet goes down (glossary: `CONTEXT.md`). Spec: `docs/specs/`.
 
 ## Stack
 

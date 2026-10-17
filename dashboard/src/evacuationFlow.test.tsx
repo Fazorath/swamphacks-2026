@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
 
@@ -90,7 +90,8 @@ test("a resident with a profile sees the nearest open Shelter, marked on the map
 
   expect(await screen.findByText(/Nearest open Shelter: Test Gym, 1\.1 km away/)).toBeVisible();
   expect(screen.getByText("Evacuation decisions come from official sources.")).toBeVisible();
-  expect(document.querySelectorAll(".shelter-marker")).toHaveLength(1);
+  // Leaflet can add the marker a moment after the plan text renders.
+  await waitFor(() => expect(document.querySelectorAll(".shelter-marker")).toHaveLength(1));
 });
 
 test("the Shelter marker clears when no Shelter is open", async () => {

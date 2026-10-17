@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -16,7 +17,10 @@ HUB = "hub"
 class MeshedNodes:
     """Several Nodes in one process, joined by the in-memory Mesh and driven through their APIs."""
 
-    def __init__(self) -> None:
+    def __init__(self, directory: Path) -> None:
+        # Every Node's files live under here, never in the checkout: a built dashboard, a downloaded
+        # Cache Pack or a Hub's saved Shelter status there would change what the tests see.
+        self._directory = directory
         self._network = InMemoryNetwork()
         self._clients: dict[str, TestClient] = {}
         self._now = datetime.now(UTC)
@@ -27,7 +31,7 @@ class MeshedNodes:
         """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
         for name in names:
             mesh = self._network.join(name, HUB)
-            settings = Settings(name=name, hub_identity=HUB)
+            settings = self._settings(name, hub_identity=HUB)
             if cache_pack:
                 directory, pack = cache_pack
                 settings = settings.model_copy(update={"cache_pack_dir": directory / name})
@@ -38,7 +42,7 @@ class MeshedNodes:
         self, cache_pack: tuple[Path, bytes] | None = None, *, shelter_repeat_seconds: float = 30
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
-        settings = Settings(name=HUB, role="hub", shelter_repeat_seconds=shelter_repeat_seconds)
+        settings = self._settings(HUB, role="hub", shelter_repeat_seconds=shelter_repeat_seconds)
         if cache_pack:
             directory, pack = cache_pack
             settings = settings.model_copy(
@@ -50,6 +54,16 @@ class MeshedNodes:
         client.__enter__()
         self._running.append(client)
         self._clients[HUB] = client
+
+    def _settings(self, name: str, **overrides: Any) -> Settings:
+        own = self._directory / name
+        return Settings(
+            name=name,
+            dashboard_dir=own / "no-dashboard",
+            cache_pack_dir=own / "cache-pack",
+            data_dir=own / "data",
+            **overrides,
+        )
 
     def stop_hub(self) -> None:
         """Stop the Hub as a power cut would; `start_hub` with the same directory brings it back."""

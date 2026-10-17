@@ -129,7 +129,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
 
 ### Message formats
 
-The wire formats for Community Reading, Community Warning, registry update, Shelter status update and the Cache Pack layout are **decided in `docs/specs/wire-formats.md`** , written after this spec because they are designed with the dashboard. From now on, changing a format needs the whole team. Fixed now: every mesh message carries its kind, sender identity, timestamp and a signature (Reticulum provides it). Community Readings carry the simulated flag and a fuzzed position. Official Alerts carry source and live or replay.
+The wire formats for Community Reading, Community Warning, registry update, Shelter status update and the Cache Pack layout are **decided in `docs/specs/wire-formats.md`** , written after this spec because they are designed with the dashboard. From now on, changing a format needs the whole team. Fixed now: every mesh message carries its kind, sender identity, timestamp and a signature (made with the sender's Reticulum identity). Community Readings carry the simulated flag and a fuzzed position. Official Alerts carry source and live or replay.
 
 ### Build order
 
