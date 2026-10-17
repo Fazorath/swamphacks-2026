@@ -33,5 +33,5 @@
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | done | Fazorath |
-| [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | ready-for-agent | unclaimed |
+| [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | in-progress | Fazorath |
 | [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | ready-for-agent | unclaimed |
