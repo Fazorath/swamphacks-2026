@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 
+export type NodeLevel = "elevated" | "high";
+
+export type FloodRiskReason = {
+  code: "water_high" | "water_rising" | "rain_heavy" | "pressure_falling" | "raining";
+  nodes: number;
+  value: number;
+};
+
 export type FloodRisk = {
-  level: "low" | "elevated" | "high";
-  reasons: { code: string; nodes: string[]; text: string }[];
-  storm_signal: { falling: boolean; text: string };
+  level: "low" | "elevated" | "high" | null;
+  reasons: FloodRiskReason[];
+  storm_signal: { on: boolean; nodes: number; pressure_hpa: number | null };
+  nodes: Record<string, NodeLevel | null>;
 };
 
 const POLL_EVERY_MS = 1000;

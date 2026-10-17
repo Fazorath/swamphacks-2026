@@ -1,30 +1,27 @@
+import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { FloodRisk } from "./useFloodRisk";
 
-const LEVEL_LABELS: Record<FloodRisk["level"], string> = {
-  low: "Low",
-  elevated: "Elevated",
-  high: "High",
-};
+const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 
-export function FloodRiskPanel({ floodRisk }: { floodRisk: FloodRisk | null }) {
+export function FloodRiskChip({ floodRisk }: { floodRisk: FloodRisk | null }) {
+  if (!floodRisk?.level) return null;
   return (
-    <section aria-label="Flood Risk">
-      <h2>Flood Risk</h2>
-      {floodRisk ? (
-        <>
-          <p className={`flood-risk-level ${floodRisk.level}`}>{LEVEL_LABELS[floodRisk.level]}</p>
-          <ul>
-            {floodRisk.reasons.map((reason) => (
-              <li key={reason.code}>{reason.text}</li>
-            ))}
-          </ul>
-          {floodRisk.storm_signal.falling && (
-            <p className="storm-signal">Storm signal · {floodRisk.storm_signal.text}</p>
-          )}
-        </>
-      ) : (
-        <p>Waiting for readings…</p>
-      )}
+    <span className={`flood-risk-chip ${floodRisk.level}`}>
+      Flood Risk · {LEVEL_WORDS[floodRisk.level]}
+    </span>
+  );
+}
+
+export function FloodRiskCard({ floodRisk }: { floodRisk: FloodRisk | null }) {
+  if (!floodRisk?.level) return null;
+  return (
+    <section aria-label="Flood Risk" className={`flood-risk-card ${floodRisk.level}`}>
+      <h3>Flood Risk · {LEVEL_WORDS[floodRisk.level]}</h3>
+      <ul>
+        {cardReasons(floodRisk).map((reason) => (
+          <li key={reason.code}>{reasonSentence(reason)}</li>
+        ))}
+      </ul>
     </section>
   );
 }

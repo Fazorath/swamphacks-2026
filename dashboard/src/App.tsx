@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { FloodRiskPanel } from "./FloodRiskPanel";
+import { FloodRiskChip } from "./FloodRiskPanel";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
@@ -15,7 +15,7 @@ const PLACEHOLDER_AREAS = ["Alerts", "Evacuation Plan"];
 export function App() {
   const { identity, failed } = useNodeIdentity();
   const floodRisk = useFloodRisk();
-  const nodes = nodesOnMap(useReadings(), identity);
+  const nodes = nodesOnMap(useReadings(), identity, floodRisk?.nodes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   return (
@@ -29,11 +29,21 @@ export function App() {
               ? "Node unreachable"
               : "Connecting…"}
         </p>
+        <FloodRiskChip floodRisk={floodRisk} />
       </header>
       <div className="areas">
-        <FloodRiskPanel floodRisk={floodRisk} />
-        <ReadingsPanel nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
-        <NodeMap nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
+        <ReadingsPanel
+          nodes={nodes}
+          floodRisk={floodRisk}
+          selectedId={selectedId}
+          onSelect={toggleSelected}
+        />
+        <NodeMap
+          nodes={nodes}
+          selectedId={selectedId}
+          onSelect={toggleSelected}
+          stormSignal={floodRisk?.storm_signal ?? null}
+        />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>
             <h2>{title}</h2>

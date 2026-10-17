@@ -25,5 +25,6 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 
 ## Flood Risk (ticket 0006)
 
-- **`pnpm test` could not start on Node 20.20**: vitest's jsdom worker dies loading `undici@8` (`Cannot read properties of undefined (reading 'bind')`). Typecheck, lint and build pass; run the dashboard tests on a newer Node before trusting the new `App.test.tsx` case.
-- Trend rules (`water_rising`, `pressure_falling`) compare the oldest and newest reading in the last 60 s, so a trend lingers up to a minute after the Scenario stops moving, and a Scenario step shows at once because it publishes immediately.
+- **`pnpm test` fails to start on Node 20.20**: vitest's jsdom worker dies loading `undici@8` (`Cannot read properties of undefined (reading 'bind')`). It passes on Node 22: `npx -y node@22 node_modules/vitest/vitest.mjs run` from `dashboard/`.
+- **The Scenario cannot reach "Low from rain" alone**: its rain step also lifts water to 35 cm, which is Elevated. `MeshedNodes.hear_from(sender, water_cm=..., soil_pct=...)` publishes one hand-made reading over the in-memory Mesh to test such rules; `MeshedNodes.advance(seconds)` moves every Node's clock.
+- In `MeshedNodes`, a Node only hears peers that publish after it joins. Post `/api/scenario/reset` on each Node first when a test counts Nodes.

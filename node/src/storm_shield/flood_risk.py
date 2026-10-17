@@ -1,91 +1,138 @@
-from collections import defaultdict
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
 
 from storm_shield.community_reading import CommunityReading
 
-# First-pass thresholds, tuned by eye against the Scenario. Change them here only.
-COUNTING_WINDOW_SECONDS = 60  # a Node silent for longer stops counting (CONTEXT.md: Stale)
+# First-pass thresholds, meant to be retuned against real readings. Change them here only.
+HISTORY_WINDOW_SECONDS = 120
+WATER_ELEVATED_CM = 30
 WATER_HIGH_CM = 60
-WATER_RISING_CM = 5  # gained across the counting window
-RAIN_HEAVY_MMH = 20
-PRESSURE_FALLING_HPA = 3  # lost across the counting window
+WATER_RISING_CM = 10  # gained across the history window
+RAIN_ELEVATED_MMH = 10
+RAIN_HIGH_MMH = 25  # High only while water is also rising
+SOIL_RISING_POINTS = 3  # gained across the history window
+STORM_PRESSURE_HPA = 1009
 
+NodeLevel = Literal["elevated", "high"]
 FloodRiskLevel = Literal["low", "elevated", "high"]
-_LEVELS_LOWEST_FIRST: list[FloodRiskLevel] = ["low", "elevated", "high"]
-ReasonCode = Literal["water_high", "water_rising", "rain_heavy"]
-
-_REASON_TEXT: dict[ReasonCode, str] = {
-    "water_high": "water level high",
-    "water_rising": "water level rising",
-    "rain_heavy": "heavy rain",
-}
+ReasonCode = Literal["water_high", "water_rising", "rain_heavy", "pressure_falling", "raining"]
 
 
 class Reason(BaseModel):
     code: ReasonCode
-    nodes: list[str]
-    text: str
+    nodes: int
+    value: float
 
 
 class StormSignal(BaseModel):
-    falling: bool
-    text: str
+    on: bool
+    nodes: int
+    pressure_hpa: float | None
 
 
 class FloodRisk(BaseModel):
-    level: FloodRiskLevel
+    level: FloodRiskLevel | None
     reasons: list[Reason]
     storm_signal: StormSignal
+    nodes: dict[str, NodeLevel | None]
+
+
+@dataclass
+class _NodeView:
+    """What one Node's recent readings say, before comparing it with the other Nodes."""
+
+    water_cm: float
+    water_gain_cm: float
+    rain_mmh: float
+    soil_gain_points: float
+    pressure_hpa: float
+
+    @classmethod
+    def of(cls, readings: list[CommunityReading]) -> "_NodeView":
+        newest, oldest = readings[-1], readings[0]
+        # With a single reading there is no trend, so nothing is rising.
+        return cls(
+            water_cm=newest.water_m * 100,
+            water_gain_cm=(newest.water_m - oldest.water_m) * 100,
+            rain_mmh=newest.rain_mmh,
+            soil_gain_points=newest.soil_pct - oldest.soil_pct,
+            pressure_hpa=newest.pressure_hpa,
+        )
+
+    @property
+    def water_rising(self) -> bool:
+        return self.water_gain_cm >= WATER_RISING_CM
+
+    @property
+    def soil_rising(self) -> bool:
+        return self.soil_gain_points >= SOIL_RISING_POINTS
+
+    @property
+    def level(self) -> NodeLevel | None:
+        if self.water_cm >= WATER_HIGH_CM or (self.rain_mmh >= RAIN_HIGH_MMH and self.water_rising):
+            return "high"
+        if self.water_cm >= WATER_ELEVATED_CM or self.rain_mmh >= RAIN_ELEVATED_MMH:
+            return "elevated"
+        return "elevated" if self.water_rising else None
 
 
 def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
     """Flood Risk for everything this Node can see, from each counted Node's recent readings."""
-    nodes_by_reason: dict[ReasonCode, list[str]] = defaultdict(list)
-    levels: list[FloodRiskLevel] = ["low"]
-    pressure_falling: list[str] = []
-    for node, readings in recent.items():
-        reasons = _reasons(readings)
-        for reason in reasons:
-            nodes_by_reason[reason].append(node)
-        levels.append(_level(reasons))
-        if readings[0].pressure_hpa - readings[-1].pressure_hpa >= PRESSURE_FALLING_HPA:
-            pressure_falling.append(node)
+    views = {node: _NodeView.of(readings) for node, readings in recent.items()}
+    node_levels = {node: view.level for node, view in views.items()}
+
+    storm = [view for view in views.values() if view.pressure_hpa < STORM_PRESSURE_HPA]
+    storm_on = bool(storm) and len(storm) * 2 >= len(views)
+    soil_rising = [view for view in views.values() if view.soil_rising]
+    # One odd sensor cannot make it rain, but a lone Node is believed on its own.
+    raining = len(soil_rising) >= min(2, len(views)) > 0
+
+    reasons = [
+        reason
+        for reason in [
+            _reason(
+                "water_high",
+                max,
+                [v.water_cm for v in views.values() if v.water_cm >= WATER_ELEVATED_CM],
+            ),
+            _reason(
+                "water_rising", max, [v.water_gain_cm for v in views.values() if v.water_rising]
+            ),
+            _reason(
+                "rain_heavy",
+                max,
+                [v.rain_mmh for v in views.values() if v.rain_mmh >= RAIN_ELEVATED_MMH],
+            ),
+            _reason("pressure_falling", min, [v.pressure_hpa for v in storm] if storm_on else []),
+            _reason("raining", max, [v.soil_gain_points for v in soil_rising] if raining else []),
+        ]
+        if reason
+    ]
+
+    own_levels = set(node_levels.values())
+    headline: FloodRiskLevel | None = None
+    if "high" in own_levels:
+        headline = "high"
+    elif "elevated" in own_levels:
+        headline = "elevated"
+    elif raining or storm_on:
+        headline = "low"
     return FloodRisk(
-        level=max(levels, key=_LEVELS_LOWEST_FIRST.index),
-        reasons=[
-            Reason(code=code, nodes=nodes, text=f"{_REASON_TEXT[code]} at {_count(nodes)}")
-            for code, nodes in nodes_by_reason.items()
-        ],
-        storm_signal=_storm_signal(pressure_falling, len(recent)),
+        level=headline,
+        reasons=reasons,
+        storm_signal=StormSignal(
+            on=storm_on,
+            nodes=len(storm) if storm_on else 0,
+            pressure_hpa=min((v.pressure_hpa for v in storm), default=None) if storm_on else None,
+        ),
+        nodes=node_levels,
     )
 
 
-def _reasons(readings: list[CommunityReading]) -> list[ReasonCode]:
-    latest = readings[-1]
-    reasons: list[ReasonCode] = []
-    if latest.water_m * 100 >= WATER_HIGH_CM:
-        reasons.append("water_high")
-    if (latest.water_m - readings[0].water_m) * 100 >= WATER_RISING_CM:
-        reasons.append("water_rising")
-    if latest.rain_mmh >= RAIN_HEAVY_MMH:
-        reasons.append("rain_heavy")
-    return reasons
-
-
-def _level(reasons: list[ReasonCode]) -> FloodRiskLevel:
-    if "water_high" in reasons or {"rain_heavy", "water_rising"} <= set(reasons):
-        return "high"
-    return "elevated" if reasons else "low"
-
-
-def _storm_signal(falling: list[str], counted: int) -> StormSignal:
-    # "Across Nodes" means at least half of the counted Nodes, so one odd Node does not raise it.
-    if falling and len(falling) * 2 >= counted:
-        return StormSignal(falling=True, text=f"pressure falling at {_count(falling)}")
-    return StormSignal(falling=False, text="pressure steady")
-
-
-def _count(nodes: list[str]) -> str:
-    return f"{len(nodes)} Node" if len(nodes) == 1 else f"{len(nodes)} Nodes"
+def _reason(
+    code: ReasonCode, most_telling: Callable[[list[float]], float], values: list[float]
+) -> Reason | None:
+    return Reason(code=code, nodes=len(values), value=most_telling(values)) if values else None

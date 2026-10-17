@@ -1,3 +1,4 @@
+import type { NodeLevel } from "./useFloodRisk";
 import type { NodeIdentity } from "./useNodeIdentity";
 import type { Reading } from "./useReadings";
 
@@ -10,12 +11,17 @@ export type NodeOnMap = {
   waterLevelCm: number | null;
   simulated: boolean;
   stale: boolean;
+  level: NodeLevel | null;
   ageSeconds: number;
   readings: Reading[];
 };
 
 // A Node's own name is known only to itself; everyone else is shown by id until the registry (0012).
-export function nodesOnMap(readings: Reading[], own: NodeIdentity | null): NodeOnMap[] {
+export function nodesOnMap(
+  readings: Reading[],
+  own: NodeIdentity | null,
+  levels: Record<string, NodeLevel | null> = {},
+): NodeOnMap[] {
   const byNode = new Map<string, Reading[]>();
   for (const reading of readings) {
     byNode.set(reading.node, [...(byNode.get(reading.node) ?? []), reading]);
@@ -29,6 +35,7 @@ export function nodesOnMap(readings: Reading[], own: NodeIdentity | null): NodeO
       waterLevelCm: nodeReadings.find((reading) => reading.kind === "water_level")?.value ?? null,
       simulated: nodeReadings.some((reading) => reading.simulated),
       stale: ageSeconds > STALE_AFTER_SECONDS,
+      level: levels[id] ?? null,
       ageSeconds,
       readings: nodeReadings,
     };

@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
+import { stormSignalSentence } from "./floodRiskSentences";
 import type { NodeOnMap } from "./nodesOnMap";
+import type { FloodRisk } from "./useFloodRisk";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
@@ -41,11 +43,13 @@ type Props = {
   nodes: NodeOnMap[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  stormSignal: FloodRisk["storm_signal"] | null;
 };
 
-export function NodeMap({ nodes, selectedId, onSelect }: Props) {
+export function NodeMap({ nodes, selectedId, onSelect, stormSignal }: Props) {
   return (
     <section aria-label="Map">
+      {stormSignal?.on && <p className="storm-signal">{stormSignalSentence(stormSignal)}</p>}
       <MapContainer center={GAINESVILLE} zoom={13} className="node-map">
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -55,7 +59,7 @@ export function NodeMap({ nodes, selectedId, onSelect }: Props) {
         {nodes.map((node) => {
           const selected = node.id === selectedId;
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
-          const state = [node.stale ? "stale" : "fresh", selected && "selected"]
+          const state = [node.stale ? "stale" : "fresh", node.level, selected && "selected"]
             .filter(Boolean)
             .join(" ");
           return (

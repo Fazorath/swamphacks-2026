@@ -105,7 +105,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flood Risk is not a message
 
-Every Node computes Flood Risk from the Community Readings it holds plus the registry. The Hub computes each Registered Node's risk the same way to decide when to issue a warning. Thresholds stay deferred until the Node backend exists.
+Every Node computes Flood Risk from the Community Readings it holds plus the registry. The Hub computes each Registered Node's risk the same way to decide when to issue a warning. In calm weather there is no Flood Risk, so the level in the API is `null` and the reasons list is empty. Thresholds live in one module on the Node (first pass in ticket 0006).
 
 ## Node HTTP API (dashboard seam)
 

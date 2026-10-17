@@ -10,6 +10,7 @@ export function NodeTags({ node }: { node: NodeOnMap }) {
   return (
     <>
       {node.simulated && <span className="tag simulated">SIMULATED</span>}
+      {node.level && <span className={`tag ${node.level}`}>{node.level.toUpperCase()}</span>}
       {node.stale && <span className="tag stale">STALE · {formatAge(node.ageSeconds)}</span>}
     </>
   );

@@ -32,10 +32,9 @@ main {
   display: grid;
   height: 100vh;
   grid-template-columns: 16rem 1fr 22rem;
-  grid-template-rows: auto auto 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
   grid-template-areas:
     "top top top"
-    "risk risk risk"
     "readings map alerts"
     "readings map plan";
   gap: 0.75rem;
@@ -180,44 +179,6 @@ section[aria-label="Map"] {
   padding-left: 1.1rem;
 }
 
-section[aria-label="Flood Risk"] {
-  grid-area: risk;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 1.5rem;
-}
-
-section[aria-label="Flood Risk"] h2 {
-  margin: 0;
-}
-
-section[aria-label="Flood Risk"] ul {
-  margin: 0;
-  padding-left: 1.1rem;
-}
-
-section p.flood-risk-level {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-section p.flood-risk-level.low {
-  color: var(--low);
-}
-
-section p.flood-risk-level.elevated {
-  color: var(--elevated);
-}
-
-section p.flood-risk-level.high {
-  color: var(--high);
-}
-
-section p.storm-signal {
-  color: var(--elevated);
-}
-
 section[aria-label="Readings"] {
   grid-area: readings;
 }
@@ -237,7 +198,6 @@ section[aria-label="Evacuation Plan"] {
     grid-template-rows: none;
     grid-template-areas:
       "top"
-      "risk"
       "map"
       "alerts"
       "plan"
@@ -247,4 +207,71 @@ section[aria-label="Evacuation Plan"] {
   section[aria-label="Map"] {
     height: 40vh;
   }
+}
+
+.flood-risk-chip {
+  padding: 0 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.25rem;
+  font-weight: bold;
+}
+
+.flood-risk-chip.low,
+.flood-risk-card.low h3 {
+  color: var(--low);
+}
+
+.flood-risk-chip.elevated,
+.flood-risk-card.elevated h3,
+.tag.elevated {
+  color: var(--elevated);
+}
+
+.flood-risk-chip.high,
+.flood-risk-card.high h3,
+.tag.high {
+  color: var(--high);
+}
+
+.flood-risk-card {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.flood-risk-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.flood-risk-card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+section[aria-label="Map"] {
+  position: relative;
+}
+
+section p.storm-signal {
+  position: absolute;
+  z-index: 1000;
+  top: 0.75rem;
+  left: 3.5rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--elevated);
+  border-radius: 0.25rem;
+  background: var(--surface);
+  color: var(--elevated);
+  font-weight: bold;
+}
+
+.node-dot.elevated {
+  fill: var(--elevated);
+}
+
+.node-dot.high {
+  fill: var(--high);
 }
