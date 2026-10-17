@@ -8,7 +8,7 @@
 
 **Owner:** amitathik7
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/node-registry.md` (from `docs/specs/storm-shield.md`)
 
 **Design:** `docs/design/ui.md` ("Hub Panel", "Node Panel"); canvas artboards `D-Hub-Registry`, `D-Node-Registration`, `D-StaleUnverified`.
 
