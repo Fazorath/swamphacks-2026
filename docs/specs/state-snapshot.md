@@ -48,8 +48,10 @@ Later tickets add their fields to this one object instead of adding endpoints.
   - the Scenario step;
   - Flood Risk (level, reasons, Storm Signal, per-Node levels) in the shape `/api/flood-risk` served;
   - every Node's latest readings, this one included.
-- **Readings are grouped per Node.** Each Node entry carries `id`, fuzzed `position`, the simulated flag, `age_s`, `stale`, and its four measurements (pressure, rain rate, water level, soil moisture, each with value and unit). `age_s`, `stale` and the simulated flag are per Node, not per measurement. Later tickets add `registered` to the same entry.
-- **The Node decides Stale.** `stale` means silent for more than 15 s on the receiving Node's own clock. The 15 s and the 60 s "stops counting toward Flood Risk" thresholds live side by side in the Node's one timing module, so the Flood Risk rule and the Stale flag read the same values. The dashboard's own 15 s constant is deleted and the dashboard only reads `stale`.
+- **Readings are grouped per Node.** Each Node entry is `{id, position: [lat, lon], simulated, age_s, stale, measurements}`. `measurements` is an object keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`), each `{value, unit}`. `age_s`, `stale` and the simulated flag are per Node, not per measurement. Entries are sorted by `id`. This Node is not flagged: the dashboard compares an entry's `id` to the state's own `id`. A Node with no reading yet, this one included, is absent. Later tickets add `registered` to the same entry.
+- **The Node decides Stale.** `stale` means silent for more than 15 s on the receiving Node's own clock. The 15 s and the 60 s "stops counting toward Flood Risk" thresholds sit side by side in a new timing module on the Node. `stale` reads the 15 s value from 0040. The 60 s value has no reader until 0021 wires it into the Flood Risk check that decides which Nodes count, which stays "all of them" until then. The dashboard's own 15 s constant is deleted and the dashboard only reads `stale`.
+- **One instant.** The reading store hands back the per-Node latest readings and the recent histories Flood Risk needs from one lock and one clock reading. The Node entries and Flood Risk in the response are both built from that, so they cannot disagree.
+- **Delivered in three steps.** 0040 adds `GET /api/state` and leaves the old endpoints alone; 0041 moves the dashboard over and deletes them; 0042 adds Node unreachable.
 - **What does not move in.** Shelter open ids (`/api/shelters`), camera tiles (`/api/cameras` and pictures) and the Cache Pack endpoints keep their own endpoints. Shelters can fold in later with a small follow-up.
 - **Endpoints removed, not left beside the new one:** `/api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario`. The Scenario step and reset POSTs stay and keep returning the step. Wherever `docs/specs/wire-formats.md` still mentions the removed endpoints it is updated.
 - **Fields of later tickets are not added here** (Official Alerts, Community Warnings, `registered`, Shelter ids). Flood Risk is the exception, because it already exists and must agree with the readings.
@@ -67,7 +69,7 @@ Later tickets add their fields to this one object instead of adding endpoints.
   - the state shows this Node's own readings and other Nodes' readings, grouped per Node;
   - it carries `id`, `name`, `role` and `status`, and the Scenario step;
   - a Node that stops publishing turns `stale` after 15 s and reports a growing `age_s`, using the harness clock (`advance`);
-  - Flood Risk in the state agrees with the readings in the same response;
+  - Flood Risk in the state agrees with the readings in the same response (recomputed from the Node entries, it gives the same level);
   - the removed endpoints answer 404.
 - **Dashboard seam (Vitest).** `App` renders from a fake `/api/state`. Cases:
   - it shows `Connecting…` before the first answer;

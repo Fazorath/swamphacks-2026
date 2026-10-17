@@ -115,6 +115,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `useOpenShelterIds` now returns `[ids, setIds]` so the Hub Panel shows a change at once; a poll already in flight when a change is shown is ignored, so the old list cannot come back, and later polls overwrite it as usual.
 - Rehearsed locally on loopback (Hub 8210, Sensor 8211) with a phone over Tailscale: closing the nearest Shelter on the Hub rerouted the phone. Not a Pi check.
 
+## State snapshot (ticket 0040)
+
+- **`GET /api/state` is built from `ReadingStore.snapshot(now)`**, which holds the lock once and returns the per-Node entries and the histories Flood Risk reads. Add later state fields beside them, not through a second store call.
+- **In a `MeshedNodes` test, a Node started after another hears it at once** (both publish at startup), so "only this Node is listed" needs a single `start("porch")`. `hear_from(...)` Nodes have no client; `remove` only works on app Nodes.
+- `STOPS_COUNTING_AFTER_SECONDS` in `timing.py` has no reader until 0021; that is on purpose.
+
 ## Flash flood pivot (ADR 0004)
 
 - **Two floods hit the same river 13 months apart; don't mix their facts.** The 8 July 2025 Purepu GLOF started in Tibet and killed about 11 in Nepal; the 26 August 2026 ice-rock avalanche started on Langtang Lirung, inside Nepal, and killed well over a thousand. Many search results, including ICIMOD pages, cover both. The demo replays 2026; every fact in the replay timeline cites a 2026 source.
