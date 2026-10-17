@@ -8,7 +8,7 @@
 
 **Owner:** Fazorath
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/cache-pack.md` (parent: `docs/specs/storm-shield.md`)
 
 **Decided in grilling:**
 - Area: one demo box of about 10 × 10 km around central Gainesville (covers both creeks and every Shelter the demo can pick), zoom 11 to 16. The corners go into `manifest.json` as `bbox`.
