@@ -17,8 +17,8 @@ Every ticket carries these lines:
 ## Claiming
 
 1. Pick a ticket whose status is `ready-for-agent` and whose blockers are all `done`.
-2. Set `Owner` to your name and `Status` to `in-progress` on its branch, commit, push. Post "taking 0004" in the group chat.
-3. Seeing someone else's name on a ticket means hands off.
+2. Run `scripts/claim.sh 0004`. It checks the ticket on the latest `origin/main` (unclaimed, blockers done), sets `Owner` to your git `user.name` and `Status` to `in-progress`, pushes that straight to `main` and creates the `0004-<slug>` branch. A claim that lives only on your branch is invisible to everyone else; that is how two people claimed 0009. Post "taking 0004" in the group chat.
+3. Seeing someone else's name on a ticket means hands off. `claim.sh` refuses it for you.
 
 ## Finding work
 

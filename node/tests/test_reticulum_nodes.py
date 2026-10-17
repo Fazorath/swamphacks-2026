@@ -1,4 +1,5 @@
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -8,6 +9,8 @@ from typing import Any
 
 import httpx
 import pytest
+
+from storm_shield.reticulum_mesh import LOOPBACK_BASE_PORT
 
 FIRST_HTTP_PORT = 8101
 FIRST_TCP_PORT = 4350
@@ -79,8 +82,29 @@ def _eventually(check: Callable[[], bool], seconds: float = 40) -> None:
         time.sleep(0.5)
 
 
+def _fail_if_ports_are_taken() -> None:
+    """A Node left running elsewhere would answer in place of ours; say so instead of timing out."""
+    ports = [
+        base + slot
+        for base in (FIRST_HTTP_PORT, FIRST_TCP_PORT, LOOPBACK_BASE_PORT)
+        for slot in range(NODE_COUNT)
+    ]
+    taken = []
+    for port in ports:
+        with socket.socket() as probe:
+            probe.settimeout(0.2)
+            if probe.connect_ex(("127.0.0.1", port)) == 0:
+                taken.append(port)
+    if taken:
+        pytest.fail(
+            f"ports {taken} already have a listener, probably a Node left running; "
+            "run scripts/stop-nodes.sh and try again"
+        )
+
+
 @pytest.fixture(params=["loopback", "tcp"])
 def nodes(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[list[RunningNode]]:
+    _fail_if_ports_are_taken()
     running = [
         RunningNode(slot, tmp_path / f"node-{slot}", request.param) for slot in range(NODE_COUNT)
     ]

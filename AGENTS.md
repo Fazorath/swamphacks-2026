@@ -27,6 +27,10 @@ Run these before calling any ticket done. An agent must not claim "done" without
 | Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |
 | Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |
 | Tests | `cd node && uv run pytest` and `cd dashboard && pnpm test` |
+| **All of the above** | `scripts/check.sh` (`node` or `dashboard` for one side; works without uv/pnpm and on Node 20, and lists anything it could not run) |
+| Claim a ticket | `scripts/claim.sh NNNN` (pushes the claim to `main`, creates the branch) |
+| Setup problems | `scripts/doctor.sh` (missing tools, hooks off, behind `main`, a Node left running) |
+| Stop stray Nodes | `scripts/stop-nodes.sh` (frees the ports the Node tests need) |
 
 ## No Pis or sensors
 
@@ -74,7 +78,8 @@ The repo goes public at submission and judges read it. Write for a teammate seei
 - Branch per ticket: `NNNN-<slug>` from an up-to-date `main`.
 - Small commits, imperative subject: `add trip search endpoint`.
 - Merge into `main` when `code-review` is clean and **Commands** pass, then push. `main` must always be demoable.
-- Pull `main` often; merge it into long branches rather than letting them drift.
+- Pull `main` often; merge it into long branches rather than letting them drift. Claude Code says at session start how far behind you are, and `git push` warns on a branch behind `origin/main`.
+- Pushing Node or dashboard code to `main` runs `scripts/check.sh` first and warns loudly if it fails (it does not block; `SKIP_CHECK=1` skips it).
 - Never force-push, `reset --hard`, or delete someone else's branch (Claude Code blocks these via a hook).
 - No AI attribution in commits or PRs (no `Co-Authored-By: Claude`, no "Generated with" footers). Commits are authored by whoever is driving; the `commit-msg` hook strips any trailer an agent adds.
 
