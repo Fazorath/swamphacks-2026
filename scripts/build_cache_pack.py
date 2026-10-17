@@ -197,8 +197,8 @@ def build_route_files(
         compressed = sum(len(zlib.compress(content)) for content in files.values())
         print(f"{len(files)} route files at {spacing_m} m: {compressed / 1e6:.1f} MB", flush=True)
         if compressed <= ROUTES_BUDGET_BYTES:
-            break
-    return grid, files
+            return grid, files
+    sys.exit(f"Routes stay over {ROUTES_BUDGET_BYTES / 1e6:.0f} MB even at {spacing_m} m spacing")
 
 
 def build(output: Path, osm_extract: Path) -> None:
