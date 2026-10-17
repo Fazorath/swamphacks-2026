@@ -28,7 +28,7 @@
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | ready-for-agent | unclaimed |
 | [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | ready-for-agent | unclaimed |
-| [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | ready-for-agent | unclaimed |
+| [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | in-progress | Fazorath |
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | done | Fazorath |
