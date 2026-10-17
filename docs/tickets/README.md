@@ -22,7 +22,7 @@
 | [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | ready-for-agent | unclaimed |
 | [0017-live-nws-and-nhc-feeds](0017-live-nws-and-nhc-feeds.md) | ready-for-agent | unclaimed |
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | ready-for-agent | unclaimed |
-| [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | ready-for-agent | unclaimed |
+| [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | in-progress | leonardorofaDV |
 | [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | ready-for-agent | unclaimed |
 | [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | ready-for-agent | unclaimed |
 | [0022-restarted-node-is-heard-again](0022-restarted-node-is-heard-again.md) | ready-for-agent | unclaimed |
