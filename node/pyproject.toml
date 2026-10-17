@@ -12,8 +12,6 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest", "ruff", "mypy"]
-# Only scripts/build_cache_pack.py needs this; a Node never installs it (`uv sync --group build`).
-build = ["pyrosm"]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"

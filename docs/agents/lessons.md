@@ -68,6 +68,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Sensor with a track plays it only while the Event clock is playing or paused**; before the Hub starts the replay (or after a stop) it keeps the Scenario. Past `silent_at` it publishes nothing, so its reading ages and turns Stale.
 - **Tests drive a Sensor's publish loop with `MeshedNodes.start_sensor`** (loop every 20 ms on the injected clock) and move time with `advance`; 1 s of real time is 30 s of event time.
 
+## Valley Cache Pack (ticket 0043)
+
+- **Release `cache-pack-v3` is the valley pack** (2.4 MB, 795 tiles at z10 to 14, five Shelters, river line, corridor, no route grid); `v1` and `v2` are the Gainesville packs. The repo is private, so serve it from a laptop as before. Rebuild with `scripts/build_cache_pack.py`; `derive_river.py` only when the river inputs change.
+- **Measured River km differs a little from the spec's table**: nearest river vertices give Timure 3.6 (spec 3.4), Syabrubesi 14.4 (14.6), Betrawati 45.0 (45.6), Trishuli 53.3 (54.0), because the line is simplified to 25 m and the place coordinates sit up to 275 m from it. Only S0 (-12.2) comes from the line; the others are the spec's numbers.
+- **A Node with no `NODE_LATITUDE` now sits at Betrawati**, so tests that read a Node's shared position see (27.974, 85.186). Tests that pass their own coordinates keep Gainesville ones.
+- **Tests that leave Nodes running** (`test_reticulum_nodes.py`) fail the next run on busy ports; `pkill -f "storm_shield.main import run"` before rerunning if `[loopback]` or `[tcp]` fails for no reason you can see.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.

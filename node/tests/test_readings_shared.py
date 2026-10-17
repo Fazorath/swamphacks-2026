@@ -61,7 +61,7 @@ def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
         for reading in meshed_nodes["garage"].get("/api/readings").json()
         if reading["node"] == "porch"
     ]
-    assert {tuple(reading["position"]) for reading in from_porch} == {(29.652, -82.324)}
+    assert {tuple(reading["position"]) for reading in from_porch} == {(27.974, 85.186)}
 
 
 def test_a_restarted_node_is_heard_again(

@@ -4,6 +4,7 @@ Run once when the river inputs change; the Cache Pack build reads the two files 
 See scripts/cache-pack/README.md.
 """
 
+import itertools
 import json
 import math
 import sys
@@ -107,7 +108,7 @@ def simplify(line: list[Point]) -> list[Point]:
 def kilometres_along(line: list[Point]) -> list[float]:
     """River km at each vertex, zero at the vertex nearest the confluence."""
     running = [0.0]
-    for a, b in zip(line, line[1:], strict=False):
+    for a, b in itertools.pairwise(line):
         running.append(running[-1] + distance_m(a, b) / 1000)
     zero = min(range(len(line)), key=lambda i: distance_m(line[i], CONFLUENCE))
     return [value - running[zero] for value in running]

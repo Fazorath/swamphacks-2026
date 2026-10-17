@@ -9,9 +9,10 @@ gh release create cache-pack-v1 build/cache-pack.zip              # or `gh relea
 
 Then set `CACHE_PACK_URL` on the Hub to the Release asset's download URL. Sensor Nodes set it to the Hub's `/api/cache-pack.zip`.
 
-- Needs `httpx` (a Node dependency) and, for Routes, `pyrosm` from the build-only group: `uv sync --project node --group build`.
-- Routes need the Geofabrik Florida extract (about 650 MB, kept out of git): `curl -L -o build/florida-latest.osm.pbf https://download.geofabrik.de/north-america/us/florida-latest.osm.pbf`, or pass `--osm-extract`. Reading it takes about a minute and the whole route step about 90 s. The grid is 100 m, and 250 m if the routes would pass 5 MB zipped.
-- The build takes a few minutes: it fetches CARTO Dark Matter tiles politely (identifying `User-Agent`, delay between requests). Tiles are credited "© OpenStreetMap contributors © CARTO" on the map (ticket 0025).
-- `shelters.source.json` is the curated list. Each entry's `source` note records where it was checked and when. The build fails if a Shelter lies outside the box.
-- `creek_floodplains.geojson` is a hand-made, approximate layer for Hogtown Creek and Sweetwater Branch. The FEMA zones (A and AE) are fetched from the NFHL ArcGIS service.
+- Needs `httpx` (a Node dependency) and `CARTO_API_KEY` exported (see `.env.example`).
+- The pack covers the Bhote Koshi valley, from the Lhende Khola down to below Trishuli (`BBOX` in the script, about 66 x 40 km). Tiles are zoom 10 to 14 so it stays small. There is no route grid: the plan works without one, and Road Routes are a stretch ticket (`pack_routes.py` is kept for it).
+- The build takes a few minutes: it fetches CARTO Dark Matter tiles politely (identifying `User-Agent`, delay between requests). Tiles are credited "© OpenStreetMap contributors © CARTO" on the map.
+- `shelters.source.json` is the curated list. Each entry's `source` note records the OSM id, how the height above the river was measured and when it was checked. The build fails if a Shelter lies outside the box. None has been visited or confirmed by the district; the notes say so.
+- `river.source.geojson` (the river line with River km and a speed per reach) and `flood_corridor.source.geojson` (the Flood-Prone Area: 150 m each side of the river line, approximate) are written by `uv run --project node python scripts/derive_river.py` from OpenStreetMap ways through Overpass. Run it again only when the river inputs change, and commit the two files. The speeds are reconstructed from reported arrival times, and each reach cites its source.
+- River km is zero at the Lhende-Kyirong confluence (28.2781 N, 85.3770 E), negative upstream.
 - `bbox` in the manifest is `[south, west, north, east]`.

@@ -184,7 +184,7 @@ export function evacuationPlan({
 
   const area = inFloodProneArea(profile.home, pack)
     ? "Your home is inside a mapped Flood-Prone Area."
-    : "Your home is outside the mapped Flood-Prone Areas (FEMA zones and creek floodplains, approximate).";
+    : "Your home is outside the mapped Flood-Prone Areas (the river corridor, approximate).";
   const { shelter, route, lines } = nearestFittingShelter(profile, pack, openShelterIds, routes);
   return { ...plan, lines: [area, ...lines], shelter, route };
 }

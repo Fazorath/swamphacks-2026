@@ -17,7 +17,7 @@ beforeEach(() => {
     if (path === "/api/cache-pack") {
       return Response.json({
         available: true,
-        manifest: { route_grid: { south: 29, west: -83, lat_step: 0.01, lon_step: 0.01 } },
+        manifest: { route_grid: { south: 27.9, west: 85.1, lat_step: 0.01, lon_step: 0.01 } },
       });
     }
     if (path.endsWith("shelters.json")) return Response.json([]);

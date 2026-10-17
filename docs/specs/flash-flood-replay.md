@@ -76,7 +76,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 
   | Node | Place | River km | Role |
   |---|---|---|---|
-  | S0 | Lhende Khola, below the collapse (hypothetical station in Langtang National Park) | about −12, measured in the pack build | Sensor; first to surge, silent within a minute |
+  | S0 | Lhende Khola, below the collapse (hypothetical station in Langtang National Park) | −12.2, measured on the pack's river line at 28.3517 N, 85.4477 E | Sensor; first to surge, silent within a minute |
   | S1 | Timure (28.2528, 85.3667) | 3.4 | Sensor; silent at about 08:45 |
   | S2 | Syabrubesi (28.1632, 85.3391) | 14.6 | Sensor; silent at 08:50 like the real gauge |
   | Hub | Betrawati (27.9731, 85.1860) | 45.6 | Hub, with the camera |

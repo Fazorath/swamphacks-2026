@@ -22,7 +22,9 @@ def _event_clock(meshed_nodes: MeshedNodes, name: str) -> dict[str, object]:
     return clock
 
 
-def _latest_reading(meshed_nodes: MeshedNodes, viewer: str, node: str, kind: str) -> dict[str, float]:
+def _latest_reading(
+    meshed_nodes: MeshedNodes, viewer: str, node: str, kind: str
+) -> dict[str, float]:
     readings = meshed_nodes[viewer].get("/api/readings").json()
     return next(r for r in readings if r["node"] == node and r["kind"] == kind)
 
