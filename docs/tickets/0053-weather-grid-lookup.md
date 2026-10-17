@@ -10,9 +10,9 @@
 
 **Spec:** `docs/specs/weather-layers.md`
 
-- [ ] `valueAt(grid, variable, lat, lon, time)`: bilinear in space, linear between hours; clamps at the grid edge and the first and last hour instead of returning NaN
-- [ ] `windAt(grid, lat, lon, time)` returns u (east) and v (north) in m/s from speed and direction (a wind from the north, 0°, blows south)
-- [ ] `speedBand(ms)` names the Beaufort-style band for a speed
-- [ ] A malformed grid (missing variable, wrong array length) throws an error that names the problem
-- [ ] Vitest: exact at grid points; midpoint between points and between hours; edge clamping; u and v for the four compass directions; band boundaries; malformed grid
-- [ ] All **Commands** pass
+- [x] `valueAt(grid, variable, lat, lon, time)`: bilinear in space, linear between hours; clamps at the grid edge and the first and last hour instead of returning NaN
+- [x] `windAt(grid, lat, lon, time)` returns u (east) and v (north) in m/s from speed and direction (a wind from the north, 0°, blows south)
+- [x] `speedBand(ms)` names the Beaufort-style band for a speed
+- [x] A malformed grid (missing variable, wrong array length) throws an error that names the problem
+- [x] Vitest: exact at grid points; midpoint between points and between hours; edge clamping; u and v for the four compass directions; band boundaries; malformed grid
+- [x] All **Commands** pass
