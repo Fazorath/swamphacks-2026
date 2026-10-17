@@ -188,6 +188,7 @@ def _surge_reason_of(client: TestClient) -> dict[str, Any] | None:
 
 def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
     meshed_nodes.advance(8)
     meshed_nodes.hear_from("creek", water_cm=340)
@@ -205,6 +206,7 @@ def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: Mes
 
 def test_the_same_rise_spread_over_a_long_time_is_not_a_surge(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
     meshed_nodes.advance(61)
     meshed_nodes.hear_from("creek", water_cm=340)
@@ -223,6 +225,7 @@ def test_a_rise_just_under_the_surge_size_is_not_a_surge(meshed_nodes: MeshedNod
 
 def test_a_rise_of_exactly_the_surge_size_is_a_surge(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=10)
     meshed_nodes.hear_from("creek", water_cm=110)
     assert _flood_risk(meshed_nodes["porch"])["surged"] == ["creek"]
@@ -238,6 +241,7 @@ def test_only_the_node_that_surged_is_listed_and_the_reason_reports_its_rise(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "garage", "porch")
     for sender in ["creek", "garage"]:
         meshed_nodes.hear_from(sender, water_cm=20)
     meshed_nodes.advance(5)
@@ -254,6 +258,7 @@ def test_the_reason_reports_the_biggest_rise_when_several_nodes_surge(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "garage", "porch")
     for sender in ["creek", "garage"]:
         meshed_nodes.hear_from(sender, water_cm=20)
     meshed_nodes.advance(6)
@@ -268,6 +273,7 @@ def test_the_surge_ends_once_the_jump_leaves_the_window_but_the_high_water_stays
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
     meshed_nodes.hear_from("creek", water_cm=20)
     meshed_nodes.hear_from("creek", water_cm=340)
     meshed_nodes.advance(61)
