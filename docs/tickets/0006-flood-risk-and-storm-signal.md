@@ -8,7 +8,7 @@
 
 **Owner:** leonardorofaDV
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/flood-risk.md` (parent: `docs/specs/storm-shield.md`)
 
 ## Rules (first pass, decided in the 0006 grilling)
 
