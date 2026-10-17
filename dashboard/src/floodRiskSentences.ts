@@ -4,9 +4,16 @@ function nodeCount(count: number): string {
   return count === 1 ? "1 Node" : `${count} Nodes`;
 }
 
-export function reasonSentence({ code, nodes, value }: FloodRiskReason): string {
+function howLong(seconds: number): string {
+  if (seconds === 0) return "at once";
+  return seconds < 60 ? `in ${seconds} s` : `in ${Math.round(seconds / 60)} min`;
+}
+
+export function reasonSentence({ code, nodes, value, seconds }: FloodRiskReason): string {
   const at = `at ${nodeCount(nodes)}`;
   switch (code) {
+    case "water_surge":
+      return `water rose ${value / 100} m ${howLong(seconds ?? 0)}`;
     case "water_high":
       return `water level ${value} cm ${at}`;
     case "water_rising":
@@ -21,11 +28,13 @@ export function reasonSentence({ code, nodes, value }: FloodRiskReason): string 
 }
 
 // The map badge already shows the Storm Signal, so the card repeats it only when it is all that
-// made Flood Risk appear.
+// made Flood Risk appear. A Surge already says the water is rising, so that sentence is dropped.
 export function cardReasons(floodRisk: FloodRisk): FloodRiskReason[] {
-  return floodRisk.reasons.length === 1
-    ? floodRisk.reasons
-    : floodRisk.reasons.filter((reason) => reason.code !== "pressure_falling");
+  if (floodRisk.reasons.length === 1) return floodRisk.reasons;
+  const surging = floodRisk.reasons.some((reason) => reason.code === "water_surge");
+  return floodRisk.reasons.filter(
+    (reason) => reason.code !== "pressure_falling" && !(surging && reason.code === "water_rising"),
+  );
 }
 
 export function stormSignalSentence({ nodes, pressure_hpa }: FloodRisk["storm_signal"]): string {

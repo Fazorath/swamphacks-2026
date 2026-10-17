@@ -51,7 +51,7 @@ Every Node works out Flood Risk from the Community Readings it holds and shows i
 ## Implementation Decisions
 
 - **Flood Risk module.** One pure function takes the recent readings of every counted Node (about two minutes of history each) and the current time, and returns the headline level (or none), the reasons, each Node's own level, and the Storm Signal. It has no knowledge of the Mesh, the clock or HTTP.
-- **Thresholds module.** Every number lives in one named place: water 30 cm (Elevated) and 60 cm (High); rain rate 10 mm/h (Elevated) and 25 mm/h with rising water (High); "water rising" is a 10 cm rise; "soil rising" is a 3-point rise; the history window is 2 minutes; the Storm Signal is pressure below 1009 hPa at half or more of counted Nodes. They are a first pass and are meant to be retuned.
+- **Thresholds module.** Every number lives in one named place: water 30 cm (Elevated) and 60 cm (High); rain rate 10 mm/h (Elevated) and 25 mm/h with rising water (High); "water rising" is a 10 cm rise; a Surge is a 100 cm rise within 60 s of the sender's own timestamps, High at once (ticket 0046); "soil rising" is a 3-point rise; the history window is 2 minutes; the Storm Signal is pressure below 1009 hPa at half or more of counted Nodes. They are a first pass and are meant to be retuned.
 - **History in the reading store.** The store keeps, per Node, the readings received in the last 2 minutes, in memory only, timestamped on this Node's own clock (as `age_s` already is). It still answers "latest reading per Node". "Rising" means the newest value minus the oldest value still in the window; a Node with a single reading has no trend and is not rising. A restarted Node starts with an empty history, so nothing is rising until a second reading arrives.
 - **Which Nodes count.** A single check, "does this Node count?", decides. For now every Node the store holds counts. Registered-only (0012) and the 60-second silence cutoff (0021) will tighten this one check without touching the rules.
 - **Per-Node level.** Elevated or High (or none), from that Node's own water level, rain rate and rising water. Low is deliberately not a per-Node level, because "raining" is judged across the Mesh.
@@ -61,7 +61,8 @@ Every Node works out Flood Risk from the Community Readings it holds and shows i
 - **Reasons.** One entry per rule that fired, naming the reason code, how many Nodes triggered it and the most telling value among them. Codes are the four from the wire format (`water_high`, `water_rising`, `rain_heavy`, `pressure_falling`) plus `raining` for rising soil moisture, which only ever appears in the API and never in a Community Warning. Water at 30 cm or more uses `water_high`; the level (Elevated or High) comes from the threshold crossed. There is no duration wording. The dashboard writes the sentences, so wording can change without touching the Node.
 - **Node API.** A new endpoint returns the Flood Risk snapshot:
   - `level`: `"low"`, `"elevated"`, `"high"` or `null`;
-  - `reasons`: a list of `{code, nodes, value}`, empty when `level` is `null` (a Storm Signal with no other reason still gives `pressure_falling`);
+  - `surged`: the ids of the Nodes whose water is surging now (ticket 0046);
+  - `reasons`: a list of `{code, nodes, value}` (`water_surge` also carries `seconds`, how long the rise took, the one reason that states a duration), empty when `level` is `null` (a Storm Signal with no other reason still gives `pressure_falling`);
   - `storm_signal`: `{on, nodes, pressure_hpa}`, where `pressure_hpa` is the lowest current value;
   - `nodes`: each counted Node id mapped to its own level (`"elevated"`, `"high"` or `null`).
   Ticket 0019 folds this into `/api/state` as a block with the same shape. The wire format is unchanged: Flood Risk is never sent over the Mesh.
@@ -70,7 +71,7 @@ Every Node works out Flood Risk from the Community Readings it holds and shows i
 - **Dashboard: top bar and card.** A top-bar chip shows the level and its word (Low green, Elevated amber, High red, never color alone), and a Flood Risk card heads the Readings rail with the reason sentences. Both are absent when `level` is `null`. If the design canvas has a different slot for the card, follow the canvas.
 - **Dashboard: Storm Signal.** A badge on the map shows "Low pressure: N hPa at K Nodes". When the Storm Signal is the only reason for Low, the card repeats it.
 - **Dashboard: map dots.** The dots from 0005 are colored by the Node's own level (Elevated amber, High red) and show the word; a Node with no level keeps the neutral Community color. This finishes the "Flood Risk coloring arrives with 0006" note in the 0005 spec.
-- **Reason sentences.** A small pure mapping turns `{code, nodes, value}` into a sentence ("water level 90 cm at 1 Node", "heavy rain: 30 mm/h at 2 Nodes", "low pressure: 1002 hPa at 3 Nodes", "soil moisture rising at 2 Nodes", "water level rising at 2 Nodes"), with singular and plural handled.
+- **Reason sentences.** A small pure mapping turns `{code, nodes, value}` into a sentence ("water level 90 cm at 1 Node", "heavy rain: 30 mm/h at 2 Nodes", "low pressure: 1002 hPa at 3 Nodes", "soil moisture rising at 2 Nodes", "water level rising at 2 Nodes", "water rose 3.2 m in 8 s"; the card leaves out "rising" while a Surge says it), with singular and plural handled.
 - **Glossary.** `CONTEXT.md` already gained Storm Signal and Raining and the revised Flood Risk. No ADR.
 
 ## Testing Decisions

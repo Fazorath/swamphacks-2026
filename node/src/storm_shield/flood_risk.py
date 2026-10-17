@@ -11,6 +11,8 @@ HISTORY_WINDOW_SECONDS = 120
 WATER_ELEVATED_CM = 30
 WATER_HIGH_CM = 60
 WATER_RISING_CM = 10  # gained across the history window
+SURGE_RISE_CM = 100  # gained within SURGE_WINDOW_SECONDS, High before any fixed level is reached
+SURGE_WINDOW_SECONDS = 60
 RAIN_ELEVATED_MMH = 10
 RAIN_HIGH_MMH = 25  # High only while water is also rising
 SOIL_RISING_POINTS = 3  # gained across the history window
@@ -18,13 +20,16 @@ STORM_PRESSURE_HPA = 1009
 
 NodeLevel = Literal["elevated", "high"]
 FloodRiskLevel = Literal["low", "elevated", "high"]
-ReasonCode = Literal["water_high", "water_rising", "rain_heavy", "pressure_falling", "raining"]
+ReasonCode = Literal[
+    "water_surge", "water_high", "water_rising", "rain_heavy", "pressure_falling", "raining"
+]
 
 
 class Reason(BaseModel):
     code: ReasonCode
     nodes: int
     value: float
+    seconds: int | None = None  # only a Surge says how long the rise took
 
 
 class StormSignal(BaseModel):
@@ -38,6 +43,7 @@ class FloodRisk(BaseModel):
     reasons: list[Reason]
     storm_signal: StormSignal
     nodes: dict[str, NodeLevel | None]
+    surged: list[str]  # ids of the Nodes whose water is surging now
 
 
 @dataclass
@@ -46,6 +52,8 @@ class _NodeView:
 
     water_cm: float
     water_gain_cm: float
+    surge_rise_cm: float
+    surge_seconds: int
     rain_mmh: float
     soil_gain_points: float
     pressure_hpa: float
@@ -53,14 +61,24 @@ class _NodeView:
     @classmethod
     def of(cls, readings: list[CommunityReading]) -> "_NodeView":
         newest, oldest = readings[-1], readings[0]
+        # The Surge window counts in the sender's own timestamps, so a slow rise cannot pass for
+        # one just because its readings arrived together.
+        in_surge_window = [r for r in readings if newest.t - r.t <= SURGE_WINDOW_SECONDS]
+        lowest = min(in_surge_window, key=lambda r: r.water_m)
         # With a single reading there is no trend, so nothing is rising.
         return cls(
             water_cm=newest.water_m * 100,
             water_gain_cm=(newest.water_m - oldest.water_m) * 100,
+            surge_rise_cm=round((newest.water_m - lowest.water_m) * 100, 1),
+            surge_seconds=newest.t - lowest.t,
             rain_mmh=newest.rain_mmh,
             soil_gain_points=newest.soil_pct - oldest.soil_pct,
             pressure_hpa=newest.pressure_hpa,
         )
+
+    @property
+    def surging(self) -> bool:
+        return self.surge_rise_cm >= SURGE_RISE_CM
 
     @property
     def water_rising(self) -> bool:
@@ -72,7 +90,11 @@ class _NodeView:
 
     @property
     def level(self) -> NodeLevel | None:
-        if self.water_cm >= WATER_HIGH_CM or (self.rain_mmh >= RAIN_HIGH_MMH and self.water_rising):
+        if (
+            self.surging
+            or self.water_cm >= WATER_HIGH_CM
+            or (self.rain_mmh >= RAIN_HIGH_MMH and self.water_rising)
+        ):
             return "high"
         if self.water_cm >= WATER_ELEVATED_CM or self.rain_mmh >= RAIN_ELEVATED_MMH:
             return "elevated"
@@ -94,9 +116,12 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
     needed = min(2, len(views))
     raining = bool(views) and len(soil_rising) >= needed
 
+    surged = {node: view for node, view in views.items() if view.surging}
+
     reasons = [
         reason
         for reason in [
+            _surge_reason(list(surged.values())),
             _reason(
                 "water_high",
                 max,
@@ -133,6 +158,7 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
             pressure_hpa=min((v.pressure_hpa for v in storm), default=None),
         ),
         nodes=node_levels,
+        surged=sorted(surged),
     )
 
 
@@ -140,6 +166,18 @@ def _counts(node: str, readings: list[CommunityReading]) -> bool:
     # The one place that decides whether a Node's readings count. Only registered Nodes (0012)
     # and Nodes not silent for 60 s (0021) will count, and they will change this check alone.
     return True
+
+
+def _surge_reason(surging: list[_NodeView]) -> Reason | None:
+    if not surging:
+        return None
+    biggest = max(surging, key=lambda view: view.surge_rise_cm)
+    return Reason(
+        code="water_surge",
+        nodes=len(surging),
+        value=biggest.surge_rise_cm,
+        seconds=biggest.surge_seconds,
+    )
 
 
 def _reason(

@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 export type NodeLevel = "elevated" | "high";
 
 export type FloodRiskReason = {
-  code: "water_high" | "water_rising" | "rain_heavy" | "pressure_falling" | "raining";
+  code:
+    "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling" | "raining";
   nodes: number;
   value: number;
+  seconds?: number | null;
 };
 
 export type FloodRisk = {
@@ -13,6 +15,7 @@ export type FloodRisk = {
   reasons: FloodRiskReason[];
   storm_signal: { on: boolean; nodes: number; pressure_hpa: number | null };
   nodes: Record<string, NodeLevel | null>;
+  surged?: string[];
 };
 
 const POLL_EVERY_MS = 1000;

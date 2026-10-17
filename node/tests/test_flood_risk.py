@@ -166,3 +166,99 @@ def test_reasons_show_tidy_values(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.hear_from("creek", water_cm=41.7)
     values = [reason["value"] for reason in _flood_risk(meshed_nodes["porch"])["reasons"]]
     assert all(value == round(value, 1) for value in values)
+
+
+def _surge_reason(client: TestClient) -> dict[str, Any] | None:
+    return next((r for r in _flood_risk(client)["reasons"] if r["code"] == "water_surge"), None)
+
+
+def test_a_sudden_rise_makes_the_node_high_with_a_surge_reason(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=20)
+    meshed_nodes.advance(8)
+    meshed_nodes.hear_from("creek", water_cm=340)
+    flood_risk = _flood_risk(meshed_nodes["porch"])
+    assert flood_risk["level"] == "high"
+    assert flood_risk["nodes"]["creek"] == "high"
+    assert flood_risk["surged"] == ["creek"]
+    assert _surge_reason(meshed_nodes["porch"]) == {
+        "code": "water_surge",
+        "nodes": 1,
+        "value": 320,
+        "seconds": 8,
+    }
+
+
+def test_the_same_rise_spread_over_a_long_time_is_not_a_surge(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=20)
+    meshed_nodes.advance(61)
+    meshed_nodes.hear_from("creek", water_cm=340)
+    flood_risk = _flood_risk(meshed_nodes["porch"])
+    assert flood_risk["surged"] == []
+    assert _surge_reason(meshed_nodes["porch"]) is None
+    assert "water_high" in _reason_codes(meshed_nodes["porch"])
+
+
+def test_a_rise_just_under_the_surge_size_is_not_a_surge(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=10)
+    meshed_nodes.hear_from("creek", water_cm=109.9)
+    assert _flood_risk(meshed_nodes["porch"])["surged"] == []
+
+
+def test_a_rise_of_exactly_the_surge_size_is_a_surge(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=10)
+    meshed_nodes.hear_from("creek", water_cm=110)
+    assert _flood_risk(meshed_nodes["porch"])["surged"] == ["creek"]
+
+
+def test_a_node_with_a_single_reading_cannot_surge(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=500)
+    assert _flood_risk(meshed_nodes["porch"])["surged"] == []
+
+
+def test_only_the_node_that_surged_is_listed_and_the_reason_reports_its_rise(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    for sender in ["creek", "garage"]:
+        meshed_nodes.hear_from(sender, water_cm=20)
+    meshed_nodes.advance(5)
+    meshed_nodes.hear_from("creek", water_cm=200)
+    meshed_nodes.hear_from("garage", water_cm=25)
+    flood_risk = _flood_risk(meshed_nodes["porch"])
+    assert flood_risk["surged"] == ["creek"]
+    assert flood_risk["nodes"] == {"creek": "high", "garage": None, "porch": None}
+    surge = _surge_reason(meshed_nodes["porch"])
+    assert surge is not None and surge["nodes"] == 1 and surge["value"] == 180
+
+
+def test_the_reason_reports_the_biggest_rise_when_several_nodes_surge(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    for sender in ["creek", "garage"]:
+        meshed_nodes.hear_from(sender, water_cm=20)
+    meshed_nodes.advance(6)
+    meshed_nodes.hear_from("creek", water_cm=150)
+    meshed_nodes.hear_from("garage", water_cm=400)
+    surge = _surge_reason(meshed_nodes["porch"])
+    assert surge is not None
+    assert (surge["nodes"], surge["value"], surge["seconds"]) == (2, 380, 6)
+
+
+def test_the_surge_ends_once_the_jump_leaves_the_window_but_the_high_water_stays(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=20)
+    meshed_nodes.hear_from("creek", water_cm=340)
+    meshed_nodes.advance(61)
+    meshed_nodes.hear_from("creek", water_cm=340)
+    flood_risk = _flood_risk(meshed_nodes["porch"])
+    assert flood_risk["surged"] == []
+    assert flood_risk["level"] == "high"
+    assert "water_high" in _reason_codes(meshed_nodes["porch"])
