@@ -73,22 +73,24 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 
 ## Official Alert (`kind: "alert"`)
 
-Sent by the Hub only, from the same normalization path for live feeds and the Hurricane Helene replay.
+Sent by the Hub only. Today every alert is a replayed DHM or district alert from `replay_timeline.json` (0014); live feeds were dropped with ticket 0017.
 
 ```json
-{ "v": 1, "kind": "alert", "id": "helene-004", "source": "county", "mode": "replay",
-  "issued": "2024-09-25T15:00:00Z",
-  "headline": "Evacuation order: mobile homes, RVs, flood-prone areas",
-  "applies_to": ["mobile_home", "rv", "flood_prone_area"],
-  "url": "https://[source link]" }
+{ "v": 1, "kind": "alert", "id": "dhm-sms", "source": "dhm", "mode": "replay",
+  "issued": "2026-08-26T09:15:00+05:45",
+  "headline": "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert",
+  "applies_to": ["flood_prone_area"],
+  "url": "https://kathmandupost.com/national/2026/08/27/how-the-bhotekoshi-flood-unfolded-over-10-hours" }
 ```
 
-- `source`: `nws`, `nhc` or `county`; drives the source tag.
+- `source`: `dhm`, `ndrrma` or `district`; drives the source tag.
 - `mode`: `live` or `replay`. `replay` produces the OFFICIAL · REPLAY label and is never optional.
 - `applies_to`: tags the Evacuation Plan reads, so it never parses prose. Empty means the alert covers everyone in the zone. Values: `mobile_home`, `rv`, `flood_prone_area`.
 - `issued` is the source's own real timestamp and is displayed as is; it does not go through age logic.
 - `headline` is at most 120 characters. Full text stays behind `url`, which opens only when the internet is back.
-- Replay alerts are tagged by hand (a recorded event). Live NWS and NHC alerts are tagged only in obvious cases; anything else applies to everyone.
+- Replay alerts are tagged by hand (a recorded event).
+- **Replay timing.** The Hub sends a replayed alert once its Event clock reaches `issued` (checked every `NODE_ALERT_CHECK_SECONDS`, default 1 s) and repeats every alert already due with each Event clock repeat. A Node shows a replayed alert only while its own Event clock is at or past `issued`, so a reset or a jump back hides it again without a new message. A signed alert must fit one Reticulum packet (464 bytes), which bounds `headline` and `url` together.
+- `GET /api/state` carries the alerts this Node shows as `official_alerts`, oldest first.
 
 ## Shelter status (`kind: "shelters"`)
 
@@ -105,7 +107,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044); the `warning` additions and the `alert.source` values are not yet (0013).
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044) and the `alert.source` values are built (0014); the `warning` additions are not yet (0013).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 
@@ -134,7 +136,7 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" i
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements}`, where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). Still to come: `registered` on each entry; Official Alerts; verified Community Warnings only; Shelter open ids.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements}`, where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). Still to come: `registered` on each entry; verified Community Warnings only; Shelter open ids.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.
@@ -145,15 +147,16 @@ Built by a script ahead of the event. The Hub downloads it while online; other N
 
 ```
 cache-pack.zip
-├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }, "files": { "<path>": "<sha256>" } }
+├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }?, "files": { "<path>": "<sha256>" } }
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
-│                             "special_needs": true, "pet_friendly": false } ]
-├── flood_prone.geojson   FEMA flood zones plus the Hogtown Creek and Sweetwater Branch floodplains
-├── tiles/{z}/{x}/{y}.png dark map tiles for the neighborhood (credit shown on the map)
-└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell
+│                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
+├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
+├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
+├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
+└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
 ```
 
 - `bbox` is `[south, west, north, east]`, the demo box the pack covers.
-- The route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
+- The valley pack has no `route_grid` and no `routes/` (the plan works without them). When Routes are built, the route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.

@@ -4,16 +4,18 @@
 
 **Blocked by:** 0004
 
-**Status:** ready-for-agent
+**Status:** done
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] A message with an unknown `kind` is dropped without an error reaching any Node
-- [ ] A message with extra fields is accepted and the extras are ignored
-- [ ] A message with a format version `v` this Node does not know is dropped the same way as an unknown `kind`
-- [ ] A message that fails to parse is dropped and logged, and the Mesh keeps delivering later messages
-- [ ] One listener raising does not stop the other listeners or other Nodes from receiving the message
-- [ ] Tests cover each case through the Node API on both the in-memory and the Reticulum Mesh
-- [ ] All **Commands** pass
+- [x] A message with an unknown `kind` is dropped without an error reaching any Node
+- [x] A message with extra fields is accepted and the extras are ignored
+- [x] A message with a format version `v` this Node does not know is dropped the same way as an unknown `kind`
+- [x] A message that fails to parse is dropped and logged, and the Mesh keeps delivering later messages
+- [x] One listener raising does not stop the other listeners or other Nodes from receiving the message
+- [x] Tests cover each case through the Node API on both the in-memory and the Reticulum Mesh
+- [x] All **Commands** pass
+
+**Note:** the in-memory cases run through Node APIs (`MeshedNodes.send_bytes`). The Reticulum cases run through `verify` on signed packets and the shared `deliver_to_listeners`, not through two live Reticulum Nodes with a hand-made bad packet.

@@ -15,6 +15,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
       nodes: {},
     },
     nodes: [],
+    official_alerts: [],
     ...overrides,
   };
 }

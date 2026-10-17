@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     name: str = "node-1"
     role: Role = "sensor"
     port: int = 8000
-    # Downtown Gainesville until the operator sets the real spot; only a fuzzed copy leaves the Node.
-    latitude: float = 29.6516
-    longitude: float = -82.3248
+    # Betrawati until the operator sets the real spot; only a fuzzed copy leaves the Node.
+    latitude: float = 27.9731
+    longitude: float = 85.1860
     # Resolved from this file, not the cwd, so the Node starts from any directory.
     dashboard_dir: Path = Path(__file__).resolve().parents[3] / "dashboard" / "dist"
     # "memory" is a Node that hears only itself; tests and the dashboard dev server use it.
@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
     # converges.
     replay_repeat_seconds: float = 10
+    # How often the Hub checks whether the Event clock has reached a replayed Official Alert or
+    # the end of the replay.
+    alert_check_seconds: float = 1
     # How often a Node shares its readings.
     publish_every_seconds: float = 3
     # Which Sensor track of the replay timeline this Node plays (S0 to S3). Blank keeps the Scenario.

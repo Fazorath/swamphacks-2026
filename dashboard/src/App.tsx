@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { AlertsPanel } from "./AlertsPanel";
 import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { EventClockTag } from "./EventClockTag";
@@ -28,8 +29,6 @@ const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
   unsaved: "Your household profile will not be remembered after you close this page.",
 };
 
-const PLACEHOLDER_AREAS = ["Alerts"];
-
 export function App() {
   const { state, refresh } = useNodeState();
   const floodRisk = state?.flood_risk ?? null;
@@ -42,7 +41,15 @@ export function App() {
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
-  const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk, routes });
+  const officialAlerts = state?.official_alerts ?? [];
+  const plan = evacuationPlan({
+    profile,
+    pack: cachePack,
+    openShelterIds,
+    floodRisk,
+    routes,
+    officialAlerts,
+  });
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -131,12 +138,13 @@ export function App() {
           onDonePicking={() => setPicking(false)}
         />
         <EvacuationPlanPanel plan={plan} />
-        {PLACEHOLDER_AREAS.map((title) => (
-          <section key={title} aria-label={title}>
-            <h2>{title}</h2>
-            <p>Coming soon</p>
-          </section>
-        ))}
+        <AlertsPanel
+          alerts={officialAlerts}
+          appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
+          // Community Warnings arrive with ticket 0013; until then there is no lead time to show.
+          firstCommunityWarningAt={null}
+          online={state?.status === "online"}
+        />
       </div>
     </main>
   );

@@ -28,6 +28,7 @@ from storm_shield.internet_connection import (
     Status,
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
+from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
@@ -58,6 +59,7 @@ class NodeState(BaseModel):
     scenario: ScenarioState
     flood_risk: FloodRisk
     nodes: list[NodeSnapshot]
+    official_alerts: list[OfficialAlert]
 
 
 class OpenShelters(BaseModel):
@@ -183,8 +185,48 @@ def create_app(
             # The clock already runs on the Hub, and the next repeat sends it again.
             logger.exception("could not announce the Event clock")
 
+    official_alerts = HeardOfficialAlerts()
+
+    def hear_official_alert(_: str, message: Message) -> None:
+        if isinstance(message, OfficialAlert):
+            official_alerts.hear(message)
+
+    forwarded_alert_ids: set[str] = set()
+
+    def due_official_alerts() -> list[OfficialAlert]:
+        event = event_clock.current(clock())
+        return [] if event.state == "stopped" else timeline.official_alerts_due(event.event_t)
+
+    def forward_official_alert(alert: OfficialAlert) -> None:
+        # The Hub does not hear its own broadcasts, so it keeps the alert itself.
+        official_alerts.hear(alert)
+        forwarded_alert_ids.add(alert.id)
+        try:
+            mesh.publish(alert)
+        except Exception:
+            # The Hub already shows it, and the next repeat sends it again.
+            logger.exception("could not forward Official Alert %s", alert.id)
+
+    def forward_newly_due_official_alerts() -> None:
+        for alert in due_official_alerts():
+            if alert.id not in forwarded_alert_ids:
+                forward_official_alert(alert)
+
+    def pause_at_the_end() -> None:
+        """Hold the clock at the replay's end instead of letting it play on past the timeline."""
+        event = event_clock.current(clock())
+        if event.state == "playing" and event.event_t >= timeline.end_unix:
+            announce_event_clock(
+                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=timeline.rate)
+            )
+
+    def repeat_due_official_alerts() -> None:
+        for alert in due_official_alerts():
+            forward_official_alert(alert)
+
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_event_clock)
+    mesh.subscribe(hear_official_alert)
     mesh.subscribe(hear_shelter_status)
     share_own_readings()
     if settings.role == "hub":
@@ -246,8 +288,20 @@ def create_app(
                     event = event_clock.current(clock())
                     if event.state != "stopped":
                         announce_event_clock(event)
+                        # A Node that joined late or missed a packet gets the alerts with the clock.
+                        repeat_due_official_alerts()
                 except Exception:
                     logger.exception("could not repeat the Event clock")
+
+        async def keep_following_the_timeline() -> None:
+            while True:
+                await asyncio.sleep(settings.alert_check_seconds)
+                try:
+                    # Alerts first, so the last one is sent before the clock stops at the end.
+                    forward_newly_due_official_alerts()
+                    pause_at_the_end()
+                except Exception:
+                    logger.exception("could not follow the replay timeline")
 
         tasks = [
             asyncio.create_task(keep_sharing()),
@@ -257,6 +311,7 @@ def create_app(
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
             tasks.append(asyncio.create_task(keep_repeating_event_clock()))
+            tasks.append(asyncio.create_task(keep_following_the_timeline()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -276,6 +331,7 @@ def create_app(
             scenario=ScenarioState(step=scenario.step_name),
             flood_risk=flood_risk(snapshot.recent),
             nodes=snapshot.nodes,
+            official_alerts=official_alerts.shown_at(event_clock.current(clock())),
         )
 
     @app.get("/api/cameras")
@@ -385,6 +441,10 @@ def create_app(
             heard = event_clock.current(clock())
             if heard.state != "paused":
                 raise HTTPException(status_code=409, detail="the replay is not paused")
+            if heard.event_t >= timeline.end_unix:
+                raise HTTPException(
+                    status_code=409, detail="the replay has ended; Reset or jump to a phase"
+                )
             return set_replay("playing", heard.event_t)
 
         @app.post("/api/replay/reset")

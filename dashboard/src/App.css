@@ -118,6 +118,12 @@ button:disabled {
   margin: 0;
 }
 
+/* The slide-over scrolls as a whole; a squeezed section would scroll on its own and hide the
+   Replay buttons and the internet cue at the top of it. */
+.slide-over section {
+  flex-shrink: 0;
+}
+
 .slide-over p {
   margin: 0;
 }
@@ -217,6 +223,90 @@ button:disabled {
 }
 
 .official-line {
+  font-weight: bold;
+}
+
+/* Official Alerts look nothing like community information: light panel, solid blue tag. */
+.official-alert {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--official);
+  border: 2px solid var(--official-blue);
+  border-radius: 0.5rem;
+  color: var(--official-ink);
+}
+
+.official-alert h3 {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+
+/* `section p` sets the muted color, which is unreadable on the light Official panel. */
+section .official-alert p,
+.official-alert a {
+  color: var(--official-ink);
+}
+
+.official-alert-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.official-tag,
+.applies-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.official-tag {
+  background: var(--official-blue);
+  color: var(--official);
+}
+
+.applies-chip {
+  border: 1px solid var(--official-blue);
+}
+
+.plan-official-alerts {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* The canvas's empty Panel (C-States): an icon in a raised circle above one line saying why. */
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.1rem 0.5rem;
+  text-align: center;
+}
+
+.empty-panel-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+section .empty-panel p {
+  max-width: 16rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.lead-time {
+  margin-bottom: 0.5rem;
   font-weight: bold;
 }
 

@@ -1,3 +1,5 @@
+import type { OfficialAlert } from "./officialAlerts";
+
 export type NodeLevel = "elevated" | "high";
 
 export type FloodRiskReason = {
@@ -38,4 +40,5 @@ export type NodeState = {
   scenario: { step: string };
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
+  official_alerts: OfficialAlert[];
 };

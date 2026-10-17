@@ -212,3 +212,38 @@ def test_a_sensor_cannot_control_the_replay(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_sensor("s0", replay_track="S0")
     for action in ("pause", "resume", "reset"):
         assert meshed_nodes["s0"].post(f"/api/replay/{action}").status_code == 404
+
+
+# 10:30 NPT, just after the last Official Alert (10:28), where the Hub stops the replay.
+REPLAY_END = REPLAY_START + 2 * 3600
+
+
+def _wait_until_paused_at(meshed_nodes: MeshedNodes, name: str, event_t: int) -> None:
+    _wait_until(
+        lambda: (
+            _event_clock(meshed_nodes, name)["state"] == "paused"
+            and _event_clock(meshed_nodes, name)["event_t"] == event_t
+        )
+    )
+
+
+def test_the_replay_stops_at_its_end_on_every_node(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start_sensor("porch")
+    _start_replay(meshed_nodes)
+    meshed_nodes.advance((REPLAY_END - REPLAY_START) / RATE + 30)
+    for name in ("hub", "porch"):
+        _wait_until_paused_at(meshed_nodes, name, REPLAY_END)
+    alerts = meshed_nodes["porch"].get("/api/state").json()["official_alerts"]
+    assert alerts[-1]["id"] == "district-galchhi-muglin"
+
+
+def test_resume_at_the_end_is_refused(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    _start_replay(meshed_nodes)
+    assert meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "end"}).status_code == 200
+    _wait_until(lambda: _event_clock(meshed_nodes, "hub")["state"] == "playing")
+    assert meshed_nodes["hub"].post("/api/replay/pause").status_code == 200
+    response = meshed_nodes["hub"].post("/api/replay/resume")
+    assert response.status_code == 409
+    assert "ended" in response.json()["detail"]

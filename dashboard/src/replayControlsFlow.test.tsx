@@ -86,3 +86,16 @@ test("the Hub Panel says to cut the internet once the Event clock reaches the cu
     await within(panel).findByText("Cut the internet now", {}, { timeout: 3000 }),
   ).toBeVisible();
 });
+
+test("Resume at the end of the replay shows why the Hub refused it", async () => {
+  replay = { v: 1, kind: "replay", state: "paused", event_t: REPLAY_START + 120 * 60, rate: 30 };
+  const panel = await openHubPanel();
+  const resume = await within(panel).findByRole("button", { name: "Resume" });
+  vi.stubGlobal("fetch", async () =>
+    Response.json({ detail: "the replay has ended; Reset or jump to a phase" }, { status: 409 }),
+  );
+  fireEvent.click(resume);
+  expect(await within(panel).findByRole("alert")).toHaveTextContent(
+    "Could not resume the replay: the replay has ended; Reset or jump to a phase",
+  );
+});

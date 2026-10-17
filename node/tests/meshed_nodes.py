@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
-from storm_shield.mesh import InMemoryMesh, InMemoryNetwork
+from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
+from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
 from storm_shield.shelter_status import ShelterStatus
@@ -60,6 +61,7 @@ class MeshedNodes:
         *,
         shelter_repeat_seconds: float = 30,
         replay_repeat_seconds: float = 10,
+        alert_check_seconds: float = 0.02,
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
         settings = self._settings(
@@ -67,6 +69,7 @@ class MeshedNodes:
             role="hub",
             shelter_repeat_seconds=shelter_repeat_seconds,
             replay_repeat_seconds=replay_repeat_seconds,
+            alert_check_seconds=alert_check_seconds,
         )
         if cache_pack:
             directory, pack = cache_pack
@@ -105,15 +108,39 @@ class MeshedNodes:
         self, state: Literal["playing", "paused", "stopped"], event_t: int, *, sender: str = HUB
     ) -> None:
         """Have a Node that is not running an app publish one Event clock message."""
-        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
-        self._hand_fed[sender] = mesh
-        mesh[0].publish(ReplayClockMessage(state=state, event_t=event_t, rate=30))
+        self._hand_fed_mesh(sender).publish(
+            ReplayClockMessage(state=state, event_t=event_t, rate=30)
+        )
 
     def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Shelter status."""
+        self._hand_fed_mesh(sender).publish(
+            ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids)
+        )
+
+    def announce_official_alert(self, alert: OfficialAlert, *, sender: str = HUB) -> None:
+        """Have a Node that is not running an app publish one Official Alert."""
+        self._hand_fed_mesh(sender).publish(alert)
+
+    def send_bytes(self, body: bytes, *, sender: str = HUB) -> None:
+        """Put exactly these bytes on the Mesh, as a Node running other software could."""
+        # Joining first means the sender is not among the receivers, as when it publishes.
+        self._hand_fed_mesh(sender)
+        self._network.deliver_bytes(sender, body)
+
+    def join_with_failing_listener(self, name: str) -> None:
+        """Join a Node whose listener raises on every message."""
+
+        def fail(_sender: str, _message: Message) -> None:
+            raise RuntimeError("bug in one listener")
+
+        self._network.join(name, HUB).subscribe(fail)
+
+    def _hand_fed_mesh(self, sender: str) -> InMemoryMesh:
+        """The Mesh of a Node that is not running an app, joined on first use."""
         mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
         self._hand_fed[sender] = mesh
-        mesh[0].publish(ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids))
+        return mesh[0]
 
     def record_shelter_status(self) -> list[ShelterStatus]:
         """Join a Node that only listens; every Shelter status it hears is appended to the list."""

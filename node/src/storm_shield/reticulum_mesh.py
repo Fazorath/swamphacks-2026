@@ -1,18 +1,16 @@
 import logging
+import os
 import threading
 import time
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 
 import RNS
-from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
-from storm_shield.mesh import Message, MessageListener
-from storm_shield.replay import ReplayClockMessage
+from storm_shield.mesh import Message, MessageListener, decode_message, deliver_to_listeners
 from storm_shield.settings import Settings
-from storm_shield.shelter_status import ShelterStatus
 
 APP_NAME = "storm_shield"
 ANNOUNCE_EVERY_SECONDS = 10
@@ -25,10 +23,6 @@ SIGNATURE_LENGTH = 64
 LOOPBACK_BASE_PORT = 4250
 
 logger = logging.getLogger(__name__)
-
-_MESSAGE: TypeAdapter[Message] = TypeAdapter(
-    Annotated[CommunityReading | ShelterStatus | ReplayClockMessage, Field(discriminator="kind")]
-)
 
 
 def node_id(identity: Any) -> str:
@@ -96,11 +90,8 @@ def verify(
     if len(data) <= SIGNATURE_LENGTH:
         return None
     signature, body = data[:SIGNATURE_LENGTH], data[SIGNATURE_LENGTH:]
-    try:
-        message = _MESSAGE.validate_json(body)
-    except ValidationError:
-        # Unknown kinds land here too: a newer Node's message is ignored, not an error.
-        logger.warning("dropped a mesh packet that is not a message this Node understands")
+    message = decode_message(body)
+    if message is None:
         return None
     sender_id = message.node if isinstance(message, CommunityReading) else hub_identity
     sender = known_nodes.get(sender_id)
@@ -125,7 +116,7 @@ class ReticulumMesh:
         (config_dir / "config").write_text(reticulum_config(settings))
         RNS.Reticulum(configdir=str(config_dir), loglevel=RNS.LOG_WARNING)
 
-        self._key = _load_or_create_identity(settings.data_dir / "identity")
+        self._key = load_or_create_identity(settings.data_dir / "identity")
         self.identity = node_id(self._key)
         self._hub_identity = settings.hub_identity
         self._known_nodes: dict[str, Any] = {}
@@ -170,12 +161,7 @@ class ReticulumMesh:
         if verified is None:
             return
         sender, message = verified
-        for listener in self._listeners:
-            try:
-                listener(sender, message)
-            except Exception:
-                # Reticulum would swallow this silently on its own thread.
-                logger.exception("a listener failed on a %s from %s", message.kind, sender)
+        deliver_to_listeners(self._listeners, sender, message)
 
     def _announce_forever(self) -> None:
         while True:
@@ -203,9 +189,20 @@ class _NodeAnnounces:
         self._known_nodes[node_id(announced_identity)] = announced_identity
 
 
-def _load_or_create_identity(path: Path) -> Any:
+def load_or_create_identity(path: Path) -> Any:
+    """This Node's identity. The file holds its private key, so only its owner may read it."""
     if path.exists():
-        return RNS.Identity.from_file(str(path))
+        key = RNS.Identity.from_file(str(path))
+        if key is None:
+            raise ValueError(
+                f"{path} is not a Reticulum identity (a write cut short?). Delete it to give this "
+                "Node a new id; if it is the Hub, every Node then needs the new HUB_IDENTITY"
+            )
+        # Identity files written before this check are readable by everyone on the machine.
+        path.chmod(0o600)
+        return key
     key = RNS.Identity()
-    key.to_file(str(path))
+    # Not Identity.to_file: it leaves the key readable by everyone and only logs a failed write.
+    with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as file:
+        file.write(key.get_private_key())
     return key

@@ -59,7 +59,7 @@ def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
     meshed_nodes["porch"].post("/api/scenario/reset")
     nodes = meshed_nodes["garage"].get("/api/state").json()["nodes"]
     [from_porch] = [entry for entry in nodes if entry["id"] == "porch"]
-    assert tuple(from_porch["position"]) == (29.652, -82.324)
+    assert tuple(from_porch["position"]) == (27.974, 85.186)
 
 
 def test_a_restarted_node_is_heard_again(

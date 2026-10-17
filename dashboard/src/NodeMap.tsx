@@ -21,7 +21,7 @@ import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { FloodRisk } from "./nodeState";
 
-const GAINESVILLE: [number, number] = [29.6516, -82.3248];
+const BETRAWATI: [number, number] = [27.9731, 85.186];
 
 const DRAFT_HOME_ICON = divIcon({ className: "home-draft-marker", html: "⌂", iconSize: [28, 28] });
 const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
@@ -103,7 +103,7 @@ export function NodeMap({
         </div>
       )}
       <MapContainer
-        center={GAINESVILLE}
+        center={BETRAWATI}
         zoom={13}
         className={picking ? "node-map picking" : "node-map"}
       >

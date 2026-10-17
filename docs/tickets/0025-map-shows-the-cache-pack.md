@@ -11,7 +11,7 @@
 **Spec:** `docs/specs/storm-shield.md`
 
 - [ ] Each Shelter in `shelters.json` is marked on the map with its name and its special-needs and pet-friendly flags
-- [ ] The Flood-Prone Area overlay is drawn from `flood_prone.geojson`, with the creek layer visibly marked approximate
+- [ ] The Flood-Prone Area overlay (the hand-drawn river corridor) is drawn from `flood_prone.geojson`, visibly marked approximate
 - [ ] Vitest tests with a fixture pack: every Shelter in the pack gets a marker
 - [ ] Manual check: with the internet off, the Shelters and Flood-Prone Areas render on a phone
 - [ ] All **Commands** pass
