@@ -22,7 +22,7 @@ Run these before calling any ticket done. An agent must not claim "done" without
 | Install | `cd node && uv sync` and `cd dashboard && pnpm install` |
 | Build dashboard | `cd dashboard && pnpm build` |
 | Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
-| Keep a Node on latest `main` | `scripts/run-live.sh` from a checkout that stays on `main` (pulls, rebuilds, restarts when `main` moves) |
+| Keep a Node on your checkout | `scripts/run-live.sh` (rebuilds and restarts whenever `HEAD` moves, e.g. after `git pull`) |
 | Dashboard dev server | `cd dashboard && pnpm dev` (proxies `/api` to port 8000) |
 | Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |
 | Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |

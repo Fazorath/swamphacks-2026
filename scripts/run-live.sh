@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Keeps a Node running on the latest `main`: polls origin and, when main moved,
-# rebuilds the dashboard and restarts the Node.
-# Run it from a checkout that stays on main (no feature work in it).
+# Keeps a Node running on whatever this checkout has: when HEAD moves (git pull,
+# merge, branch switch), rebuilds the dashboard and restarts the Node.
+# Uncommitted edits do not trigger a restart.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -35,13 +35,10 @@ start_node() {
 }
 
 start_node
+running_commit="$(git rev-parse HEAD)"
 while sleep "$interval"; do
-  git fetch --quiet origin main
-  if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
-    if git merge --ff-only --quiet origin/main; then
-      start_node
-    else
-      echo "cannot fast-forward; keep this checkout on main"
-    fi
+  if [ "$(git rev-parse HEAD)" != "$running_commit" ]; then
+    running_commit="$(git rev-parse HEAD)"
+    start_node
   fi
 done
