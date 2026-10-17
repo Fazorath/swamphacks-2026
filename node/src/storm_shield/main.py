@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -21,7 +19,7 @@ def create_app(settings: Settings) -> FastAPI:
         return NodeIdentity(name=settings.name, role=settings.role)
 
     # Mounted last so it never shadows /api routes.
-    dashboard = Path(settings.dashboard_dir)
+    dashboard = settings.dashboard_dir
     if dashboard.is_dir():
         app.mount("/", StaticFiles(directory=dashboard, html=True), name="dashboard")
     return app
