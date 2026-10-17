@@ -1,13 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { App } from "./App";
+import { fakeNodeState } from "./fakeNodeState";
+import { STATE_POLL_MS } from "./useNodeState";
 
 const KEY = "storm-shield.household-profile";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
 
 let fetchSpy: ReturnType<typeof vi.fn>;
 
@@ -23,15 +20,15 @@ beforeEach(() => {
     if (path.endsWith("shelters.json")) return Response.json([]);
     if (path.endsWith("flood_prone.geojson")) return Response.json({ features: [] });
     if (path.includes("/routes/")) return new Response(null, { status: 404 });
-    return Response.json(
-      path === "/api/cameras" ? [] : { id: "porch", name: "porch", role: "hub", status: "online" },
-    );
+    return Response.json(path === "/api/state" ? fakeNodeState() : []);
   });
   vi.stubGlobal("fetch", fetchSpy);
-  vi.stubGlobal("EventSource", SilentEventSource);
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 function tapHomeOnMap() {
   fireEvent.click(screen.getByRole("button", { name: "Set home on map" }));
@@ -139,11 +136,12 @@ test("a failed delete still clears the profile for the session and says so", () 
   expect(screen.getByText("Fill in your household profile")).toBeInTheDocument();
 });
 
-test("no request carries the profile", async () => {
+test("no request carries the profile, across several poll cycles", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   render(<App />);
   fillInProfile();
   const { home } = JSON.parse(localStorage.getItem(KEY)!).profile;
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  await act(() => vi.advanceTimersByTimeAsync(5 * STATE_POLL_MS));
   // The one allowed exception (docs/adr/0003): asking for the file of the Grid point nearest home.
   const requests = fetchSpy.mock.calls.map(([path]) => String(path));
   const routeFileRequests = requests.filter((path) => path.includes("/routes/"));
@@ -151,6 +149,7 @@ test("no request carries the profile", async () => {
   for (const path of routeFileRequests) {
     expect(path).toMatch(/^\/api\/cache-pack\/files\/routes\/\d+_\d+\.json$/);
   }
+  expect(requests.filter((path) => path === "/api/state").length).toBeGreaterThanOrEqual(5);
   const sent = JSON.stringify(requests.filter((path) => !path.includes("/routes/")));
   expect(sent).not.toMatch(/mobile-home-rv|housing|"lat"|"lon"/);
   expect(sent).not.toContain(String(home.lat));

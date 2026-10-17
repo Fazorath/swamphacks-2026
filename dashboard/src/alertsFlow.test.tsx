@@ -1,12 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
 
 const PROFILE_KEY = "storm-shield.household-profile";
 const HOME = { lat: 29.65, lon: -82.32 };
@@ -53,8 +49,7 @@ const AROUND_HOME = {
 
 function stubNode(status: "online" | "mesh_only", officialAlerts: OfficialAlert[]) {
   const answers: Record<string, unknown> = {
-    "/api/node": { id: "porch", name: "porch", role: "sensor", status },
-    "/api/state": { official_alerts: officialAlerts },
+    "/api/state": fakeNodeState({ role: "sensor", status, official_alerts: officialAlerts }),
     "/api/cache-pack": { available: true, manifest: null },
     "/api/cache-pack/files/shelters.json": [],
     "/api/cache-pack/files/flood_prone.geojson": AROUND_HOME,
@@ -85,7 +80,6 @@ function saveProfileInsideFloodProneArea() {
 
 beforeEach(() => {
   localStorage.clear();
-  vi.stubGlobal("EventSource", SilentEventSource);
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

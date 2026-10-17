@@ -1,5 +1,5 @@
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
-import type { FloodRisk } from "./useFloodRisk";
+import type { FloodRisk } from "./nodeState";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 

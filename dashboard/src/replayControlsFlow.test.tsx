@@ -1,11 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
+import { fakeNodeState } from "./fakeNodeState";
 
 // 08:30 NPT on 26 Aug 2026; each phase is that many minutes on.
 const REPLAY_START = 1787712300;
@@ -30,11 +26,10 @@ beforeEach(() => {
     if (path === "/api/replay/phases") {
       return Response.json({ phases: PHASES, internet_cue_event_t: INTERNET_CUE });
     }
-    if (path === "/api/flood-risk") return Response.json({ level: null, reasons: [], nodes: {} });
     if (path === "/api/cameras") return Response.json([]);
-    return Response.json({ id: "hub", name: "hub", role: "hub", status: "online" });
+    if (path === "/api/state") return Response.json(fakeNodeState({ id: "hub", name: "hub" }));
+    return new Response(null, { status: 404 });
   });
-  vi.stubGlobal("EventSource", SilentEventSource);
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

@@ -134,9 +134,9 @@ Every Node computes Flood Risk from the Community Readings it holds plus the reg
 
 The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering. This replaces the server-sent events in the spec's Node HTTP API paragraph.
 
-**Until `/api/state` exists** (it grows ticket by ticket), `GET /api/readings` returns the latest reading of every Node, this one included, as one entry per measurement (`node`, `kind`, `value`, `unit`, `position`, `timestamp`, `simulated`). That is the Node's internal shape, not the wire format, and ticket 0019 replaces it with `/api/state`.
+`/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object: this Node's identity, role and `online` / `mesh_only` status; readings (with `registered`, `stale`, `age_s` and `sim`); Flood Risk with reason codes; Official Alerts; verified Community Warnings only; Shelter open ids; Scenario step.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements}`, where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). Still to come: `registered` on each entry; verified Community Warnings only; Shelter open ids.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.

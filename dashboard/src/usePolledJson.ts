@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 export const POLL_EVERY_MS = 3000;
 
-// Keeps the last answer when a poll fails: saying the Node is unreachable belongs to the
-// one-second state snapshot (0019), which replaces this.
+// Keeps the last answer when a poll fails. Camera tiles, the Event clock and Replay controls use
+// it; what this Node knows about the Mesh comes from useNodeState.
 export function usePolledJson<T>(path: string, everyMs = POLL_EVERY_MS): T | null {
   const [latest, setLatest] = useState<T | null>(null);
   useEffect(() => {

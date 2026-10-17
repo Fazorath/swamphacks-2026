@@ -1,8 +1,4 @@
-import type { NodeLevel } from "./useFloodRisk";
-import type { NodeIdentity } from "./useNodeIdentity";
-import type { Reading } from "./useReadings";
-
-const STALE_AFTER_SECONDS = 15;
+import type { Measurement, NodeLevel, NodeState, ReadingKind } from "./nodeState";
 
 export type NodeOnMap = {
   id: string;
@@ -13,31 +9,23 @@ export type NodeOnMap = {
   stale: boolean;
   level: NodeLevel | null;
   ageSeconds: number;
-  readings: Reading[];
+  measurements: ({ kind: ReadingKind } & Measurement)[];
 };
 
 // A Node's own name is known only to itself; everyone else is shown by id until the registry (0012).
-export function nodesOnMap(
-  readings: Reading[],
-  own: NodeIdentity | null,
-  levels: Record<string, NodeLevel | null> = {},
-): NodeOnMap[] {
-  const byNode = new Map<string, Reading[]>();
-  for (const reading of readings) {
-    byNode.set(reading.node, [...(byNode.get(reading.node) ?? []), reading]);
-  }
-  return [...byNode].map(([id, nodeReadings]) => {
-    const ageSeconds = Math.max(...nodeReadings.map((reading) => reading.age_s));
-    return {
-      id,
-      label: own?.id === id ? own.name : id,
-      position: nodeReadings[0].position,
-      waterLevelCm: nodeReadings.find((reading) => reading.kind === "water_level")?.value ?? null,
-      simulated: nodeReadings.some((reading) => reading.simulated),
-      stale: ageSeconds > STALE_AFTER_SECONDS,
-      level: levels[id] ?? null,
-      ageSeconds,
-      readings: nodeReadings,
-    };
-  });
+export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
+  if (!state) return [];
+  return state.nodes.map((node) => ({
+    id: node.id,
+    label: node.id === state.id ? state.name : node.id,
+    position: node.position,
+    waterLevelCm: node.measurements.water_level?.value ?? null,
+    simulated: node.simulated,
+    stale: node.stale,
+    level: state.flood_risk.nodes[node.id] ?? null,
+    ageSeconds: node.age_s,
+    measurements: (Object.entries(node.measurements) as [ReadingKind, Measurement][]).map(
+      ([kind, measurement]) => ({ kind, ...measurement }),
+    ),
+  }));
 }

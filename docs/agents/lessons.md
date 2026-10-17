@@ -37,7 +37,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **Leaflet map clicks work in jsdom**: `fireEvent.click(document.querySelector(".node-map")!, { clientX, clientY })` reaches `useMapEvents({ click })`, so pick mode is testable without mocking Leaflet. The tapped lat/lon is meaningless in jsdom (zero-size container); assert on what the app does with it, not its value.
 - **Don't name two files apart only by case** (`householdProfile.test.ts` vs `HouseholdProfile.test.tsx`): they collide on macOS. The flow test is `householdFlow.test.tsx`.
-- The dashboard has no polling yet, so the "no request carries the profile" test waits briefly on the only request there is (`/api/node`). When polling lands (0019), make that test run a real poll cycle.
+- The "no request carries the profile" test now runs five real poll cycles with fake timers (0041), as promised for 0019.
 
 ## Map tiles (CARTO key)
 
@@ -135,7 +135,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A signed alert must fit one Reticulum packet** (464 bytes with the 64-byte signature), and headline plus URL take most of it. `test_every_replayed_alert_fits_one_reticulum_packet` guards it; shorten the headline if it fails.
 - **Nodes filter alerts on their own Event clock**, so Reset (paused at 08:30) hides every alert with no extra message. The Hub only forwards; it never takes an alert back.
 - The lead-time line compares with the first Official Alert (09:05 notice), so it reads "Community Warning 08:37 · first Official Alert 09:05", decided on 2026-10-17. Nothing feeds it a Community Warning until 0013; `App` passes `null` for now.
-- The dashboard reads alerts from `/api/state` (`useOfficialAlerts`, every second) because 0041 has not moved the dashboard to the snapshot yet; 0041 folds it in.
+- The dashboard reads alerts from `official_alerts` in the one state snapshot (`useNodeState`, every second), so a replayed alert appears when the Event clock reaches it.
 - **Icons come from `lucide-react` 1.49.0, pinned with `--save-exact`** (ui.md), first used for the empty Alerts Panel. Match canvas icons by their SVG path: the Alerts empty state's triangle is `TriangleAlert`. The empty-Panel look (icon in a raised circle, one line) is `.empty-panel` in `App.css`; reuse it for the other empty Panels on `C-States`.
 - With no Cache Pack yet, the plan counts the home as possibly in the Flood-Prone Area, so a riverbank alert is still listed: a missed alert is worse than an extra one.
 - Rehearsed on loopback Reticulum (Hub slot 0 / port 8320, Sensor slot 1 / port 8321 with `HUB_IDENTITY`): after a jump to `dhm-sms` the Sensor showed both alerts within 2 s, so the signed alert packet verifies against the Hub key. Software path only, not a Pi check.
@@ -162,15 +162,33 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `GET /api/replay/phases` lists the phases and the internet cue in Event time. "Cut the internet now" shows while the Event clock is at or past the cue. No Community Warning exists in the code yet, so Reset's "no warning showing" is untested until warnings land.
 - `findLast` is not in the dashboard's TypeScript lib target; use `.filter(...).at(-1)`. macOS `sed -i` needs `-i ''`.
 
+## Dashboard reads the state snapshot (ticket 0041)
+
+- **Fake timers must advance with real time in dashboard flow tests**: `vi.useFakeTimers({ shouldAdvanceTime: true })`. Faking `setTimeout` without it hangs every `findBy*` (Testing Library waits on a `setTimeout` that never fires), and the symptom is a 5 s test timeout, not an error.
+- **A test of "updates without waiting for the poll" must look inside the poll interval**: after the click, `advanceTimersByTimeAsync(STATE_POLL_MS / 10)` and a synchronous `getByText`. A `findBy*` (up to 1 s) passed even with `refresh()` disabled, because the next poll arrived on its own; check a new test by breaking the code it covers.
+- **`useNodeState()` returns `{ state, refresh }`; `state` is null until the first answer**, which is "Connecting…". A failed poll keeps the last state and only logs; 0042 adds the `unreachable` connection and the clearing.
+- **Dashboard tests build state with `fakeNodeState()` / `fakeNodeSnapshot()`** (`dashboard/src/fakeNodeState.ts`). A flow test whose `fetch` stub lacks `/api/state` stays on "Connecting…".
+
 ## Mesh ignores bad messages (ticket 0023)
 
 - **Both Meshes decode through `mesh.decode_message` and call listeners through `deliver_to_listeners`**, so a rule added there holds on the radio and in tests. A string `kind` or integer `v` this Node does not know is dropped silently (a newer Node); a missing or non-string `kind`, a missing or non-integer `v` (`true` included) and anything else that does not parse logs a warning. Check `kind` is a string before testing set membership: a list or object `kind` raised `TypeError` (found in review). Extra fields were already ignored by pydantic default.
 - `MeshedNodes.send_bytes(body)` puts raw bytes on the in-memory Mesh; `join_with_failing_listener(name)` adds a Node whose listener raises.
 - Not proven: a bad packet sent to a live Reticulum Node (only `verify` is tested with signed bad bodies).
 
+## One-laptop demo script (ticket 0049)
+
+- **`scripts/run-demo.sh` rehearsed on loopback** (Hub 8600, S0 to S3 8601 to 8604, `DEMO_SLOT_BASE=20` because a teammate's Node held slot 0 and port 8000): all four Sensors took `HUB_IDENTITY`, fetched the pack from the Hub, followed Start, and the Hub dashboard answered on the hotspot and Tailscale addresses. Software path only, not a Pi or Wi-Fi check.
+- **`gh release download` of the 2.4 MB pack took about 6 minutes** on this network and writes its file under the final name while downloading, so the script downloads into a side folder and moves it.
+- **A script started with `nohup ... &` ignores SIGINT**, so Ctrl-C style stops must be tested with `kill -TERM`; a script in a real terminal gets the trap.
+- macOS `sed` has no `\|` alternation; use `awk` to filter `ifconfig`.
+- River km is not a Node setting yet, so the script gives each Node only position and track; ETA reads River km from the Cache Pack's river line.
+- **A Node logs "is up" before it binds its HTTP port** (`main.py`, `run()`), so the identity line does not prove the Hub is serving: with 8000 taken, the Sensors started and the projector showed the old Node. `run-demo.sh` now refuses to start while any of its HTTP, pack or loopback Reticulum ports is listening, and stops waiting if the Hub process dies.
+- **macOS ships bash 3.2, where `"${arr[@]}"` on an empty array is "unbound variable" under `set -u`**; use `${arr[@]+"${arr[@]}"}` in traps that may run before anything starts.
+- "Cut the internet" has two halves: stop the pack server and take away the laptop's upstream. Nodes decide online/Mesh-only by probing gstatic themselves; there is no switch.
+
 ## Surge (ticket 0046)
 
-- **On Windows four Node tests fail on a clean `main`**: the two identity-file tests assert mode `0o600`, which Windows cannot report (it shows `0o666`), and the two `test_reticulum_nodes.py` loopback tests failed beside Nodes left running from other worktrees (the cause was not confirmed). A change that leaves exactly these four failing has not broken anything.
+- **On Windows two Node tests fail on a clean `main`**: the identity-file tests assert mode `0o600`, which Windows cannot report (it shows `0o666`). The two `test_reticulum_nodes.py` loopback tests also failed until the Nodes left running from other worktrees were stopped (they held ports 4250 and 4251); they pass once those ports are free. A change that leaves exactly the two identity-file tests failing has not broken anything.
 - **`evacuationFlow.test.tsx` "the Route request names a Grid point, not the home" failed once and passed on the next two runs** with no change near it; rerun before chasing it.
 - **A Surge is judged on the sender's timestamps (`t`), not on when readings arrived**, so two readings that reach a Node together still count as one over time. In tests, `MeshedNodes.advance(seconds)` between two `hear_from` calls is what makes a rise slow. A slow rise to a high level is still High from `water_high`; assert on `surged` and the `water_surge` reason to tell a Surge apart.
 - **`surged` is "surging now", not latched**: it empties about 60 s after the jump even while the water stays high. Ticket 0013 must remember that it already warned for a Node's Surge; it cannot ask Flood Risk.

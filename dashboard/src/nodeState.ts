@@ -1,0 +1,47 @@
+import type { OfficialAlert } from "./officialAlerts";
+
+export type NodeLevel = "elevated" | "high";
+
+export type FloodRiskReason = {
+  code:
+    "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling" | "raining";
+  nodes: number;
+  value: number;
+  seconds?: number | null;
+};
+
+export type FloodRisk = {
+  level: "low" | "elevated" | "high" | null;
+  reasons: FloodRiskReason[];
+  storm_signal: { on: boolean; nodes: number; pressure_hpa: number | null };
+  nodes: Record<string, NodeLevel | null>;
+  surged: string[];
+};
+
+export type ReadingKind = "pressure" | "rain_rate" | "water_level" | "soil_moisture";
+
+export type Measurement = { value: number; unit: string };
+
+// What this Node last heard from one Node. The Node decides `stale`, so the browser never does.
+export type NodeSnapshot = {
+  id: string;
+  position: [number, number];
+  simulated: boolean;
+  age_s: number;
+  stale: boolean;
+  measurements: Partial<Record<ReadingKind, Measurement>>;
+};
+
+type NodeStatus = "online" | "mesh_only";
+
+// The answer of GET /api/state: one consistent instant of this Node's view of the Mesh.
+export type NodeState = {
+  id: string;
+  name: string;
+  role: "sensor" | "hub";
+  status: NodeStatus;
+  scenario: { step: string };
+  flood_risk: FloodRisk;
+  nodes: NodeSnapshot[];
+  official_alerts: OfficialAlert[];
+};

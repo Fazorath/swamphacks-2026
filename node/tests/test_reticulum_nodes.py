@@ -50,16 +50,14 @@ class RunningNode:
             self._process = None
 
     def id(self) -> str:
-        return str(self._get("/api/node")["id"])
+        return str(self._get("/api/state")["id"])
 
     def heard_from(self) -> set[str]:
-        return {reading["node"] for reading in self._get("/api/readings")}
+        return {entry["id"] for entry in self._get("/api/state")["nodes"]}
 
     def pressure_from(self, node: str) -> float:
-        readings = [reading for reading in self._get("/api/readings") if reading["node"] == node]
-        return float(
-            next(reading["value"] for reading in readings if reading["kind"] == "pressure")
-        )
+        entry = next(entry for entry in self._get("/api/state")["nodes"] if entry["id"] == node)
+        return float(entry["measurements"]["pressure"]["value"])
 
     def step_scenario(self) -> None:
         httpx.post(f"{self.url}/api/scenario/step").raise_for_status()

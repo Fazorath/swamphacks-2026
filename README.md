@@ -21,3 +21,7 @@ Then open the repo in your agent of choice. Read `AGENTS.md` once: it covers the
 - `.claude/skills/`: playbooks (grill, spec, tickets, implement, review…), readable by any agent
 
 Skills in `.claude/skills/` are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT, see `.claude/skills/LICENSE-mattpocock-skills`).
+
+## Run the demo
+
+`scripts/run-demo.sh` starts the Cache Pack server, the Hub and Sensors S0 to S3 on this laptop and prints the dashboard addresses for the projector and the phones; Ctrl-C stops everything. Setup notes (hotspot, projector, the two phones' Household Profiles) are in `scripts/demo-setup.md`.

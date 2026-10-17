@@ -3,18 +3,22 @@ import { useEffect } from "react";
 import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
-import type { FloodRisk } from "./useFloodRisk";
-import type { Reading } from "./useReadings";
+import type { FloodRisk, ReadingKind } from "./nodeState";
 
-const KIND_LABELS: Record<Reading["kind"], string> = {
+const KIND_LABELS: Record<ReadingKind, string> = {
   pressure: "Pressure",
   rain_rate: "Rain rate",
   water_level: "Water level",
   soil_moisture: "Soil moisture",
 };
 
-function post(path: string) {
-  fetch(path, { method: "POST" }).catch(console.error);
+function post(path: string, afterPost: () => void) {
+  fetch(path, { method: "POST" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+      afterPost();
+    })
+    .catch(console.error);
 }
 
 type Props = {
@@ -22,17 +26,24 @@ type Props = {
   floodRisk: FloodRisk | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onScenarioChanged: () => void;
 };
 
-export function ReadingsPanel({ nodes, floodRisk, selectedId, onSelect }: Props) {
+export function ReadingsPanel({
+  nodes,
+  floodRisk,
+  selectedId,
+  onSelect,
+  onScenarioChanged,
+}: Props) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "n") post("/api/scenario/step");
-      if (event.key === "r") post("/api/scenario/reset");
+      if (event.key === "n") post("/api/scenario/step", onScenarioChanged);
+      if (event.key === "r") post("/api/scenario/reset", onScenarioChanged);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [onScenarioChanged]);
 
   return (
     <section aria-label="Readings">
@@ -52,16 +63,18 @@ export function ReadingsPanel({ nodes, floodRisk, selectedId, onSelect }: Props)
             <NodeTags node={node} />
           </h3>
           <ul>
-            {node.readings.map((reading) => (
-              <li key={reading.kind}>
-                {KIND_LABELS[reading.kind]}: {reading.value} {reading.unit}
+            {node.measurements.map((measurement) => (
+              <li key={measurement.kind}>
+                {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
               </li>
             ))}
           </ul>
         </section>
       ))}
-      <button onClick={() => post("/api/scenario/step")}>Step scenario (n)</button>{" "}
-      <button onClick={() => post("/api/scenario/reset")}>Reset (r)</button>
+      <button onClick={() => post("/api/scenario/step", onScenarioChanged)}>
+        Step scenario (n)
+      </button>{" "}
+      <button onClick={() => post("/api/scenario/reset", onScenarioChanged)}>Reset (r)</button>
     </section>
   );
 }

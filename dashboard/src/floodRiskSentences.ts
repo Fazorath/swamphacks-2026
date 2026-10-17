@@ -1,4 +1,4 @@
-import type { FloodRisk, FloodRiskReason } from "./useFloodRisk";
+import type { FloodRisk, FloodRiskReason } from "./nodeState";
 
 function nodeCount(count: number): string {
   return count === 1 ? "1 Node" : `${count} Nodes`;

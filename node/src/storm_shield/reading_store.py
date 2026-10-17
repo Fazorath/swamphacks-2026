@@ -10,12 +10,6 @@ from storm_shield.scenario import Reading, ReadingKind
 from storm_shield.timing import STALE_AFTER_SECONDS
 
 
-class NodeReading(Reading):
-    node: str
-    position: tuple[float, float]
-    age_s: float
-
-
 class Measurement(BaseModel):
     value: float
     unit: str
@@ -58,15 +52,6 @@ class ReadingStore:
             while history[0][1] < received_at - self._history_window:
                 history.popleft()
 
-    def recent(self, now: datetime) -> dict[str, list[CommunityReading]]:
-        """Each Node's readings from the history window, oldest first.
-
-        A Node that has said nothing within the window still keeps its last reading, because
-        nothing yet drops silent Nodes (ticket 0021).
-        """
-        with self._lock:
-            return self._recent_locked(now)
-
     def snapshot(self, now: datetime) -> StoreSnapshot:
         with self._lock:
             nodes = [
@@ -76,26 +61,17 @@ class ReadingStore:
             return StoreSnapshot(nodes=nodes, recent=self._recent_locked(now))
 
     def _recent_locked(self, now: datetime) -> dict[str, list[CommunityReading]]:
+        """Each Node's readings from the history window, oldest first.
+
+        A Node that has said nothing within the window still keeps its last reading, because
+        nothing yet drops silent Nodes (ticket 0021).
+        """
         since = now - self._history_window
         recent: dict[str, list[CommunityReading]] = {}
         for sender, history in self._history.items():
             in_window = [reading for reading, received_at in history if received_at >= since]
             recent[sender] = in_window or [history[-1][0]]
         return recent
-
-    def latest(self, now: datetime) -> list[NodeReading]:
-        with self._lock:
-            latest = sorted((sender, history[-1]) for sender, history in self._history.items())
-        return [
-            NodeReading(
-                node=sender,
-                position=reading.pos,
-                age_s=(now - received_at).total_seconds(),
-                **measurement.model_dump(),
-            )
-            for sender, (reading, received_at) in latest
-            for measurement in _measurements(reading, received_at)
-        ]
 
 
 def _node_snapshot(

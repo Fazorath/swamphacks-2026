@@ -1,11 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
+import { fakeNodeState } from "./fakeNodeState";
 
 const SHELTERS = [
   { id: "test-gym", name: "Test Gym", pos: [29.66, -82.32] },
@@ -20,7 +16,7 @@ let heldPolls: Promise<void>;
 
 function stubNode(role: "hub" | "sensor") {
   const answers: Record<string, unknown> = {
-    "/api/node": { id: "porch", name: "porch", role },
+    "/api/state": fakeNodeState({ role }),
     "/api/cache-pack": { available: true, manifest: null },
     "/api/cache-pack/files/shelters.json": SHELTERS,
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
@@ -66,7 +62,6 @@ beforeEach(() => {
   postedBodies = [];
   refusal = null;
   heldPolls = Promise.resolve();
-  vi.stubGlobal("EventSource", SilentEventSource);
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

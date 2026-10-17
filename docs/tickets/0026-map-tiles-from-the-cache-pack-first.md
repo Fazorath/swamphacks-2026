@@ -4,9 +4,9 @@
 
 **Blocked by:** 0005, 0007, 0009
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/cache-pack.md`
 
