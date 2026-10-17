@@ -175,3 +175,6 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A script started with `nohup ... &` ignores SIGINT**, so Ctrl-C style stops must be tested with `kill -TERM`; a script in a real terminal gets the trap.
 - macOS `sed` has no `\|` alternation; use `awk` to filter `ifconfig`.
 - River km is not a Node setting yet, so the script gives each Node only position and track; ETA reads River km from the Cache Pack's river line.
+- **A Node logs "is up" before it binds its HTTP port** (`main.py`, `run()`), so the identity line does not prove the Hub is serving: with 8000 taken, the Sensors started and the projector showed the old Node. `run-demo.sh` now refuses to start while any of its HTTP, pack or loopback Reticulum ports is listening, and stops waiting if the Hub process dies.
+- **macOS ships bash 3.2, where `"${arr[@]}"` on an empty array is "unbound variable" under `set -u`**; use `${arr[@]+"${arr[@]}"}` in traps that may run before anything starts.
+- "Cut the internet" has two halves: stop the pack server and take away the laptop's upstream. Nodes decide online/Mesh-only by probing gstatic themselves; there is no switch.
