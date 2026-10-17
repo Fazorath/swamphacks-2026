@@ -77,7 +77,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
 
 ### Demo presenter
 
-46. As the presenter, I want a "normal day" state with five Registered Nodes, live readings and Flood Risk Low, so that the demo opens calmly.
+46. As the presenter, I want a "normal day" state with five Registered Nodes, live readings and no Flood Risk shown, so that the demo opens calmly.
 47. As the presenter, I want one button press to start the pressure drop across Nodes, so that the storm's approach is visible immediately.
 48. As the presenter, I want the rain switch and water-rising button to push two Nodes to High and trigger a Community Warning within seconds, so that the climax lands on cue.
 49. As the presenter, I want to pull the Hub's USB tether and see readings keep flowing, so that the offline story is proven live.
@@ -100,7 +100,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
 - **Scenario.** Owns the scripted storm sequence: normal day → pressure drop → rain → water rising, plus reset. Inputs: digital GPIO buttons and switches on the Pi (the Pi has no analog input), and a keyboard or HTTP step on laptops. Output: Simulated Readings (pressure, rain rate, water level, soil moisture), always flagged as simulated, published through Mesh at a steady cadence.
 - **Reading store.** Keeps the latest Community Readings per Node from everything Mesh delivers, with timestamps for staleness. It applies location fuzzing (about 200 m) to this Node's own readings before they are published; positions from other Nodes are only ever fuzzed values.
 - **Registry.** On the Hub it is the source of truth: it accepts Node identities at sign-up and publishes the signed registry over Mesh. On every Node it holds the latest Hub-signed registry and answers whether a Node is Registered. Unknown senders are Unverified.
-- **Flood Risk.** A pure function of the Community Readings a Node can see plus the registry. Output: Low / Elevated / High and a list of human-readable reasons. Only Registered Nodes' readings count. The rules are transparent thresholds on water level, rain rate and trend, and pressure contributes the storm signal. **The thresholds are deferred** until the Node backend and its reading types exist; the shape (level plus reasons) is fixed now.
+- **Flood Risk.** A pure function of the Community Readings a Node can see plus the registry. Output: Low / Elevated / High, or nothing in calm weather, and a list of human-readable reasons. Only Registered Nodes' readings count. The rules are transparent thresholds on water level, rain rate and trend, kept in one place; pressure drives the storm signal and soil moisture drives the Low level (first-pass values are in ticket 0006).
 - **Community Warning issuer (Hub only).** Watches per-Node Flood Risk. When two or more Registered Nodes are High, it issues one Community Warning signed with the Hub identity. The warning is labeled non-official, names the Nodes and reasons, and always points to official sources for evacuation. It does not re-issue while the condition holds, and every warning lands in the Community Warning log. Nodes show only warnings whose signature verifies against the Hub identity in their registry.
 - **Official feeds (Hub only).** Live mode polls NWS `alerts/active?zone=FLZ136` (User-Agent header required), NHC `CurrentStorms.json` and Alachua County notices. Replay mode feeds recorded Hurricane Helene NWS alerts and the Alachua County evacuation order through the same normalization path. Each alert is tagged with its source and with live or replay, and both are forwarded over Mesh.
 - **Cache Pack.** Built by a script ahead of the event, not on the Nodes, and published as a downloadable file the Hub fetches while online. Each Node then downloads the full pack while online (from the internet or from the Hub). Contents:
@@ -141,7 +141,7 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
 - **Seam A: Node HTTP API with an in-memory mesh (pytest).** Several Node instances (one Hub and several Sensor Nodes) are started in one test process, wired together through the in-memory Mesh, and driven through the HTTP API (Scenario steps, sign-up, internet on/off). Behaviors covered:
   - readings published by one Node appear on every other Node's API, flagged simulated, with fuzzed positions;
   - Unverified Nodes' readings appear but are excluded from Flood Risk;
-  - Flood Risk moves Low → Elevated → High as the Scenario advances, with reasons;
+  - Flood Risk is absent on a calm day, then moves Low → Elevated → High as the Scenario advances, with reasons;
   - the Hub issues exactly one signed Community Warning when the second Registered Node goes High, and none when only one is High or when the High Nodes are Unverified;
   - a warning with a bad signature is not shown;
   - replayed Helene alerts reach every Node labeled as replay;
@@ -176,7 +176,7 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
 ## Further Notes
 
 - **Demo storyline (3 minutes):**
-  1. Normal day: five Registered Nodes, Flood Risk Low, camera tiles live.
+  1. Normal day: five Registered Nodes, no Flood Risk shown, camera tiles live.
   2. The pressure-drop button starts the storm signal.
   3. The replayed Helene NWS alert arrives (OFFICIAL · REPLAY).
   4. The rain switch and water-rising button push two Nodes to High, and the Hub sends a signed Community Warning.
@@ -185,7 +185,7 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
   7. A phone with a mobile-home profile shows Flood Risk High, the county order, the nearest open Shelter and its route, offline.
 
   Judges only see this demo, so build what shows on stage first.
-- **Deferred, tracked, not blocking:** the public camera source, and the Flood Risk thresholds.
+- **Deferred, tracked, not blocking:** the public camera source.
 - **Sources:**
   - Helene evacuation order: https://alachuacounty.us/News/Article/Pages/Hurricane-Helene-Update-11-–-Evacuation-Order-in-Effect.aspx
   - FEMA open shelters: https://gis.fema.gov/arcgis/rest/services/NSS/OpenShelters/FeatureServer/0
