@@ -2,6 +2,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from storm_shield.main import create_app
+from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
 
 PNG = b"\x89PNG tile bytes"
@@ -19,7 +20,8 @@ def _client(
         return answer
 
     tile_source = httpx.Client(transport=httpx.MockTransport(respond))
-    app = create_app(Settings(carto_api_key=key), tile_source=tile_source)
+    settings = Settings(carto_api_key=key)
+    app = create_app(settings, InMemoryNetwork().join(settings.name), tile_source=tile_source)
     return TestClient(app), requests
 
 
