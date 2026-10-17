@@ -10,13 +10,16 @@ import httpx
 import pytest
 
 FIRST_HTTP_PORT = 8101
+FIRST_TCP_PORT = 4350
+NODE_COUNT = 3
 
 
 class RunningNode:
-    """A real Node process on the loopback Reticulum interface, as on a laptop without the Pis."""
+    """A real Node process on one machine, joined to the others by loopback or fixed TCP addresses."""
 
-    def __init__(self, slot: int, data_dir: Path) -> None:
+    def __init__(self, slot: int, data_dir: Path, interface: str) -> None:
         self._slot = slot
+        self._interface = interface
         self._data_dir = data_dir
         self.url = f"http://127.0.0.1:{FIRST_HTTP_PORT + slot}"
         self._process: subprocess.Popen[bytes] | None = None
@@ -26,8 +29,14 @@ class RunningNode:
             **os.environ,
             "NODE_NAME": f"node-{self._slot}",
             "NODE_PORT": str(FIRST_HTTP_PORT + self._slot),
-            "NODE_MESH_INTERFACE": "loopback",
+            "NODE_MESH_INTERFACE": self._interface,
             "NODE_LOOPBACK_SLOT": str(self._slot),
+            "NODE_TCP_PORT": str(FIRST_TCP_PORT + self._slot),
+            "NODE_TCP_PEERS": ",".join(
+                f"127.0.0.1:{FIRST_TCP_PORT + other}"
+                for other in range(NODE_COUNT)
+                if other != self._slot
+            ),
             "NODE_DATA_DIR": str(self._data_dir),
         }
         self._process = subprocess.Popen(
@@ -72,9 +81,11 @@ def _eventually(check: Callable[[], bool], seconds: float = 40) -> None:
         time.sleep(0.5)
 
 
-@pytest.fixture
-def nodes(tmp_path: Path) -> Iterator[list[RunningNode]]:
-    running = [RunningNode(slot, tmp_path / f"node-{slot}") for slot in range(3)]
+@pytest.fixture(params=["loopback", "tcp"])
+def nodes(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[list[RunningNode]]:
+    running = [
+        RunningNode(slot, tmp_path / f"node-{slot}", request.param) for slot in range(NODE_COUNT)
+    ]
     for node in running:
         node.start()
     yield running

@@ -41,7 +41,7 @@ Open decisions, with the recommended answer:
 
 ## Progress (built without the Pis)
 
-Built and tested on one Windows machine over a loopback Reticulum interface (`NODE_MESH_INTERFACE=loopback`); `node/README.md` has the run notes. Still open, all needing the real hardware:
+Built and tested on one Windows machine over a loopback Reticulum interface (`NODE_MESH_INTERFACE=loopback`); `node/README.md` has the run notes. A fixed-address interface (`NODE_MESH_INTERFACE=tcp`, for example over Tailscale, with every machine on the same tailnet) lets real machines on different networks exchange readings before the Pis arrive; it is also the fixed-address fallback if automatic discovery fails on the Pi hotspot. Still open, all needing the real hardware:
 
 - AutoInterface discovery on two laptops and on the Pi hotspot (`NODE_MESH_INTERFACE=auto`, the default). The code path is the same; only the interface section of the generated Reticulum config differs.
 - The internet-unplugged and firewall checks.

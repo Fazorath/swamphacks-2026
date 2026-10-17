@@ -116,7 +116,7 @@ def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
 def build_mesh(settings: Settings) -> Mesh:
     if settings.mesh == "memory":
         return InMemoryNetwork().join(settings.name)
-    return ReticulumMesh(settings.data_dir, settings.mesh_interface, settings.loopback_slot)
+    return ReticulumMesh(settings)
 
 
 def run() -> None:

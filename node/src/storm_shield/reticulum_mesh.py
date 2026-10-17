@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.mesh import MessageListener
-from storm_shield.settings import ReticulumInterface
+from storm_shield.settings import Settings
 
 APP_NAME = "storm_shield"
 ANNOUNCE_EVERY_SECONDS = 10
@@ -29,7 +29,7 @@ def node_id(identity: Any) -> str:
     return str(identity.hexhash[:NODE_ID_LENGTH])
 
 
-def reticulum_config(interface: ReticulumInterface, loopback_slot: int) -> str:
+def reticulum_config(settings: Settings) -> str:
     return f"""[reticulum]
   enable_transport = False
   share_instance = No
@@ -38,23 +38,38 @@ def reticulum_config(interface: ReticulumInterface, loopback_slot: int) -> str:
   loglevel = 2
 
 [interfaces]
-{_interface_config(interface, loopback_slot)}
+{_interface_config(settings)}
 """
 
 
-def _interface_config(interface: ReticulumInterface, loopback_slot: int) -> str:
-    if interface == "auto":
+def _interface_config(settings: Settings) -> str:
+    if settings.mesh_interface == "auto":
         return "  [[Wi-Fi]]\n    type = AutoInterface\n    enabled = yes"
+    if settings.mesh_interface == "tcp":
+        listen_ip, listen_port = "0.0.0.0", settings.tcp_port
+        dials = [_peer_address(entry, settings.tcp_port) for entry in _entries(settings.tcp_peers)]
+    else:
+        listen_ip, listen_port = "127.0.0.1", LOOPBACK_BASE_PORT + settings.loopback_slot
+        dials = [("127.0.0.1", LOOPBACK_BASE_PORT + slot) for slot in range(settings.loopback_slot)]
     listen = (
         "  [[Listen]]\n    type = TCPServerInterface\n    enabled = yes\n"
-        f"    listen_ip = 127.0.0.1\n    listen_port = {LOOPBACK_BASE_PORT + loopback_slot}"
+        f"    listen_ip = {listen_ip}\n    listen_port = {listen_port}"
     )
-    dial_lower_slots = [
-        f"  [[Slot {slot}]]\n    type = TCPClientInterface\n    enabled = yes\n"
-        f"    target_host = 127.0.0.1\n    target_port = {LOOPBACK_BASE_PORT + slot}"
-        for slot in range(loopback_slot)
+    dial_peers = [
+        f"  [[Peer {number}]]\n    type = TCPClientInterface\n    enabled = yes\n"
+        f"    target_host = {host}\n    target_port = {port}"
+        for number, (host, port) in enumerate(dials)
     ]
-    return "\n".join([listen, *dial_lower_slots])
+    return "\n".join([listen, *dial_peers])
+
+
+def _entries(peers: str) -> list[str]:
+    return [entry.strip() for entry in peers.split(",") if entry.strip()]
+
+
+def _peer_address(entry: str, default_port: int) -> tuple[str, int]:
+    host, _, port = entry.partition(":")
+    return (host, int(port) if port else default_port)
 
 
 def sign(identity: Any, reading: CommunityReading) -> bytes:
@@ -82,14 +97,14 @@ def verify(data: bytes, known_nodes: Mapping[str, Any]) -> CommunityReading | No
 class ReticulumMesh:
     """Readings as signed, unencrypted broadcast packets; Nodes learn each other from announces."""
 
-    def __init__(self, data_dir: Path, interface: ReticulumInterface, loopback_slot: int) -> None:
-        config_dir = data_dir / "reticulum"
+    def __init__(self, settings: Settings) -> None:
+        config_dir = settings.data_dir / "reticulum"
         config_dir.mkdir(parents=True, exist_ok=True)
         # Rewritten on every start so the settings, not a stale file, decide the interface.
-        (config_dir / "config").write_text(reticulum_config(interface, loopback_slot))
+        (config_dir / "config").write_text(reticulum_config(settings))
         RNS.Reticulum(configdir=str(config_dir), loglevel=RNS.LOG_WARNING)
 
-        self._key = _load_or_create_identity(data_dir / "identity")
+        self._key = _load_or_create_identity(settings.data_dir / "identity")
         self.identity = node_id(self._key)
         self._known_nodes: dict[str, Any] = {}
         self._listeners: list[MessageListener] = []

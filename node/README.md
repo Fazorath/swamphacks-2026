@@ -30,6 +30,15 @@ $env:NODE_MESH_INTERFACE="loopback"; $env:NODE_LOOPBACK_SLOT="0"; $env:NODE_PORT
 $env:NODE_MESH_INTERFACE="loopback"; $env:NODE_LOOPBACK_SLOT="1"; $env:NODE_PORT="8001"; $env:NODE_DATA_DIR="data/b"; uv run storm-shield-node
 ```
 
+Machines on different networks, or Wi-Fi discovery not working yet (`NODE_MESH_INTERFACE=tcp`, for example over Tailscale). **Every machine must have Tailscale installed and be signed in to the same tailnet**; `tailscale ip -4` prints a machine's 100.x address. Each Node lists every other Node, because Reticulum does not relay between clients:
+
+```
+# on machine A (100.64.0.1), with machines B and C at 100.64.0.2 and 100.64.0.3
+$env:NODE_MESH_INTERFACE="tcp"; $env:NODE_TCP_PEERS="100.64.0.2,100.64.0.3"; uv run storm-shield-node
+```
+
+Peers are `host` or `host:port` (default port `NODE_TCP_PORT`, 4242); allow that TCP port through the firewall. Nothing is discovered in this mode, so adding a machine means editing the others' `NODE_TCP_PEERS` and restarting them. It is also the fixed-address fallback the ticket asks for if automatic discovery fails on the Pi hotspot.
+
 Two Nodes on one machine cannot use `auto`: AutoInterface ignores the machine's own addresses and its UDP ports collide.
 
 Moving to the Pis: on each Pi leave `NODE_MESH_INTERFACE` unset (it defaults to `auto`) and give it its own `NODE_NAME`. Nothing else changes.
@@ -38,4 +47,4 @@ Moving to the Pis: on each Pi leave `NODE_MESH_INTERFACE` unset (it defaults to 
 
 ## Tests
 
-`tests/test_reticulum_mesh.py` checks signing and verification. `tests/test_reticulum_nodes.py` starts three real Node processes on the loopback interface (HTTP ports 8101-8103, Reticulum ports 4250-4252) and takes about 15 s; stop any Node running on those ports first.
+`tests/test_reticulum_mesh.py` checks signing and verification and `tests/test_reticulum_config.py` the generated Reticulum config. `tests/test_reticulum_nodes.py` starts three real Node processes, once on the loopback interface and once on fixed TCP addresses (HTTP ports 8101-8103, Reticulum ports 4250-4252 and 4350-4352) and takes under 20 s; stop any Node running on those ports first.

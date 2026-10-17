@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Role = Literal["sensor", "hub"]
 MeshKind = Literal["reticulum", "memory"]
-ReticulumInterface = Literal["auto", "loopback"]
+ReticulumInterface = Literal["auto", "loopback", "tcp"]
 
 
 class Settings(BaseSettings):
@@ -22,9 +22,14 @@ class Settings(BaseSettings):
     # "memory" is a Node that hears only itself; tests and the dashboard dev server use it.
     mesh: MeshKind = "reticulum"
     # "auto" finds Nodes on the local Wi-Fi (the demo). "loopback" joins Nodes on this one machine,
-    # for rehearsing without the Pis.
+    # for rehearsing without the Pis. "tcp" reaches Nodes at addresses you give it.
     mesh_interface: ReticulumInterface = "auto"
     # Each Node on one machine needs its own slot; only read when mesh_interface is "loopback".
     loopback_slot: int = 0
+    # "tcp" is the fixed-address interface (for example over Tailscale): this Node listens on
+    # tcp_port and dials every host in tcp_peers, a comma-separated list of "host" or "host:port".
+    # Every Node must list every other Node, because Reticulum does not relay between clients.
+    tcp_port: int = 4242
+    tcp_peers: str = ""
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
