@@ -1,12 +1,28 @@
 import "leaflet/dist/leaflet.css";
 
+import { divIcon } from "leaflet";
 import { useEffect, useRef } from "react";
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  Marker,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
+
+const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
+
+function PickHomeOnClick({ onPick }: { onPick: (home: { lat: number; lon: number }) => void }) {
+  useMapEvents({ click: (event) => onPick({ lat: event.latlng.lat, lon: event.latlng.lng }) });
+  return null;
+}
 
 // This Node hears itself before it hears anyone else, so the view is re-framed as new Nodes
 // appear, until the resident pans or zooms. After that it is never moved again.
@@ -41,21 +57,51 @@ type Props = {
   nodes: NodeOnMap[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  home: { lat: number; lon: number } | null;
+  picking: boolean;
+  onPickHome: (home: { lat: number; lon: number }) => void;
+  onDonePicking: () => void;
 };
 
-export function NodeMap({ nodes, selectedId, onSelect }: Props) {
+export function NodeMap({
+  nodes,
+  selectedId,
+  onSelect,
+  home,
+  picking,
+  onPickHome,
+  onDonePicking,
+}: Props) {
   return (
     <section aria-label="Map">
-      <MapContainer center={GAINESVILLE} zoom={13} className="node-map">
+      {picking && (
+        <div className="pick-banner">
+          Tap the map to place your home
+          <button type="button" onClick={onDonePicking}>
+            Done
+          </button>
+        </div>
+      )}
+      <MapContainer
+        center={GAINESVILLE}
+        zoom={13}
+        className={picking ? "node-map picking" : "node-map"}
+      >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
         <FitToNodesUntilMoved nodes={nodes} />
+        {picking && <PickHomeOnClick onPick={onPickHome} />}
+        {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
         {nodes.map((node) => {
           const selected = node.id === selectedId;
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
-          const state = [node.stale ? "stale" : "fresh", selected && "selected"]
+          const state = [
+            node.stale ? "stale" : "fresh",
+            selected && "selected",
+            picking && "picking",
+          ]
             .filter(Boolean)
             .join(" ");
           return (
@@ -64,10 +110,16 @@ export function NodeMap({ nodes, selectedId, onSelect }: Props) {
               center={node.position}
               radius={selected ? 12 : 8}
               className={`node-dot ${state}`}
+              interactive={!picking}
               eventHandlers={{ click: () => onSelect(node.id) }}
             >
               {/* An interactive tooltip bubbles its clicks to the marker, so only the marker listens. */}
-              <Tooltip permanent interactive direction="right" className={`node-label ${state}`}>
+              <Tooltip
+                permanent
+                interactive={!picking}
+                direction="right"
+                className={`node-label ${state}`}
+              >
                 <strong>{node.label}</strong>
                 {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
                 <NodeTags node={node} />

@@ -65,6 +65,112 @@ header p {
   color: var(--muted);
 }
 
+.household-status {
+  margin-left: auto;
+}
+
+button {
+  padding: 0.3rem 0.7rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0.375rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--elevated);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--elevated);
+}
+
+.slide-over {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  width: min(24rem, 100vw);
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow: auto;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+}
+
+.slide-over[hidden] {
+  display: none;
+}
+
+.slide-over h2 {
+  margin: 0;
+}
+
+.slide-over p {
+  margin: 0;
+}
+
+.slide-over .privacy {
+  color: var(--low);
+}
+
+.slide-over fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.375rem;
+}
+
+.slide-over .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pick-banner {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--community);
+  border-radius: 0.5rem;
+}
+
+.node-map.picking {
+  cursor: crosshair;
+}
+
+.home-marker {
+  display: grid;
+  place-items: center;
+  background: var(--official);
+  border: 2px solid var(--official-blue);
+  border-radius: 50%;
+  color: var(--official-ink);
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
 .areas {
   display: contents;
 }
@@ -92,6 +198,7 @@ section p {
 }
 
 section[aria-label="Map"] {
+  position: relative;
   grid-area: map;
   padding: 0;
   overflow: hidden;
