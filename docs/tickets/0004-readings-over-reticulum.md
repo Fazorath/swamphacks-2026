@@ -4,13 +4,13 @@
 
 **Blocked by:** 0003, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress (everything that can be done without the Pis is done; the unticked boxes need them)
 
 **Owner:** unclaimed
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [x] A Reticulum implementation of the Mesh interface (AutoInterface over the local Wi-Fi), chosen by config
+- [ ] A Reticulum implementation of the Mesh interface (AutoInterface over the local Wi-Fi), chosen by config (built and proven on loopback and fixed TCP addresses; AutoInterface itself is untried until the Pis)
 - [x] Each Node has a persistent Reticulum identity; incoming messages carry the verified sender identity
 - [x] A Node's id (12 hex characters of that identity) is the sender id other Nodes and the API use; the operator's Node name is only a label, and until the registry (0012) the dashboard shows a remote Node by its id
 - [x] Each Node keeps its Reticulum config and identity in its own gitignored folder (`NODE_DATA_DIR`, in `.env.example`), so a restart keeps the same id and Nodes never share Reticulum state
@@ -21,7 +21,7 @@
 - [ ] Manual check: still works with the internet unplugged
 - [x] Short setup and run notes for teammates, kept next to the code
 - [x] Seam A tests still run on the in-memory Mesh and pass
-- [ ] All **Commands** pass
+- [x] All **Commands** pass
 
 ## Findings and open decisions (from grilling, before the spike)
 

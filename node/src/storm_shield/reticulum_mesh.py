@@ -69,6 +69,8 @@ def _entries(peers: str) -> list[str]:
 
 def _peer_address(entry: str, default_port: int) -> tuple[str, int]:
     host, _, port = entry.partition(":")
+    if port and not port.isdigit():
+        raise ValueError(f"NODE_TCP_PEERS entry {entry!r} must be host or host:port")
     return (host, int(port) if port else default_port)
 
 
@@ -89,7 +91,11 @@ def verify(data: bytes, known_nodes: Mapping[str, Any]) -> CommunityReading | No
         logger.warning("dropped a mesh packet that is not a Community Reading")
         return None
     sender = known_nodes.get(reading.node)
-    if sender is None or not sender.validate(signature, body):
+    # Nothing to log for an unknown sender: until its announce arrives that is the normal case.
+    if sender is None:
+        return None
+    if not sender.validate(signature, body):
+        logger.warning("dropped a reading whose signature does not match Node %s", reading.node)
         return None
     return reading
 
@@ -139,11 +145,19 @@ class ReticulumMesh:
         if reading is None:
             return
         for listener in self._listeners:
-            listener(reading.node, reading)
+            try:
+                listener(reading.node, reading)
+            except Exception:
+                # Reticulum would swallow this silently on its own thread.
+                logger.exception("a listener failed on a reading from %s", reading.node)
 
     def _announce_forever(self) -> None:
         while True:
-            self._announce_destination.announce()
+            try:
+                self._announce_destination.announce()
+            except Exception:
+                # One failed announce must not make this Node undiscoverable for good.
+                logger.exception("could not announce this Node")
             time.sleep(ANNOUNCE_EVERY_SECONDS)
 
 

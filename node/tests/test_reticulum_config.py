@@ -1,3 +1,5 @@
+import pytest
+
 from storm_shield.reticulum_mesh import reticulum_config
 from storm_shield.settings import Settings
 
@@ -24,3 +26,13 @@ def test_loopback_slot_dials_only_lower_slots() -> None:
     assert "target_port = 4250" in config
     assert "target_port = 4251" in config
     assert config.count("TCPClientInterface") == 2
+
+
+def test_a_malformed_tcp_peer_names_the_setting() -> None:
+    with pytest.raises(ValueError, match="NODE_TCP_PEERS"):
+        reticulum_config(Settings(mesh_interface="tcp", tcp_peers="100.64.0.2:abc"))
+
+
+def test_reticulum_over_wifi_discovery_is_the_default() -> None:
+    settings = Settings()
+    assert (settings.mesh, settings.mesh_interface) == ("reticulum", "auto")
