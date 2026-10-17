@@ -49,7 +49,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   ▲ Layer rail
 ```
 
-- **The map fills the viewport** under the top bar and above the status strip. It is never less than about 60% of the width.
+- **The map fills the viewport** under the top bar and above the status strip; Panels float over it. Sizes below are CSS pixels before the 120% zoom, so a 1440 × 900 screen is laid out at 1200 × 750. With one Panel open per side, about 40% of the width stays clear map.
 - **Layer rail** on the far left. Eight buttons, one visual treatment, brightness showing on or off:
 
   | Button | Kind | Count badge |
@@ -64,7 +64,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Alerts | Panel | unacknowledged warnings |
 
   The Evacuation Plan Panel opens from the Household button in the top bar.
-- **Panels** float over the map: Readings docks on the left next to the rail (320 px); Alerts, Evacuation Plan and Cameras stack on the right (360 px). At most two Panels are open per side; opening a third collapses the oldest. Each Panel has a collapse chevron, and which Panels are open is remembered per device. Opening a Panel re-centers the map so the selected Node is never hidden.
+- **Panels** float over the map: Readings docks on the left next to the rail (288 px); Alerts, Evacuation Plan and Cameras stack on the right (336 px). At most two Panels are open per side; opening a third collapses the oldest. Each Panel has a collapse chevron, and which Panels are open is remembered per device. Opening a Panel re-centers the map so the selected Node is never hidden.
 - **Default open Panels:** on a calm day, Readings and Evacuation Plan; once there is a Flood Risk of Elevated or High or any Alert, Alerts and Evacuation Plan.
 - **Top bar:** left, logo then Node name and role (`porch · Hub`); center, the mesh-wide Flood Risk chip and, when on, the Storm Signal pill; right, the Online / Mesh-only pill, the Household icon button, the Node button (only on the Node's own screen) and the Hub button (only when the role is Hub).
 - **Status strip:** freshness per source: readings age, Official Alerts last fetch, Cache Pack version, cameras live or offline. Mesh-only says so here too.
@@ -75,7 +75,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
 - Four bottom tabs: **Map** (default), **Readings**, **Alerts**, **Plan**; 44 px minimum touch targets everywhere.
 - Top bar keeps only the logo, the Flood Risk chip and the connection pill.
 - **Map tab:** the map, the risk chip, the most recent Alert pinned above the tab bar, and a bottom sheet that peeks at the selected Node.
-- **Readings tab:** the Node cards. **Alerts tab:** Official cards, then Community cards. **Plan tab:** Household Profile, then the Evacuation Plan, then the Route.
+- **Readings tab:** the Node cards, then the Cameras. **Alerts tab:** Official cards, then Community cards. **Plan tab:** Household Profile, then the Evacuation Plan, then the Route.
 
 ## Map
 
@@ -187,7 +187,7 @@ Never blank out data we already have; mark it stale instead.
 | Thing | Rule |
 |---|---|
 | Theme | Dark. Colors come in two layers: **primitives** (the raw palette, used only in the theme file) and **roles** (what a color is for, used by every component). Re-theming is editing the primitive-to-role mapping in one file. No raw hex outside the theme file, in code or on the canvas |
-| Roles | `--bg-page`, `--surface-panel`, `--surface-raised`, `--surface-glass`, `--border`, `--text-primary`, `--text-secondary`, `--accent`, `--risk-low`, `--risk-elevated`, `--risk-high`, `--official-bg`, `--official-ink`, `--official-tag`, `--community-warning`, `--flood-prone`, `--scrim`, `--focus-ring`. The table lives on the canvas Foundations page |
+| Roles | `--bg-page`, `--surface-panel`, `--surface-raised`, `--surface-glass`, `--surface-solid`, `--border`, `--border-strong`, `--text-primary`, `--text-secondary`, `--text-dim`, `--accent`, `--accent-ink`, `--risk-low`, `--risk-elevated`, `--risk-high`, `--danger`, `--official-bg`, `--official-ink`, `--official-tag`, `--official-tag-ink`, `--community-warning`, `--flood-prone`, `--map-ground`, `--map-block`, `--map-road`, `--map-water`, `--scrim`, `--focus-ring`. The table, with measured contrast, is on the canvas Foundations page; the canvas links a copy of the theme file as `theme.css` |
 | Contrast | At least 7:1 for all text on its background. Greyed-out Unverified Nodes are the only deliberate exception, and stay at least 4.5:1 |
 | Scale | Projector-first on desktop: everything at 120% (body about 18 px, tags about 14 px). The map stays the biggest thing on screen. Phones use the base scale |
 | Type | IBM Plex Sans (400, 600, 700) for text; IBM Plex Mono (500, 600) for labels, tags and numbers, with tabular figures so numbers never shift. **Bundled with the dashboard** (`@fontsource/ibm-plex-sans` and `@fontsource/ibm-plex-mono` 5.3.0), never loaded from Google Fonts: a Mesh-only Node has no internet |
