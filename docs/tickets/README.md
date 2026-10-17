@@ -19,7 +19,7 @@
 | [0013-community-warnings](0013-community-warnings.md) | in-progress | Fazorath |
 | [0014-official-alerts-dhm-replay](0014-official-alerts-dhm-replay.md) | done | Fazorath |
 | [0015-shelter-status-updates](0015-shelter-status-updates.md) | done | Fazorath |
-| [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | ready-for-agent | unclaimed |
+| [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | in-progress | amitathik7 |
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | ready-for-agent | unclaimed |
 | [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | in-progress | leonardorofaDV |
 | [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | ready-for-agent | unclaimed |
