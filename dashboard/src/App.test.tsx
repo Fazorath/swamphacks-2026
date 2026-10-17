@@ -83,3 +83,11 @@ test("selecting a card marks it as the selected Node", async () => {
     "false",
   );
 });
+
+test("selecting the selected card again clears the selection", async () => {
+  render(<App />);
+  const garage = await screen.findByRole("region", { name: "Node garage" });
+  fireEvent.click(garage);
+  fireEvent.click(garage);
+  expect(garage).toHaveAttribute("aria-current", "false");
+});

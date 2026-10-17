@@ -14,6 +14,7 @@ export function App() {
   const { identity, failed } = useNodeIdentity();
   const nodes = nodesOnMap(useReadings(), identity);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   return (
     <main>
       <header>
@@ -27,8 +28,8 @@ export function App() {
         </p>
       </header>
       <div className="areas">
-        <ReadingsPanel nodes={nodes} selectedId={selectedId} onSelect={setSelectedId} />
-        <NodeMap nodes={nodes} selectedId={selectedId} onSelect={setSelectedId} />
+        <ReadingsPanel nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
+        <NodeMap nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>
             <h2>{title}</h2>
