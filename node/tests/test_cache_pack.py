@@ -1,0 +1,115 @@
+import time
+from collections.abc import Callable
+from pathlib import Path
+
+import httpx
+from fastapi.testclient import TestClient
+from fixture_pack import FLOOD_PRONE, SHELTERS, TILE, TILE_PATH, build_fixture_pack
+
+from storm_shield.main import create_app
+from storm_shield.settings import Settings
+
+
+class PackSource:
+    """A stand-in for the Release or the Hub: serves bytes until it is shut down."""
+
+    def __init__(self, pack: bytes) -> None:
+        self.pack = pack
+        self.running = True
+        self.requests = 0
+        self.client = httpx.Client(transport=httpx.MockTransport(self._answer))
+
+    def _answer(self, request: httpx.Request) -> httpx.Response:
+        self.requests += 1
+        if not self.running:
+            raise httpx.ConnectError("the source is shut down", request=request)
+        return httpx.Response(200, content=self.pack)
+
+
+def _node(
+    tmp_path: Path, source: httpx.Client, name: str = "node", url: str = "http://source/pack.zip"
+) -> TestClient:
+    settings = Settings(name=name, cache_pack_url=url, cache_pack_dir=tmp_path / name)
+    return TestClient(create_app(settings, pack_source=source))
+
+
+def _wait_until(condition: Callable[[], bool]) -> None:
+    deadline = time.monotonic() + 5
+    while not condition():
+        assert time.monotonic() < deadline, "timed out waiting for the Cache Pack"
+        time.sleep(0.02)
+
+
+def _has_pack(client: TestClient) -> bool:
+    return bool(client.get("/api/cache-pack").json()["available"])
+
+
+def test_node_downloads_the_pack_and_serves_it_after_the_source_is_gone(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack())
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: _has_pack(node))
+        source.running = False
+
+        status = node.get("/api/cache-pack").json()
+        assert status["manifest"]["bbox"] == [29.6, -82.37, 29.7, -82.27]
+        assert node.get("/api/cache-pack/files/shelters.json").json() == SHELTERS
+        assert node.get("/api/cache-pack/files/flood_prone.geojson").json() == FLOOD_PRONE
+        assert node.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE
+
+
+def test_pack_without_a_source_is_unavailable(tmp_path: Path) -> None:
+    node = TestClient(create_app(Settings(cache_pack_dir=tmp_path / "empty")))
+    assert node.get("/api/cache-pack").json() == {"available": False, "manifest": None}
+    assert node.get("/api/cache-pack.zip").status_code == 404
+    assert node.get("/api/cache-pack/files/shelters.json").status_code == 404
+
+
+def test_corrupt_pack_is_refused_and_discarded(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack(corrupt_tile=True))
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: source.requests >= 1)
+        time.sleep(0.2)
+        assert not _has_pack(node)
+        assert not (tmp_path / "node" / "files").exists()
+
+
+def test_incomplete_pack_is_refused(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack(leave_out_tile=True))
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: source.requests >= 1)
+        time.sleep(0.2)
+        assert not _has_pack(node)
+
+
+def test_node_with_a_pack_on_disk_never_downloads_again(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack())
+    with _node(tmp_path, source.client) as first:
+        _wait_until(lambda: _has_pack(first))
+    requests_so_far = source.requests
+
+    with _node(tmp_path, source.client) as restarted:
+        assert _has_pack(restarted)
+        time.sleep(0.2)
+    assert source.requests == requests_so_far
+
+
+def test_pack_corrupted_on_disk_is_discarded_at_startup(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack())
+    with _node(tmp_path, source.client) as first:
+        _wait_until(lambda: _has_pack(first))
+    (tmp_path / "node" / "files" / TILE_PATH).write_bytes(b"bit rot")
+
+    source.running = False
+    with _node(tmp_path, source.client) as restarted:
+        assert not _has_pack(restarted)
+
+
+def test_sensor_downloads_the_pack_from_a_hub_node(tmp_path: Path) -> None:
+    release = PackSource(build_fixture_pack())
+    with _node(tmp_path, release.client, name="hub") as hub:
+        _wait_until(lambda: _has_pack(hub))
+        release.running = False
+
+        with _node(tmp_path, hub, name="sensor", url="/api/cache-pack.zip") as sensor:
+            _wait_until(lambda: _has_pack(sensor))
+            assert sensor.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE

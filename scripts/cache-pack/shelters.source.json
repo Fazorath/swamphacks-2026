@@ -1,0 +1,29 @@
+[
+  {
+    "id": "gainesville-high",
+    "name": "Gainesville High School",
+    "address": "1900 NE 8th Ave, Gainesville, FL",
+    "pos": [29.6636, -82.3068],
+    "special_needs": false,
+    "pet_friendly": false,
+    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
+  },
+  {
+    "id": "eastside-high",
+    "name": "Eastside High School",
+    "address": "1201 SE 43rd St, Gainesville, FL",
+    "pos": [29.6395, -82.2905],
+    "special_needs": true,
+    "pet_friendly": true,
+    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
+  },
+  {
+    "id": "howard-bishop-middle",
+    "name": "Howard W. Bishop Middle School",
+    "address": "1901 NE 9th St, Gainesville, FL",
+    "pos": [29.6590, -82.3135],
+    "special_needs": false,
+    "pet_friendly": true,
+    "source": "PLACEHOLDER, coordinates approximate. Not yet checked against Alachua County Emergency Management or FEMA. Review before the demo and replace this note with the check date."
+  }
+]

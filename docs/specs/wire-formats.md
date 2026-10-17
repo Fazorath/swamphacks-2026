@@ -132,6 +132,7 @@ cache-pack.zip
 └── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell
 ```
 
+- `bbox` is `[south, west, north, east]`, the demo box the pack covers.
 - The route grid is a fixed spacing (about 100 m). A home snaps to the nearest cell and the plan loads only that file.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.

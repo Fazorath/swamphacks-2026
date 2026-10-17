@@ -2,10 +2,10 @@
 name = "storm-shield-node"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["fastapi", "uvicorn", "pydantic-settings"]
+dependencies = ["fastapi", "uvicorn", "pydantic-settings", "httpx"]
 
 [dependency-groups]
-dev = ["pytest", "httpx", "ruff", "mypy"]
+dev = ["pytest", "ruff", "mypy"]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"

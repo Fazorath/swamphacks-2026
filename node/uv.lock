@@ -617,13 +617,13 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pydantic-settings" },
     { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -632,13 +632,13 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pydantic-settings" },
     { name = "uvicorn" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
