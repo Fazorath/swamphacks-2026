@@ -9,14 +9,19 @@ def _client(settings: Settings) -> TestClient:
     return TestClient(create_app(settings, InMemoryNetwork().join(settings.name)))
 
 
+def _identity(client: TestClient) -> dict[str, str]:
+    node = client.get("/api/node").json()
+    return {key: node[key] for key in ("id", "name", "role")}
+
+
 def test_sensor_node_reports_its_id_name_and_role() -> None:
     client = _client(Settings(name="porch", role="sensor"))
-    assert client.get("/api/node").json() == {"id": "porch", "name": "porch", "role": "sensor"}
+    assert _identity(client) == {"id": "porch", "name": "porch", "role": "sensor"}
 
 
 def test_hub_reports_the_hub_role() -> None:
     client = _client(Settings(name="hub", role="hub"))
-    assert client.get("/api/node").json() == {"id": "hub", "name": "hub", "role": "hub"}
+    assert _identity(client) == {"id": "hub", "name": "hub", "role": "hub"}
 
 
 def _readings_by_kind(client: TestClient) -> dict[str, float]:

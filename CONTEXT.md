@@ -36,6 +36,10 @@ _Avoid_: rogue node, guest
 The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend
 
+**Mesh-only**:
+A Node that currently has no internet and still takes part in the Mesh. Each Node reports only its own state: Online or Mesh-only. Online-only features (camera tiles, live feeds) stop while a Node is Mesh-only; everything carried over the Mesh keeps working.
+_Avoid_: offline node
+
 **Viewer**:
 A phone or browser that shows the dashboard by connecting to a Node, without being part of the Mesh itself.
 _Avoid_: client, user device

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { FloodRiskChip } from "./FloodRiskPanel";
 import { evacuationPlan } from "./evacuationPlan";
@@ -9,13 +10,16 @@ import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { useCachePack } from "./useCachePack";
+import { useCameras } from "./useCameras";
 import { useFloodRisk } from "./useFloodRisk";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeIdentity } from "./useNodeIdentity";
+import { useNodeStatus } from "./useNodeStatus";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useReadings } from "./useReadings";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
+const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
 
 const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
   unreadable:
@@ -27,6 +31,8 @@ const PLACEHOLDER_AREAS = ["Alerts"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
+  const status = useNodeStatus();
+  const cameras = useCameras();
   const floodRisk = useFloodRisk();
   const nodes = nodesOnMap(useReadings(), identity, floodRisk?.nodes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -57,6 +63,7 @@ export function App() {
               ? "Node unreachable"
               : "Connecting…"}
         </p>
+        {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
         <FloodRiskChip floodRisk={floodRisk} />
         <p className="household-status">
           {profile ? "Household profile saved" : "Fill in your household profile"}
@@ -88,6 +95,7 @@ export function App() {
           selectedId={selectedId}
           onSelect={toggleSelected}
         />
+        <CamerasPanel tiles={cameras} />
         <NodeMap
           nodes={nodes}
           selectedId={selectedId}
