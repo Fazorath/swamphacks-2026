@@ -143,6 +143,7 @@ export function App() {
         <CamerasPanel tiles={cameras} />
         <NodeMap
           nodes={nodes}
+          packTileMaxZoom={cachePack?.tileMaxZoom ?? null}
           selectedId={selectedId}
           onSelect={toggleSelected}
           stormSignal={floodRisk?.storm_signal ?? null}

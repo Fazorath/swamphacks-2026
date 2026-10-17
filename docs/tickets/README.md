@@ -20,7 +20,7 @@
 | [0014-official-alerts-dhm-replay](0014-official-alerts-dhm-replay.md) | done | Fazorath |
 | [0015-shelter-status-updates](0015-shelter-status-updates.md) | done | Fazorath |
 | [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | in-progress | amitathik7 |
-| [0018-on-device-rerouting](0018-on-device-rerouting.md) | ready-for-agent | unclaimed |
+| [0018-on-device-rerouting](0018-on-device-rerouting.md) | in-progress | leonardorofaDV |
 | [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | done | leonardorofaDV |
 | [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | ready-for-agent | unclaimed |
 | [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | ready-for-agent | unclaimed |
@@ -28,13 +28,13 @@
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | ready-for-agent | unclaimed |
 | [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | ready-for-agent | unclaimed |
-| [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | in-progress | Fazorath |
+| [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | done | Fazorath |
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | done | Fazorath |
 | [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | done | Fazorath |
 | [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | done | Fazorath |
-| [0032-theme-fonts-and-icons](0032-theme-fonts-and-icons.md) | in-progress | leonardorofaDV |
+| [0032-theme-fonts-and-icons](0032-theme-fonts-and-icons.md) | ready-for-agent | unclaimed |
 | [0033-full-bleed-map-shell](0033-full-bleed-map-shell.md) | ready-for-agent | unclaimed |
 | [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | ready-for-agent | unclaimed |
 | [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | ready-for-agent | unclaimed |
@@ -62,6 +62,6 @@
 | [0057-reduced-motion-wind-arrows](0057-reduced-motion-wind-arrows.md) | ready-for-agent | unclaimed |
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | ready-for-agent | unclaimed |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed |
-| [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | ready-for-agent | unclaimed |
+| [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | in-progress | leonardorofaDV |
 | [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | ready-for-agent | unclaimed |
 | [0062-flood-levels-fit-the-river](0062-flood-levels-fit-the-river.md) | ready-for-agent | unclaimed |

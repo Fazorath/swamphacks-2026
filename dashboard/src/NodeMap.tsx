@@ -14,6 +14,7 @@ import {
 } from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
+import { MAP_CREDIT, onlineUrlForMissingPackTile, tileUrlTemplate } from "./mapTiles";
 import { stormSignalSentence } from "./floodRiskSentences";
 import type { Shelter } from "./evacuationPlan";
 import type { Home } from "./householdProfile";
@@ -64,6 +65,7 @@ function FitToNodesUntilMoved({ nodes }: { nodes: NodeOnMap[] }) {
 
 type Props = {
   nodes: NodeOnMap[];
+  packTileMaxZoom: number | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
   stormSignal: FloodRisk["storm_signal"] | null;
@@ -80,6 +82,7 @@ type Props = {
 
 export function NodeMap({
   nodes,
+  packTileMaxZoom,
   selectedId,
   onSelect,
   stormSignal,
@@ -108,8 +111,19 @@ export function NodeMap({
         className={picking ? "node-map picking" : "node-map"}
       >
         <TileLayer
-          url="/api/tiles/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          // The pack arrives after the map is first drawn, and Leaflet reads maxNativeZoom only when
+          // it creates the layer, so the layer is rebuilt when the pack's depth becomes known.
+          key={packTileMaxZoom ?? "online"}
+          url={tileUrlTemplate(packTileMaxZoom !== null)}
+          maxNativeZoom={packTileMaxZoom ?? undefined}
+          attribution={MAP_CREDIT}
+          eventHandlers={{
+            tileerror: ({ tile }) => {
+              const image = tile as HTMLImageElement;
+              const onlineUrl = onlineUrlForMissingPackTile(image.src);
+              if (onlineUrl) image.src = onlineUrl;
+            },
+          }}
         />
         <FitToNodesUntilMoved nodes={nodes} />
         {picking && <PickHomeOnClick onPick={onPickHome} />}
