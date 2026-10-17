@@ -4,9 +4,9 @@
 
 **Blocked by:** 0052
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/weather-layers.md`
 

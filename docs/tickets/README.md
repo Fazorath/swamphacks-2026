@@ -55,12 +55,12 @@
 | [0050-measured-wave-speed](0050-measured-wave-speed.md) | ready-for-agent | unclaimed |
 | [0051-valley-road-routes](0051-valley-road-routes.md) | ready-for-agent | unclaimed |
 | [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | done | leonardorofaDV |
-| [0053-weather-grid-lookup](0053-weather-grid-lookup.md) | ready-for-agent | unclaimed |
+| [0053-weather-grid-lookup](0053-weather-grid-lookup.md) | in-progress | refloow-0 |
 | [0054-weather-button-and-picker](0054-weather-button-and-picker.md) | ready-for-agent | unclaimed |
 | [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | ready-for-agent | unclaimed |
 | [0056-wind-particles](0056-wind-particles.md) | ready-for-agent | unclaimed |
 | [0057-reduced-motion-wind-arrows](0057-reduced-motion-wind-arrows.md) | ready-for-agent | unclaimed |
-| [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | ready-for-agent | unclaimed |
+| [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | in-progress | refloow-0 |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV |
 | [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | ready-for-agent | unclaimed |
