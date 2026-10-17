@@ -71,7 +71,7 @@ A signed warning issued by Storm Shield from Community Readings; never an evacua
 _Avoid_: alert, alarm, evacuation notice
 
 **Cache Pack**:
-The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and later precomputed routes) built once by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
+The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built once by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
@@ -93,8 +93,16 @@ What a resident should do and where to go: their risk, the nearest open Shelter,
 _Avoid_: evac info, escape route
 
 **Household Profile**:
-A resident's home location, housing type (site-built or mobile home/RV), and whether they need a special-needs or pet-friendly Shelter; kept only on their own device.
+A resident's home location, housing type (site-built or mobile home/RV), and whether they need a special-needs or pet-friendly Shelter; kept only on their own device. The one thing it reveals is the Grid point nearest home, when the Viewer asks its connected Node for the Route; never to the rest of the Mesh.
 _Avoid_: user profile, account, settings
+
+**Route**:
+The driving path from a Grid point to a Shelter, precomputed into the Cache Pack. It is the shortest drive and ignores Flood-Prone Areas and live road conditions; its length ranks Shelters. A Shelter with no Route from the resident's Grid point ranks after every Shelter that has one, by straight-line distance and labelled as such, with no line drawn.
+_Avoid_: directions, navigation, path
+
+**Grid point**:
+One of the evenly spaced points, about 100 m apart, that cover the roads of the Cache Pack area; a home takes the Route of its nearest Grid point. Areas more than about 100 m from a drivable road have none.
+_Avoid_: waypoint, cell, node
 
 **Shelter**:
 A public building opened by the county to house evacuees during a storm.
