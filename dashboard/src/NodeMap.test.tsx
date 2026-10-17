@@ -28,6 +28,11 @@ function renderMap(packTileMaxZoom: number | null) {
       picking={false}
       onPickHome={() => {}}
       onDonePicking={() => {}}
+      blockedRoadLines={[]}
+      canBlockRoads={false}
+      blocking={false}
+      onToggleBlocking={() => {}}
+      onTapRoad={() => {}}
     />,
   );
   return tileLayerProps.latest!;

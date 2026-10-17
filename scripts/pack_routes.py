@@ -5,6 +5,8 @@ import math
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
+from itertools import pairwise
+from typing import Any
 
 Point = tuple[float, float]  # (lat, lon)
 BBox = tuple[float, float, float, float]  # (south, west, north, east)
@@ -79,9 +81,10 @@ class Roads:
         self, coords: dict[int, Point], segments: Iterable[tuple[int, int, bool]]
     ) -> None:
         self.coords = coords
+        self.segments = list(segments)
         # The arcs that end at each node, because routes are searched backwards from a Shelter.
         self._arcs_into: dict[int, list[tuple[int, float]]] = defaultdict(list)
-        for start, end, one_way in segments:
+        for start, end, one_way in self.segments:
             length = distance_m(coords[start], coords[end])
             self._arcs_into[end].append((start, length))
             if not one_way:
@@ -194,3 +197,56 @@ def build_routes(
             ]
             routes.setdefault(f"routes/{gx}_{gy}.json", {})[shelter_id] = polyline
     return routes
+
+
+def build_road_graph(roads: Roads, keep_near: Iterable[Point]) -> dict[str, list[Any]]:
+    """The roads as junctions joined by segments, for rerouting on a phone.
+
+    Bends are folded into the segment they sit on, so the file stays small. A road node nearest
+    one of `keep_near` (the Shelters) is kept as a junction so the phone can start from it.
+    Every segment is two-way: a resident in a hurry ignores one-way rules.
+    """
+    neighbours: dict[int, set[int]] = defaultdict(set)
+    for start, end, _ in roads.segments:
+        if start != end:
+            neighbours[start].add(end)
+            neighbours[end].add(start)
+    junctions = {node for node, around in neighbours.items() if len(around) != 2}
+    for point in keep_near:
+        node = roads.nearest_node(point, MAX_SHELTER_TO_ROAD_M)
+        if node is not None and node in neighbours:
+            junctions.add(node)
+
+    index_of: dict[int, int] = {}
+    nodes: list[list[float]] = []
+
+    def index(node: int) -> int:
+        if node not in index_of:
+            index_of[node] = len(nodes)
+            lat, lon = roads.coords[node]
+            nodes.append([round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)])
+        return index_of[node]
+
+    edges: list[list[Any]] = []
+    for junction in sorted(junctions):
+        for first in sorted(neighbours[junction]):
+            chain = [junction]
+            before, here = junction, first
+            while here not in junctions:
+                chain.append(here)
+                (after,) = neighbours[here] - {before}
+                before, here = here, after
+            # Each segment is found from both ends; keep the one found from the lower end.
+            if here <= junction:
+                continue
+            points = [roads.coords[node] for node in [*chain, here]]
+            length = sum(distance_m(a, b) for a, b in pairwise(points))
+            bends = [
+                [round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)]
+                for lat, lon in simplify(points)[1:-1]
+            ]
+            edge: list[Any] = [index(junction), index(here), round(length)]
+            if bends:
+                edge.append(bends)
+            edges.append(edge)
+    return {"nodes": nodes, "edges": edges}

@@ -23,7 +23,9 @@ beforeEach(() => {
     }
     if (path.endsWith("shelters.json")) return Response.json([]);
     if (path.endsWith("flood_prone.geojson")) return Response.json({ features: [] });
-    if (path.includes("/routes/")) return new Response(null, { status: 404 });
+    if (path.includes("/routes/") || path.endsWith("roads.json")) {
+      return new Response(null, { status: 404 });
+    }
     return Response.json(path === "/api/state" ? fakeNodeState() : []);
   });
   vi.stubGlobal("fetch", fetchSpy);
