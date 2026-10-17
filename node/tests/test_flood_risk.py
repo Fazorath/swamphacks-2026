@@ -58,9 +58,10 @@ def test_rain_with_water_rising_is_high(meshed_nodes: MeshedNodes) -> None:
 def test_resetting_the_scenario_shows_no_flood_risk_again(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
     _step(meshed_nodes["porch"], 3)
-    meshed_nodes.advance(121)
     meshed_nodes["porch"].post("/api/scenario/reset")
-    assert _flood_risk(meshed_nodes["porch"])["level"] is None
+    flood_risk = _flood_risk(meshed_nodes["porch"])
+    assert flood_risk["level"] is None
+    assert flood_risk["reasons"] == []
 
 
 def test_reasons_count_the_nodes_that_agree(meshed_nodes: MeshedNodes) -> None:
@@ -157,3 +158,11 @@ def test_a_node_with_a_single_reading_is_not_rising(meshed_nodes: MeshedNodes) -
     codes = _reason_codes(meshed_nodes["porch"])
     assert "water_high" in codes
     assert "water_rising" not in codes
+
+
+def test_reasons_show_tidy_values(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.hear_from("creek", water_cm=29)
+    meshed_nodes.hear_from("creek", water_cm=41.7)
+    values = [reason["value"] for reason in _flood_risk(meshed_nodes["porch"])["reasons"]]
+    assert all(value == round(value, 1) for value in values)

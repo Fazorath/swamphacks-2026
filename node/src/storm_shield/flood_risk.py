@@ -145,4 +145,8 @@ def _counts(node: str, readings: list[CommunityReading]) -> bool:
 def _reason(
     code: ReasonCode, most_telling: Callable[[list[float]], float], values: list[float]
 ) -> Reason | None:
-    return Reason(code=code, nodes=len(values), value=most_telling(values)) if values else None
+    return (
+        Reason(code=code, nodes=len(values), value=round(most_telling(values), 1))
+        if values
+        else None
+    )
