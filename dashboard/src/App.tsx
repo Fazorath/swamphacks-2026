@@ -14,12 +14,9 @@ import { ReadingsPanel } from "./ReadingsPanel";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
-import { useFloodRisk } from "./useFloodRisk";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
-import { useNodeIdentity } from "./useNodeIdentity";
-import { useNodeStatus } from "./useNodeStatus";
+import { useNodeState } from "./useNodeState";
 import { useOpenShelterIds } from "./useOpenShelterIds";
-import { useReadings } from "./useReadings";
 import { useRoutes } from "./useRoutes";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
@@ -34,12 +31,11 @@ const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
 const PLACEHOLDER_AREAS = ["Alerts"];
 
 export function App() {
-  const { identity, failed } = useNodeIdentity();
-  const status = useNodeStatus();
+  const { state, refresh } = useNodeState();
+  const floodRisk = state?.flood_risk ?? null;
   const eventClock = useEventClock();
   const cameras = useCameras();
-  const floodRisk = useFloodRisk();
-  const nodes = nodesOnMap(useReadings(), identity, floodRisk?.nodes);
+  const nodes = nodesOnMap(state);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
@@ -69,14 +65,10 @@ export function App() {
     <main>
       <header>
         <h1>Storm Shield</h1>
-        <p>
-          {identity
-            ? `${identity.name} · ${ROLE_LABELS[identity.role]}`
-            : failed
-              ? "Node unreachable"
-              : "Connecting…"}
-        </p>
-        {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
+        <p>{state ? `${state.name} · ${ROLE_LABELS[state.role]}` : "Connecting…"}</p>
+        {state && (
+          <span className={`connection-badge ${state.status}`}>{STATUS_LABELS[state.status]}</span>
+        )}
         <EventClockTag clock={eventClock} />
         <FloodRiskChip floodRisk={floodRisk} />
         <p className="household-status">
@@ -85,7 +77,7 @@ export function App() {
         <button type="button" onClick={openPanel}>
           My household
         </button>
-        {identity?.role === "hub" && (
+        {state?.role === "hub" && (
           <button type="button" onClick={openHubPanel}>
             Hub
           </button>
@@ -122,6 +114,7 @@ export function App() {
           floodRisk={floodRisk}
           selectedId={selectedId}
           onSelect={toggleSelected}
+          onScenarioChanged={refresh}
         />
         <CamerasPanel tiles={cameras} />
         <NodeMap

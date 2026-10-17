@@ -1,13 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
+import { fakeNodeState } from "./fakeNodeState";
 
 const PROFILE_KEY = "storm-shield.household-profile";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
 
 function saveProfile() {
   localStorage.setItem(
@@ -45,7 +41,7 @@ function stubNode({
   routeFile?: Record<string, [number, number][]>;
 }) {
   const answers: Record<string, unknown> = {
-    "/api/node": { id: "porch", name: "porch", role: "hub" },
+    "/api/state": fakeNodeState(),
     "/api/cache-pack": {
       available: packAvailable,
       manifest: routeGrid && { route_grid: routeGrid },
@@ -77,7 +73,6 @@ function fetchedUrls(): string[] {
 
 beforeEach(() => {
   localStorage.clear();
-  vi.stubGlobal("EventSource", SilentEventSource);
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

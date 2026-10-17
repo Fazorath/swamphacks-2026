@@ -6,7 +6,7 @@ import {
 } from "./evacuationPlan";
 import type { HouseholdProfile } from "./householdProfile";
 import type { Routes } from "./routeGrid";
-import type { FloodRisk } from "./useFloodRisk";
+import type { FloodRisk } from "./nodeState";
 
 const HOME = { lat: 29.65, lon: -82.32 };
 
