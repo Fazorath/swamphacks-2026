@@ -12,7 +12,7 @@
 
 - [ ] One replay timeline file: tracks for S0–S3 (water, rain, soil, pressure) from 08:30 to 10:00 NPT, the time each Sensor goes silent, the named phases and the internet cue; real values where reported, the rest marked reconstructed, every fact citing a source
 - [ ] A Node's config names which track it plays; a Node with no track keeps the Scenario
-- [ ] The Hub's start action sends the `replay` message (proposed in `docs/specs/wire-formats.md`; confirm with the team first) on start and every 10 s; only the Hub identity may send it
+- [ ] The Hub's start action sends the `replay` message (decided, `docs/specs/wire-formats.md`) on start and every 10 s; only the Hub identity may send it
 - [ ] Each Node anchors the Event clock on its own clock at receipt and publishes its track's readings at the usual cadence, flagged simulated
 - [ ] A Sensor past the end of its track stops publishing, so it turns Stale
 - [ ] The Node API exposes the Event clock; the top bar shows it with the REPLAY tag

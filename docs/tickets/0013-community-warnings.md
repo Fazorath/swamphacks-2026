@@ -2,7 +2,7 @@
 
 **What to build:** When one Registered Node reports a Surge, the Hub sends one signed Community Warning over the mesh, naming that Node, its River km and the Event clock time of the Surge. Every Viewer then sees it, labelled non-official and pointing to official sources for evacuation. The Hub dashboard shows a log of what was sent and why.
 
-**Blocked by:** 0012, 0044, 0046; the warning format change is proposed in `docs/specs/wire-formats.md` and needs the team's ok
+**Blocked by:** 0012, 0044, 0046, and the warning format (decided, `docs/specs/wire-formats.md`)
 
 **Status:** ready-for-agent
 

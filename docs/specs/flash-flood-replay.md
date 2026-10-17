@@ -118,7 +118,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 
 - Rebuilt for the valley box. Tiles cover a narrower zoom range so the larger box stays small. FEMA zones and the creek floodplains are replaced by a hand-drawn river corridor as the Flood-Prone Area. A new `river.geojson` holds the river line with River km and the reach speeds. The hand-picked Shelters cite their OSM ids or sources.
 
-### Message formats (proposed; the team confirms, `docs/specs/wire-formats.md`)
+### Message formats (decided 2026-10-17, `docs/specs/wire-formats.md`)
 
 - `warning` gains `origin` (Node id), `origin_km` and `surge_t` (event time, Unix seconds), and the reason code `water_surge`.
 - New kind `replay`: `{ "v": 1, "kind": "replay", "state": "playing", "event_t": 1787733000, "rate": 30 }`. `state` is `playing`, `paused` or `stopped`; `event_t` is the event time at the moment of sending. Only the Hub may send it.
@@ -173,7 +173,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
   5. 09:15 the replayed DHM SMS arrives. The lead-time line reads "Community Warning 08:37 · first official SMS 09:15".
   6. Internet cue at 09:20: the camera tile goes Offline, readings and the countdown keep going over the Mesh.
 - **Tone.** This happened seven weeks ago to real families and the search is not over. On screen and in the pitch: the replay is "a reconstruction from reported times", never the official record; no casualty total is presented as final (cite NDRRMA with its date if a number is needed at all); no victim imagery; no "Himalayan tsunami"; the origin was in Nepal, so do not blame China for the start. Many victims were migrant workers and pilgrims.
-- **Honest limits.** Near the source the wave was fast enough that Timure would have had one to eight minutes. The gain is real from Syabrubesi downstream. Arrival times at Rasuwagadhi, Timure and Syabrubesi are partly inferred from gauges going silent.
+- **Honest limits, said out loud.** Near the source the wave was fast enough that Timure would have had one to eight minutes. The gain is real from Syabrubesi downstream. Arrival times at Rasuwagadhi, Timure and Syabrubesi are inferred from gauges going silent, and the surge sizes are invented; the pitch, the README and the replay timeline file all say so.
 - **Sources** (checked 2026-10-17):
   - Kathmandu Post, how the flood unfolded: https://kathmandupost.com/national/2026/08/27/how-the-bhotekoshi-flood-unfolded-over-10-hours
   - ICIMOD, Kyirong–Rasuwa flood 2026: https://www.icimod.org/?p=78368
@@ -181,4 +181,4 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
   - Republica, why early warning failed: https://myrepublica.nagariknetwork.com/news/rasuwa-flood-why-did-early-warning-fail-despite-systems-in-place-64-74.html
   - Nepali Times, distance to the border: https://nepalitimes.com/more-clues-about-the-nepal-china-flood
   - River km and place coordinates: OpenStreetMap (Overpass), measured from the Lhende–Kyirong confluence.
-- **Open, not blocking:** whether the name Storm Shield still fits a flash-flood demo.
+- **"Storm Shield" is a working name** and may change before submission; don't build anything that depends on it.

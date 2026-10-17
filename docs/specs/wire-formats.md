@@ -103,9 +103,9 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 - A Shelter that was in the previous snapshot and is gone now shows as closed. If none are open, the plan says "No open Shelter announced yet. Follow official sources." and draws no route.
 - Shelter ids are short slugs fixed in the Cache Pack.
 
-## Proposed for the flash flood replay (team to confirm)
+## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; nothing below is built yet. Confirm in the group chat before the first ticket that uses it (0013, 0044) merges.
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17, not built yet (0013, 0044).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 
