@@ -51,7 +51,7 @@
 | [0046-surge-makes-flood-risk-high](0046-surge-makes-flood-risk-high.md) | ready-for-agent | unclaimed |
 | [0047-wave-eta-counts-down-at-home](0047-wave-eta-counts-down-at-home.md) | ready-for-agent | unclaimed |
 | [0048-shelter-or-higher-ground](0048-shelter-or-higher-ground.md) | ready-for-agent | unclaimed |
-| [0049-one-laptop-demo-script](0049-one-laptop-demo-script.md) | ready-for-agent | unclaimed |
+| [0049-one-laptop-demo-script](0049-one-laptop-demo-script.md) | in-progress | Fazorath |
 | [0050-measured-wave-speed](0050-measured-wave-speed.md) | ready-for-agent | unclaimed |
 | [0051-valley-road-routes](0051-valley-road-routes.md) | ready-for-agent | unclaimed |
 | [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | ready-for-agent | unclaimed |
