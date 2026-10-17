@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
+from pack_weather import fetch_weather_replay
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 # [south, west, north, east]: the Lhende Khola down to below Trishuli, about 66 x 40 km.
@@ -20,6 +21,9 @@ BBOX = (27.86, 85.08, 28.46, 85.47)
 ZOOMS = range(10, 15)
 TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_DELAY_SECONDS = 0.15
+# The recorded weather around the flood (UTC days), for the Weather layers.
+WEATHER_FIRST_DAY = "2026-08-25"
+WEATHER_LAST_DAY = "2026-08-27"
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
 
 
@@ -88,8 +92,10 @@ def build(output: Path) -> None:
         "river.geojson": (SOURCE_DIR / "river.source.geojson").read_bytes(),
     }
     tile_list = tiles_covering(BBOX)
-    print(f"fetching {len(tile_list)} tiles", flush=True)
+    print(f"fetching the recorded weather and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
+        weather = fetch_weather_replay(client, BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
+        files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 

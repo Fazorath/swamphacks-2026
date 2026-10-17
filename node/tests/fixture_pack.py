@@ -24,14 +24,18 @@ RIVER = {
         }
     ],
 }
+WEATHER_REPLAY = {"source": "fixture", "credit": "fixture credit", "times": ["2026-08-26T00:00Z"]}
 TILE = b"\x89PNG fixture tile"
 TILE_PATH = "tiles/10/754/429.png"
+WEATHER_PATH = "weather_replay.json"
 
 
 def build_fixture_pack(
     *,
     corrupt_tile: bool = False,
     leave_out_tile: bool = False,
+    with_weather: bool = False,
+    corrupt_weather: bool = False,
     shelters: list[dict[str, object]] = SHELTERS,
 ) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
@@ -41,6 +45,8 @@ def build_fixture_pack(
         "river.geojson": json.dumps(RIVER).encode(),
         TILE_PATH: TILE,
     }
+    if with_weather:
+        files[WEATHER_PATH] = json.dumps(WEATHER_REPLAY).encode()
     manifest = {
         "v": 1,
         "built": "2026-10-16T00:00:00Z",
@@ -49,6 +55,8 @@ def build_fixture_pack(
     }
     if corrupt_tile:
         files[TILE_PATH] = b"tampered"
+    if corrupt_weather:
+        files[WEATHER_PATH] = b"tampered"
     if leave_out_tile:
         del files[TILE_PATH]
     buffer = io.BytesIO()
