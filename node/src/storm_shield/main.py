@@ -10,7 +10,7 @@ from typing import Any, Literal
 import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -29,7 +29,7 @@ from storm_shield.internet_connection import (
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
-from storm_shield.reading_store import NodeReading, NodeSnapshot, ReadingStore
+from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Reading, Scenario
@@ -43,16 +43,8 @@ from storm_shield.shelter_status import (
 
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
-READINGS_PUSH_SECONDS = 2
 
 logger = logging.getLogger(__name__)
-
-
-class NodeStatusReport(BaseModel):
-    id: str
-    name: str
-    role: Role
-    status: Status
 
 
 class ScenarioState(BaseModel):
@@ -328,12 +320,6 @@ def create_app(
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
-    @app.get("/api/node")
-    def node_status_report() -> NodeStatusReport:
-        return NodeStatusReport(
-            id=mesh.identity, name=settings.name, role=settings.role, status=internet.status
-        )
-
     @app.get("/api/state")
     def node_state() -> NodeState:
         snapshot = store.snapshot(clock())
@@ -364,28 +350,6 @@ def create_app(
             )
         # A cached copy shown later would look live, which is exactly what this must never do.
         return Response(picture, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
-
-    @app.get("/api/readings")
-    def readings() -> list[NodeReading]:
-        return store.latest(clock())
-
-    @app.get("/api/flood-risk")
-    def current_flood_risk() -> FloodRisk:
-        return flood_risk(store.recent(clock()))
-
-    @app.get("/api/readings/stream")
-    async def readings_stream() -> StreamingResponse:
-        async def events() -> AsyncIterator[str]:
-            while True:
-                payload = ",".join(reading.model_dump_json() for reading in store.latest(clock()))
-                yield f"data: [{payload}]\n\n"
-                await asyncio.sleep(READINGS_PUSH_SECONDS)
-
-        return StreamingResponse(events(), media_type="text/event-stream")
-
-    @app.get("/api/scenario")
-    def scenario_state() -> ScenarioState:
-        return ScenarioState(step=scenario.step_name)
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:

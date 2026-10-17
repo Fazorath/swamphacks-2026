@@ -6,7 +6,7 @@ The Node service: FastAPI, the Scenario, and the Mesh that shares Community Read
 
 `storm_shield/reticulum_mesh.py` is the only code that knows about Reticulum.
 
-- Each Node has a Reticulum identity in `NODE_DATA_DIR` (default `node/data/`, gitignored). Its **Node id** is the first 12 hex characters of that identity, printed at startup and returned by `GET /api/node`.
+- Each Node has a Reticulum identity in `NODE_DATA_DIR` (default `node/data/`, gitignored). Its **Node id** is the first 12 hex characters of that identity, printed at startup and returned as `id` by `GET /api/state`.
 - A Node announces itself on start and every 10 s. Other Nodes keep its public key from the announce.
 - Readings go out as one unencrypted broadcast packet: a 64-byte signature, then the JSON. Reticulum does not say who sent a data packet, so a receiver checks the signature against the announced key and drops anything from a Node it has not heard announce yet.
 - The Reticulum config is regenerated from the settings on every start.

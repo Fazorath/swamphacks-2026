@@ -2,7 +2,7 @@ import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { Home, HouseholdProfile } from "./householdProfile";
 import { appliesToHousehold, type OfficialAlert } from "./officialAlerts";
 import type { LatLon, RouteGrid, Routes } from "./routeGrid";
-import type { FloodRisk } from "./useFloodRisk";
+import type { FloodRisk } from "./nodeState";
 
 export type Shelter = {
   id: string;

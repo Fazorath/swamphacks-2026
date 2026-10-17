@@ -37,7 +37,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **Leaflet map clicks work in jsdom**: `fireEvent.click(document.querySelector(".node-map")!, { clientX, clientY })` reaches `useMapEvents({ click })`, so pick mode is testable without mocking Leaflet. The tapped lat/lon is meaningless in jsdom (zero-size container); assert on what the app does with it, not its value.
 - **Don't name two files apart only by case** (`householdProfile.test.ts` vs `HouseholdProfile.test.tsx`): they collide on macOS. The flow test is `householdFlow.test.tsx`.
-- The dashboard has no polling yet, so the "no request carries the profile" test waits briefly on the only request there is (`/api/node`). When polling lands (0019), make that test run a real poll cycle.
+- The "no request carries the profile" test now runs five real poll cycles with fake timers (0041), as promised for 0019.
 
 ## Map tiles (CARTO key)
 
@@ -135,7 +135,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A signed alert must fit one Reticulum packet** (464 bytes with the 64-byte signature), and headline plus URL take most of it. `test_every_replayed_alert_fits_one_reticulum_packet` guards it; shorten the headline if it fails.
 - **Nodes filter alerts on their own Event clock**, so Reset (paused at 08:30) hides every alert with no extra message. The Hub only forwards; it never takes an alert back.
 - The lead-time line compares with the first Official Alert (09:05 notice), so it reads "Community Warning 08:37 · first Official Alert 09:05", decided on 2026-10-17. Nothing feeds it a Community Warning until 0013; `App` passes `null` for now.
-- The dashboard reads alerts from `/api/state` (`useOfficialAlerts`, every second) because 0041 has not moved the dashboard to the snapshot yet; 0041 folds it in.
+- The dashboard reads alerts from `official_alerts` in the one state snapshot (`useNodeState`, every second), so a replayed alert appears when the Event clock reaches it.
 - **Icons come from `lucide-react` 1.49.0, pinned with `--save-exact`** (ui.md), first used for the empty Alerts Panel. Match canvas icons by their SVG path: the Alerts empty state's triangle is `TriangleAlert`. The empty-Panel look (icon in a raised circle, one line) is `.empty-panel` in `App.css`; reuse it for the other empty Panels on `C-States`.
 - With no Cache Pack yet, the plan counts the home as possibly in the Flood-Prone Area, so a riverbank alert is still listed: a missed alert is worse than an extra one.
 - Rehearsed on loopback Reticulum (Hub slot 0 / port 8320, Sensor slot 1 / port 8321 with `HUB_IDENTITY`): after a jump to `dhm-sms` the Sensor showed both alerts within 2 s, so the signed alert packet verifies against the Hub key. Software path only, not a Pi check.
@@ -161,6 +161,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Jump keeps the clock's state** (paused stays paused, otherwise it plays). Pause and resume answer 409 in the wrong state.
 - `GET /api/replay/phases` lists the phases and the internet cue in Event time. "Cut the internet now" shows while the Event clock is at or past the cue. No Community Warning exists in the code yet, so Reset's "no warning showing" is untested until warnings land.
 - `findLast` is not in the dashboard's TypeScript lib target; use `.filter(...).at(-1)`. macOS `sed -i` needs `-i ''`.
+
+## Dashboard reads the state snapshot (ticket 0041)
+
+- **Fake timers must advance with real time in dashboard flow tests**: `vi.useFakeTimers({ shouldAdvanceTime: true })`. Faking `setTimeout` without it hangs every `findBy*` (Testing Library waits on a `setTimeout` that never fires), and the symptom is a 5 s test timeout, not an error.
+- **A test of "updates without waiting for the poll" must look inside the poll interval**: after the click, `advanceTimersByTimeAsync(STATE_POLL_MS / 10)` and a synchronous `getByText`. A `findBy*` (up to 1 s) passed even with `refresh()` disabled, because the next poll arrived on its own; check a new test by breaking the code it covers.
+- **`useNodeState()` returns `{ state, refresh }`; `state` is null until the first answer**, which is "Connecting…". A failed poll keeps the last state and only logs; 0042 adds the `unreachable` connection and the clearing.
+- **Dashboard tests build state with `fakeNodeState()` / `fakeNodeSnapshot()`** (`dashboard/src/fakeNodeState.ts`). A flow test whose `fetch` stub lacks `/api/state` stays on "Connecting…".
 
 ## Mesh ignores bad messages (ticket 0023)
 

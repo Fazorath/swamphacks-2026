@@ -6,7 +6,8 @@ export type EventClock = {
   rate: number;
 };
 
-// Fast enough that the clock moves visibly at ×30; 0019's snapshot replaces this poll.
+// Fast enough that the clock moves visibly at ×30. It keeps its own poll: the state snapshot does
+// not carry the Event clock.
 const CLOCK_POLL_MS = 1000;
 
 // Null while no replay is running, which is also what a Node that predates the replay answers.

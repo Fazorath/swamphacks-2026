@@ -1,51 +1,17 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import type { FloodRisk } from "./nodeState";
 
-const PORCH_AGE_SECONDS = 2;
-const GARAGE_AGE_SECONDS = 40;
-
-class FakeEventSource {
-  onmessage: ((event: { data: string }) => void) | null = null;
-  constructor() {
-    queueMicrotask(() =>
-      this.onmessage?.({
-        data: JSON.stringify([
-          {
-            node: "porch",
-            kind: "pressure",
-            value: 1015,
-            unit: "hPa",
-            position: [29.652, -82.324],
-            timestamp: "2026-10-16T12:00:00Z",
-            age_s: PORCH_AGE_SECONDS,
-            simulated: true,
-          },
-          {
-            node: "garage",
-            kind: "pressure",
-            value: 1002,
-            unit: "hPa",
-            position: [29.654, -82.322],
-            timestamp: "2026-10-16T12:00:00Z",
-            age_s: GARAGE_AGE_SECONDS,
-            simulated: true,
-          },
-        ]),
-      }),
-    );
-  }
-  close() {}
-}
-
-const CALM = {
+const CALM: FloodRisk = {
   level: null,
   reasons: [],
   storm_signal: { on: false, nodes: 0, pressure_hpa: null },
   nodes: { porch: null, garage: null },
 };
 
-const HIGH = {
+const HIGH: FloodRisk = {
   level: "high",
   reasons: [
     { code: "water_high", nodes: 1, value: 90 },
@@ -56,24 +22,47 @@ const HIGH = {
   nodes: { porch: "high", garage: null },
 };
 
-const LOW_FROM_STORM_SIGNAL = {
+const LOW_FROM_STORM_SIGNAL: FloodRisk = {
   level: "low",
   reasons: [{ code: "pressure_falling", nodes: 3, value: 1002 }],
   storm_signal: { on: true, nodes: 3, pressure_hpa: 1002 },
   nodes: { porch: null, garage: null },
 };
 
-function stubFloodRisk(floodRisk: object) {
+const GARAGE_AGE_SECONDS = 40;
+
+function stubFloodRisk(floodRisk: FloodRisk) {
+  const state = fakeNodeState({
+    flood_risk: floodRisk,
+    nodes: [
+      fakeNodeSnapshot("garage", {
+        position: [29.654, -82.322],
+        age_s: GARAGE_AGE_SECONDS,
+        stale: true,
+        measurements: { pressure: { value: 1002, unit: "hPa" } },
+      }),
+      fakeNodeSnapshot("porch"),
+    ],
+  });
   vi.stubGlobal("fetch", async (path: string) => {
-    if (path === "/api/flood-risk") return Response.json(floodRisk);
+    if (path === "/api/state") return Response.json(state);
     if (path === "/api/cameras") return Response.json([]);
-    return Response.json({ id: "porch", name: "porch", role: "hub", status: "online" });
+    return new Response(null, { status: 404 });
   });
 }
 
 beforeEach(() => {
   stubFloodRisk(CALM);
-  vi.stubGlobal("EventSource", FakeEventSource);
+  vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => vi.restoreAllMocks());
+
+test("says Connecting… until the Node answers, not an error", async () => {
+  vi.stubGlobal("fetch", () => new Promise(() => {}));
+  render(<App />);
+  expect(screen.getByText("Connecting…")).toBeInTheDocument();
+  expect(screen.queryByText(/unreachable/i)).not.toBeInTheDocument();
 });
 
 test("shows the Node's name and role and the placeholder areas", async () => {
@@ -99,7 +88,7 @@ test("lists readings from other Nodes under each Node's name", async () => {
   ).toBeInTheDocument();
 });
 
-test("a silent Node is greyed with STALE and its age", async () => {
+test("a silent Node is greyed with STALE and its age, as the Node decided", async () => {
   render(<App />);
   const garage = await screen.findByRole("region", { name: "Node garage" });
   expect(within(garage).getByText("STALE · 40 s")).toBeInTheDocument();

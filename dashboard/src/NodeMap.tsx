@@ -19,7 +19,7 @@ import type { Shelter } from "./evacuationPlan";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
-import type { FloodRisk } from "./useFloodRisk";
+import type { FloodRisk } from "./nodeState";
 
 const BETRAWATI: [number, number] = [27.9731, 85.186];
 

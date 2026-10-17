@@ -1,12 +1,8 @@
 import { act, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { fakeNodeState } from "./fakeNodeState";
 import { POLL_EVERY_MS } from "./usePolledJson";
-
-class SilentEventSource {
-  onmessage = null;
-  close() {}
-}
 
 const ARCHER = "I-75 southbound at SR-24 / Archer Rd";
 const NEWBERRY = "I-75 southbound at SR-26 / Newberry Rd";
@@ -36,13 +32,12 @@ beforeEach(() => {
   nodeReachable = true;
   vi.stubGlobal("fetch", async (path: string) => {
     if (!nodeReachable) throw new TypeError("Failed to fetch");
-    if (path === "/api/flood-risk") return Response.json({ level: null, reasons: [], nodes: {} });
     if (path === "/api/cameras") return Response.json(cameraTiles);
-    return Response.json({ id: "porch", name: "porch", role: "hub", status: nodeStatus });
+    if (path === "/api/state") return Response.json(fakeNodeState({ status: nodeStatus }));
+    return new Response(null, { status: 404 });
   });
-  vi.stubGlobal("EventSource", SilentEventSource);
   vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
 afterEach(() => {

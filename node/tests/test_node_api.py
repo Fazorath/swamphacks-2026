@@ -10,7 +10,7 @@ def _client(settings: Settings) -> TestClient:
 
 
 def _identity(client: TestClient) -> dict[str, str]:
-    node = client.get("/api/node").json()
+    node = client.get("/api/state").json()
     return {key: node[key] for key in ("id", "name", "role")}
 
 
@@ -25,20 +25,16 @@ def test_hub_reports_the_hub_role() -> None:
 
 
 def _readings_by_kind(client: TestClient) -> dict[str, float]:
-    return {reading["kind"]: reading["value"] for reading in client.get("/api/readings").json()}
+    [own] = client.get("/api/state").json()["nodes"]
+    return {kind: measurement["value"] for kind, measurement in own["measurements"].items()}
 
 
-def test_readings_are_timestamped_and_labeled_simulated() -> None:
+def test_readings_are_aged_and_labeled_simulated() -> None:
     client = _client(Settings())
-    readings = client.get("/api/readings").json()
-    assert {reading["kind"] for reading in readings} == {
-        "pressure",
-        "rain_rate",
-        "water_level",
-        "soil_moisture",
-    }
-    assert all(reading["simulated"] and reading["timestamp"] for reading in readings)
-    assert all(0 <= reading["age_s"] < 5 for reading in readings)
+    [own] = client.get("/api/state").json()["nodes"]
+    assert set(own["measurements"]) == {"pressure", "rain_rate", "water_level", "soil_moisture"}
+    assert own["simulated"]
+    assert 0 <= own["age_s"] < 5
 
 
 def test_stepping_the_scenario_changes_the_readings() -> None:
@@ -56,7 +52,7 @@ def test_stepping_past_water_rising_stays_there() -> None:
     client = _client(Settings())
     for _ in range(6):
         client.post("/api/scenario/step")
-    assert client.get("/api/scenario").json() == {"step": "water_rising"}
+    assert client.get("/api/state").json()["scenario"] == {"step": "water_rising"}
 
 
 def test_reset_returns_the_scenario_to_normal_day() -> None:

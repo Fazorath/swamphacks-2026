@@ -12,5 +12,5 @@ def test_a_reading_ages_on_this_nodes_own_clock() -> None:
     )
     store = ReadingStore(history_seconds=120)
     store.record("garage", reading, received_at)
-    ages = {r.age_s for r in store.latest(received_at + timedelta(seconds=23))}
-    assert ages == {23.0}
+    [heard] = store.snapshot(received_at + timedelta(seconds=23)).nodes
+    assert heard.age_s == 23.0
