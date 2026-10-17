@@ -27,7 +27,7 @@ export type NodeSnapshot = {
   measurements: Partial<Record<ReadingKind, Measurement>>;
 };
 
-export type NodeStatus = "online" | "mesh_only";
+type NodeStatus = "online" | "mesh_only";
 
 // The answer of GET /api/state: one consistent instant of this Node's view of the Mesh.
 export type NodeState = {

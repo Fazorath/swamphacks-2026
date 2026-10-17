@@ -12,8 +12,13 @@ const KIND_LABELS: Record<ReadingKind, string> = {
   soil_moisture: "Soil moisture",
 };
 
-function post(path: string, then: () => void) {
-  fetch(path, { method: "POST" }).then(then).catch(console.error);
+function post(path: string, afterPost: () => void) {
+  fetch(path, { method: "POST" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+      afterPost();
+    })
+    .catch(console.error);
 }
 
 type Props = {

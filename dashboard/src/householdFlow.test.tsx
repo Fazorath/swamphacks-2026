@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { App } from "./App";
 import { fakeNodeState } from "./fakeNodeState";
-import { POLL_EVERY_MS } from "./useNodeState";
+import { STATE_POLL_MS } from "./useNodeState";
 
 const KEY = "storm-shield.household-profile";
 
@@ -141,7 +141,7 @@ test("no request carries the profile, across several poll cycles", async () => {
   render(<App />);
   fillInProfile();
   const { home } = JSON.parse(localStorage.getItem(KEY)!).profile;
-  await act(() => vi.advanceTimersByTimeAsync(5 * POLL_EVERY_MS));
+  await act(() => vi.advanceTimersByTimeAsync(5 * STATE_POLL_MS));
   // The one allowed exception (docs/adr/0003): asking for the file of the Grid point nearest home.
   const requests = fetchSpy.mock.calls.map(([path]) => String(path));
   const routeFileRequests = requests.filter((path) => path.includes("/routes/"));

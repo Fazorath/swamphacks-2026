@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { NodeState } from "./nodeState";
 
-export const POLL_EVERY_MS = 1000;
+export const STATE_POLL_MS = 1000;
 const REQUEST_TIMEOUT_MS = 2000;
 
 type NodeStateFeed = {
-  // Null until the first answer; a failed poll keeps the last answer (0042 adds Node unreachable).
+  // Null until the first answer; a failed poll keeps the last answer.
   state: NodeState | null;
   // Polls now, e.g. after a Scenario button, so the screen shows the change without waiting.
   refresh: () => void;
@@ -43,7 +43,7 @@ export function useNodeState(): NodeStateFeed {
         askedWhilePolling = false;
         void poll();
       } else {
-        timer = setTimeout(poll, Math.max(0, POLL_EVERY_MS - (Date.now() - startedAt)));
+        timer = setTimeout(poll, Math.max(0, STATE_POLL_MS - (Date.now() - startedAt)));
       }
     };
 
