@@ -53,7 +53,7 @@ The first good answer clears the warning and brings everything back.
 
 ## Implementation Decisions
 
-- **One rule, in time.** `connection` is `connecting` until the first good answer, `connected` after one, and `unreachable` once 5 s have passed with no good answer, counted from the last good answer or, before any, from when polling started. It is checked as each poll fails, so a Node that answers with errors is caught at 5 s and one that hangs (2 s per request) at about 6 s. This replaces the "3 failed polls in a row" rule in the parent spec. A good answer is an OK `/api/state` response; a network error, a non-OK answer and the 2 s request timeout are not. Any good answer returns to `connected` at once.
+- **One rule, in time.** `connection` is `connecting` until the first good answer, `connected` after one, and `unreachable` once 5 s have passed with no good answer, counted from the last good answer or, before any, from when polling started. It is checked as each poll fails; a Node that answers with errors and one that hangs (its requests given up on after 2 s, the first starting 1 s after the last answer) are both caught at 5 s. This replaces the "3 failed polls in a row" rule in the parent spec. A good answer is an OK `/api/state` response; a network error, a non-OK answer and the 2 s request timeout are not. Any good answer returns to `connected` at once.
 - **The poll itself does not change.** `/api/state` is still polled every second with a chained timeout and a 2 s request timeout, and `refresh()` still polls at once. The state hook decides `connection`; it is the only place the 5 s rule lives.
 - **Unreachable drops the live state.** While unreachable, the hook hands back no readings, Flood Risk or online status, so no panel can show a frozen one. It keeps the Node's last known `name`, `role` and Official Alerts, so the header still names the Node, the Hub button and Hub Panel stay on a Hub, and Official Alerts with their Evacuation Plan lines stay.
 - **The banner.** While unreachable, a banner with the `alert` role under the header reads: "Node unreachable. Live readings are hidden until it answers again; the map, Shelters and your household profile are still here." The Online / Mesh-only badge is not shown. "Connecting…" shows only while `connecting`.
@@ -71,7 +71,7 @@ The first good answer clears the warning and brings everything back.
 - **A good test** checks what the resident sees on screen and which requests the page makes, not which hook made them.
 - **One seam: the dashboard Vitest seam.** `App` renders against a stubbed `fetch` for `/api/state`, `/api/cameras`, `/api/replay` and `/api/shelters`, with fake timers advancing the chained poll. No Node (pytest) changes.
 - Cases:
-  - a Node that stops answering (network error, non-OK answer, or a request that hangs past the 2 s timeout) leaves the screen unchanged at 4 s and shows "Node unreachable" at 5 s (about 6 s for the hang);
+  - a Node that stops answering (network error, non-OK answer, or a request that hangs past the 2 s timeout) leaves the screen unchanged at 4 s and shows "Node unreachable" at 5 s;
   - a page whose Node never answers shows "Connecting…", then "Node unreachable" after 5 s;
   - failures broken by a good answer never add up to the warning;
   - while unreachable: no readings, Flood Risk, status badge, camera tile or Event clock; the map, the Household Profile, the Node's name, the Official Alerts and the open Shelters stay;
@@ -95,5 +95,4 @@ The first good answer clears the warning and brings everything back.
 
 ## Further Notes
 
-- The parent spec chose 3 failures, about 3 s; this spec moves to 5 s so a reconnect has time to succeed before the resident is warned. With the 2 s timeout, a hanging Node is noticed on the first failed poll past the 5 s mark, about 6 s.
-- Official Alerts stay because each carries its own issue time and losing an evacuation order to a Wi-Fi drop is worse than an alert seconds old. Readings and Flood Risk carry no such promise.
+- The parent spec chose 3 failures, about 3 s; this spec moves to 5 s so a reconnect has time to succeed before the resident is warned.- Official Alerts stay because each carries its own issue time and losing an evacuation order to a Wi-Fi drop is worse than an alert seconds old. Readings and Flood Risk carry no such promise.

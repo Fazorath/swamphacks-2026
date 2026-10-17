@@ -7,10 +7,14 @@ import { STATE_POLL_MS } from "./useNodeState";
 const KEY = "storm-shield.household-profile";
 
 let fetchSpy: ReturnType<typeof vi.fn>;
+// While set, /api/state fails, so the page keeps retrying an unreachable Node.
+let nodeDown: boolean;
 
 beforeEach(() => {
   localStorage.clear();
+  nodeDown = false;
   fetchSpy = vi.fn(async (path: string) => {
+    if (nodeDown && path === "/api/state") throw new TypeError("Failed to fetch");
     if (path === "/api/cache-pack") {
       return Response.json({
         available: true,
@@ -136,12 +140,17 @@ test("a failed delete still clears the profile for the session and says so", () 
   expect(screen.getByText("Fill in your household profile")).toBeInTheDocument();
 });
 
-test("no request carries the profile, across several poll cycles", async () => {
+test("no request carries the profile, across several poll cycles and an unreachable stretch", async () => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   render(<App />);
   fillInProfile();
   const { home } = JSON.parse(localStorage.getItem(KEY)!).profile;
   await act(() => vi.advanceTimersByTimeAsync(5 * STATE_POLL_MS));
+  nodeDown = true;
+  await act(() => vi.advanceTimersByTimeAsync(7 * STATE_POLL_MS));
+  expect(screen.getByText(/Node unreachable/)).toBeInTheDocument();
+  nodeDown = false;
+  await act(() => vi.advanceTimersByTimeAsync(2 * STATE_POLL_MS));
   // The one allowed exception (docs/adr/0003): asking for the file of the Grid point nearest home.
   const requests = fetchSpy.mock.calls.map(([path]) => String(path));
   const routeFileRequests = requests.filter((path) => path.includes("/routes/"));

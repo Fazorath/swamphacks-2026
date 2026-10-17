@@ -174,3 +174,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Both Meshes decode through `mesh.decode_message` and call listeners through `deliver_to_listeners`**, so a rule added there holds on the radio and in tests. A string `kind` or integer `v` this Node does not know is dropped silently (a newer Node); a missing or non-string `kind`, a missing or non-integer `v` (`true` included) and anything else that does not parse logs a warning. Check `kind` is a string before testing set membership: a list or object `kind` raised `TypeError` (found in review). Extra fields were already ignored by pydantic default.
 - `MeshedNodes.send_bytes(body)` puts raw bytes on the in-memory Mesh; `join_with_failing_listener(name)` adds a Node whose listener raises.
 - Not proven: a bad packet sent to a live Reticulum Node (only `verify` is tested with signed bad bodies).
+
+## Node unreachable (ticket 0042)
+
+- **The 5 s rule is checked when a poll fails, against the time of the last good answer**, so errors and hangs both trip it at 5 s: a hanging Node's first request starts 1 s after the last answer and is given up on at 3 s, the next at 5 s. The spec first said "about 6 s for a hang"; the test showed 5.
+- **To test the 2 s request timeout on fake timers**, spy on `AbortSignal.timeout` and return a controller aborted by a (faked) `setTimeout(ms)`; the real one runs on a clock fake timers cannot move (`nodeUnreachableFlow.test.tsx`).
+- `usePolledJson(null)` stops a poll and drops its last answer; cameras and the Event clock use it while unreachable. `useNodeState` returns `state` (null while unreachable) and `lastAnswer` (kept, for name, role and Official Alerts).
+- **`evacuationFlow.test.tsx` "the Route request names a Grid point" failed 1 full run in 4** (passed alone and in the other runs): it reads the requests as soon as "Nearest open Shelter" shows, which can be before the Route file is asked for. Not fixed here.

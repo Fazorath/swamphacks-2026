@@ -1,12 +1,5 @@
+import { agoWords } from "./agoWords";
 import type { CameraTile } from "./useCameras";
-
-const SECONDS_BEFORE_MINUTES = 90;
-
-function updatedAgo(ageSeconds: number): string {
-  return ageSeconds < SECONDS_BEFORE_MINUTES
-    ? `${Math.round(ageSeconds)} s ago`
-    : `${Math.round(ageSeconds / 60)} min ago`;
-}
 
 function Tile({ tile }: { tile: CameraTile }) {
   const name = `Camera ${tile.label}`;
@@ -16,7 +9,7 @@ function Tile({ tile }: { tile: CameraTile }) {
       <article aria-label={name} className="camera-tile live">
         <img src={`/api/cameras/${tile.id}.jpg?t=${tile.taken_at}`} alt={tile.label} />
         <p>
-          {tile.label} · updated {updatedAgo(tile.age_s ?? 0)}
+          {tile.label} · updated {agoWords(tile.age_s ?? 0)}
         </p>
       </article>
     );

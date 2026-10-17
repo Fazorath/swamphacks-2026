@@ -20,9 +20,26 @@ async function sendToReplay(action: string, body?: object): Promise<void> {
 
 // The Hub Panel's Replay section. The Event clock it shows arrives by the header's poll, so a
 // press shows up within a second.
-export function ReplayControls({ clock }: { clock: EventClock | null }) {
+export function ReplayControls({
+  clock,
+  hubReachable,
+}: {
+  clock: EventClock | null;
+  // While the Hub is unreachable the clock is unknown, and a Start button would suggest no replay
+  // is running.
+  hubReachable: boolean;
+}) {
   const replayPhases = usePolledJson<ReplayPhases>("/api/replay/phases");
   const [problem, setProblem] = useState<string | null>(null);
+
+  if (!hubReachable) {
+    return (
+      <section aria-label="Replay controls">
+        <h3>Replay</h3>
+        <p role="status">Waiting for the Hub to answer</p>
+      </section>
+    );
+  }
 
   const send = async (action: string, body?: object) => {
     setProblem(null);
