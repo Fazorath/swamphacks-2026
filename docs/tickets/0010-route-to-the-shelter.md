@@ -6,7 +6,7 @@
 
 **Status:** in-progress
 
-**Owner:** refloow-0
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
