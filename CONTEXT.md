@@ -149,7 +149,7 @@ Whether a Shelter is open or closed, set by the Hub operator and announced over 
 _Avoid_: availability, capacity
 
 **Flood-Prone Area**:
-The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered.
+The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered. The map always marks it approximate.
 _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
