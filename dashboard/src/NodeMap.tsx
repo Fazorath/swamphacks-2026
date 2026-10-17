@@ -8,18 +8,32 @@ import type { NodeOnMap } from "./nodesOnMap";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
-// Fits the Nodes once, so a resident who has panned or zoomed is never fought.
-function FitToNodesOnce({ nodes }: { nodes: NodeOnMap[] }) {
+// This Node hears itself before it hears anyone else, so the view is re-framed as new Nodes
+// appear, until the resident pans or zooms. After that it is never moved again.
+function FitToNodesUntilMoved({ nodes }: { nodes: NodeOnMap[] }) {
   const map = useMap();
-  const fitted = useRef(false);
+  const moved = useRef(false);
+  const nodeIds = nodes.map((node) => node.id).join();
+
   useEffect(() => {
-    if (fitted.current || nodes.length === 0) return;
+    const container = map.getContainer();
+    const markMoved = () => (moved.current = true);
+    container.addEventListener("pointerdown", markMoved);
+    container.addEventListener("wheel", markMoved);
+    return () => {
+      container.removeEventListener("pointerdown", markMoved);
+      container.removeEventListener("wheel", markMoved);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (moved.current || nodeIds === "") return;
     map.fitBounds(
-      nodes.map((node) => node.position),
+      nodeIds.split(",").map((id) => nodes.find((node) => node.id === id)!.position),
       { padding: [60, 60], maxZoom: 15 },
     );
-    fitted.current = true;
-  }, [map, nodes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-frame only when the set of Nodes changes
+  }, [map, nodeIds]);
   return null;
 }
 
@@ -37,11 +51,13 @@ export function NodeMap({ nodes, selectedId, onSelect }: Props) {
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
-        <FitToNodesOnce nodes={nodes} />
+        <FitToNodesUntilMoved nodes={nodes} />
         {nodes.map((node) => {
           const selected = node.id === selectedId;
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
-          const state = `${node.stale ? "stale" : "fresh"} ${selected ? "selected" : ""}`;
+          const state = [node.stale ? "stale" : "fresh", selected && "selected"]
+            .filter(Boolean)
+            .join(" ");
           return (
             <CircleMarker
               key={`${node.id} ${state}`}

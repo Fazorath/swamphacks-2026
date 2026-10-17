@@ -41,12 +41,12 @@ def test_positions_snap_to_a_grid_of_about_200_metres() -> None:
 
 
 def test_a_fuzzed_position_stays_within_200_metres_of_the_real_one() -> None:
-    latitude, longitude = 29.6516, -82.3248
-    fuzzed_latitude, fuzzed_longitude = fuzz_position(latitude, longitude)
     metres_per_degree = 111_320
-    north_south = (fuzzed_latitude - latitude) * metres_per_degree
-    east_west = (
-        (fuzzed_longitude - longitude) * metres_per_degree * math.cos(math.radians(latitude))
-    )
-    assert (fuzzed_latitude, fuzzed_longitude) != (latitude, longitude)
-    assert math.hypot(north_south, east_west) <= 200
+    for latitude, longitude in [(29.6516, -82.3248), (29.6531, -82.3239), (29.6499, -82.3262)]:
+        fuzzed_latitude, fuzzed_longitude = fuzz_position(latitude, longitude)
+        north_south = (fuzzed_latitude - latitude) * metres_per_degree
+        east_west = (
+            (fuzzed_longitude - longitude) * metres_per_degree * math.cos(math.radians(latitude))
+        )
+        assert (fuzzed_latitude, fuzzed_longitude) != (latitude, longitude)
+        assert math.hypot(north_south, east_west) <= 200

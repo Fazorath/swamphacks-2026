@@ -42,8 +42,8 @@ The dashboard shows a Leaflet map of the neighborhood with one marker per Node a
 - **Markers.** A neutral Community-cyan dot with a label of the Node's name and water level in centimetres (the API's unit). SIMULATED tag when the reading is simulated; greyed with STALE and the age when Stale. No popups. Flood Risk coloring arrives with ticket 0006.
 - **Node names.** The label uses this Node's configured name for itself and the 12-character Node id for every other Node. Registry names arrive with ticket 0012.
 - **Readings rail.** The existing readings list becomes a rail beside the map. Each Node is a card with all four readings, the SIMULATED tag and the STALE tag with the age. The Step and Reset buttons and the `n` and `r` shortcuts stay at the bottom of the rail, unchanged.
-- **Selection.** One selected Node at a time, shared by map and rail: selecting a marker highlights its card and selecting a card highlights its marker.
-- **View.** Fit to all Nodes once, on first load with at least one Node; Gainesville centre while empty. Never re-fit after that.
+- **Selection.** One selected Node at a time, shared by map and rail: selecting a marker highlights its card and selecting a card highlights its marker. Selecting the selected Node again clears the selection. The marker label counts as part of the marker.
+- **View.** Fit to all Nodes; Gainesville centre while empty. A Node hears itself before anyone else, so the view is re-framed as new Nodes appear, until the resident pans or zooms. After that it is never moved.
 - **Pure mapping module.** A single function turns the polled readings plus this Node's name into marker data (label, water level, simulated, stale, age, position). The map and the rail both read it.
 - **Configuration.** `.env.example` says each demo Node needs its own `NODE_LATITUDE` and `NODE_LONGITUDE`. No overlap handling for markers.
 - **Glossary.** `CONTEXT.md` gained Fuzzed Position and notes where Stale ages are shown. No ADR.

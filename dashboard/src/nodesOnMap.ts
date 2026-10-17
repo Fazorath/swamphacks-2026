@@ -14,10 +14,6 @@ export type NodeOnMap = {
   readings: Reading[];
 };
 
-export function formatAge(seconds: number): string {
-  return seconds < 60 ? `${Math.round(seconds)} s` : `${Math.floor(seconds / 60)} min`;
-}
-
 // A Node's own name is known only to itself; everyone else is shown by id until the registry (0012).
 export function nodesOnMap(readings: Reading[], own: NodeIdentity | null): NodeOnMap[] {
   const byNode = new Map<string, Reading[]>();

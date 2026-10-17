@@ -2,7 +2,8 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
 
-const AGE_SECONDS = [2, 40];
+const PORCH_AGE_SECONDS = 2;
+const GARAGE_AGE_SECONDS = 40;
 
 class FakeEventSource {
   onmessage: ((event: { data: string }) => void) | null = null;
@@ -17,7 +18,7 @@ class FakeEventSource {
             unit: "hPa",
             position: [29.652, -82.324],
             timestamp: "2026-10-16T12:00:00Z",
-            age_s: AGE_SECONDS[0],
+            age_s: PORCH_AGE_SECONDS,
             simulated: true,
           },
           {
@@ -27,7 +28,7 @@ class FakeEventSource {
             unit: "hPa",
             position: [29.654, -82.322],
             timestamp: "2026-10-16T12:00:00Z",
-            age_s: AGE_SECONDS[1],
+            age_s: GARAGE_AGE_SECONDS,
             simulated: true,
           },
         ]),

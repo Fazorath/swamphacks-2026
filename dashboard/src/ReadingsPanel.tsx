@@ -43,6 +43,7 @@ export function ReadingsPanel({ nodes, selectedId, onSelect }: Props) {
           onClick={() => onSelect(node.id)}
         >
           <h3>
+            {/* Clicks reach the card; the button only makes the card reachable by keyboard. */}
             <button>{node.label}</button>
             <NodeTags node={node} />
           </h3>
