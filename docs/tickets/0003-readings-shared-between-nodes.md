@@ -10,11 +10,11 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] Mesh offers publish-a-message and subscribe-to-messages, and hands subscribers the sender identity
-- [ ] The in-memory Mesh connects several Node instances inside one test process
-- [ ] Community Readings follow the format from the UI design doc
-- [ ] Each Node's Reading store keeps the latest Community Readings per Node, with timestamps
-- [ ] The API and dashboard show readings from other Nodes as well as this Node's own
-- [ ] Seam A test setup: a reusable way to start N Nodes on the in-memory Mesh and drive them through their APIs
-- [ ] Seam A tests: a reading stepped on Node A shows up on Node B; removing a Node leaves the others working
-- [ ] All **Commands** pass
+- [x] Mesh offers publish-a-message and subscribe-to-messages, and hands subscribers the sender identity
+- [x] The in-memory Mesh connects several Node instances inside one test process
+- [x] Community Readings follow the format from the UI design doc
+- [x] Each Node's Reading store keeps the latest Community Readings per Node, with timestamps
+- [x] The API and dashboard show readings from other Nodes as well as this Node's own
+- [x] Seam A test setup: a reusable way to start N Nodes on the in-memory Mesh and drive them through their APIs
+- [x] Seam A tests: a reading stepped on Node A shows up on Node B; removing a Node leaves the others working
+- [x] All **Commands** pass
