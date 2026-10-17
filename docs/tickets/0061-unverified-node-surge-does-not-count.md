@@ -4,9 +4,9 @@
 
 **Blocked by:** 0012
 
-**Status:** in-progress
+**Status:** ready-for-agent
 
-**Owner:** leonardorofaDV
+**Owner:** unclaimed
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 

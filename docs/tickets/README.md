@@ -23,7 +23,7 @@
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | done | leonardorofaDV |
 | [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | done | leonardorofaDV |
 | [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | done | refloow-0 |
-| [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | ready-for-agent | unclaimed |
+| [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | in-progress | leonardorofaDV |
 | [0022-restarted-node-is-heard-again](0022-restarted-node-is-heard-again.md) | in-progress | leonardorofaDV |
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | done | refloow-0 |
@@ -63,5 +63,5 @@
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV |
-| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | in-progress | leonardorofaDV |
+| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | ready-for-agent | unclaimed |
 | [0062-flood-levels-fit-the-river](0062-flood-levels-fit-the-river.md) | done | refloow-0 |
