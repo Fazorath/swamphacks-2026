@@ -10,8 +10,8 @@
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [ ] The Hub sends an updated Community Warning with the second Node and the measured speed; it does not count as a new warning for the Warning Takeover
-- [ ] ETAs below the second Node use the measured speed; reaches above keep the reconstructed ones
-- [ ] The card shows distance, time and speed
-- [ ] Seam A tests: a second Surge produces the measured speed; Seam B tests: the ETA uses it
-- [ ] All **Commands** pass
+- [x] The Hub sends an updated Community Warning with the second Node and the measured speed; it does not count as a new warning for the Warning Takeover
+- [x] ETAs below the second Node use the measured speed; reaches above keep the reconstructed ones
+- [x] The card shows distance, time and speed
+- [x] Seam A tests: a second Surge produces the measured speed; Seam B tests: the ETA uses it
+- [x] All **Commands** pass

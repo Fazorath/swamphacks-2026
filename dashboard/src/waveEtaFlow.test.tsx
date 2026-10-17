@@ -64,12 +64,20 @@ function saveProfile(home: { lat: number; lon: number }) {
 
 let requests: string[];
 
-function stubNode({ eventT, river = RIVER }: { eventT: number; river?: object | null }) {
+function stubNode({
+  eventT,
+  river = RIVER,
+  warning = WARNING,
+}: {
+  eventT: number;
+  river?: object | null;
+  warning?: CommunityWarning;
+}) {
   const answers: Record<string, unknown> = {
     "/api/state": fakeNodeState({
       id: "porch",
       role: "sensor",
-      community_warnings: [WARNING],
+      community_warnings: [warning],
       nodes: [fakeNodeSnapshot("porch", { river_km: 20, position: [KM_20.lat, KM_20.lon] })],
     }),
     "/api/replay": { v: 1, kind: "replay", state: "paused", event_t: eventT, rate: 30 },
@@ -153,4 +161,16 @@ test("no request carries the home location", async () => {
     selector: "section[aria-label='Evacuation Plan'] p",
   });
   expect(requests.filter((url) => url.includes("27.82") || url.includes("85"))).toEqual([]);
+});
+
+test("a measured speed moves the ETA and the warning card shows the arithmetic", async () => {
+  saveProfile(KM_20);
+  // 20 km in 1000 s between the Nodes; the wave then covers km 10 to 20 at 120 km/h (300 s).
+  const measured = { node: "s1", km: 10, surge_t: SURGE_T + 1000, speed_kmh: 120 };
+  stubNode({ eventT: SURGE_T + 60, warning: { ...WARNING, measured } });
+  render(<App />);
+
+  const card = await screen.findByRole("article", { name: "Community Warning" });
+  expect(within(card).getByText("Measured: 20.0 km in 17 min = 120 km/h (s0 to s1)")).toBeVisible();
+  expect(await within(card).findByText("Wave expected at your home in about 21 min")).toBeVisible();
 });

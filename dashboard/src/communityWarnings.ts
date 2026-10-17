@@ -3,6 +3,9 @@ import type { NodeSnapshot } from "./nodeState";
 export type CommunityWarningReason =
   "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling";
 
+// The wave's speed between the warning's origin and `node`, the next Node downstream to surge.
+export type MeasuredSpeed = { node: string; km: number; surge_t: number; speed_kmh: number };
+
 // A warning the Node has already checked against the Hub's signature; the browser cannot.
 export type CommunityWarning = {
   id: number;
@@ -12,6 +15,8 @@ export type CommunityWarning = {
   origin: string;
   origin_km: number;
   surge_t: number;
+  // Present once a second Node has surged downstream; the same warning, so not a new one.
+  measured?: MeasuredSpeed | null;
 };
 
 // Nepal's Department of Hydrology and Meteorology, the authority whose flood warnings count.
@@ -31,6 +36,19 @@ export function reasonsSentence(warning: CommunityWarning): string {
 
 export function firstSurgeAt(warnings: CommunityWarning[]): number | null {
   return warnings.length > 0 ? Math.min(...warnings.map((warning) => warning.surge_t)) : null;
+}
+
+// "Measured: 15.6 km in 12 min = 78 km/h (S0 to S1)"; null until a second Node has surged.
+export function measuredSpeedLine(
+  warning: CommunityWarning,
+  nameOf: (nodeId: string) => string,
+): string | null {
+  const { measured } = warning;
+  if (!measured) return null;
+  const distanceKm = (measured.km - warning.origin_km).toFixed(1);
+  const minutes = Math.round((measured.surge_t - warning.surge_t) / 60);
+  const speed = Math.round(measured.speed_kmh);
+  return `Measured: ${distanceKm} km in ${minutes} min = ${speed} km/h (${nameOf(warning.origin)} to ${nameOf(measured.node)})`;
 }
 
 export function riverKm(km: number): string {
