@@ -1,10 +1,9 @@
-import json
 import threading
 from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 class ShelterStatus(BaseModel):
@@ -38,6 +37,13 @@ class HeardShelterStatus:
         return [shelter_id for shelter_id in shelter_ids if shelter_id in announced_open]
 
 
+class SavedShelters(BaseModel):
+    """What the Hub keeps on disk between restarts."""
+
+    ver: int
+    open: list[str]
+
+
 class UnknownShelter(ValueError):
     """The id is not a Shelter in this Hub's Cache Pack."""
 
@@ -63,11 +69,9 @@ class ShelterRegistry:
         self._ver = 0
         self._open: set[str] = set()
         if state_file.exists():
-            saved = json.loads(state_file.read_text())
-            self._open = set(saved["open"])
+            saved = self._load()
             # Nodes already hold the saved `ver`, and only a higher one replaces it.
-            self._ver = saved["ver"] + 1
-            self._save()
+            self._commit(saved.ver + 1, set(saved.open))
 
     def snapshot(self) -> ShelterStatus | None:
         """The current status; the first call with a pack opens every Shelter at `ver` 1.
@@ -83,12 +87,8 @@ class ShelterRegistry:
             raise UnknownShelter(shelter_id)
         with self._lock:
             self._seeded_status()
-            if is_open:
-                self._open.add(shelter_id)
-            else:
-                self._open.discard(shelter_id)
-            self._ver += 1
-            self._save()
+            now_open = self._open | {shelter_id} if is_open else self._open - {shelter_id}
+            self._commit(self._ver + 1, now_open)
             return self._status()
 
     def _seeded_status(self) -> ShelterStatus | None:
@@ -96,17 +96,29 @@ class ShelterRegistry:
         if not shelter_ids:
             return None
         if self._ver == 0:
-            self._open = set(shelter_ids)
-            self._ver = 1
-            self._save()
+            self._commit(1, set(shelter_ids))
         return self._status()
 
-    def _save(self) -> None:
-        # Replace the file in one step, so losing power mid-write cannot leave half a file.
+    def _load(self) -> SavedShelters:
+        try:
+            return SavedShelters.model_validate_json(self._state_file.read_text())
+        except ValidationError as error:
+            # Guessing would reopen a closed Shelter or rewind `ver`, so the operator decides.
+            raise RuntimeError(
+                f"{self._state_file} is not a valid Shelter status file; fix it, or delete it "
+                "to start over with every Shelter open"
+            ) from error
+
+    def _commit(self, ver: int, now_open: set[str]) -> None:
+        """Save first, so a failed write leaves the Hub as it was and announces nothing unsaved."""
         self._state_file.parent.mkdir(parents=True, exist_ok=True)
-        pending = self._state_file.with_suffix(".tmp")
-        pending.write_text(json.dumps({"ver": self._ver, "open": sorted(self._open)}))
-        pending.replace(self._state_file)
+        # Replace the file in one step, so losing power mid-write cannot leave half a file.
+        temporary_file = self._state_file.with_suffix(".tmp")
+        saved = SavedShelters(ver=ver, open=sorted(now_open))
+        temporary_file.write_text(saved.model_dump_json())
+        temporary_file.replace(self._state_file)
+        self._ver = ver
+        self._open = now_open
 
     def _status(self) -> ShelterStatus:
         # Pack order keeps the list stable between announcements.

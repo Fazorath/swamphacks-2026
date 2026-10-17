@@ -68,6 +68,15 @@ class MeshedNodes:
         self._hand_fed[sender] = mesh
         mesh[0].publish(ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids))
 
+    def record_shelter_status(self) -> list[ShelterStatus]:
+        """Join a Node that only listens; every Shelter status it hears is appended to the list."""
+        heard: list[ShelterStatus] = []
+        mesh = self._network.join("recorder", HUB)
+        mesh.subscribe(
+            lambda _, message: heard.append(message) if isinstance(message, ShelterStatus) else None
+        )
+        return heard
+
     def advance(self, seconds: float) -> None:
         """Move every Node's clock forward without waiting."""
         self._now += timedelta(seconds=seconds)

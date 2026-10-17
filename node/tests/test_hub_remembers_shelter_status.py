@@ -2,6 +2,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import pytest
 from fixture_pack import SHELTERS, build_fixture_pack
 from meshed_nodes import MeshedNodes
 
@@ -15,7 +16,7 @@ def _open(meshed_nodes: MeshedNodes, name: str) -> list[str]:
     return list(meshed_nodes[name].get("/api/shelters").json()["open"])
 
 
-def _set(meshed_nodes: MeshedNodes, shelter_id: str, is_open: bool) -> None:
+def _set_open(meshed_nodes: MeshedNodes, shelter_id: str, is_open: bool) -> None:
     meshed_nodes["hub"].post("/api/shelters/open", json={"id": shelter_id, "open": is_open})
 
 
@@ -40,7 +41,7 @@ def test_a_restarted_hub_keeps_a_closed_shelter_closed_on_every_node(
     pack = build_fixture_pack(shelters=TWO_SHELTERS)
     meshed_nodes.start("porch", "garage", cache_pack=(tmp_path, pack))
     _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
-    _set(meshed_nodes, GYM, False)
+    _set_open(meshed_nodes, GYM, False)
 
     meshed_nodes.stop_hub()
     _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
@@ -68,10 +69,52 @@ def test_a_restart_does_not_reseed_a_shelter_that_stayed_open(
     meshed_nodes: MeshedNodes, tmp_path: Path
 ) -> None:
     _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
-    _set(meshed_nodes, LIBRARY, False)
-    _set(meshed_nodes, LIBRARY, True)
+    _set_open(meshed_nodes, LIBRARY, False)
+    _set_open(meshed_nodes, LIBRARY, True)
 
     meshed_nodes.stop_hub()
     _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
 
     assert _open(meshed_nodes, "hub") == [GYM, LIBRARY]
+
+
+def test_the_first_announcement_after_a_restart_has_a_higher_ver(
+    meshed_nodes: MeshedNodes, tmp_path: Path
+) -> None:
+    heard = meshed_nodes.record_shelter_status()
+    _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
+    _set_open(meshed_nodes, GYM, False)
+    ver_before_restart = max(status.ver for status in heard)
+
+    meshed_nodes.stop_hub()
+    heard.clear()
+    _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
+
+    assert heard[0].ver > ver_before_restart
+    assert heard[0].open == [LIBRARY]
+
+
+def test_a_state_file_that_cannot_be_read_stops_the_hub_and_names_the_file(
+    meshed_nodes: MeshedNodes, tmp_path: Path
+) -> None:
+    state_file = tmp_path / "hub" / "data" / "shelter_status.json"
+    state_file.parent.mkdir(parents=True)
+    state_file.write_text('{"ver": 3')
+
+    with pytest.raises(RuntimeError, match="shelter_status.json"):
+        _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
+
+
+def test_a_change_that_cannot_be_saved_is_not_announced(
+    meshed_nodes: MeshedNodes, tmp_path: Path
+) -> None:
+    meshed_nodes.start("porch", cache_pack=(tmp_path, build_fixture_pack(shelters=TWO_SHELTERS)))
+    _start_hub(meshed_nodes, tmp_path, TWO_SHELTERS)
+    # A directory where the temporary file belongs makes every save fail.
+    (tmp_path / "hub" / "data" / "shelter_status.tmp").mkdir()
+
+    with pytest.raises(OSError):
+        _set_open(meshed_nodes, GYM, False)
+
+    assert _open(meshed_nodes, "hub") == [GYM, LIBRARY]
+    assert _open(meshed_nodes, "porch") == [GYM, LIBRARY]
