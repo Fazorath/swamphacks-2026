@@ -5,7 +5,7 @@ import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 import uvicorn
@@ -65,6 +65,21 @@ class OpenShelters(BaseModel):
 class ShelterChange(BaseModel):
     id: str
     open: bool
+
+
+class ReplayJump(BaseModel):
+    phase: str
+
+
+class ReplayPhase(BaseModel):
+    id: str
+    label: str
+    event_t: int
+
+
+class ReplayPhases(BaseModel):
+    phases: list[ReplayPhase]
+    internet_cue_event_t: int
 
 
 class CachePackStatus(BaseModel):
@@ -309,6 +324,16 @@ def create_app(
     def replay_clock() -> ReplayClockMessage:
         return event_clock.current(clock())
 
+    @app.get("/api/replay/phases")
+    def replay_phases() -> ReplayPhases:
+        return ReplayPhases(
+            phases=[
+                ReplayPhase(id=phase.id, label=phase.label, event_t=timeline.event_t_at(phase.at))
+                for phase in timeline.phases
+            ],
+            internet_cue_event_t=timeline.event_t_at(timeline.internet_cue.at),
+        )
+
     @app.get("/api/cache-pack")
     def cache_pack_status() -> CachePackStatus:
         manifest = cache_pack.manifest
@@ -351,12 +376,42 @@ def create_app(
 
     if settings.role == "hub":
 
-        @app.post("/api/replay/start")
-        def start_replay() -> ReplayClockMessage:
+        def set_replay(state: Literal["playing", "paused"], event_t: int) -> ReplayClockMessage:
             announce_event_clock(
-                ReplayClockMessage(state="playing", event_t=timeline.start_unix, rate=timeline.rate)
+                ReplayClockMessage(state=state, event_t=event_t, rate=timeline.rate)
             )
             return event_clock.current(clock())
+
+        @app.post("/api/replay/start")
+        def start_replay() -> ReplayClockMessage:
+            return set_replay("playing", timeline.start_unix)
+
+        @app.post("/api/replay/pause")
+        def pause_replay() -> ReplayClockMessage:
+            heard = event_clock.current(clock())
+            if heard.state != "playing":
+                raise HTTPException(status_code=409, detail="the replay is not playing")
+            return set_replay("paused", heard.event_t)
+
+        @app.post("/api/replay/resume")
+        def resume_replay() -> ReplayClockMessage:
+            heard = event_clock.current(clock())
+            if heard.state != "paused":
+                raise HTTPException(status_code=409, detail="the replay is not paused")
+            return set_replay("playing", heard.event_t)
+
+        @app.post("/api/replay/reset")
+        def reset_replay() -> ReplayClockMessage:
+            # Paused at 08:30 rather than stopped: a stopped Sensor falls back to the Scenario.
+            return set_replay("paused", timeline.start_unix)
+
+        @app.post("/api/replay/jump")
+        def jump_replay(jump: ReplayJump) -> ReplayClockMessage:
+            phase = next((p for p in timeline.phases if p.id == jump.phase), None)
+            if phase is None:
+                raise HTTPException(status_code=422, detail=f"unknown phase {jump.phase!r}")
+            keeps_paused = event_clock.current(clock()).state == "paused"
+            return set_replay("paused" if keeps_paused else "playing", timeline.event_t_at(phase.at))
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:

@@ -4,7 +4,7 @@
 
 **Blocked by:** 0044
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -12,9 +12,9 @@
 
 **Design:** `docs/design/ui.md` ("Hub Panel")
 
-- [ ] Hub Panel buttons for start, pause, resume, reset and a phase list; the current phase is highlighted
-- [ ] Each action sends a `replay` message at once; Nodes jump their tracks to the new Event clock time
-- [ ] At the internet cue the Hub Panel shows "Cut the internet now"
-- [ ] Reset returns every Node to 08:30 with no Community Warning showing
-- [ ] Seam A tests: pause holds every Node's readings; jump-to-phase moves every Node's Event clock; reset clears back to calm
-- [ ] All **Commands** pass
+- [x] Hub Panel buttons for start, pause, resume, reset and a phase list; the current phase is highlighted
+- [x] Each action sends a `replay` message at once; Nodes jump their tracks to the new Event clock time
+- [x] At the internet cue the Hub Panel shows "Cut the internet now"
+- [x] Reset returns every Node to 08:30 with no Community Warning showing
+- [x] Seam A tests: pause holds every Node's readings; jump-to-phase moves every Node's Event clock; reset clears back to calm
+- [x] All **Commands** pass

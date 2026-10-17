@@ -519,3 +519,22 @@ section p.storm-signal {
 .shelter-status.closed {
   color: var(--high);
 }
+
+.phase-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.phase-list button[aria-current="step"] {
+  border-color: var(--low);
+  font-weight: 700;
+}
+
+.internet-cue {
+  font-weight: 700;
+  color: var(--high);
+}

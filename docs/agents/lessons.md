@@ -120,3 +120,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Two floods hit the same river 13 months apart; don't mix their facts.** The 8 July 2025 Purepu GLOF started in Tibet and killed about 11 in Nepal; the 26 August 2026 ice-rock avalanche started on Langtang Lirung, inside Nepal, and killed well over a thousand. Many search results, including ICIMOD pages, cover both. The demo replays 2026; every fact in the replay timeline cites a 2026 source.
 - **Early reports of the 2026 flood were badly wrong**: "about 160 dead" and "came from the Tibetan side" were both revised within days. Use the latest NDRRMA figure with its date, or none.
 - A single fixed wave speed puts Syabrubesi's ETA at about 26 min when the real arrival was about 12, because the top reach ran near 190 km/h. ETA adds up per-reach speeds from the Cache Pack's river line.
+
+## Hub Replay controls (ticket 0045)
+
+- **Reset is "paused at 08:30", not "stopped"**: a stopped Event clock sends Sensors back to the Scenario, so only a paused clock holds every Node's track at calm. Start plays it again.
+- **Jump keeps the clock's state** (paused stays paused, otherwise it plays). Pause and resume answer 409 in the wrong state.
+- `GET /api/replay/phases` lists the phases and the internet cue in Event time. "Cut the internet now" shows while the Event clock is at or past the cue. No Community Warning exists in the code yet, so Reset's "no warning showing" is untested until warnings land.
+- `findLast` is not in the dashboard's TypeScript lib target; use `.filter(...).at(-1)`. macOS `sed -i` needs `-i ''`.
