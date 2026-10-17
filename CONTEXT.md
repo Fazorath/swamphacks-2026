@@ -55,7 +55,7 @@ A signed warning issued by Storm Shield from Community Readings; never an evacua
 _Avoid_: alert, alarm, evacuation notice
 
 **Cache Pack**:
-The bundle of offline information (shelters, flood-prone areas, roads, map) downloaded while online so it works without internet.
+The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and later precomputed routes) built once by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
