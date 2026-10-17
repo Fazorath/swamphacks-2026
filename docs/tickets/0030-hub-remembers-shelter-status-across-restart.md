@@ -4,14 +4,14 @@
 
 **Blocked by:** 0029
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
 **Spec:** `docs/specs/shelter-status.md`
 
-- [ ] The Hub saves `ver` and the open list in its data directory on every change and loads them at startup
-- [ ] After a restart the Hub announces the saved list at a `ver` higher than any it announced before, and does not reseed all-open
-- [ ] A saved Shelter that is no longer in the Cache Pack is dropped from the list
-- [ ] Seam A tests: close a Shelter, restart the Hub, and every Node still shows it closed; the `ver` after the restart is higher than before
-- [ ] All **Commands** pass
+- [x] The Hub saves `ver` and the open list in its data directory on every change and loads them at startup
+- [x] After a restart the Hub announces the saved list at a `ver` higher than any it announced before, and does not reseed all-open
+- [x] A saved Shelter that is no longer in the Cache Pack is dropped from the list
+- [x] Seam A tests: close a Shelter, restart the Hub, and every Node still shows it closed; the `ver` after the restart is higher than before
+- [x] All **Commands** pass

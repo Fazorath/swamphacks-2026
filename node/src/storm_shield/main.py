@@ -115,7 +115,11 @@ def create_app(
         if isinstance(message, ShelterStatus):
             shelter_status.hear(message)
 
-    shelter_registry = ShelterRegistry(cache_pack.shelter_ids, lambda: int(clock().timestamp()))
+    shelter_registry = ShelterRegistry(
+        cache_pack.shelter_ids,
+        lambda: int(clock().timestamp()),
+        settings.data_dir / "shelter_status.json",
+    )
 
     def announce_shelters(status: ShelterStatus) -> None:
         # The Hub does not hear its own broadcasts, so it takes the status itself.

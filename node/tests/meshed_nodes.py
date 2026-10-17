@@ -41,13 +41,22 @@ class MeshedNodes:
         settings = Settings(name=HUB, role="hub", shelter_repeat_seconds=shelter_repeat_seconds)
         if cache_pack:
             directory, pack = cache_pack
-            settings = settings.model_copy(update={"cache_pack_dir": directory / HUB})
+            settings = settings.model_copy(
+                update={"cache_pack_dir": directory / HUB, "data_dir": directory / HUB / "data"}
+            )
             CachePack(directory / HUB).install(pack)
         mesh = self._network.join(HUB, HUB)
         client = TestClient(create_app(settings, mesh, clock=lambda: self._now))
         client.__enter__()
         self._running.append(client)
         self._clients[HUB] = client
+
+    def stop_hub(self) -> None:
+        """Stop the Hub as a power cut would; `start_hub` with the same directory brings it back."""
+        client = self._clients.pop(HUB)
+        client.__exit__(None, None, None)
+        self._running.remove(client)
+        self._network.leave(HUB)
 
     def close(self) -> None:
         for client in self._running:
