@@ -5,7 +5,9 @@ export type Reading = {
   kind: "pressure" | "rain_rate" | "water_level" | "soil_moisture";
   value: number;
   unit: string;
+  position: [number, number];
   timestamp: string;
+  age_s: number;
   simulated: boolean;
 };
 

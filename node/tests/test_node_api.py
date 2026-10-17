@@ -6,12 +6,16 @@ from storm_shield.settings import Settings
 
 def test_sensor_node_reports_its_name_and_role() -> None:
     client = TestClient(create_app(Settings(name="porch", role="sensor")))
-    assert client.get("/api/node").json() == {"name": "porch", "role": "sensor"}
+    assert client.get("/api/node").json() == {
+        "id": "porch",
+        "name": "porch",
+        "role": "sensor",
+    }
 
 
 def test_hub_reports_the_hub_role() -> None:
     client = TestClient(create_app(Settings(name="hub", role="hub")))
-    assert client.get("/api/node").json() == {"name": "hub", "role": "hub"}
+    assert client.get("/api/node").json() == {"id": "hub", "name": "hub", "role": "hub"}
 
 
 def _readings_by_kind(client: TestClient) -> dict[str, float]:
@@ -28,6 +32,7 @@ def test_readings_are_timestamped_and_labeled_simulated() -> None:
         "soil_moisture",
     }
     assert all(reading["simulated"] and reading["timestamp"] for reading in readings)
+    assert all(0 <= reading["age_s"] < 5 for reading in readings)
 
 
 def test_stepping_the_scenario_changes_the_readings() -> None:

@@ -93,8 +93,90 @@ section p {
 
 section[aria-label="Map"] {
   grid-area: map;
-  background: transparent;
-  border-style: dashed;
+  padding: 0;
+  overflow: hidden;
+}
+
+.node-map {
+  height: 100%;
+  min-height: 20rem;
+  background: var(--bg);
+}
+
+.node-dot {
+  fill: var(--community);
+  fill-opacity: 0.85;
+  stroke: var(--text);
+}
+
+.node-dot.stale {
+  fill: var(--muted);
+  stroke: var(--muted);
+}
+
+.node-dot.selected {
+  stroke-width: 4;
+}
+
+.leaflet-tooltip.node-label {
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.leaflet-tooltip.node-label.stale {
+  color: var(--muted);
+}
+
+.leaflet-tooltip.node-label.selected {
+  border-color: var(--community);
+}
+
+.tag {
+  margin-left: 0.5rem;
+  padding: 0 0.3rem;
+  border: 1px solid currentcolor;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: normal;
+  letter-spacing: 0.04em;
+}
+
+.tag.simulated {
+  color: var(--community);
+}
+
+.tag.stale {
+  color: var(--elevated);
+}
+
+.node-card {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.node-card[aria-current="true"] {
+  border-color: var(--community);
+}
+
+.node-card.stale {
+  color: var(--muted);
+}
+
+.node-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.node-card ul {
+  margin: 0;
+  padding-left: 1.1rem;
 }
 
 section[aria-label="Readings"] {
@@ -123,6 +205,6 @@ section[aria-label="Evacuation Plan"] {
   }
 
   section[aria-label="Map"] {
-    min-height: 40vh;
+    height: 40vh;
   }
 }

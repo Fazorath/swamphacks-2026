@@ -4,15 +4,15 @@
 
 **Blocked by:** 0003
 
-**Status:** ready-for-agent
+**Status:** done
 
-**Owner:** unclaimed
+**Owner:** leonardorofaDV
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/readings-on-the-map.md`
 
-- [ ] Each Node has a configured location; it is fuzzed to about 200 m before anything is published
-- [ ] The dashboard map shows a marker per Node at its fuzzed position with its latest readings
-- [ ] Markers show staleness (age of the latest reading) and the simulated label
-- [ ] The map uses online tiles for now; offline tiles come in 0007
-- [ ] Seam A tests: positions another Node sees are never the exact configured location, and they stay within about 200 m of it
-- [ ] All **Commands** pass
+- [x] Each Node has a configured location; it is fuzzed to about 200 m before anything is published
+- [x] The dashboard map shows a marker per Node at its fuzzed position with its latest readings
+- [x] Markers show staleness (age of the latest reading) and the simulated label
+- [x] The map uses online tiles for now; offline tiles come in 0025
+- [x] Seam A tests: positions another Node sees are never the exact configured location, and they stay within about 200 m of it
+- [x] All **Commands** pass

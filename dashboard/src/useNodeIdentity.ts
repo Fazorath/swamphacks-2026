@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type NodeIdentity = { name: string; role: "sensor" | "hub" };
+export type NodeIdentity = { id: string; name: string; role: "sensor" | "hub" };
 
 export type NodeIdentityState = { identity: NodeIdentity | null; failed: boolean };
 

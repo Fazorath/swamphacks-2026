@@ -54,6 +54,10 @@ _Avoid_: data point, sample, telemetry
 A Community Reading whose value comes from a breadboard input or replay script instead of a real sensor; always labeled as such.
 _Avoid_: fake reading, mock data
 
+**Fuzzed Position**:
+A Node's location snapped to a grid of about 200 m before anything is published; the true location never leaves the Node. A fixed grid, not random jitter, because jitter can be averaged away by an observer collecting many readings.
+_Avoid_: exact location, coordinates
+
 **Scenario**:
 A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by breadboard buttons.
 _Avoid_: demo script, simulation, playback
@@ -99,7 +103,7 @@ The full-screen modal that interrupts any view when a new Official Alert or Comm
 _Avoid_: popup, alarm, klaxon, notification
 
 **Stale**:
-A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk.
+A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk. The age is shown on the Node's map marker and Readings card.
 _Avoid_: offline node, dead node, timed out
 
 **Hub Panel**:
