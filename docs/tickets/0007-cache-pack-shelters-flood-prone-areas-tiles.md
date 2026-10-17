@@ -25,5 +25,5 @@
 - [x] The API serves the pack: `GET /api/cache-pack` (availability and manifest), `GET /api/cache-pack/files/{path}` (any file or tile), `GET /api/cache-pack.zip` (for other Nodes)
 - [x] `CACHE_PACK_URL` and `CACHE_PACK_DIR` are in `.env.example`, and a short build-and-publish note sits next to the script
 - [x] Seam A tests, using a tiny fixture pack built by a test helper: a Node downloads and serves it; the source is shut down and the Node still serves the manifest, Shelters, flood zones and a tile; a corrupt pack is refused; a sensor downloads from a Hub Node
-- [ ] Manual check: the real pack builds, is uploaded as a Release asset, and two Nodes download it
+- [x] Manual check: the real pack builds, is uploaded as a Release asset, and two Nodes download it (Release `cache-pack-v1`; while the repo is private the Hub must download from a laptop serving the zip, not the Release link)
 - [ ] All **Commands** pass
