@@ -28,6 +28,10 @@ Run these before calling any ticket done. An agent must not claim "done" without
 | Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |
 | Tests | `cd node && uv run pytest` and `cd dashboard && pnpm test` |
 
+## No physical devices
+
+Agents and their drivers currently have **no Raspberry Pis, sensors or phones** to test on. Any check that says "unplug the internet", "on a phone" or "over the mesh" is rehearsed on one laptop: two or more Node processes with `NODE_MESH_INTERFACE=loopback`, each with its own `NODE_PORT`, `NODE_LOOPBACK_SLOT` and `NODE_DATA_DIR`, and "no internet" simulated by stopping whatever serves the Cache Pack. Never report a hardware check as passed; say it was rehearsed locally and what is still unproven on real devices. The recipe is in `docs/agents/lessons.md`.
+
 ## Workflow
 
 Idea → spec → tickets → build → review → merge.

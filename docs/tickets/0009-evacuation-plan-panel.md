@@ -22,5 +22,5 @@
 - [x] The panel renders the plan and marks only the chosen Shelter on the map, styled apart from the Home marker; the marker clears when the plan has no Shelter. Every other Shelter and the flood overlay stay in 0025
 - [x] Seam B tests: closed Shelters are skipped; special-needs and pet requirements pick the right Shelter, and a household with no needs can get a flagged Shelter; a home inside a Flood-Prone Area is flagged and one outside is not; a `null` level, no profile and no pack each render the cases above
 - [x] Node test (seam A): the open-Shelter list holds every pack Shelter at startup
-- [ ] Manual cut-line check: one Node → dashboard over the mesh → unplug internet → readings keep updating → the Evacuation Plan renders on a phone
+- [ ] Manual cut-line check: one Node → dashboard over the mesh → unplug internet → readings keep updating → the Evacuation Plan renders on a phone. Rehearsed locally with a Hub and a Sensor over loopback (readings and Shelters survive the pack source going away); still unproven on real devices and a phone's browser, and the plan panel itself has not been seen in a real browser yet
 - [x] All **Commands** pass
