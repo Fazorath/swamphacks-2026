@@ -129,6 +129,7 @@ class ReticulumMesh:
         self._hub_identity = settings.hub_identity
         self._known_nodes: dict[str, Any] = {}
         self._listeners: list[MessageListener] = []
+        self._send_failing = False
 
         self._announce_destination = RNS.Destination(
             self._key, RNS.Destination.IN, RNS.Destination.SINGLE, APP_NAME, "node"
@@ -149,8 +150,16 @@ class ReticulumMesh:
         packet = sign(self._key, message)
         if len(packet) > RNS.Packet.PLAIN_MDU:
             raise ValueError(f"signed message is {len(packet)} bytes, over one Reticulum packet")
-        if not RNS.Packet(self._readings_out, packet).send():
-            logger.warning("Reticulum did not send this Node's %s", message.kind)
+        sent = bool(RNS.Packet(self._readings_out, packet).send())
+        # Log only when sending starts or stops failing: a Node with no peers
+        # fails on every publish, and a warning each time buries the real logs.
+        if not sent and not self._send_failing:
+            logger.warning(
+                "Reticulum cannot send this Node's %s (no peers or interfaces?)", message.kind
+            )
+        elif sent and self._send_failing:
+            logger.info("Reticulum is sending this Node's messages again")
+        self._send_failing = not sent
 
     def subscribe(self, listener: MessageListener) -> None:
         self._listeners.append(listener)
