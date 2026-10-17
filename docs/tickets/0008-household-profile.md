@@ -4,7 +4,7 @@
 
 **Blocked by:** 0005
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -22,13 +22,13 @@
 
 ## Acceptance
 
-- [ ] A Household Profile form (slide-over) with housing type, special-needs and pets, and the line "Stays on this device"
-- [ ] Home location is set by tapping the map in pick mode; no address lookup; Node popups are off while picking and a "Done" button leaves pick mode
-- [ ] Save is disabled until home location and housing type are set; an incomplete profile counts as missing
-- [ ] The profile is stored only in the Viewer's browser storage and survives a reload
-- [ ] The profile is never sent to any Node (no request carries it)
-- [ ] Storage failure shows a visible message and the profile still works for the session; an unreadable stored value counts as missing, shows a message and is not deleted
-- [ ] A distinct Home marker shows on the main map whenever a complete profile exists
-- [ ] A "Delete my profile" button with a two-step in-panel confirm clears storage and returns to the "fill in your profile" prompt
-- [ ] Vitest tests: saving and loading a profile round-trips; a missing profile prompts the resident to fill one in; an incomplete profile counts as missing; a storage failure shows the message; a `fetch` spy sees no request carrying any profile value after saving and a poll cycle
-- [ ] All **Commands** pass
+- [x] A Household Profile form (slide-over) with housing type, special-needs and pets, and the line "Stays on this device"
+- [x] Home location is set by tapping the map in pick mode; no address lookup; Node popups are off while picking and a "Done" button leaves pick mode
+- [x] Save is disabled until home location and housing type are set; an incomplete profile counts as missing
+- [x] The profile is stored only in the Viewer's browser storage and survives a reload
+- [x] The profile is never sent to any Node (no request carries it)
+- [x] Storage failure shows a visible message and the profile still works for the session; an unreadable stored value counts as missing, shows a message and is not deleted
+- [x] A distinct Home marker shows on the main map whenever a complete profile exists
+- [x] A "Delete my profile" button with a two-step in-panel confirm clears storage and returns to the "fill in your profile" prompt
+- [x] Vitest tests: saving and loading a profile round-trips; a missing profile prompts the resident to fill one in; an incomplete profile counts as missing; a storage failure shows the message; a `fetch` spy sees no request carrying any profile value after saving and a poll cycle
+- [x] All **Commands** pass

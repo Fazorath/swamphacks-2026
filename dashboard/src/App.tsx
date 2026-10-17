@@ -1,14 +1,23 @@
 import { useState } from "react";
 
 import { FloodRiskChip } from "./FloodRiskPanel";
+import { HouseholdPanel } from "./HouseholdPanel";
+import type { Home } from "./householdProfile";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { useFloodRisk } from "./useFloodRisk";
+import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeIdentity } from "./useNodeIdentity";
 import { useReadings } from "./useReadings";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
+
+const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
+  unreadable:
+    "Your saved household profile could not be read, so it is treated as missing. It was not deleted.",
+  unsaved: "Your household profile will not be remembered after you close this page.",
+};
 
 const PLACEHOLDER_AREAS = ["Alerts", "Evacuation Plan"];
 
@@ -18,6 +27,18 @@ export function App() {
   const nodes = nodesOnMap(useReadings(), identity, floodRisk?.nodes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
+  const { profile, storageProblem, save, remove } = useHouseholdProfile();
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [draftHome, setDraftHome] = useState<Home | null>(null);
+  const openPanel = () => {
+    setDraftHome(profile?.home ?? null);
+    setPanelOpen(true);
+  };
+  const closePanel = () => {
+    setPanelOpen(false);
+    setPicking(false);
+  };
   return (
     <main>
       <header>
@@ -30,7 +51,29 @@ export function App() {
               : "Connecting…"}
         </p>
         <FloodRiskChip floodRisk={floodRisk} />
+        <p className="household-status">
+          {profile ? "Household profile saved" : "Fill in your household profile"}
+        </p>
+        <button type="button" onClick={openPanel}>
+          My household
+        </button>
       </header>
+      {storageProblem && (
+        <p role="alert" className="banner">
+          {STORAGE_PROBLEM_MESSAGES[storageProblem]}
+        </p>
+      )}
+      {panelOpen && (
+        <HouseholdPanel
+          profile={profile}
+          home={draftHome}
+          hidden={picking}
+          onPickHome={() => setPicking(true)}
+          onSave={save}
+          onDelete={remove}
+          onClose={closePanel}
+        />
+      )}
       <div className="areas">
         <ReadingsPanel
           nodes={nodes}
@@ -43,6 +86,11 @@ export function App() {
           selectedId={selectedId}
           onSelect={toggleSelected}
           stormSignal={floodRisk?.storm_signal ?? null}
+          home={profile?.home ?? null}
+          draftHome={panelOpen ? draftHome : null}
+          picking={picking}
+          onPickHome={setDraftHome}
+          onDonePicking={() => setPicking(false)}
         />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>

@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -23,9 +23,12 @@ from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
+from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
 
+CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
+TILE_TIMEOUT_SECONDS = 10
 READINGS_PUSH_SECONDS = 2
 PUBLISH_EVERY_SECONDS = 3
 
@@ -49,16 +52,16 @@ class CachePackStatus(BaseModel):
 
 def create_app(
     settings: Settings,
-    mesh: Mesh | None = None,
+    mesh: Mesh,
     pack_source: httpx.Client | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    tile_source: httpx.Client | None = None,
 ) -> FastAPI:
-    # Until the Reticulum Mesh lands, a Node started on its own hears only itself.
-    mesh = mesh or InMemoryNetwork().join(settings.name)
     cache_pack = CachePack(settings.cache_pack_dir)
     pack_source = pack_source or httpx.Client(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
     )
+    tile_source = tile_source or httpx.Client(timeout=TILE_TIMEOUT_SECONDS)
     scenario = Scenario()
     store = ReadingStore(HISTORY_WINDOW_SECONDS)
     position = fuzz_position(settings.latitude, settings.longitude)
@@ -165,6 +168,26 @@ def create_app(
             raise HTTPException(status_code=404, detail="not in the Cache Pack")
         return FileResponse(file)
 
+    @app.get("/api/tiles/{z}/{x}/{y}.png")
+    def map_tile(z: int, x: int, y: int) -> Response:
+        if not settings.carto_api_key:
+            raise HTTPException(status_code=404, detail="CARTO_API_KEY is not set on this Node")
+        try:
+            upstream = tile_source.get(
+                CARTO_TILE_URL.format(z=z, x=x, y=y), params={"key": settings.carto_api_key}
+            )
+        except httpx.HTTPError as error:
+            # The error text can carry the request URL, and the URL carries the key.
+            logger.warning("CARTO tile request failed: %s", type(error).__name__)
+            raise HTTPException(status_code=502, detail="CARTO is unreachable") from None
+        if upstream.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"CARTO answered {upstream.status_code}")
+        return Response(
+            upstream.content,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
     # Mounted last so it never shadows /api routes.
     dashboard = settings.dashboard_dir
     if dashboard.is_dir():
@@ -172,6 +195,15 @@ def create_app(
     return app
 
 
+def build_mesh(settings: Settings) -> Mesh:
+    if settings.mesh == "memory":
+        return InMemoryNetwork().join(settings.name)
+    return ReticulumMesh(settings)
+
+
 def run() -> None:
+    logging.basicConfig(level=logging.INFO)
     settings = Settings()
-    uvicorn.run(create_app(settings), host="0.0.0.0", port=settings.port)
+    mesh = build_mesh(settings)
+    logger.info("Node %s (%s) is up as %s", mesh.identity, settings.name, settings.role)
+    uvicorn.run(create_app(settings, mesh), host="0.0.0.0", port=settings.port)

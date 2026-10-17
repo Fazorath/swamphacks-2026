@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import sys
 import time
 import zipfile
@@ -17,7 +18,7 @@ SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 # [south, west, north, east]: about 10 x 10 km around central Gainesville.
 BBOX = (29.6066, -82.3766, 29.6966, -82.2730)
 ZOOMS = range(11, 17)
-TILE_URL = "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_DELAY_SECONDS = 0.15
 FEMA_URL = (
     "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query"
@@ -134,9 +135,18 @@ def fetch_fema_zones(client: httpx.Client) -> list[dict[str, object]]:
             return features
 
 
+def carto_key() -> str:
+    key = os.environ.get("CARTO_API_KEY", "")
+    if not key:
+        sys.exit("CARTO_API_KEY is not set: export it from .env (see .env.example)")
+    return key
+
+
 def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
-    response = client.get(TILE_URL.format(z=zoom, x=x, y=y))
-    response.raise_for_status()
+    response = client.get(TILE_URL.format(z=zoom, x=x, y=y), params={"key": carto_key()})
+    if response.status_code != 200:
+        # Not raise_for_status: its message would print the URL, and the URL carries the key.
+        sys.exit(f"CARTO answered {response.status_code} for tile {zoom}/{x}/{y}")
     time.sleep(TILE_DELAY_SECONDS)
     return response.content
 

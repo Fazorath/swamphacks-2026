@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from fixture_pack import FLOOD_PRONE, SHELTERS, TILE, TILE_PATH, build_fixture_pack
 
 from storm_shield.main import create_app
+from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
 
 
@@ -30,7 +31,7 @@ def _node(
     tmp_path: Path, source: httpx.Client, name: str = "node", url: str = "http://source/pack.zip"
 ) -> TestClient:
     settings = Settings(name=name, cache_pack_url=url, cache_pack_dir=tmp_path / name)
-    return TestClient(create_app(settings, pack_source=source))
+    return TestClient(create_app(settings, InMemoryNetwork().join(name), pack_source=source))
 
 
 def _wait_until(condition: Callable[[], bool]) -> None:
@@ -58,7 +59,8 @@ def test_node_downloads_the_pack_and_serves_it_after_the_source_is_gone(tmp_path
 
 
 def test_pack_without_a_source_is_unavailable(tmp_path: Path) -> None:
-    node = TestClient(create_app(Settings(cache_pack_dir=tmp_path / "empty")))
+    settings = Settings(cache_pack_dir=tmp_path / "empty")
+    node = TestClient(create_app(settings, InMemoryNetwork().join(settings.name)))
     assert node.get("/api/cache-pack").json() == {"available": False, "manifest": None}
     assert node.get("/api/cache-pack.zip").status_code == 404
     assert node.get("/api/cache-pack/files/shelters.json").status_code == 404
