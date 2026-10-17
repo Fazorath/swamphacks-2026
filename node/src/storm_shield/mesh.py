@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 from collections.abc import Callable, Iterable
-from typing import Annotated, Protocol, get_args
+from typing import Annotated, Any, Protocol, get_args
 
 from pydantic import Field, TypeAdapter, ValidationError
 
@@ -16,6 +16,7 @@ Message = CommunityReading | ShelterStatus | ReplayClockMessage | OfficialAlert
 # The sender is whatever the Mesh verified, never something the message claims about itself.
 MessageListener = Callable[[str, Message], None]
 
+# The `v` every message class declares; decode_message checks it before the classes see the body.
 FORMAT_VERSION = 1
 
 logger = logging.getLogger(__name__)
@@ -30,19 +31,34 @@ def decode_message(body: bytes) -> Message | None:
     A kind or format version this Node does not know is a newer Node talking, so it is dropped
     quietly; anything else that does not parse is logged. Extra fields are ignored.
     """
-    try:
-        fields = json.loads(body)
-    except ValueError:
-        fields = None
-    if isinstance(fields, dict) and (
-        fields.get("kind") not in _KNOWN_KINDS or fields.get("v") != FORMAT_VERSION
-    ):
+    fields = _fields_with_kind_and_version(body)
+    if fields is not None and (fields["kind"] not in _KNOWN_KINDS or fields["v"] != FORMAT_VERSION):
         return None
     try:
         return _MESSAGE.validate_python(fields)
     except ValidationError:
         logger.warning("dropped a mesh packet that is not a message this Node understands")
         return None
+
+
+def _fields_with_kind_and_version(body: bytes) -> dict[str, Any] | None:
+    """The JSON object in `body` if its `kind` is a string and its `v` an integer, else None.
+
+    Only such a message can be a newer Node's; anything else is a broken sender, and the None it
+    gets here fails validation so that it is logged.
+    """
+    try:
+        fields = json.loads(body)
+    except ValueError:
+        return None
+    # bool is an int in Python, so `true` must not pass for version 1.
+    if (
+        not isinstance(fields, dict)
+        or not isinstance(fields.get("kind"), str)
+        or type(fields.get("v")) is not int
+    ):
+        return None
+    return fields
 
 
 def deliver_to_listeners(

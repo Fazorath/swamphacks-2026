@@ -163,6 +163,6 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Mesh ignores bad messages (ticket 0023)
 
-- **Both Meshes decode through `mesh.decode_message` and call listeners through `deliver_to_listeners`**, so a rule added there holds on the radio and in tests. An unknown `kind` or `v` is dropped silently (a newer Node); anything else that does not parse logs a warning. Extra fields were already ignored by pydantic default.
+- **Both Meshes decode through `mesh.decode_message` and call listeners through `deliver_to_listeners`**, so a rule added there holds on the radio and in tests. A string `kind` or integer `v` this Node does not know is dropped silently (a newer Node); a missing or non-string `kind`, a missing or non-integer `v` (`true` included) and anything else that does not parse logs a warning. Check `kind` is a string before testing set membership: a list or object `kind` raised `TypeError` (found in review). Extra fields were already ignored by pydantic default.
 - `MeshedNodes.send_bytes(body)` puts raw bytes on the in-memory Mesh; `join_with_failing_listener(name)` adds a Node whose listener raises.
 - Not proven: a bad packet sent to a live Reticulum Node (only `verify` is tested with signed bad bodies).

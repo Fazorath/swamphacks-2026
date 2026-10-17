@@ -124,6 +124,7 @@ class MeshedNodes:
 
     def send_bytes(self, body: bytes, *, sender: str = HUB) -> None:
         """Put exactly these bytes on the Mesh, as a Node running other software could."""
+        # Joining first means the sender is not among the receivers, as when it publishes.
         self._hand_fed_mesh(sender)
         self._network.deliver_bytes(sender, body)
 

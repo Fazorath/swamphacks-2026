@@ -49,7 +49,19 @@ def test_a_message_of_an_unknown_format_version_is_dropped_like_an_unknown_kind(
 
 @pytest.mark.parametrize(
     "garbage",
-    [b"", b"not json", b"[1, 2]", b"null", b'{"v": 1, "kind": "shelters", "ver": "three"}'],
+    [
+        b"",
+        b"not json",
+        b"[1, 2]",
+        b"null",
+        b'{"v": 1, "kind": "shelters", "ver": "three"}',
+        b'{"v": 1}',
+        b'{"v": 1, "kind": ["shelters"]}',
+        b'{"v": 1, "kind": {"a": 1}}',
+        f"{{{STATUS}}}".encode(),
+        f'{{"v": "1", {STATUS}}}'.encode(),
+        f'{{"v": true, {STATUS}}}'.encode(),
+    ],
 )
 def test_a_message_that_does_not_parse_is_logged_and_later_messages_still_arrive(
     meshed_nodes: MeshedNodes, tmp_path: Path, caplog: pytest.LogCaptureFixture, garbage: bytes
