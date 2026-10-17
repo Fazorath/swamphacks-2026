@@ -8,6 +8,9 @@
 .claude/settings.local.json
 .claude/worktrees/
 
+# downloaded Cache Pack on a Node
+/cache-pack/
+
 # deps / builds (common stacks)
 node_modules/
 dist/

@@ -6,7 +6,7 @@
 
 **Status:** in-progress (everything that can be done without the Pis is done; the unticked boxes need them)
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/storm-shield.md`
 

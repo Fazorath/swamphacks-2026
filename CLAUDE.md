@@ -1,4 +1,5 @@
 @AGENTS.md
+@docs/agents/lessons.md
 
 ## Claude Code specifics
 
@@ -6,3 +7,4 @@
 - **Skills** live in `.claude/skills/`. The ones that write tracker files (`to-spec`, `to-tickets`, `implement`, `handoff`, `grill-me`, `grill-with-docs`, `wait-what`) only run when you type them as `/name`.
 - Broad codebase searches → the Explore subagent; keep only its findings in the main session.
 - A hook blocks destructive git (force-push, `reset --hard`, `clean -f`, `branch -D`, `checkout .`/`restore .`). Another one turns on the repo's git hooks (secret scan, attribution strip) at session start. Commit attribution is off in settings; don't add trailers by hand.
+- **Lessons log:** `docs/agents/lessons.md` is loaded every session. Read it before building. When you hit something that broke, surprised you or took more than one try, add a short entry in the same commit as the work.

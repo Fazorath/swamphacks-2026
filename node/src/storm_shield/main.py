@@ -5,13 +5,20 @@ import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import Any
 
+import httpx
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from storm_shield.cache_pack import (
+    DOWNLOAD_TIMEOUT_SECONDS,
+    RETRY_EVERY_SECONDS,
+    CachePack,
+)
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
@@ -35,7 +42,22 @@ class ScenarioState(BaseModel):
     step: str
 
 
-def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
+class CachePackStatus(BaseModel):
+    available: bool
+    manifest: dict[str, Any] | None
+
+
+def create_app(
+    settings: Settings,
+    mesh: Mesh | None = None,
+    pack_source: httpx.Client | None = None,
+) -> FastAPI:
+    # Until the Reticulum Mesh lands, a Node started on its own hears only itself.
+    mesh = mesh or InMemoryNetwork().join(settings.name)
+    cache_pack = CachePack(settings.cache_pack_dir)
+    pack_source = pack_source or httpx.Client(
+        timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
+    )
     scenario = Scenario()
     store = ReadingStore()
     position = fuzz_position(settings.latitude, settings.longitude)
@@ -66,9 +88,23 @@ def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
                     # One bad tick must not silence this Node for the rest of the storm.
                     logger.exception("could not share this Node's readings")
 
-        task = asyncio.create_task(keep_sharing())
+        async def fetch_cache_pack() -> None:
+            while cache_pack.manifest is None:
+                try:
+                    await asyncio.to_thread(
+                        cache_pack.download, settings.cache_pack_url, pack_source
+                    )
+                except Exception:
+                    # Whatever went wrong, a Node without a pack must keep retrying.
+                    logger.exception("could not get the Cache Pack, retrying")
+                    await asyncio.sleep(RETRY_EVERY_SECONDS)
+
+        tasks = [asyncio.create_task(keep_sharing())]
+        if settings.cache_pack_url:
+            tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
-        task.cancel()
+        for task in tasks:
+            task.cancel()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
@@ -78,13 +114,15 @@ def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
 
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:
-        return store.latest()
+        return store.latest(datetime.now(UTC))
 
     @app.get("/api/readings/stream")
     async def readings_stream() -> StreamingResponse:
         async def events() -> AsyncIterator[str]:
             while True:
-                payload = ",".join(reading.model_dump_json() for reading in store.latest())
+                payload = ",".join(
+                    reading.model_dump_json() for reading in store.latest(datetime.now(UTC))
+                )
                 yield f"data: [{payload}]\n\n"
                 await asyncio.sleep(READINGS_PUSH_SECONDS)
 
@@ -105,6 +143,24 @@ def create_app(settings: Settings, mesh: Mesh) -> FastAPI:
         scenario.reset()
         share_own_readings()
         return ScenarioState(step=scenario.step_name)
+
+    @app.get("/api/cache-pack")
+    def cache_pack_status() -> CachePackStatus:
+        manifest = cache_pack.manifest
+        return CachePackStatus(available=manifest is not None, manifest=manifest)
+
+    @app.get("/api/cache-pack.zip")
+    def cache_pack_zip() -> FileResponse:
+        if cache_pack.manifest is None:
+            raise HTTPException(status_code=404, detail="no Cache Pack on this Node yet")
+        return FileResponse(cache_pack.zip_path, media_type="application/zip")
+
+    @app.get("/api/cache-pack/files/{path:path}")
+    def cache_pack_file(path: str) -> FileResponse:
+        file = cache_pack.file(path)
+        if file is None:
+            raise HTTPException(status_code=404, detail="not in the Cache Pack")
+        return FileResponse(file)
 
     # Mounted last so it never shadows /api routes.
     dashboard = settings.dashboard_dir

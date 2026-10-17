@@ -4,7 +4,7 @@
 
 **Blocked by:** 0003
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -18,12 +18,12 @@
 - Distribution: the zip is uploaded as a GitHub Release asset. Every Node has `CACHE_PACK_URL` (the Hub: the Release; a sensor: the Hub's `/api/cache-pack.zip`, or the Release if it has internet). A Node with a valid pack on disk does nothing; otherwise it tries at startup and retries every 30 s. A pack failing its checksums is discarded.
 - "Internet off": serving the pack from disk does not depend on connectivity. 0007 builds no online/offline flag (that is 0011).
 
-- [ ] `scripts/build_cache_pack.py` (run with `uv run --project node`, its extra dependencies in a separate group) produces `cache-pack.zip` in the layout of `docs/specs/wire-formats.md`: `manifest.json` with `bbox` and checksums, `shelters.json`, `flood_prone.geojson`, `tiles/{z}/{x}/{y}.png`
-- [ ] The curated Shelter source and the creek floodplain layer are in the repo, reviewable by eye; the script fails on a Shelter outside the box
-- [ ] A Node downloads the pack from `CACHE_PACK_URL`, checks the checksums in `manifest.json`, unpacks it into `CACHE_PACK_DIR` (gitignored) and refuses and discards an incomplete or corrupt pack
-- [ ] A Node without a valid pack retries every 30 s in the background; a Node with one never downloads again
-- [ ] The API serves the pack: `GET /api/cache-pack` (availability and manifest), `GET /api/cache-pack/files/{path}` (any file or tile), `GET /api/cache-pack.zip` (for other Nodes)
-- [ ] `CACHE_PACK_URL` and `CACHE_PACK_DIR` are in `.env.example`, and a short build-and-publish note sits next to the script
-- [ ] Seam A tests, using a tiny fixture pack built by a test helper: a Node downloads and serves it; the source is shut down and the Node still serves the manifest, Shelters, flood zones and a tile; a corrupt pack is refused; a sensor downloads from a Hub Node
-- [ ] Manual check: the real pack builds, is uploaded as a Release asset, and two Nodes download it
-- [ ] All **Commands** pass
+- [x] `scripts/build_cache_pack.py` (run with `uv run --project node`, its extra dependencies in a separate group) produces `cache-pack.zip` in the layout of `docs/specs/wire-formats.md`: `manifest.json` with `bbox` and checksums, `shelters.json`, `flood_prone.geojson`, `tiles/{z}/{x}/{y}.png`
+- [x] The curated Shelter source and the creek floodplain layer are in the repo, reviewable by eye; the script fails on a Shelter outside the box (Shelter names and coordinates are approximate for now; **before the presentation** they must be checked against Alachua County and FEMA and the `source` notes given a check date)
+- [x] A Node downloads the pack from `CACHE_PACK_URL`, checks the checksums in `manifest.json`, unpacks it into `CACHE_PACK_DIR` (gitignored) and refuses and discards an incomplete or corrupt pack
+- [x] A Node without a valid pack retries every 30 s in the background; a Node with one never downloads again
+- [x] The API serves the pack: `GET /api/cache-pack` (availability and manifest), `GET /api/cache-pack/files/{path}` (any file or tile), `GET /api/cache-pack.zip` (for other Nodes)
+- [x] `CACHE_PACK_URL` and `CACHE_PACK_DIR` are in `.env.example`, and a short build-and-publish note sits next to the script
+- [x] Seam A tests, using a tiny fixture pack built by a test helper: a Node downloads and serves it; the source is shut down and the Node still serves the manifest, Shelters, flood zones and a tile; a corrupt pack is refused; a sensor downloads from a Hub Node
+- [x] Manual check: the real pack builds, is uploaded as a Release asset, and two Nodes download it (Release `cache-pack-v1`; while the repo is private the Hub must download from a laptop serving the zip, not the Release link)
+- [x] All **Commands** pass (dashboard run with `npx pnpm@10`)

@@ -33,6 +33,7 @@ def test_readings_are_timestamped_and_labeled_simulated() -> None:
         "soil_moisture",
     }
     assert all(reading["simulated"] and reading["timestamp"] for reading in readings)
+    assert all(0 <= reading["age_s"] < 5 for reading in readings)
 
 
 def test_stepping_the_scenario_changes_the_readings() -> None:

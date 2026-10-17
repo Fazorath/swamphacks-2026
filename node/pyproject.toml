@@ -6,11 +6,12 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic-settings",
+    "httpx",
     "rns>=1.5.7",
 ]
 
 [dependency-groups]
-dev = ["pytest", "httpx", "ruff", "mypy"]
+dev = ["pytest", "ruff", "mypy"]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"
