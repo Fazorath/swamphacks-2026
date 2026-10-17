@@ -60,6 +60,8 @@ def create_app(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
     )
     tile_source = tile_source or httpx.Client(timeout=TILE_TIMEOUT_SECONDS)
+    # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
     store = ReadingStore()
     position = fuzz_position(settings.latitude, settings.longitude)

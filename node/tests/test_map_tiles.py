@@ -1,4 +1,7 @@
+import logging
+
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from storm_shield.main import create_app
@@ -59,3 +62,10 @@ def test_a_rejected_key_is_a_bad_gateway_without_the_key_in_it() -> None:
 def test_an_unreachable_carto_is_a_bad_gateway() -> None:
     client, _ = _client(httpx.ConnectError("offline"))
     assert client.get("/api/tiles/13/2255/3376.png").status_code == 502
+
+
+def test_the_key_is_not_written_to_the_logs(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO)
+    client, _ = _client(httpx.Response(200, content=PNG))
+    client.get("/api/tiles/13/2255/3376.png")
+    assert "secret-key" not in caplog.text
