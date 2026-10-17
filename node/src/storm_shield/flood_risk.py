@@ -6,17 +6,20 @@ from pydantic import BaseModel
 
 from storm_shield.community_reading import CommunityReading
 
-# First-pass thresholds, meant to be retuned against real readings. Change them here only.
+# Tuned for a mountain river: the Bhote Koshi replay's calm water is 0.6 to 2.1 m and its calm
+# pressure 1002 to 1008 hPa, so nothing below counts those as a flood. Change them here only.
+# The 6 m High level is the reported Syabrubesi warning level (danger 9 m); the Elevated level, the
+# rise sizes and the pressure are reconstructed, as are the replay's own water values.
 HISTORY_WINDOW_SECONDS = 120
-WATER_ELEVATED_CM = 30
-WATER_HIGH_CM = 60
-WATER_RISING_CM = 10  # gained across the history window
-SURGE_RISE_CM = 100  # gained within SURGE_WINDOW_SECONDS, High before any fixed level is reached
+WATER_ELEVATED_CM = 300
+WATER_HIGH_CM = 600
+WATER_RISING_CM = 50  # gained across the history window, above the replay's calm drift
+SURGE_RISE_CM = 300  # gained within SURGE_WINDOW_SECONDS, High before any fixed level is reached
 SURGE_WINDOW_SECONDS = 60
 RAIN_ELEVATED_MMH = 10
 RAIN_HIGH_MMH = 25  # High only while water is also rising
 SOIL_RISING_POINTS = 3  # gained across the history window
-STORM_PRESSURE_HPA = 1009
+STORM_PRESSURE_HPA = 1000  # the replay never goes below 1002; the 2026 flood was not a storm
 
 NodeLevel = Literal["elevated", "high"]
 FloodRiskLevel = Literal["low", "elevated", "high"]

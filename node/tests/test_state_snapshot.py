@@ -86,10 +86,10 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
 
 def test_flood_risk_and_the_node_entries_list_the_same_nodes(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.hear_from("garage", rain_mmh=30, water_cm=90)
+    meshed_nodes.hear_from("garage", rain_mmh=30, water_cm=650)
     state = _state(meshed_nodes["porch"])
 
-    assert _entry(state, "garage")["measurements"]["water_level"]["value"] == 90
+    assert _entry(state, "garage")["measurements"]["water_level"]["value"] == 650
     assert set(state["flood_risk"]["nodes"]) == {entry["id"] for entry in state["nodes"]}
     assert state["flood_risk"]["nodes"]["garage"] == "high"
 

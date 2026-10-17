@@ -92,6 +92,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Audit 2026-10-17: the Evacuation Plan test's Shelter-marker check failed about 1 run in 12, before and after 0010, because it checked the map right after the plan text appeared. Map assertions wait with `waitFor`.
 - 0004 review 2026-10-17: **`RNS.Identity.from_file` returns `None` for a damaged file** instead of raising, and `Identity.to_file` writes the private key readable by everyone (644) and only logs a failed write. `load_or_create_identity` now stops the Node with an error naming the file, writes the key 600 itself, and locks down an older 644 file when it loads it. Deleting the file gives the Node a new id; for the Hub, every Node then needs the new `HUB_IDENTITY`.
 
+## Flood levels fit the river (ticket 0062)
+
+- **The Scenario cannot reach the 6 m High level without being a Surge**: stepping through it in a test takes under 60 s, so any total rise of 3 m or more counts as a Surge. Its last step is 390 cm, High from heavy rain on rising water, below the 300 cm Surge size from its 100 cm start.
+- **The Surge size is 3 m because S0's track rises only 3.5 m before it goes silent** (0.7 m at 08:36:30, 4.2 m at its last 08:37:30 publish); 4 m missed it.
+- **The water-rising size (50 cm) sits above the replay's calm drift** (S2 gains 12 cm between 08:30 and 08:40); retune it with the levels, not alone.
+- A test that plays the replay with the real publish interval waits for the Hub to hear every Sensor before reading Flood Risk; `advance` alone moves only the clock.
+
 ## Flood Risk (ticket 0006)
 
 - **`pnpm test` fails to start on Node 20.20**: vitest's jsdom worker dies loading `undici@8` (`Cannot read properties of undefined (reading 'bind')`). It passes on Node 22: `npx -y node@22 node_modules/vitest/vitest.mjs run` from `dashboard/`.

@@ -10,7 +10,7 @@ A resident can see Community Readings (pressure, rain rate, water level, soil mo
 
 ## Solution
 
-Every Node works out Flood Risk from the Community Readings it holds and shows it with the reasons behind it, such as "water level 90 cm at 1 Node". In calm weather nothing is shown at all. Low appears only when it is raining or a Storm Signal is on, and Elevated and High follow from water level, rain rate and a rising trend. When air pressure is low across the Nodes, a Storm Signal badge appears on the map. Stepping the Scenario visibly moves the dashboard from nothing, to Low with the Storm Signal, to Elevated, to High. Every Node computes this itself, so the answer survives the Hub going down.
+Every Node works out Flood Risk from the Community Readings it holds and shows it with the reasons behind it, such as "water level 650 cm at 1 Node". In calm weather nothing is shown at all. Low appears only when it is raining or a Storm Signal is on, and Elevated and High follow from water level, rain rate and a rising trend. When air pressure is low across the Nodes, a Storm Signal badge appears on the map. Stepping the Scenario visibly moves the dashboard from nothing, to Low with the Storm Signal, to Elevated, to High. Every Node computes this itself, so the answer survives the Hub going down.
 
 ## User Stories
 
@@ -51,7 +51,7 @@ Every Node works out Flood Risk from the Community Readings it holds and shows i
 ## Implementation Decisions
 
 - **Flood Risk module.** One pure function takes the recent readings of every counted Node (about two minutes of history each) and the current time, and returns the headline level (or none), the reasons, each Node's own level, and the Storm Signal. It has no knowledge of the Mesh, the clock or HTTP.
-- **Thresholds module.** Every number lives in one named place: water 30 cm (Elevated) and 60 cm (High); rain rate 10 mm/h (Elevated) and 25 mm/h with rising water (High); "water rising" is a 10 cm rise; a Surge is a 100 cm rise within 60 s of the sender's own timestamps, High at once (ticket 0046); "soil rising" is a 3-point rise; the history window is 2 minutes; the Storm Signal is pressure below 1009 hPa at half or more of counted Nodes. They are a first pass and are meant to be retuned.
+- **Thresholds module.** Every number lives in one named place: water 300 cm (Elevated) and 600 cm (High), tuned for a mountain river (the 6 m is the reported Syabrubesi warning level; ticket 0062); rain rate 10 mm/h (Elevated) and 25 mm/h with rising water (High); "water rising" is a 50 cm rise; a Surge is a 300 cm rise within 60 s of the sender's own timestamps, High at once (ticket 0046); "soil rising" is a 3-point rise; the history window is 2 minutes; the Storm Signal is pressure below 1000 hPa at half or more of counted Nodes. They are a first pass and are meant to be retuned.
 - **History in the reading store.** The store keeps, per Node, the readings received in the last 2 minutes, in memory only, timestamped on this Node's own clock (as `age_s` already is). It still answers "latest reading per Node". "Rising" means the newest value minus the oldest value still in the window; a Node with a single reading has no trend and is not rising. A restarted Node starts with an empty history, so nothing is rising until a second reading arrives.
 - **Which Nodes count.** A single check, "does this Node count?", decides. For now every Node the store holds counts. Registered-only (0012) and the 60-second silence cutoff (0021) will tighten this one check without touching the rules.
 - **Per-Node level.** Elevated or High (or none), from that Node's own water level, rain rate and rising water. Low is deliberately not a per-Node level, because "raining" is judged across the Mesh.
@@ -71,7 +71,7 @@ Every Node works out Flood Risk from the Community Readings it holds and shows i
 - **Dashboard: top bar and card.** A top-bar chip shows the level and its word (Low green, Elevated amber, High red, never color alone), and a Flood Risk card heads the Readings rail with the reason sentences. Both are absent when `level` is `null`. If the design canvas has a different slot for the card, follow the canvas.
 - **Dashboard: Storm Signal.** A badge on the map shows "Low pressure: N hPa at K Nodes". When the Storm Signal is the only reason for Low, the card repeats it.
 - **Dashboard: map dots.** The dots from 0005 are colored by the Node's own level (Elevated amber, High red) and show the word; a Node with no level keeps the neutral Community color. This finishes the "Flood Risk coloring arrives with 0006" note in the 0005 spec.
-- **Reason sentences.** A small pure mapping turns `{code, nodes, value}` into a sentence ("water level 90 cm at 1 Node", "heavy rain: 30 mm/h at 2 Nodes", "low pressure: 1002 hPa at 3 Nodes", "soil moisture rising at 2 Nodes", "water level rising at 2 Nodes", "water rose 3.2 m in 8 s"; the card leaves out "rising" while a Surge says it), with singular and plural handled.
+- **Reason sentences.** A small pure mapping turns `{code, nodes, value}` into a sentence ("water level 650 cm at 1 Node", "heavy rain: 30 mm/h at 2 Nodes", "low pressure: 1002 hPa at 3 Nodes", "soil moisture rising at 2 Nodes", "water level rising at 2 Nodes", "water rose 3.2 m in 8 s"; the card leaves out "rising" while a Surge says it), with singular and plural handled.
 - **Glossary.** `CONTEXT.md` already gained Storm Signal and Raining and the revised Flood Risk. No ADR.
 
 ## Testing Decisions
@@ -100,8 +100,8 @@ Registered-only counting and Unverified greying (0012), the 60-second silence cu
 
 ## Further Notes
 
-- **Soil moisture as rain.** The Scenario's rain step raises soil moisture by 23 points, so the demo shows Low then Elevated. Real soil moisture rises slowly and falls slowly, so Low-from-rain will fade about two minutes after soil stops rising; Elevated holds if water stays at 30 cm or more.
+- **Soil moisture as rain.** The Scenario's rain step raises soil moisture by 23 points, so the demo shows Low then Elevated. Real soil moisture rises slowly and falls slowly, so Low-from-rain will fade about two minutes after soil stops rising; Elevated holds if water stays at 300 cm or more.
 - **Silent Nodes count until 0021.** Until the cutoff exists, a Node that goes quiet keeps its last reading in every calculation.
 - **Evacuation Plan and Community Warning must accept `null`.** Tickets 0009 and 0013 read the level, which can now be absent.
-- **Calm-day quirk.** A Node at 30 cm or more of water on a dry, high-pressure day still shows Elevated, on purpose.
+- **Calm-day quirk.** A Node at 300 cm or more of water on a dry, high-pressure day still shows Elevated, on purpose.
 - The reason code `pressure_falling` is kept from the wire format even though the rule tests for low pressure, not for a fall; the sentence says "low pressure".
