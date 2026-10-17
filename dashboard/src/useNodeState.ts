@@ -48,6 +48,7 @@ export function useNodeState(): NodeStateFeed {
     };
 
     pollNow.current = () => {
+      if (stopped) return;
       if (polling) askedWhilePolling = true;
       else void poll();
     };
