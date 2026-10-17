@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
 
@@ -9,8 +9,17 @@ class FakeEventSource {
       this.onmessage?.({
         data: JSON.stringify([
           {
+            node: "porch",
             kind: "pressure",
             value: 1015,
+            unit: "hPa",
+            timestamp: "2026-10-16T12:00:00Z",
+            simulated: true,
+          },
+          {
+            node: "garage",
+            kind: "pressure",
+            value: 1002,
             unit: "hPa",
             timestamp: "2026-10-16T12:00:00Z",
             simulated: true,
@@ -38,5 +47,14 @@ test("shows the Node's name and role and the placeholder areas", async () => {
 test("lists readings labeled as simulated", async () => {
   render(<App />);
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
-  expect(screen.getByText("(simulated)")).toBeInTheDocument();
+  expect(screen.getAllByText("(simulated)")).toHaveLength(2);
+});
+
+test("lists readings from other Nodes under each Node's name", async () => {
+  render(<App />);
+  const garage = await screen.findByRole("region", { name: "Node garage" });
+  expect(within(garage).getByText(/Pressure: 1002 hPa/)).toBeInTheDocument();
+  expect(
+    within(screen.getByRole("region", { name: "Node porch" })).getByText(/Pressure: 1015 hPa/),
+  ).toBeInTheDocument();
 });

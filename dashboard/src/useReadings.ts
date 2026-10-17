@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export type Reading = {
+  node: string;
   kind: "pressure" | "rain_rate" | "water_level" | "soil_moisture";
   value: number;
   unit: string;
