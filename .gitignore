@@ -29,3 +29,6 @@ Thumbs.db
 
 # per-Node Reticulum config and identity
 node/data/
+
+# local demo state (data folders, logs, downloaded pack)
+/.demo/

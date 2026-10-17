@@ -10,10 +10,10 @@
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [ ] One script starts the five Nodes and the pack server, waits for the Hub's identity and hands it to the Sensors as `HUB_IDENTITY`
+- [x] One script starts the five Nodes and the pack server, waits for the Hub's identity and hands it to the Sensors as `HUB_IDENTITY`
 - [ ] It registers S0–S3 with the Hub so every Node counts, once 0012 lands
-- [ ] It prints the laptop's local and Tailscale addresses
-- [ ] Setup notes for the laptop hotspot, the projector and the two phones' Household Profiles (Syabrubesi and Betrawati) sit next to the script
-- [ ] The README's "Run the demo" section points to it
+- [x] It prints the laptop's local and Tailscale addresses
+- [x] Setup notes for the laptop hotspot, the projector and the two phones' Household Profiles (Syabrubesi and Betrawati) sit next to the script
+- [x] The README's "Run the demo" section points to it
 - [ ] Manual check: the full replay runs on one laptop with two phones joined; record what was rehearsed and what stays unproven on real devices
 - [ ] All **Commands** pass
