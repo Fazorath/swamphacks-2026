@@ -9,6 +9,7 @@ import time
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -18,8 +19,13 @@ BBOX = (29.6066, -82.3766, 29.6966, -82.2730)
 ZOOMS = range(11, 17)
 TILE_URL = "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
 TILE_DELAY_SECONDS = 0.15
-FEMA_URL = "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query"
+FEMA_URL = (
+    "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28/query"
+)
 FEMA_PAGE_SIZE = 500
+# The FEMA service resets connections at random, so each page gets several tries.
+FEMA_ATTEMPTS = 8
+FEMA_RETRY_SECONDS = 10
 COORDINATE_DECIMALS = 4
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
 
@@ -31,13 +37,19 @@ def tile_of(lat: float, lon: float, zoom: int) -> tuple[int, int]:
     return x, y
 
 
-def tiles_covering(bbox: tuple[float, float, float, float]) -> list[tuple[int, int, int]]:
+def tiles_covering(
+    bbox: tuple[float, float, float, float],
+) -> list[tuple[int, int, int]]:
     south, west, north, east = bbox
     tiles = []
     for zoom in ZOOMS:
         x_min, y_max = tile_of(south, west, zoom)
         x_max, y_min = tile_of(north, east, zoom)
-        tiles += [(zoom, x, y) for x in range(x_min, x_max + 1) for y in range(y_min, y_max + 1)]
+        tiles += [
+            (zoom, x, y)
+            for x in range(x_min, x_max + 1)
+            for y in range(y_min, y_max + 1)
+        ]
     return tiles
 
 
@@ -47,13 +59,16 @@ def load_shelters() -> list[dict[str, object]]:
     outside = [
         shelter["id"]
         for shelter in shelters
-        if not (south <= shelter["pos"][0] <= north and west <= shelter["pos"][1] <= east)
+        if not (
+            south <= shelter["pos"][0] <= north and west <= shelter["pos"][1] <= east
+        )
     ]
     if outside:
         sys.exit(f"Shelters outside the demo box: {', '.join(outside)}")
     # The `source` note is for reviewers of the repo; Nodes only need the fields they show.
     return [
-        {key: value for key, value in shelter.items() if key != "source"} for shelter in shelters
+        {key: value for key, value in shelter.items() if key != "source"}
+        for shelter in shelters
     ]
 
 
@@ -63,13 +78,31 @@ def _round_coordinates(coordinates: list) -> list:  # type: ignore[type-arg]
     return [_round_coordinates(part) for part in coordinates]
 
 
+def fetch_fema_page(
+    client: httpx.Client, params: dict[str, object]
+) -> list[dict[str, Any]]:
+    for attempt in range(1, FEMA_ATTEMPTS + 1):
+        try:
+            response = client.get(FEMA_URL, params=params)
+            response.raise_for_status()
+            return list(response.json()["features"])
+        except (httpx.HTTPError, ValueError, KeyError) as error:
+            print(
+                f"FEMA attempt {attempt}/{FEMA_ATTEMPTS} failed: {error!r}", flush=True
+            )
+            if attempt == FEMA_ATTEMPTS:
+                raise
+            time.sleep(FEMA_RETRY_SECONDS)
+    raise AssertionError("unreachable")
+
+
 def fetch_fema_zones(client: httpx.Client) -> list[dict[str, object]]:
     south, west, north, east = BBOX
     features: list[dict[str, object]] = []
     while True:
-        response = client.get(
-            FEMA_URL,
-            params={
+        page = fetch_fema_page(
+            client,
+            {
                 "where": "FLD_ZONE IN ('A','AE')",
                 "geometry": f"{west},{south},{east},{north}",
                 "geometryType": "esriGeometryEnvelope",
@@ -82,15 +115,17 @@ def fetch_fema_zones(client: httpx.Client) -> list[dict[str, object]]:
                 "resultRecordCount": FEMA_PAGE_SIZE,
             },
         )
-        response.raise_for_status()
-        page = response.json()["features"]
         features += [
             {
                 "type": "Feature",
-                "properties": {"source": f"FEMA NFHL zone {feature['properties']['FLD_ZONE']}"},
+                "properties": {
+                    "source": f"FEMA NFHL zone {feature['properties']['FLD_ZONE']}"
+                },
                 "geometry": {
                     "type": feature["geometry"]["type"],
-                    "coordinates": _round_coordinates(feature["geometry"]["coordinates"]),
+                    "coordinates": _round_coordinates(
+                        feature["geometry"]["coordinates"]
+                    ),
                 },
             }
             for feature in page
@@ -111,11 +146,16 @@ def build(output: Path) -> None:
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
         fema_zones = fetch_fema_zones(client)
         tile_list = tiles_covering(BBOX)
-        print(f"{len(fema_zones)} FEMA zones; fetching {len(tile_list)} tiles", flush=True)
+        print(
+            f"{len(fema_zones)} FEMA zones; fetching {len(tile_list)} tiles", flush=True
+        )
         files: dict[str, bytes] = {
             "shelters.json": json.dumps(load_shelters(), indent=1).encode(),
             "flood_prone.geojson": json.dumps(
-                {"type": "FeatureCollection", "features": fema_zones + creek_layer["features"]},
+                {
+                    "type": "FeatureCollection",
+                    "features": fema_zones + creek_layer["features"],
+                },
                 separators=(",", ":"),
             ).encode(),
         }
@@ -126,7 +166,9 @@ def build(output: Path) -> None:
         "v": 1,
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
         "bbox": list(BBOX),
-        "files": {path: hashlib.sha256(content).hexdigest() for path, content in files.items()},
+        "files": {
+            path: hashlib.sha256(content).hexdigest() for path, content in files.items()
+        },
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
