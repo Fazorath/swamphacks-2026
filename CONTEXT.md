@@ -119,13 +119,33 @@ _Avoid_: evacuation zone, surge zone
 ## Dashboard
 
 **Warning Takeover**:
-The full-screen modal that interrupts any view when a new Official Alert or Community Warning arrives, with one large acknowledge button; acknowledging it on one device never clears it on another.
+The modal that interrupts any view when a new Official Alert or Community Warning arrives, with one large acknowledge button; it fills a phone's screen and floats over the dimmed map on a larger one. Acknowledging it on one device never clears it on another.
 _Avoid_: popup, alarm, klaxon, notification
 
 **Stale**:
-A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk. The age is shown on the Node's map marker and Readings card.
+A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk. The age is shown on the Node's map marker and Node card.
 _Avoid_: offline node, dead node, timed out
+
+**Layer rail**:
+The column of buttons along the left edge of the dashboard that shows and hides map layers and Panels, each with a live count where one applies.
+_Avoid_: sidebar, toolbar, nav
+
+**Panel**:
+A translucent box floating over the map that holds one kind of information (Readings, Alerts, Evacuation Plan, Cameras) and can be collapsed without leaving the map.
+_Avoid_: widget, sidebar, column
+
+**Node card**:
+One Node's entry in the Readings Panel: its name, tags, water level and the other Community Readings with their trends.
+_Avoid_: tile, row, sensor card
 
 **Hub Panel**:
 The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the live or replay switch for Official Alerts.
 _Avoid_: admin page, settings, control panel
+
+**Node Panel**:
+The slide-over shown only on a Node's own screen, holding the Scenario controls and that Node's registration status; never shown to Viewers on other devices.
+_Avoid_: operator panel, settings, admin
+
+**Join card**:
+The card with the two codes a phone scans to join the neighborhood Wi-Fi and then open the dashboard.
+_Avoid_: QR, invite, onboarding

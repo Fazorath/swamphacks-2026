@@ -1,77 +1,239 @@
 # Dashboard UI design
 
-How the Storm Shield dashboard looks and where things go. **The visual source of truth is the design canvas: https://claude.ai/artifact/722U2tKJ78hvbbbNUnx2dQ** (foundations, one artboard per view, shared components). Build from it; if a view is missing, add an artboard there first. Message and API shapes: `docs/specs/wire-formats.md`. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
+How the Storm Shield dashboard looks, where things go and how it moves. **The visual source of truth is the design canvas: https://claude.ai/artifact/722U2tKJ78hvbbbNUnx2dQ**, organized in five pages: Foundations, Components, Desktop, Phone and Flows. Build from it; if a view or state is missing, add an artboard there first (see "Changing the design"). Message and API shapes: `docs/specs/wire-formats.md`. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
 
 ## Reference
 
-The look is borrowed from [Osiris](https://github.com/simplifaisoul/osiris) ([osirisai.live](https://osirisai.live)), an open-source OSINT dashboard that layers cameras, weather and satellite data on one map.
+The look is borrowed from [Osiris](https://github.com/simplifaisoul/osiris) ([osirisai.live](https://osirisai.live)), an open-source (MIT) OSINT dashboard that layers cameras, weather and satellite data on one map. Keep its license notice in anything copied from it, and never copy its `stealthFetch` (it forges request headers).
 
 What we take from it:
 
-- **The map is the page.** Everything else sits around or floats over it.
-- **A rail with live counts** beside the map.
-- **Translucent glass panels** over the map, with pulse dots for live status.
+- **The map is the page.** It fills the screen; everything else floats over it.
+- **A Layer rail with live counts** on the left edge.
+- **Translucent Panels** over the map that slide in and collapse.
+- **Marker anatomy:** glow, outlined dot, label.
+- **Stock Lucide icons** whose brightness shows on or off, and a pulse ring for fresh information.
 - **Freshness badges** and an **OFFLINE** state when a source is down.
-- **A dark "ops room" theme**, all colors from CSS variables. (Osiris is dark too, in gold and cyan; our palette is below.)
 
-What we leave out: the 40 layers, globe, AI analyst, finance, cyber. Storm Shield has one neighborhood and one storm.
+What we leave out: the 40 layers, globe, AI analyst, finance, cyber, and its gold controls (they collide with Elevated amber). Storm Shield has one neighborhood and one storm.
 
 ## Which views get built
 
 | Group | Views |
 |---|---|
-| **Must build (on stage)** | Resident Normal day, Resident Storm, Resident Mesh only, Phone Home, Phone Evacuation Plan, Phone Route, Warning Takeover |
-| **Simple but real (setup, not shown)** | Phone Household Profile, Hub Panel (registry, warning log, Shelters, live/replay) |
-| **Stretch** | Sensor Node on-screen Scenario stepper (the breadboard drives the demo), "Mark road blocked" / "Find another route" (0018), QR code to join the dashboard |
+| **Must build (on stage)** | Resident Normal day, Raining, Elevated, Storm, Mesh-only; Warning Takeover; Phone Map, Readings, Alerts and Plan tabs; Phone Route |
+| **Simple but real** | Loading, empty and error states; Phone Household Profile; Hub Panel (Registry, Warnings, Shelters, Feeds); Node Panel (Scenario, registration); Join card |
+| **Stretch** | "Mark road blocked" / "Find another route" (0018), enlarging a camera tile |
+
+The breadboard drives the Scenario on stage; the Node Panel's stepper is for laptops and rehearsal.
 
 ## Layout
 
+### Desktop (900 px and wider, after scaling)
+
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ Storm Shield  porch · Hub   [Hub]   ● Mesh only   Flood: LOW │  top bar
-├──────────────────────────────────────────────────────────────┤
-│ persistent banner for an acknowledged warning (when active)  │
-├────────┬─────────────────────────────────────┬───────────────┤
-│Readings│                                     │ Alerts        │
-│  rail  │              MAP                    ├───────────────┤
-│        │   Node dots with water level,       │ Evacuation    │
-│        │   storm signal, route, cameras      │ Plan          │
-│        │                                     ├───────────────┤
-│        │                                     │ Cameras       │
-├────────┴─────────────────────────────────────┴───────────────┤
-│ freshness badges · OFFLINE note                              │  status strip
-└──────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│ ◇ Storm Shield  porch · Hub    [FLOOD RISK · HIGH] [STORM SIGNAL]  │  top bar
+│                                     ● Mesh-only  [⌂] [Node] [Hub]  │
+├────────────────────────────────────────────────────────────────────┤
+│ acknowledged-warning banners (when any)                            │
+├──┬─────────────┬──────────────────────────────────┬────────────────┤
+│▣ │ Readings    │                                  │ Alerts         │
+│▣3│ Panel       │          MAP (full bleed,        ├────────────────┤
+│▣ │             │          under everything)       │ Evacuation     │
+│▣2│             │                                  │ Plan           │
+│▣ │             │                                  │                │
+├──┴─────────────┴──────────────────────────────────┴────────────────┤
+│ readings 1 s · alerts 40 s · Cache Pack v3 · cameras live          │  status strip
+└────────────────────────────────────────────────────────────────────┘
+  ▲ Layer rail
 ```
 
-- **Phone:** four bottom tabs (Map, Readings, Alerts, Plan), 44 px minimum touch targets. Residents open the dashboard on a phone first.
-- **Map Nodes:** each dot shows the Node name and its water level, colored by that Node's Flood Risk. Selecting a Node highlights its card in the Readings rail and the other way round. No popups.
-- **Evacuation Plan on a device with no Household Profile** (the projected Hub laptop): a hand-off card, "Your plan lives on your phone", with this Node's address. The full plan appears on any device that has a profile.
-- **Hub Panel:** a "Hub" button in the top bar, present only when the Node's role is Hub, opens a slide-over with tabs for the registry and for the warning log, Shelter status and live/replay switch. The map keeps updating underneath.
+- **The map fills the viewport** under the top bar and above the status strip. It is never less than about 60% of the width.
+- **Layer rail** on the far left. Eight buttons, one visual treatment, brightness showing on or off:
+
+  | Button | Kind | Count badge |
+  |---|---|---|
+  | Nodes | map layer | Registered Nodes |
+  | Readings | Panel | none |
+  | Flood-Prone Areas | map layer | none |
+  | Shelters | map layer | open Shelters |
+  | Route | map layer | none |
+  | Storm Signal | map layer | none |
+  | Cameras | Panel | live cameras |
+  | Alerts | Panel | unacknowledged warnings |
+
+  The Evacuation Plan Panel opens from the Household button in the top bar.
+- **Panels** float over the map: Readings docks on the left next to the rail (320 px); Alerts, Evacuation Plan and Cameras stack on the right (360 px). At most two Panels are open per side; opening a third collapses the oldest. Each Panel has a collapse chevron, and which Panels are open is remembered per device. Opening a Panel re-centers the map so the selected Node is never hidden.
+- **Default open Panels:** on a calm day, Readings and Evacuation Plan; once there is a Flood Risk of Elevated or High or any Alert, Alerts and Evacuation Plan.
+- **Top bar:** left, logo then Node name and role (`porch · Hub`); center, the mesh-wide Flood Risk chip and, when on, the Storm Signal pill; right, the Online / Mesh-only pill, the Household icon button, the Node button (only on the Node's own screen) and the Hub button (only when the role is Hub).
+- **Status strip:** freshness per source: readings age, Official Alerts last fetch, Cache Pack version, cameras live or offline. Mesh-only says so here too.
+- Tablets get the desktop layout with one Panel open per side.
+
+### Phone (under 900 px)
+
+- Four bottom tabs: **Map** (default), **Readings**, **Alerts**, **Plan**; 44 px minimum touch targets everywhere.
+- Top bar keeps only the logo, the Flood Risk chip and the connection pill.
+- **Map tab:** the map, the risk chip, the most recent Alert pinned above the tab bar, and a bottom sheet that peeks at the selected Node.
+- **Readings tab:** the Node cards. **Alerts tab:** Official cards, then Community cards. **Plan tab:** Household Profile, then the Evacuation Plan, then the Route.
+
+## Map
+
+- Dark tiles from the Cache Pack through the Node, with the data credit always shown.
+- **Node markers** (Osiris anatomy: glow, outlined dot, label `garage · 0.42 m`). Markers update in place and are never rebuilt on a poll.
+
+  | State | Marker |
+  |---|---|
+  | No Flood Risk | Muted dot, no glow |
+  | Low / Elevated / High | Risk-colored dot and glow; the glow is strongest for High |
+  | Unverified | Hollow dot, dashed grey outline, label `NOT COUNTED` |
+  | Stale | Glow removed, desaturated, label `STALE · 42 s` |
+  | Selected | 2 px cyan ring, larger label |
+
+  A Node pulses once when its Flood Risk rises; never continuously. Selecting a Node highlights its Node card and the other way round. No popups.
+- **Layers:**
+
+  | Layer | Style |
+  |---|---|
+  | Flood-Prone Areas | Translucent blue-grey diagonal hatch (never violet, never a risk color) |
+  | Shelter, open | Solid light pin with a building icon |
+  | Shelter, closed | Hollow grey pin, `CLOSED` |
+  | Nearest open Shelter for you | Open pin with a cyan ring, name always shown |
+  | Home | Cyan house icon |
+  | Route | 5 px cyan line with a dark casing |
+  | Storm Signal | Slow, static darkening at the map's edges, plus the top-bar pill; no animated weather |
+
+## Readings Panel
+
+- Starts with a one-line Flood Risk summary; the full reasons live in the risk chip's popover.
+- **Node card:** header with the Node name and its tags (`THIS NODE`, `SIMULATED`, risk, `STALE · age`, `NOT COUNTED`); water level as the hero number with a trend arrow; rain rate, pressure and soil moisture in a three-column row, each with its arrow. Arrows come from the last 30 s of polls held in the browser. No sparklines.
+- **Order never changes on its own:** this Node first, then the other Registered Nodes A to Z, then Unverified Nodes under a "Not counted" divider. A card whose risk rises flashes once and stays where it is.
+
+## Flood Risk reasons
+
+The top-bar risk chip opens a popover with the level and every reason. Nothing floats permanently on the map. With no Flood Risk, the chip reads `NO FLOOD RISK` in muted style and the popover explains why (a calm day: not Raining, no Storm Signal, no water at 30 cm).
+
+## Alerts Panel
+
+- **Official card:** `OFFICIAL` or `OFFICIAL · REPLAY` tag; source (NWS · FLZ136, NHC, Alachua County); headline; issued time exactly as the source gave it; an `APPLIES TO YOUR HOUSEHOLD` chip when the plan matches; "Read at the source", which while Mesh-only reads "Source link opens when online" instead of a dead link.
+- **Community card:** `COMMUNITY WARNING · NOT OFFICIAL`; a sentence built from its fields ("Water is high at garage and kitchen"); "Signed by the Hub · verified"; the fixed "Check official sources for any evacuation decision." line.
+- Official cards first, newest on top, then Community cards. An acknowledged card shows a small "Acknowledged" check.
+
+## Evacuation Plan Panel
+
+| State | Shows |
+|---|---|
+| No Household Profile, desktop (the projected Hub) | Hand-off card "Your plan lives on your phone" with the Join card |
+| No Household Profile, phone | Empty state and a 44 px "Set up your household" button |
+| Profile, calm day | Nearest open Shelter with fit badges (special-needs, pets) and drive distance |
+| Profile, storm | Your Flood Risk, then the official orders that apply to you, then Flood-Prone Area yes or no, then the Shelter card, then "Show route" |
+| No open Shelter | "No open Shelter announced yet. Follow official sources." and no route |
+| No Route from your Grid point | Shelter labeled "straight-line distance", no line drawn |
+| No Cache Pack | "Shelters and routes arrive once this Node has the Cache Pack" |
+
+Every state ends with "Evacuation decisions come from official sources."
+
+## Cameras Panel
+
+A 2×2 grid of 16:9 tiles.
+
+- **Live:** the picture, a LIVE dot and "updated 40 s ago"; a new picture cross-fades in over 300 ms.
+- **Offline** (the Node is Mesh-only): dashed muted frame, camera-off icon, `OFFLINE · internet down`, no picture.
+- **Unavailable** (one camera failed while Online): solid frame, alert icon, `UNAVAILABLE`. Never mistaken for Offline.
+
+## Hub Panel
+
+The "Hub" button in the top bar opens a slide-over with four tabs; the map keeps updating underneath.
+
+- **Registry** (default): Node name, Node id in mono, `REGISTERED`, `UNVERIFIED` or `SIGN-UP WAITING`, last heard, and Accept for a waiting sign-up.
+- **Warnings:** the Community Warning log, each with time, Nodes and reasons.
+- **Shelters:** one toggle per Shelter.
+- **Feeds:** Live / Replay segmented control and each feed's last fetch.
+
+## Node Panel
+
+Shown only when the dashboard is opened on the Node's own machine (`localhost`); the "Node" button sits beside the Hub button. On the Hub both exist.
+
+- **Scenario:** the stepper with the current beat highlighted, and Reset. The `n` (step) and `r` (reset) keys work only here.
+- **Registration:** `UNVERIFIED`, then "Sign-up sent, waiting for the Hub", then `REGISTERED`, with a "Sign up with the Hub" button.
+
+## Join card
+
+Two codes a phone scans: the first joins the hotspot Wi-Fi (`WIFI:` format), the second opens the dashboard URL. Generated in the browser (`qrcode-generator` 2.0.4), so it works offline. It sits in the hand-off card and is on screen during the Normal-day beat.
 
 ## Warning Takeover
 
-Any new Official Alert or Community Warning takes over the screen. It is the only thing allowed to overpower the layout.
+Any new Official Alert or Community Warning takes over. It is the only thing allowed to overpower the layout.
 
-- Full-screen modal with one large acknowledge button.
+- **Desktop:** an 880 px card centered over the map, which stays live underneath and is dimmed to 40%; a full-width 64 px Acknowledge button. **Phone:** a full-screen sheet.
 - Official and Community keep their own treatment inside the same frame: Official on the light panel with the solid blue OFFICIAL tag; Community with the violet dashed edge, COMMUNITY WARNING · NOT OFFICIAL, and the fixed "check official sources for any evacuation decision" line.
 - If both are pending, Official shows first, then Community ("1 of 2").
 - Acknowledgement is per device and stored in that browser, keyed by the warning's id. A new warning opens the takeover again; the same one does not.
-- After acknowledging, a banner stays under the top bar and the card stays in the Alerts column. A warning never silently disappears.
+- After acknowledging, a banner stays under the top bar and the card stays in the Alerts Panel. A warning never silently disappears.
 - One short two-note chime when the takeover opens, on any device whose page has been tapped once (browsers block sound before that). It never loops. The border pulses slowly; never a strobe. With reduced motion on, no pulse.
+
+## Loading, empty and error states
+
+Never blank out data we already have; mark it stale instead.
+
+- **Connecting:** static skeleton blocks and "Connecting to garage…". No shimmer, no spinner.
+- **Node unreachable:** a banner saying when the Node was last heard; the last data stays on screen, marked stale.
+- **No Cache Pack yet:** the map shows readings only; the Plan says Shelters and routes are on their way.
+- **Storage problem:** the Household Profile banner from `App.tsx`.
+- Every empty Panel says in one line why it is empty, with its icon.
 
 ## Visual language
 
 | Thing | Rule |
 |---|---|
-| Theme | Dark. Colors only through the CSS variables in `dashboard/src/App.css` (names match the canvas: `--bg`, `--surface`, `--surface-2`, `--line`, `--text`, `--muted`, `--community`, `--low`, `--elevated`, `--high`, `--official`, `--official-ink`, `--official-blue`, `--warning`) |
+| Theme | Dark. Colors come in two layers: **primitives** (the raw palette, used only in the theme file) and **roles** (what a color is for, used by every component). Re-theming is editing the primitive-to-role mapping in one file. No raw hex outside the theme file, in code or on the canvas |
+| Roles | `--bg-page`, `--surface-panel`, `--surface-raised`, `--surface-glass`, `--border`, `--text-primary`, `--text-secondary`, `--accent`, `--risk-low`, `--risk-elevated`, `--risk-high`, `--official-bg`, `--official-ink`, `--official-tag`, `--community-warning`, `--flood-prone`, `--scrim`, `--focus-ring`. The table lives on the canvas Foundations page |
 | Contrast | At least 7:1 for all text on its background. Greyed-out Unverified Nodes are the only deliberate exception, and stay at least 4.5:1 |
-| Scale | Projector-first on desktop: everything at 120% (body about 18 px, tags about 14 px), with the side columns narrowed so the map keeps its share. The map stays the biggest thing on screen. Phones use the base scale |
-| Map tiles | Dark tiles from the Cache Pack, with the data credit always shown |
-| Panels | Translucent surface, 1 px border, backdrop blur, 8 px radius |
-| Type | IBM Plex Sans for text; IBM Plex Mono for labels, tags and numbers |
+| Scale | Projector-first on desktop: everything at 120% (body about 18 px, tags about 14 px). The map stays the biggest thing on screen. Phones use the base scale |
+| Type | IBM Plex Sans (400, 600, 700) for text; IBM Plex Mono (500, 600) for labels, tags and numbers, with tabular figures so numbers never shift. **Bundled with the dashboard** (`@fontsource/ibm-plex-sans` and `@fontsource/ibm-plex-mono` 5.3.0), never loaded from Google Fonts: a Mesh-only Node has no internet |
+| Icons | `lucide-react` 1.49.0, pinned, is the only icon source; sizes 16, 20 and 24. The canvas icon inventory names every icon and where it is used. The Storm Shield logo mark is the one custom drawing |
+| Panels | Desktop: `--surface-glass`, 1 px border, 8 px backdrop blur, 8 px radius. Phone: near-opaque surface, no blur |
+| Controls | One kit, every state drawn on the canvas: primary, secondary, ghost, danger and icon buttons at 32, 40 and 44 px (phones always 44); text field, map-pick field, radio, checkbox, toggle, segmented control, tabs, rail button with badge, chip. States: default, hover, pressed, focus-visible (2 px `--focus-ring`), disabled, busy. 6 px radius, labels never wrap. Nothing interactive outside the kit |
 | Flood Risk | Low green, Elevated amber, High red; always with the word, never color alone |
 | Official Alerts | Light panel, solid blue OFFICIAL tag, OFFICIAL · REPLAY for replays, link to the source |
 | Community information | Cyan accents; Community Warnings have a violet dashed edge. Never the official style |
 | Simulated Readings | Always carry a SIMULATED tag |
 | Unverified Nodes | Greyed out, NOT COUNTED tag |
-| Stale | After 15 s: greyed with STALE and the age. Camera tiles say OFFLINE when the internet is down, never show a frozen frame |
+| Stale | After 15 s: desaturated, with STALE and the age, in muted grey (never amber, which means Elevated) |
+
+## Motion
+
+"Reactive" means every change in the data is visible, smooth and never jarring.
+
+| Change | Motion |
+|---|---|
+| A reading changes | Its number ticks to the new value and its slot flashes for 600 ms |
+| A Node's Flood Risk rises | Its chip cross-fades, its marker pulses once, its card flashes once |
+| A Node appears | Marker and card fade in over 300 ms |
+| A Node goes Stale | Desaturates over 300 ms; the label changes in place |
+| Online to Mesh-only | Camera tiles dim and relabel in place; the pill cross-fades |
+| A Panel opens | Slides 8 px and un-blurs over 180 ms |
+| Colors change | Ease over 300 ms |
+| A fresh Alert | Pulse ring on the Alerts rail button |
+| A control is pressed | 120 ms press feedback |
+
+With reduced motion on, every change is an instant swap with no pulse or flash. The canvas Flows page holds a transitions sheet with before, after, duration and easing for each row.
+
+## Performance
+
+These are acceptance lines on every dashboard ticket, not a later polish pass.
+
+- Animate only `transform` and `opacity`.
+- A poll that changes nothing re-renders nothing; markers are updated in place.
+- No layout shift when numbers change: tabular figures, fixed-width value slots.
+- 60 fps while panning the map with Panels open, and under 8 ms of work per poll, on a mid-range phone.
+- Backdrop blur on desktop only.
+- Keep the aria-labels the tests query when restyling.
+
+## Changing the design
+
+Expect small changes once the dashboard is in real hands.
+
+- **Polish** (spacing, copy, timing, colors within the roles): change the code directly; sync the canvas in one batch at the end of the day.
+- **Anatomy** (a new element, a moved Panel, a new state): change the canvas first, then the code.
+- **Tokens:** the theme file in `dashboard/src/` owns them; the canvas mirrors it.
