@@ -1,6 +1,6 @@
 # Storm Shield
 
-A neighborhood disaster dashboard for Gainesville / Alachua County, Florida. Community sensor readings are shared over a local mesh, so residents keep seeing conditions and their evacuation plan when the internet goes down. It adds hyperlocal ground truth next to official NWS/NHC information; it never replaces it.
+A community flood warning dashboard, demonstrated on a replay of the 26 August 2026 flood down the Bhote Koshi and Trishuli in Nepal (ADR 0004). Community sensor readings are shared over a local mesh, so a surge seen upstream warns the towns downstream, and residents keep their warning and evacuation plan when the internet goes down. It adds local ground truth next to official information (DHM, NDRRMA, district offices); it never replaces it.
 
 ## Network
 
@@ -59,15 +59,27 @@ A Node's location snapped to a grid of about 200 m before anything is published;
 _Avoid_: exact location, coordinates
 
 **Scenario**:
-A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by breadboard buttons.
+A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by breadboard buttons. No longer the demo's driver (the Replay is); kept for tests and the breadboard.
 _Avoid_: demo script, simulation, playback
 
+**Replay**:
+A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
+_Avoid_: playback, recording, simulation
+
+**Event clock**:
+The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
+_Avoid_: replay time, sim time
+
+**River km**:
+A Node's or home's distance along the river from the Lhende–Kyirong confluence at the border, positive downstream; set in each Node's config and measured on the river line in the Cache Pack.
+_Avoid_: chainage, mile marker, distance
+
 **Official Alert**:
-A warning or order issued by NWS, NHC or Alachua County, shown distinctly from community information.
+A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
 _Avoid_: warning, notification
 
 **Community Warning**:
-A signed warning issued by Storm Shield from Community Readings; never an evacuation order, and always points residents to official sources for evacuation decisions.
+A signed warning the Hub issues when one Registered Node reports a Surge; it names that Node and its River km so each Viewer can work out when the wave reaches its home. Never an evacuation order, and always points residents to official sources for evacuation decisions.
 _Avoid_: alert, alarm, evacuation notice
 
 **Cache Pack**:
@@ -82,6 +94,10 @@ _Avoid_: flood score, danger level, threat level
 The condition, judged across the Mesh and not from any single Node, that soil moisture is rising at two or more of the Nodes that count (or at the only one that counts). It is what lets Flood Risk appear as Low.
 _Avoid_: wet weather, precipitation
 
+**Surge**:
+A sudden rise in one Node's water level, at least a set amount within a short window; it makes that Node's Flood Risk High at once and triggers a Community Warning.
+_Avoid_: spike, flash, wave
+
 **Storm Signal**:
 The dashboard indicator that air pressure is low across the Nodes that count, a sign a storm is approaching. It stays on while pressure stays low and is separate from Flood Risk, though it makes Flood Risk appear (as Low) when nothing else would.
 _Avoid_: storm warning, storm alert, pressure alarm
@@ -89,7 +105,7 @@ _Avoid_: storm warning, storm alert, pressure alarm
 ## Evacuation
 
 **Evacuation Plan**:
-What a resident should do and where to go: their risk, the nearest open Shelter, and a route to it. Their risk is the Mesh-wide Flood Risk (the worst level across the Nodes that count), not a level tied to where their home is.
+What a resident should do and where to go: their risk, and either the nearest open Shelter they can walk to before the wave or, if there is none, higher ground away from the river. Their risk is the Mesh-wide Flood Risk (the worst level across the Nodes that count), not a level tied to where their home is.
 _Avoid_: evac info, escape route
 
 **Household Profile**:
@@ -105,7 +121,7 @@ One of the evenly spaced points, about 100 m apart, that cover the roads of the 
 _Avoid_: waypoint, cell, node
 
 **Shelter**:
-A public building opened by the county to house evacuees during a storm.
+A public building well above the river, picked by hand into the Cache Pack, where people can wait out a flood.
 _Avoid_: refuge, safe place
 
 **Shelter status**:
@@ -113,7 +129,7 @@ Whether a Shelter is open or closed, set by the Hub operator and announced over 
 _Avoid_: availability, capacity
 
 **Flood-Prone Area**:
-Land approximated from FEMA flood zones and creek floodplains; Alachua County has no lettered evacuation zones.
+The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered.
 _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
@@ -143,7 +159,7 @@ One Node's entry in the Readings Panel: its name, tags, water level and the othe
 _Avoid_: tile, row, sensor card
 
 **Hub Panel**:
-The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the live or replay switch for Official Alerts.
+The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the Replay controls.
 _Avoid_: admin page, settings, control panel
 
 **Node Panel**:

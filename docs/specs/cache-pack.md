@@ -2,6 +2,8 @@
 
 **Status:** ready-for-agent
 
+> **Area superseded.** The pack now covers the Bhote Koshi valley with a hand-drawn river corridor, hand-picked Shelters and a river line (`docs/specs/flash-flood-replay.md`, ticket 0043). How the pack is built, checked, downloaded and served is unchanged.
+
 Feature slice of `docs/specs/storm-shield.md` (ticket 0007). File layout: `docs/specs/wire-formats.md`. Words follow `CONTEXT.md`.
 
 ## Problem Statement

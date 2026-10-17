@@ -1,5 +1,7 @@
 # 0018: On-device rerouting (stretch)
 
+> **Parked.** Road Routes are no longer in the demo's main path (`docs/specs/flash-flood-replay.md`); pick this up only after 0051.
+
 **What to build:** If the precomputed route crosses a Flood-Prone Area or a road a resident marks as blocked, the phone finds a different route to the Shelter itself, with no internet.
 
 **Blocked by:** 0010

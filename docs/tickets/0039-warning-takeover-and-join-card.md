@@ -2,7 +2,7 @@
 
 **What to build:** A new Official Alert or Community Warning takes over the screen until the resident acknowledges it, then stays visible as a banner and in the Alerts Panel. The desktop hand-off card shows two QR codes so a phone can join the hotspot and open the dashboard, generated in the browser so it works offline.
 
-**Blocked by:** 0013, 0014
+**Blocked by:** 0013, 0014, 0047
 
 **Status:** ready-for-agent
 
@@ -14,6 +14,7 @@
 
 - [ ] Desktop: an 880 px card centred over the live map dimmed to 40%, with a full-width 64 px Acknowledge button; phone: a full-screen sheet
 - [ ] Official keeps the light panel with the solid blue OFFICIAL tag; Community keeps the violet dashed edge, `COMMUNITY WARNING · NOT OFFICIAL` and the fixed "Check official sources for any evacuation decision." line
+- [ ] A Community Warning's takeover leads with the wave's ETA countdown from 0047 ("Wave expected at your home in about 9 min")
 - [ ] If both are pending, Official shows first, then Community ("1 of 2")
 - [ ] Acknowledgement is stored per device in the browser, keyed by the warning's id; a new warning opens the takeover again, the same one does not
 - [ ] After acknowledging, a banner stays under the top bar and the card stays in the Alerts Panel; a warning never silently disappears

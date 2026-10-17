@@ -2,6 +2,8 @@
 
 **Status:** ready-for-agent
 
+> **Region and demo superseded.** The Gainesville setting, the Helene replay, the live NWS/NHC feeds, the FL511 cameras and the demo storyline below are replaced by `docs/specs/flash-flood-replay.md` (ADR 0004). The system design here still holds.
+
 ## Problem Statement
 
 When a hurricane approaches Gainesville / Alachua County, residents rely on internet-delivered information: NWS alerts, NHC forecasts, county evacuation orders, shelter lists and map apps. Two things go wrong:
