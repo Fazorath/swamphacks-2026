@@ -220,6 +220,63 @@ button:disabled {
   font-weight: bold;
 }
 
+/* Official Alerts look nothing like community information: light panel, solid blue tag. */
+.official-alert {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--official);
+  border: 2px solid var(--official-blue);
+  border-radius: 0.5rem;
+  color: var(--official-ink);
+  list-style: none;
+}
+
+.official-alert h3 {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+
+section .official-alert p,
+.official-alert a {
+  color: var(--official-ink);
+}
+
+.official-alert-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.official-tag,
+.applies-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.official-tag {
+  background: var(--official-blue);
+  color: var(--official);
+}
+
+.applies-chip {
+  border: 1px solid var(--official-blue);
+}
+
+.plan-official-alerts {
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.lead-time {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
 .areas {
   display: contents;
 }

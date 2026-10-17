@@ -73,22 +73,24 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 
 ## Official Alert (`kind: "alert"`)
 
-Sent by the Hub only, from the same normalization path for live feeds and the Hurricane Helene replay.
+Sent by the Hub only. Today every alert is a replayed DHM or district alert from `replay_timeline.json` (0014); live feeds were dropped with ticket 0017.
 
 ```json
-{ "v": 1, "kind": "alert", "id": "helene-004", "source": "county", "mode": "replay",
-  "issued": "2024-09-25T15:00:00Z",
-  "headline": "Evacuation order: mobile homes, RVs, flood-prone areas",
-  "applies_to": ["mobile_home", "rv", "flood_prone_area"],
-  "url": "https://[source link]" }
+{ "v": 1, "kind": "alert", "id": "dhm-sms", "source": "dhm", "mode": "replay",
+  "issued": "2026-08-26T09:15:00+05:45",
+  "headline": "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert",
+  "applies_to": ["flood_prone_area"],
+  "url": "https://kathmandupost.com/national/2026/08/27/how-the-bhotekoshi-flood-unfolded-over-10-hours" }
 ```
 
-- `source`: `nws`, `nhc` or `county`; drives the source tag.
+- `source`: `dhm`, `ndrrma` or `district`; drives the source tag.
 - `mode`: `live` or `replay`. `replay` produces the OFFICIAL · REPLAY label and is never optional.
 - `applies_to`: tags the Evacuation Plan reads, so it never parses prose. Empty means the alert covers everyone in the zone. Values: `mobile_home`, `rv`, `flood_prone_area`.
 - `issued` is the source's own real timestamp and is displayed as is; it does not go through age logic.
 - `headline` is at most 120 characters. Full text stays behind `url`, which opens only when the internet is back.
-- Replay alerts are tagged by hand (a recorded event). Live NWS and NHC alerts are tagged only in obvious cases; anything else applies to everyone.
+- Replay alerts are tagged by hand (a recorded event).
+- **Replay timing.** The Hub sends a replayed alert once its Event clock reaches `issued` (checked every `NODE_ALERT_CHECK_SECONDS`, default 1 s) and repeats every alert already due with each Event clock repeat. A Node shows a replayed alert only while its own Event clock is at or past `issued`, so a reset or a jump back hides it again without a new message. A signed alert must fit one Reticulum packet (464 bytes), which bounds `headline` and `url` together.
+- `GET /api/state` carries the alerts this Node shows as `official_alerts`, oldest first.
 
 ## Shelter status (`kind: "shelters"`)
 
@@ -105,7 +107,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044); the `warning` additions and the `alert.source` values are not yet (0013).
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044) and the `alert.source` values are built (0014); the `warning` additions are not yet (0013).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 

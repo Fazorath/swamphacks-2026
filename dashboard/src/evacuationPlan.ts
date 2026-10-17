@@ -1,5 +1,6 @@
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { Home, HouseholdProfile } from "./householdProfile";
+import { appliesToHousehold, type OfficialAlert } from "./officialAlerts";
 import type { LatLon, RouteGrid, Routes } from "./routeGrid";
 import type { FloodRisk } from "./useFloodRisk";
 
@@ -24,6 +25,8 @@ export type CachePackContents = {
 
 export type EvacuationPlan = {
   risk: { level: NonNullable<FloodRisk["level"]>; reasons: string[] } | null;
+  // Official Alerts that apply to this household, oldest first; the plan only ever quotes them.
+  officialAlerts: OfficialAlert[];
   lines: string[];
   shelter: Shelter | null;
   // From the Grid point nearest home to the Shelter; null when the plan has no Route to draw.
@@ -149,18 +152,21 @@ export function evacuationPlan({
   openShelterIds,
   floodRisk,
   routes,
+  officialAlerts,
 }: {
   profile: HouseholdProfile | null;
   pack: CachePackContents | null;
   openShelterIds: string[];
   floodRisk: FloodRisk | null;
   routes: Routes | null;
+  officialAlerts: OfficialAlert[];
 }): EvacuationPlan {
   const risk = floodRisk?.level
     ? { level: floodRisk.level, reasons: cardReasons(floodRisk).map(reasonSentence) }
     : null;
   const plan = {
     risk,
+    officialAlerts: [] as OfficialAlert[],
     lines: [] as string[],
     shelter: null,
     route: null,
@@ -176,15 +182,26 @@ export function evacuationPlan({
   if (pack === null) {
     return {
       ...plan,
+      // Without the pack the home might be in the Flood-Prone Area, and a missed alert is worse.
+      officialAlerts: officialAlerts.filter((alert) => appliesToHousehold(alert, profile, true)),
       lines: [
         "Shelter and flood-area information is still loading on this Node. Follow official sources.",
       ],
     };
   }
 
-  const area = inFloodProneArea(profile.home, pack)
+  const homeInFloodProneArea = inFloodProneArea(profile.home, pack);
+  const area = homeInFloodProneArea
     ? "Your home is inside a mapped Flood-Prone Area."
     : "Your home is outside the mapped Flood-Prone Areas (FEMA zones and creek floodplains, approximate).";
   const { shelter, route, lines } = nearestFittingShelter(profile, pack, openShelterIds, routes);
-  return { ...plan, lines: [area, ...lines], shelter, route };
+  return {
+    ...plan,
+    officialAlerts: officialAlerts.filter((alert) =>
+      appliesToHousehold(alert, profile, homeInFloodProneArea),
+    ),
+    lines: [area, ...lines],
+    shelter,
+    route,
+  };
 }

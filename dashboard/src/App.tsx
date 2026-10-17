@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { AlertsPanel } from "./AlertsPanel";
 import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { EventClockTag } from "./EventClockTag";
@@ -18,6 +19,7 @@ import { useFloodRisk } from "./useFloodRisk";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeIdentity } from "./useNodeIdentity";
 import { useNodeStatus } from "./useNodeStatus";
+import { useOfficialAlerts } from "./useOfficialAlerts";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useReadings } from "./useReadings";
 import { useRoutes } from "./useRoutes";
@@ -30,8 +32,6 @@ const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
     "Your saved household profile could not be read, so it is treated as missing. It was not deleted.",
   unsaved: "Your household profile will not be remembered after you close this page.",
 };
-
-const PLACEHOLDER_AREAS = ["Alerts"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
@@ -46,7 +46,15 @@ export function App() {
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
-  const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk, routes });
+  const officialAlerts = useOfficialAlerts();
+  const plan = evacuationPlan({
+    profile,
+    pack: cachePack,
+    openShelterIds,
+    floodRisk,
+    routes,
+    officialAlerts,
+  });
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -138,12 +146,13 @@ export function App() {
           onDonePicking={() => setPicking(false)}
         />
         <EvacuationPlanPanel plan={plan} />
-        {PLACEHOLDER_AREAS.map((title) => (
-          <section key={title} aria-label={title}>
-            <h2>{title}</h2>
-            <p>Coming soon</p>
-          </section>
-        ))}
+        <AlertsPanel
+          alerts={officialAlerts}
+          appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
+          // Community Warnings arrive with ticket 0013; until then there is no lead time to show.
+          firstCommunityWarningAt={null}
+          online={status === "online"}
+        />
       </div>
     </main>
   );

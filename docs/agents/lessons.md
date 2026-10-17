@@ -121,6 +121,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **In a `MeshedNodes` test, a Node started after another hears it at once** (both publish at startup), so "only this Node is listed" needs a single `start("porch")`. `hear_from(...)` Nodes have no client; `remove` only works on app Nodes.
 - `STOPS_COUNTING_AFTER_SECONDS` in `timing.py` has no reader until 0021; that is on purpose.
 
+## Official Alerts: DHM replay (ticket 0014)
+
+- **The source article never names DHM**: it says "authorities" and the Flood Forecasting Division, and gives no alert wording. The timeline's headlines paraphrase it and `official_alerts_note` says so; `issuer` follows the spec's `dhm` / `district` tags. Recheck before the pitch if a better source turns up.
+- **A signed alert must fit one Reticulum packet** (464 bytes with the 64-byte signature), and headline plus URL take most of it. `test_every_replayed_alert_fits_one_reticulum_packet` guards it; shorten the headline if it fails.
+- **Nodes filter alerts on their own Event clock**, so Reset (paused at 08:30) hides every alert with no extra message. The Hub only forwards; it never takes an alert back.
+- The lead-time line compares with the first Official Alert (09:05 notice), so it reads "Community Warning 08:37 · first Official Alert 09:05", decided on 2026-10-17. Nothing feeds it a Community Warning until 0013; `App` passes `null` for now.
+- The dashboard reads alerts from `/api/state` (`useOfficialAlerts`, every second) because 0041 has not moved the dashboard to the snapshot yet; 0041 folds it in.
+
 ## Flash flood pivot (ADR 0004)
 
 - **Two floods hit the same river 13 months apart; don't mix their facts.** The 8 July 2025 Purepu GLOF started in Tibet and killed about 11 in Nepal; the 26 August 2026 ice-rock avalanche started on Langtang Lirung, inside Nepal, and killed well over a thousand. Many search results, including ICIMOD pages, cover both. The demo replays 2026; every fact in the replay timeline cites a 2026 source.

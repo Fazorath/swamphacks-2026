@@ -5,6 +5,7 @@ import {
   type Shelter,
 } from "./evacuationPlan";
 import type { HouseholdProfile } from "./householdProfile";
+import type { OfficialAlert } from "./officialAlerts";
 import type { Routes } from "./routeGrid";
 import type { FloodRisk } from "./useFloodRisk";
 
@@ -83,6 +84,7 @@ function plan(overrides: Partial<Parameters<typeof evacuationPlan>[0]> = {}) {
     openShelterIds: ["near-plain", "far-both", "nearest-flagged"],
     floodRisk: null,
     routes: null,
+    officialAlerts: [],
     ...overrides,
   });
 }
@@ -246,4 +248,60 @@ test("the plan says the route ignores flooding and road closures, only when it d
 
 test("no open Shelter draws no route", () => {
   expect(plan({ routes: ROUTES, openShelterIds: [] }).route).toBeNull();
+});
+
+const RIVERBANK_SMS: OfficialAlert = {
+  id: "dhm-sms",
+  source: "dhm",
+  mode: "replay",
+  issued: "2026-08-26T09:15:00+05:45",
+  headline:
+    "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert",
+  applies_to: ["flood_prone_area"],
+  url: "https://example.org/sms",
+};
+const FOR_EVERYONE: OfficialAlert = {
+  ...RIVERBANK_SMS,
+  id: "dhm-notice",
+  issued: "2026-08-26T09:05:00+05:45",
+  applies_to: [],
+};
+const FOR_MOBILE_HOMES: OfficialAlert = {
+  ...RIVERBANK_SMS,
+  id: "mobile",
+  applies_to: ["mobile_home"],
+};
+const AROUND_HOME = {
+  features: [{ geometry: { type: "Polygon" as const, coordinates: [SQUARE] } }],
+};
+
+test("a home in the Flood-Prone Area matches the riverbank alert; one outside does not", () => {
+  const inside = plan({ pack: pack({ floodProne: AROUND_HOME }), officialAlerts: [RIVERBANK_SMS] });
+  expect(inside.officialAlerts).toEqual([RIVERBANK_SMS]);
+  const outside = plan({
+    pack: pack({ floodProne: AROUND_HOME }),
+    profile: profile({ home: { lat: 29.7, lon: -82.2 } }),
+    officialAlerts: [RIVERBANK_SMS],
+  });
+  expect(outside.officialAlerts).toEqual([]);
+});
+
+test("an alert with no tags applies to every household, and housing tags match housing", () => {
+  const alerts = [FOR_EVERYONE, FOR_MOBILE_HOMES];
+  expect(plan({ officialAlerts: alerts }).officialAlerts).toEqual([FOR_EVERYONE]);
+  const mobileHome = profile({ housing: "mobile-home-rv" });
+  expect(plan({ officialAlerts: alerts, profile: mobileHome }).officialAlerts).toEqual(alerts);
+});
+
+test("with no Cache Pack yet the riverbank alert is still listed", () => {
+  expect(plan({ pack: null, officialAlerts: [RIVERBANK_SMS] }).officialAlerts).toEqual([
+    RIVERBANK_SMS,
+  ]);
+});
+
+test("with no Official Alert there is no evacuation language", () => {
+  const result = plan({ floodRisk: floodRisk("high"), pack: pack({ floodProne: AROUND_HOME }) });
+  expect(result.officialAlerts).toEqual([]);
+  const sentences = [...(result.risk?.reasons ?? []), ...result.lines];
+  for (const sentence of sentences) expect(sentence).not.toMatch(/\bevacuat/i);
 });
