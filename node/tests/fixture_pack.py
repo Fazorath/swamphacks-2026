@@ -19,7 +19,7 @@ RIVER = {
     "features": [
         {
             "type": "Feature",
-            "properties": {"reach": "border to Betrawati", "speed_kmh": 68, "km": [44.9, 45.6]},
+            "properties": {"reach": "border to Betrawati", "speed_kmh": 68, "km": [44.5, 45.0]},
             "geometry": {"type": "LineString", "coordinates": [[85.18, 27.98], [85.186, 27.9731]]},
         }
     ],
