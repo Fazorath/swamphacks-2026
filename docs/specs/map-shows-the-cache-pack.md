@@ -28,7 +28,7 @@ The map draws every Shelter in the Cache Pack and the Flood-Prone Area overlay f
 - **Data.** `useCachePack` already loads `shelters.json` and `flood_prone.geojson`; no Node change and no new endpoint. No pack means no Shelter markers and no overlay, with no error.
 - **Shelter markers.** Every pack Shelter gets a marker with a permanent tooltip in the style of the Node labels (no popups, per `docs/design/ui.md`): `Name · special needs · pets`, naming only the flags that are true. A Shelter not in `openShelterIds` carries a `Closed` word in its label and a `closed` class. Closed is judged the way the Evacuation Plan judges it: open only once the Hub has announced it, so before the first announcement every Shelter reads Closed.
 - **The plan's pick.** The Shelter the Evacuation Plan chose keeps the existing `shelter-marker` look and is not drawn twice; the others use a plainer class. Final pins (solid open, hollow grey closed, cyan ring) are ticket 0035.
-- **Overlay.** `floodProne` features are drawn as Leaflet GeoJSON (GeoJSON order is `[lon, lat]`, which Leaflet's GeoJSON layer handles) with a dashed outline and a light fill, not interactive, under the Nodes. A fixed caption "Flood-Prone Area: hand-drawn, approximate" shows on the map while the overlay is drawn. The hatch is 0035.
+- **Overlay.** `floodProne` features are drawn as Leaflet GeoJSON (GeoJSON order is `[lon, lat]`, which Leaflet's GeoJSON layer handles) with a dashed outline and a light fill, not interactive (taps pass through to the map, so Home picking and Road blocking work over them), under the Nodes. A fixed caption "Flood-Prone Area: hand-drawn, approximate" shows on the map while the overlay is drawn. The hatch is 0035.
 - **Deep module.** One small `PackLayers` component (Shelters and overlay) inside `NodeMap.tsx`'s folder; `NodeMap` receives `shelters`, `openShelterIds` and `floodProne` as props from `App`. The chosen-Shelter prop stays as it is.
 - **Glossary.** `CONTEXT.md` Flood-Prone Area: add that the map always marks it approximate. No new term, no ADR.
 - **Tile credit.** Already shown by the tile layer (0026).
@@ -42,7 +42,6 @@ The map draws every Shelter in the Cache Pack and the Flood-Prone Area overlay f
   - a Shelter the Hub has not announced reads Closed; one announced open does not;
   - the plan's chosen Shelter is marked once, apart from the others;
   - with a pack, the overlay path and the approximate caption are present; with no pack, neither is;
-  - tapping a marker or the overlay does not start Home picking or Road blocking.
 - **Jsdom limits.** Leaflet draws no tiles at zero size (lessons: Home Profile, Map tiles), so markers are found by their class and tooltip text, and the overlay by its path class. Map assertions wait with `waitFor`.
 - **Break check.** Remove the render of the other Shelters and confirm the new tests fail.
 - **Manual check.** Rehearsed on one laptop: a Node with the valley pack, the pack server stopped, a phone over Tailscale showing the Shelters and the overlay. Not a Pi check.
