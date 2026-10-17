@@ -177,6 +177,12 @@ button:disabled {
   border-style: dashed;
 }
 
+.evacuation-route {
+  stroke: var(--low);
+  stroke-width: 5;
+  stroke-opacity: 0.85;
+}
+
 .shelter-marker {
   display: grid;
   place-items: center;

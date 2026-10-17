@@ -12,6 +12,8 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest", "ruff", "mypy"]
+# Only scripts/build_cache_pack.py needs this; a Node never installs it (`uv sync --group build`).
+build = ["pyrosm"]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"
@@ -26,8 +28,13 @@ packages = ["src/storm_shield"]
 [tool.ruff]
 line-length = 100
 
+[tool.pytest.ini_options]
+# The Cache Pack build script is not part of the Node, but its routing is tested here.
+pythonpath = ["../scripts"]
+
 [tool.mypy]
 strict = true
+mypy_path = "../scripts"
 
 [[tool.mypy.overrides]]
 module = ["RNS", "RNS.*"]

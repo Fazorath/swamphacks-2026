@@ -53,6 +53,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Run `mypy src tests` from `node/`**: from another directory it stops with "Duplicate module named `__main__`". From a worktree use `uv run --directory <worktree>/node mypy src tests`.
 - **Prettier reformats test files you just wrote**: run `pnpm format` before `pnpm lint`.
 
+## Routes (ticket 0010)
+
+- **`pyrosm` cuts every way into one edge per pair of consecutive OSM nodes** (all geometries have 2 points), so a Route can follow the road with graph nodes alone. `oneway` is `yes`, `no`, `-1` (against node order) or NaN (two-way). Reading the Florida extract for the demo box takes about a minute each run.
+- **Real build, 2026-10-17:** 6,296 Grid point files at 100 m, 2.8 MB zipped (budget 5 MB), 84 s. The shelters are still PLACEHOLDERs, so rebuild after they are checked.
+- **The build script imports `pack_routes`, which the Node's tests also import** (`pythonpath`/`mypy_path` `../scripts` in `node/pyproject.toml`); `pyrosm` is only in `uv sync --group build`.
+- **A page that never serves a pack sends no Route request**, so the 0008 test "no request carries the profile" passed vacuously until its stub served a pack with a grid; it now asserts that the only Route-related request is `routes/{gx}_{gy}.json` (ADR 0003).
+- **ESLint `react-hooks/set-state-in-effect` rejects `setX(null)` at the top of an effect**; `useRoutes` stores the file with the Routes and derives "still loading" instead.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import type { CachePackContents } from "./evacuationPlan";
+import type { RouteGrid } from "./routeGrid";
 
 const RETRY_EVERY_MS = 5000;
 
@@ -11,13 +12,18 @@ async function getJson(url: string): Promise<unknown> {
 }
 
 async function fetchCachePack(): Promise<CachePackContents | null> {
-  const status = (await getJson("/api/cache-pack")) as { available?: boolean };
+  const status = (await getJson("/api/cache-pack")) as {
+    available?: boolean;
+    manifest?: { route_grid?: RouteGrid } | null;
+  };
   if (status.available !== true) return null;
   const [shelters, floodProne] = await Promise.all([
     getJson("/api/cache-pack/files/shelters.json"),
     getJson("/api/cache-pack/files/flood_prone.geojson"),
   ]);
-  return { shelters, floodProne } as CachePackContents;
+  // A pack built without Routes has no grid.
+  const routeGrid = status.manifest?.route_grid ?? null;
+  return { shelters, floodProne, routeGrid } as CachePackContents;
 }
 
 // The pack never changes once a Node holds a valid one, so it is read once and then kept.

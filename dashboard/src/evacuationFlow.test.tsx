@@ -24,10 +24,33 @@ function saveProfile() {
   );
 }
 
-function stubNode({ packAvailable, open }: { packAvailable: boolean; open: string[] }) {
+// A grid whose steps are whole hundredths, so the cell nearest the profile's home is easy to read.
+const ROUTE_GRID = { south: 29, west: -83, lat_step: 0.01, lon_step: 0.01 };
+const HOME_ROUTE_FILE = "/api/cache-pack/files/routes/68_65.json";
+const ROUTE: [number, number][] = [
+  [29.65, -82.32],
+  [29.655, -82.32],
+  [29.66, -82.32],
+];
+
+function stubNode({
+  packAvailable,
+  open,
+  routeGrid = null,
+  routeFile,
+}: {
+  packAvailable: boolean;
+  open: string[];
+  routeGrid?: typeof ROUTE_GRID | null;
+  routeFile?: Record<string, [number, number][]>;
+}) {
   const answers: Record<string, unknown> = {
     "/api/node": { id: "porch", name: "porch", role: "hub" },
-    "/api/cache-pack": { available: packAvailable, manifest: null },
+    "/api/cache-pack": {
+      available: packAvailable,
+      manifest: routeGrid && { route_grid: routeGrid },
+    },
+    ...(routeFile && { [HOME_ROUTE_FILE]: routeFile }),
     "/api/cache-pack/files/shelters.json": [
       {
         id: "test-gym",
@@ -46,6 +69,10 @@ function stubNode({ packAvailable, open }: { packAvailable: boolean; open: strin
       url in answers ? Response.json(answers[url]) : new Response(null, { status: 404 }),
     ),
   );
+}
+
+function fetchedUrls(): string[] {
+  return vi.mocked(fetch).mock.calls.map(([url]) => String(url));
 }
 
 beforeEach(() => {
@@ -82,4 +109,49 @@ test("a Node with no Cache Pack yet says the information is still loading", asyn
 
   expect(await screen.findByText(/still loading on this Node/)).toBeVisible();
   expect(document.querySelector(".shelter-marker")).toBeNull();
+});
+
+test("the route from the Grid point nearest home is drawn and sets the distance", async () => {
+  saveProfile();
+  stubNode({
+    packAvailable: true,
+    open: ["test-gym"],
+    routeGrid: ROUTE_GRID,
+    routeFile: { "test-gym": ROUTE },
+  });
+  render(<App />);
+
+  expect(await screen.findByText(/Nearest open Shelter: Test Gym, 1\.\d km by road/)).toBeVisible();
+  expect(fetchedUrls()).toContain(HOME_ROUTE_FILE);
+  expect(document.querySelectorAll(".evacuation-route")).toHaveLength(1);
+});
+
+test("the Route request names a Grid point, not the home", async () => {
+  saveProfile();
+  stubNode({ packAvailable: true, open: ["test-gym"], routeGrid: ROUTE_GRID });
+  render(<App />);
+
+  await screen.findByText(/Nearest open Shelter/);
+  const routeRequests = fetchedUrls().filter((url) => url.includes("routes/"));
+  expect(routeRequests).toEqual([HOME_ROUTE_FILE]);
+});
+
+test("a home with no Route file falls back to straight-line distance and draws no line", async () => {
+  saveProfile();
+  stubNode({ packAvailable: true, open: ["test-gym"], routeGrid: ROUTE_GRID });
+  render(<App />);
+
+  expect(
+    await screen.findByText(/Test Gym, 1\.1 km away in a straight line, no road route available/),
+  ).toBeVisible();
+  expect(document.querySelector(".evacuation-route")).toBeNull();
+});
+
+test("a pack built without Routes asks for none", async () => {
+  saveProfile();
+  stubNode({ packAvailable: true, open: ["test-gym"] });
+  render(<App />);
+
+  await screen.findByText(/Nearest open Shelter/);
+  expect(fetchedUrls().some((url) => url.includes("routes/"))).toBe(false);
 });

@@ -80,7 +80,6 @@ A build script prepares one Cache Pack ahead of the event for a single demo box 
 ## Out of Scope
 
 - Showing the pack on the map and the tile credit (ticket 0025).
-- Precomputed routes and the route grid (ticket 0010).
 - An online/offline flag and camera tiles (ticket 0011).
 - Shelter open status over the mesh (ticket 0015).
 - Carrying the pack over the mesh.
@@ -98,7 +97,7 @@ A build script prepares one Cache Pack ahead of the event for a single demo box 
 Ticket 0010 adds `routes/` to the pack; the manifest lists and checksums those files like any other. Decisions from the 0010 grill:
 
 - **Grid points.** About 100 m apart, kept only within about 100 m of a drivable road, so homes on a road always have one. Coordinates are rounded to 5 decimals. If the zip grows past about 5 MB, the spacing coarsens to about 250 m.
-- **Build.** The script reads the Geofabrik Florida extract clipped to `bbox` with `pyrosm` and runs one Dijkstra per Shelter with `networkx`; both live in a build-only dependency group, never in the Node's runtime dependencies. The extract stays out of git.
+- **Build.** The script reads the Geofabrik Florida extract clipped to `bbox` with `pyrosm` and runs one Dijkstra per Shelter (plain Python in `scripts/pack_routes.py`, so its tests run with the Node's); `pyrosm` lives in the build-only dependency group (`uv sync --group build`), never in the Node's runtime dependencies. The manifest gains `route_grid` (`south`, `west`, `lat_step`, `lon_step`) so a Viewer can find its Grid point's file; a pack without it has no Routes. The extract stays out of git.
 - **Routes are shortest drives.** They ignore Flood-Prone Areas and live road conditions, and the dashboard says so.
 - **No route.** A Shelter with no Route from the resident's Grid point ranks after the routed ones by straight-line distance, labelled as such, with no line drawn.
 - **Privacy.** The Viewer asks its connected Node for the file of its home's Grid point, which reveals the home to about 100 m to that Node only (`docs/adr/0003-routes-reveal-a-grid-point-to-the-connected-node.md`).

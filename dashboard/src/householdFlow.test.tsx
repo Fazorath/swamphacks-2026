@@ -13,11 +13,20 @@ let fetchSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   localStorage.clear();
-  fetchSpy = vi.fn(async (path: string) =>
-    Response.json(
+  fetchSpy = vi.fn(async (path: string) => {
+    if (path === "/api/cache-pack") {
+      return Response.json({
+        available: true,
+        manifest: { route_grid: { south: 29, west: -83, lat_step: 0.01, lon_step: 0.01 } },
+      });
+    }
+    if (path.endsWith("shelters.json")) return Response.json([]);
+    if (path.endsWith("flood_prone.geojson")) return Response.json({ features: [] });
+    if (path.includes("/routes/")) return new Response(null, { status: 404 });
+    return Response.json(
       path === "/api/cameras" ? [] : { id: "porch", name: "porch", role: "hub", status: "online" },
-    ),
-  );
+    );
+  });
   vi.stubGlobal("fetch", fetchSpy);
   vi.stubGlobal("EventSource", SilentEventSource);
 });
@@ -135,7 +144,14 @@ test("no request carries the profile", async () => {
   fillInProfile();
   const { home } = JSON.parse(localStorage.getItem(KEY)!).profile;
   await new Promise((resolve) => setTimeout(resolve, 50));
-  const sent = JSON.stringify(fetchSpy.mock.calls);
+  // The one allowed exception (docs/adr/0003): asking for the file of the Grid point nearest home.
+  const requests = fetchSpy.mock.calls.map(([path]) => String(path));
+  const routeFileRequests = requests.filter((path) => path.includes("/routes/"));
+  expect(routeFileRequests.length).toBeGreaterThan(0);
+  for (const path of routeFileRequests) {
+    expect(path).toMatch(/^\/api\/cache-pack\/files\/routes\/\d+_\d+\.json$/);
+  }
+  const sent = JSON.stringify(requests.filter((path) => !path.includes("/routes/")));
   expect(sent).not.toMatch(/mobile-home-rv|housing|"lat"|"lon"/);
   expect(sent).not.toContain(String(home.lat));
   expect(sent).not.toContain(String(home.lon));

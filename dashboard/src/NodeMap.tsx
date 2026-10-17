@@ -6,6 +6,7 @@ import {
   CircleMarker,
   MapContainer,
   Marker,
+  Polyline,
   TileLayer,
   Tooltip,
   useMap,
@@ -16,6 +17,7 @@ import { NodeTags } from "./NodeTags";
 import { stormSignalSentence } from "./floodRiskSentences";
 import type { Shelter } from "./evacuationPlan";
 import type { Home } from "./householdProfile";
+import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { FloodRisk } from "./useFloodRisk";
 
@@ -68,6 +70,7 @@ type Props = {
   home: Home | null;
   // Only the Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
+  route: LatLon[] | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
   picking: boolean;
@@ -82,6 +85,7 @@ export function NodeMap({
   stormSignal,
   home,
   shelter,
+  route,
   draftHome,
   picking,
   onPickHome,
@@ -117,6 +121,7 @@ export function NodeMap({
           />
         )}
         {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
+        {route && <Polyline positions={route} className="evacuation-route" />}
         {shelter && <Marker position={shelter.pos} icon={SHELTER_ICON} interactive={false} />}
         {nodes.map((node) => {
           const selected = node.id === selectedId;

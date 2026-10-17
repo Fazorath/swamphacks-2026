@@ -18,6 +18,7 @@ import { useNodeIdentity } from "./useNodeIdentity";
 import { useNodeStatus } from "./useNodeStatus";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useReadings } from "./useReadings";
+import { useRoutes } from "./useRoutes";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
@@ -41,7 +42,8 @@ export function App() {
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
-  const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk });
+  const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
+  const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk, routes });
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -124,6 +126,7 @@ export function App() {
           stormSignal={floodRisk?.storm_signal ?? null}
           home={profile?.home ?? null}
           shelter={plan.shelter}
+          route={plan.route}
           draftHome={panelOpen ? draftHome : null}
           picking={picking}
           onPickHome={setDraftHome}

@@ -1,5 +1,6 @@
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { Home, HouseholdProfile } from "./householdProfile";
+import type { LatLon, RouteGrid, Routes } from "./routeGrid";
 import type { FloodRisk } from "./useFloodRisk";
 
 export type Shelter = {
@@ -18,12 +19,15 @@ type FloodProneGeometry =
 export type CachePackContents = {
   shelters: Shelter[];
   floodProne: { features: { geometry: FloodProneGeometry }[] };
+  routeGrid: RouteGrid | null;
 };
 
 export type EvacuationPlan = {
   risk: { level: NonNullable<FloodRisk["level"]>; reasons: string[] } | null;
   lines: string[];
   shelter: Shelter | null;
+  // From the Grid point nearest home to the Shelter; null when the plan has no Route to draw.
+  route: LatLon[] | null;
   officialLine: string;
 };
 
@@ -31,7 +35,7 @@ export const OFFICIAL_LINE = "Evacuation decisions come from official sources.";
 
 const EARTH_RADIUS_KM = 6371;
 
-function distanceKm(from: Home, [lat, lon]: [number, number]): number {
+function distanceKm(from: Home, [lat, lon]: LatLon): number {
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
   const deltaLat = toRadians(lat - from.lat);
   const deltaLon = toRadians(lon - from.lon);
@@ -39,6 +43,14 @@ function distanceKm(from: Home, [lat, lon]: [number, number]): number {
     Math.sin(deltaLat / 2) ** 2 +
     Math.cos(toRadians(from.lat)) * Math.cos(toRadians(lat)) * Math.sin(deltaLon / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a));
+}
+
+function routeLengthKm(route: LatLon[]): number {
+  let total = 0;
+  for (let i = 1; i < route.length; i++) {
+    total += distanceKm({ lat: route[i - 1][0], lon: route[i - 1][1] }, route[i]);
+  }
+  return total;
 }
 
 function insideRing({ lat, lon }: Home, ring: Ring): boolean {
@@ -66,25 +78,40 @@ function inFloodProneArea(home: Home, pack: CachePackContents): boolean {
   );
 }
 
-function shelterDescription(shelter: Shelter, home: Home): string {
-  const km = distanceKm(home, shelter.pos).toFixed(1);
+type Candidate = { shelter: Shelter; route: LatLon[] | null; km: number };
+
+function describe({ shelter, route, km }: Candidate): string {
   const features = [
     shelter.special_needs && "special-needs",
     shelter.pet_friendly && "pet-friendly",
   ]
     .filter(Boolean)
     .join(", ");
-  return `Nearest open Shelter: ${shelter.name}, ${km} km away${features ? ` (${features})` : ""}.`;
+  const distance = route
+    ? `${km.toFixed(1)} km by road`
+    : `${km.toFixed(1)} km away in a straight line, no road route available`;
+  return `Nearest open Shelter: ${shelter.name}, ${distance}${features ? ` (${features})` : ""}.`;
+}
+
+// A Shelter with no Route from home's Grid point ranks after every one that has a Route.
+function byRoadThenStraightLine(a: Candidate, b: Candidate): number {
+  if ((a.route === null) !== (b.route === null)) return a.route === null ? 1 : -1;
+  return a.km - b.km;
 }
 
 function nearestFittingShelter(
   profile: HouseholdProfile,
   pack: CachePackContents,
   openShelterIds: string[],
-): { shelter: Shelter | null; line: string } {
+  routes: Routes | null,
+): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } {
   const open = pack.shelters.filter((shelter) => openShelterIds.includes(shelter.id));
   if (open.length === 0) {
-    return { shelter: null, line: "No open Shelter announced yet. Follow official sources." };
+    return {
+      shelter: null,
+      route: null,
+      lines: ["No open Shelter announced yet. Follow official sources."],
+    };
   }
   // A need is a filter: a household without it can still use a Shelter that offers it.
   const fitting = open.filter(
@@ -95,13 +122,25 @@ function nearestFittingShelter(
   if (fitting.length === 0) {
     return {
       shelter: null,
-      line: "No open Shelter matches this household. Follow official sources.",
+      route: null,
+      lines: ["No open Shelter matches this household. Follow official sources."],
     };
   }
-  const [nearest] = fitting.sort(
-    (a, b) => distanceKm(profile.home, a.pos) - distanceKm(profile.home, b.pos),
-  );
-  return { shelter: nearest, line: shelterDescription(nearest, profile.home) };
+  const [nearest] = fitting
+    .map((shelter): Candidate => {
+      const route = routes?.[shelter.id] ?? null;
+      return {
+        shelter,
+        route,
+        km: route ? routeLengthKm(route) : distanceKm(profile.home, shelter.pos),
+      };
+    })
+    .sort(byRoadThenStraightLine);
+  const lines = [describe(nearest)];
+  if (nearest.route) {
+    lines.push("The route is the shortest by road and ignores flooding and road closures.");
+  }
+  return { shelter: nearest.shelter, route: nearest.route, lines };
 }
 
 export function evacuationPlan({
@@ -109,16 +148,24 @@ export function evacuationPlan({
   pack,
   openShelterIds,
   floodRisk,
+  routes,
 }: {
   profile: HouseholdProfile | null;
   pack: CachePackContents | null;
   openShelterIds: string[];
   floodRisk: FloodRisk | null;
+  routes: Routes | null;
 }): EvacuationPlan {
   const risk = floodRisk?.level
     ? { level: floodRisk.level, reasons: cardReasons(floodRisk).map(reasonSentence) }
     : null;
-  const plan = { risk, lines: [] as string[], shelter: null, officialLine: OFFICIAL_LINE };
+  const plan = {
+    risk,
+    lines: [] as string[],
+    shelter: null,
+    route: null,
+    officialLine: OFFICIAL_LINE,
+  };
 
   if (profile === null) {
     return {
@@ -138,6 +185,6 @@ export function evacuationPlan({
   const area = inFloodProneArea(profile.home, pack)
     ? "Your home is inside a mapped Flood-Prone Area."
     : "Your home is outside the mapped Flood-Prone Areas (FEMA zones and creek floodplains, approximate).";
-  const { shelter, line } = nearestFittingShelter(profile, pack, openShelterIds);
-  return { ...plan, lines: [area, line], shelter };
+  const { shelter, route, lines } = nearestFittingShelter(profile, pack, openShelterIds, routes);
+  return { ...plan, lines: [area, ...lines], shelter, route };
 }

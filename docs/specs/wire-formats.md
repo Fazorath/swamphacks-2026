@@ -124,7 +124,7 @@ Built by a script ahead of the event. The Hub downloads it while online; other N
 
 ```
 cache-pack.zip
-├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "files": { "<path>": "<sha256>" } }
+├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }, "files": { "<path>": "<sha256>" } }
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
 │                             "special_needs": true, "pet_friendly": false } ]
 ├── flood_prone.geojson   FEMA flood zones plus the Hogtown Creek and Sweetwater Branch floodplains
@@ -133,6 +133,6 @@ cache-pack.zip
 ```
 
 - `bbox` is `[south, west, north, east]`, the demo box the pack covers.
-- The route grid is a fixed spacing (about 100 m). A home snaps to the nearest cell and the plan loads only that file.
+- The route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.

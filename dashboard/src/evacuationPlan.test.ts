@@ -5,6 +5,7 @@ import {
   type Shelter,
 } from "./evacuationPlan";
 import type { HouseholdProfile } from "./householdProfile";
+import type { Routes } from "./routeGrid";
 import type { FloodRisk } from "./useFloodRisk";
 
 const HOME = { lat: 29.65, lon: -82.32 };
@@ -51,6 +52,7 @@ function pack(overrides: Partial<CachePackContents> = {}): CachePackContents {
   return {
     shelters: [NEAR_PLAIN, FAR_BOTH, NEAREST_FLAGGED],
     floodProne: { features: [] },
+    routeGrid: null,
     ...overrides,
   };
 }
@@ -80,6 +82,7 @@ function plan(overrides: Partial<Parameters<typeof evacuationPlan>[0]> = {}) {
     pack: pack(),
     openShelterIds: ["near-plain", "far-both", "nearest-flagged"],
     floodRisk: null,
+    routes: null,
     ...overrides,
   });
 }
@@ -189,6 +192,7 @@ test("the plan gives no evacuation instruction of its own", () => {
     plan({ profile: profile({ needsPetFriendlyShelter: true }), openShelterIds: ["near-plain"] }),
     plan({ profile: null }),
     plan({ pack: null }),
+    plan({ routes: ROUTES }),
   ];
   const instructionVerbs =
     /\b(evacuate|leave|go|drive|head|move|travel|take|stay|shelter in place)\b/i;
@@ -197,4 +201,49 @@ test("the plan gives no evacuation instruction of its own", () => {
     const sentences = [...(result.risk?.reasons ?? []), ...result.lines];
     for (const sentence of sentences) expect(sentence).not.toMatch(instructionVerbs);
   }
+});
+
+// Routes start at the Grid point nearest HOME and end at their Shelter. NEAREST_FLAGGED is the
+// closest in a straight line but its road runs a long way round.
+const GRID_POINT: [number, number] = [29.6501, -82.3201];
+const ROUTES: Routes = {
+  "nearest-flagged": [GRID_POINT, [29.6501, -82.35], [29.651, -82.35], NEAREST_FLAGGED.pos],
+  "near-plain": [GRID_POINT, [29.655, -82.3201], NEAR_PLAIN.pos],
+  "far-both": [GRID_POINT, [29.68, -82.3201], FAR_BOTH.pos],
+};
+
+test("Shelters are ranked by road distance, not straight-line distance", () => {
+  const result = plan({ routes: ROUTES });
+  expect(result.shelter).toBe(NEAR_PLAIN);
+  expect(result.lines.join(" ")).toMatch(/Near Plain, 1\.\d km by road/);
+});
+
+test("the route starts at the Grid point and ends at the chosen Shelter", () => {
+  const result = plan({ routes: ROUTES });
+  expect(result.route?.[0]).toEqual(GRID_POINT);
+  expect(result.route?.at(-1)).toEqual(result.shelter?.pos);
+});
+
+test("a Shelter with no Route ranks after every Shelter that has one, and says so", () => {
+  const result = plan({
+    routes: { "nearest-flagged": ROUTES["nearest-flagged"], "far-both": ROUTES["far-both"] },
+  });
+  expect(result.shelter).toBe(FAR_BOTH);
+
+  const onlyUnrouted = plan({ routes: {}, openShelterIds: ["near-plain"] });
+  expect(onlyUnrouted.shelter).toBe(NEAR_PLAIN);
+  expect(onlyUnrouted.route).toBeNull();
+  expect(onlyUnrouted.lines.join(" ")).toContain(
+    "Near Plain, 1.1 km away in a straight line, no road route available",
+  );
+});
+
+test("the plan says the route ignores flooding and road closures, only when it draws one", () => {
+  const warning = "The route is the shortest by road and ignores flooding and road closures.";
+  expect(plan({ routes: ROUTES }).lines).toContain(warning);
+  expect(plan({ routes: null }).lines).not.toContain(warning);
+});
+
+test("no open Shelter draws no route", () => {
+  expect(plan({ routes: ROUTES, openShelterIds: [] }).route).toBeNull();
 });

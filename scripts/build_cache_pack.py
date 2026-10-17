@@ -8,11 +8,13 @@ import os
 import sys
 import time
 import zipfile
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
+from pack_routes import Roads, RouteGrid, build_routes
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 # [south, west, north, east]: about 10 x 10 km around central Gainesville.
@@ -28,6 +30,11 @@ FEMA_PAGE_SIZE = 500
 FEMA_ATTEMPTS = 8
 FEMA_RETRY_SECONDS = 10
 COORDINATE_DECIMALS = 4
+OSM_EXTRACT_URL = "https://download.geofabrik.de/north-america/us/florida-latest.osm.pbf"
+DEFAULT_OSM_EXTRACT = Path("build/florida-latest.osm.pbf")
+ROUTE_SPACINGS_M = (100, 250)
+# Pis pull the whole pack over the mesh, so routes stay small; the grid coarsens until they fit.
+ROUTES_BUDGET_BYTES = 5_000_000
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
 
 
@@ -151,8 +158,53 @@ def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
     return response.content
 
 
-def build(output: Path) -> None:
+def load_roads(osm_extract: Path) -> Roads:
+    if not osm_extract.is_file():
+        sys.exit(f"{osm_extract} not found: download {OSM_EXTRACT_URL} to that path")
+    from pyrosm import OSM  # build-only dependency: `uv sync --group build`
+
+    south, west, north, east = BBOX
+    nodes, edges = OSM(str(osm_extract), bounding_box=[west, south, east, north]).get_network(
+        network_type="driving", nodes=True
+    )
+    coords = {
+        int(node_id): (lat, lon)
+        for node_id, lat, lon in zip(nodes["id"], nodes["lat"], nodes["lon"], strict=True)
+    }
+    segments = []
+    # pyrosm cuts every way into one edge per pair of consecutive OSM nodes. A missing `oneway`
+    # means two-way; "-1" means the way is one-way against the order of its nodes.
+    for start, end, oneway in zip(edges["u"], edges["v"], edges["oneway"], strict=True):
+        if start in coords and end in coords:
+            segments.append(
+                (int(end), int(start), True) if oneway == "-1" else (int(start), int(end), oneway == "yes")
+            )
+    return Roads(coords, segments)
+
+
+def build_route_files(
+    osm_extract: Path, shelters: list[dict[str, Any]]
+) -> tuple[RouteGrid, dict[str, bytes]]:
+    roads = load_roads(osm_extract)
+    shelter_points = {shelter["id"]: tuple(shelter["pos"]) for shelter in shelters}
+    for spacing_m in ROUTE_SPACINGS_M:
+        grid = RouteGrid.spaced(BBOX, spacing_m)
+        routes = build_routes(roads, shelter_points, grid, BBOX)
+        files = {
+            path: json.dumps(by_shelter, separators=(",", ":")).encode()
+            for path, by_shelter in routes.items()
+        }
+        compressed = sum(len(zlib.compress(content)) for content in files.values())
+        print(f"{len(files)} route files at {spacing_m} m: {compressed / 1e6:.1f} MB", flush=True)
+        if compressed <= ROUTES_BUDGET_BYTES:
+            break
+    return grid, files
+
+
+def build(output: Path, osm_extract: Path) -> None:
     creek_layer = json.loads((SOURCE_DIR / "creek_floodplains.geojson").read_text())
+    shelters = load_shelters()
+    route_grid, route_files = build_route_files(osm_extract, shelters)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
         fema_zones = fetch_fema_zones(client)
         tile_list = tiles_covering(BBOX)
@@ -160,7 +212,7 @@ def build(output: Path) -> None:
             f"{len(fema_zones)} FEMA zones; fetching {len(tile_list)} tiles", flush=True
         )
         files: dict[str, bytes] = {
-            "shelters.json": json.dumps(load_shelters(), indent=1).encode(),
+            "shelters.json": json.dumps(shelters, indent=1).encode(),
             "flood_prone.geojson": json.dumps(
                 {
                     "type": "FeatureCollection",
@@ -169,6 +221,7 @@ def build(output: Path) -> None:
                 separators=(",", ":"),
             ).encode(),
         }
+        files.update(route_files)
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 
@@ -176,6 +229,7 @@ def build(output: Path) -> None:
         "v": 1,
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
         "bbox": list(BBOX),
+        "route_grid": route_grid.as_manifest_entry(),
         "files": {
             path: hashlib.sha256(content).hexdigest() for path, content in files.items()
         },
@@ -191,4 +245,6 @@ def build(output: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("build/cache-pack.zip"))
-    build(parser.parse_args().output)
+    parser.add_argument("--osm-extract", type=Path, default=DEFAULT_OSM_EXTRACT)
+    arguments = parser.parse_args()
+    build(arguments.output, arguments.osm_extract)
