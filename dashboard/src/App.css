@@ -710,3 +710,26 @@ section p.storm-signal {
 .registry-list code {
   color: var(--muted);
 }
+
+/* Community Warnings: violet dashed edge, never the Official style. */
+.community-warning {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px dashed var(--warning);
+  border-radius: 0.5rem;
+}
+
+.community-warning h3 {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+
+.community-warning p {
+  margin: 0.2rem 0;
+}
+
+.community-warning-tag {
+  color: var(--warning);
+  font-size: 0.8rem;
+  font-weight: bold;
+}

@@ -67,6 +67,7 @@ export function App() {
   // Kept while unreachable: each carries its own issue time, and losing an evacuation order to a
   // Wi-Fi drop is worse than showing one a few seconds old.
   const officialAlerts = lastAnswer?.state.official_alerts ?? [];
+  const communityWarnings = lastAnswer?.state.community_warnings ?? [];
   const plan = evacuationPlan({
     profile,
     pack: cachePack,
@@ -207,9 +208,15 @@ export function App() {
         />
         <AlertsPanel
           alerts={officialAlerts}
+          warnings={communityWarnings}
+          nodes={lastAnswer?.state.nodes ?? []}
+          thisNodeId={lastAnswer?.state.id ?? ""}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
-          // Community Warnings arrive with ticket 0013; until then there is no lead time to show.
-          firstCommunityWarningAt={null}
+          firstCommunityWarningAt={
+            communityWarnings.length > 0
+              ? Math.min(...communityWarnings.map((w) => w.surge_t))
+              : null
+          }
           online={state?.status === "online"}
         />
       </div>

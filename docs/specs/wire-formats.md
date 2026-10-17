@@ -16,7 +16,7 @@ One message per Sensor Node per tick, all four measurements together.
 
 ```json
 { "v": 1, "kind": "reading", "node": "91c2e0b47a3d", "seq": 412, "t": 1760650928,
-  "sim": true, "pos": [29.652, -82.325],
+  "sim": true, "pos": [29.652, -82.325], "river_km": -12.2,
   "pressure_hpa": 991.2, "water_m": 0.84, "rain_mmh": 14.8, "soil_pct": 91 }
 ```
 
@@ -25,6 +25,7 @@ One message per Sensor Node per tick, all four measurements together.
 - `t`: the sender's clock, informational only. **Age is always measured on the receiving Node's own clock** (time since the last accepted reading from that Node), because the Pi has no battery clock.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
+- `river_km`: the operator's `NODE_RIVER_KM`, or `null`. The Hub reads it from the surging Node's reading to fill a warning's `origin_km`; a Node without it can surge but starts no warning (ticket 0013).
 - Units are in the field names: `water_m` is metres, `soil_pct` a percentage. A Node may hold readings in another shape internally; the conversion happens where a message is built or received.
 
 ### Timing (one config module, tunable)
@@ -38,7 +39,7 @@ One message per Sensor Node per tick, all four measurements together.
 
 ## Community Warning (`kind: "warning"`)
 
-Sent by the Hub only, when two or more Registered Nodes are High.
+Sent by the Hub only, once per Registered Node's Surge (ticket 0013; it was two or more Registered Nodes High). The example below is the original shape; `origin`, `origin_km` and `surge_t` are added under "Flash flood additions".
 
 ```json
 { "v": 1, "kind": "warning", "id": 7, "t": 1760650928,
@@ -108,7 +109,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044) and the `alert.source` values are built (0014); the `warning` additions are not yet (0013).
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044), the `alert.source` values (0014) and the `warning` additions (0013).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 

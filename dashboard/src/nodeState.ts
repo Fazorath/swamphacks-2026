@@ -1,3 +1,4 @@
+import type { CommunityWarning } from "./communityWarnings";
 import type { OfficialAlert } from "./officialAlerts";
 
 export type NodeLevel = "elevated" | "high";
@@ -26,6 +27,8 @@ export type Measurement = { value: number; unit: string };
 export type NodeSnapshot = {
   id: string;
   position: [number, number];
+  // Where the operator put it along the river; null when it was not told.
+  river_km: number | null;
   simulated: boolean;
   age_s: number;
   stale: boolean;
@@ -51,4 +54,6 @@ export type NodeState = {
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
   official_alerts: OfficialAlert[];
+  // Only warnings whose Hub signature this Node verified.
+  community_warnings: CommunityWarning[];
 };

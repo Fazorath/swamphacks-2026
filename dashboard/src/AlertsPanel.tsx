@@ -7,6 +7,8 @@ import {
   SOURCE_LABELS,
   type OfficialAlert,
 } from "./officialAlerts";
+import { warningSentence, type CommunityWarning } from "./communityWarnings";
+import type { NodeSnapshot } from "./nodeState";
 
 // "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
 function issuedAsGiven(issued: string): string {
@@ -15,11 +17,17 @@ function issuedAsGiven(issued: string): string {
 
 export function AlertsPanel({
   alerts,
+  warnings,
+  nodes,
+  thisNodeId,
   appliesToYouIds,
   firstCommunityWarningAt,
   online,
 }: {
   alerts: OfficialAlert[];
+  warnings: CommunityWarning[];
+  nodes: NodeSnapshot[];
+  thisNodeId: string;
   appliesToYouIds: string[];
   firstCommunityWarningAt: number | null;
   online: boolean;
@@ -30,7 +38,7 @@ export function AlertsPanel({
     <section aria-label="Alerts">
       <h2>Alerts</h2>
       {leadTime && <p className="lead-time">{leadTime}</p>}
-      {newestFirst.length === 0 && (
+      {newestFirst.length === 0 && warnings.length === 0 && (
         <div className="empty-panel">
           <span className="empty-panel-icon">
             <TriangleAlert size={20} aria-hidden="true" />
@@ -56,6 +64,14 @@ export function AlertsPanel({
           ) : (
             <p className="official-alert-offline">Source link opens when online</p>
           )}
+        </article>
+      ))}
+      {[...warnings].reverse().map((warning) => (
+        <article key={warning.id} className="community-warning" aria-label="Community Warning">
+          <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
+          <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
+          <p>Signed by the Hub · verified</p>
+          <p>Check official sources for any evacuation decision.</p>
         </article>
       ))}
     </section>

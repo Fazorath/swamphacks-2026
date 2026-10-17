@@ -5,6 +5,7 @@ import pytest
 import RNS
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.community_warning import CommunityWarning
 from storm_shield.node_registry import (
     MAX_SIGNED_MESSAGE_BYTES,
     NodeRegistryMessage,
@@ -140,6 +141,25 @@ def test_the_event_clock_signed_by_the_hub_verifies_and_one_signed_by_another_no
     assert verify(sign(hub, clock), known, node_id(hub)) == (node_id(hub), clock)
     assert verify(sign(rogue, clock), known, node_id(hub)) is None
     assert len(sign(hub, clock)) <= RNS.Packet.PLAIN_MDU
+
+
+def test_a_community_warning_signed_by_the_hub_verifies_and_one_signed_by_another_node_is_dropped() -> (
+    None
+):
+    hub, rogue = RNS.Identity(), RNS.Identity()
+    known = {node_id(hub): hub, node_id(rogue): rogue}
+    warning = CommunityWarning(
+        id=1_787_716_020,
+        t=1_787_716_021,
+        nodes=["b7e1f40a92c5"],
+        reasons=["water_surge"],
+        origin="b7e1f40a92c5",
+        origin_km=-12.2,
+        surge_t=1_787_716_020,
+    )
+    assert verify(sign(hub, warning), known, node_id(hub)) == (node_id(hub), warning)
+    assert verify(sign(rogue, warning), known, node_id(hub)) is None
+    assert len(sign(hub, warning)) <= RNS.Packet.PLAIN_MDU
 
 
 def test_a_node_keeps_its_identity_in_a_file_only_its_owner_can_read(tmp_path: Path) -> None:

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
+from storm_shield.community_warning import CommunityWarning
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
 from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
@@ -156,6 +157,10 @@ class MeshedNodes:
         """Have a Node that is not running an app publish one Official Alert."""
         self._hand_fed_mesh(sender).publish(alert)
 
+    def announce_community_warning(self, warning: CommunityWarning, *, sender: str = HUB) -> None:
+        """Have a Node that is not running an app publish one Community Warning."""
+        self._hand_fed_mesh(sender).publish(warning)
+
     def send_bytes(self, body: bytes, *, sender: str = HUB) -> None:
         """Put exactly these bytes on the Mesh, as a Node running other software could."""
         # Joining first means the sender is not among the receivers, as when it publishes.
@@ -200,6 +205,7 @@ class MeshedNodes:
         rain_mmh: float = 0,
         water_cm: float = 20,
         soil_pct: float = 30,
+        river_km: float | None = None,
     ) -> None:
         """Have a Node that is not running an app publish one reading with exactly these values.
 
@@ -215,6 +221,7 @@ class MeshedNodes:
                 t=int(self._now.timestamp()),
                 sim=True,
                 pos=(29.652, -82.324),
+                river_km=river_km,
                 pressure_hpa=pressure_hpa,
                 water_m=water_cm / 100,
                 rain_mmh=rain_mmh,

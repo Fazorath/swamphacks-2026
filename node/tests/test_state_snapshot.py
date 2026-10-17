@@ -112,6 +112,7 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
     assert set(state["nodes"][0]) == {
         "id",
         "position",
+        "river_km",
         "simulated",
         "age_s",
         "stale",

@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Betrawati until the operator sets the real spot; only a fuzzed copy leaves the Node.
     latitude: float = 27.9731
     longitude: float = 85.1860
+    # Kilometres down the river from the Lhende-Kyirong confluence (negative above it); blank for a
+    # Node that is not on the river, which then cannot start a Community Warning.
+    river_km: float | None = None
     # Resolved from this file, not the cwd, so the Node starts from any directory.
     dashboard_dir: Path = Path(__file__).resolve().parents[3] / "dashboard" / "dist"
     # "memory" is a Node that hears only itself; tests and the dashboard dev server use it.

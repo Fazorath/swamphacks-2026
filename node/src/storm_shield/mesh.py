@@ -7,6 +7,7 @@ from typing import Annotated, Any, Protocol, get_args
 from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.community_warning import CommunityWarning
 from storm_shield.node_registry import NodeRegistryMessage, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
@@ -19,6 +20,7 @@ Message = (
     | ShelterStatus
     | ReplayClockMessage
     | OfficialAlert
+    | CommunityWarning
 )
 
 # The sender is whatever the Mesh verified, never something the message claims about itself.

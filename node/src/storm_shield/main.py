@@ -22,6 +22,7 @@ from storm_shield.cache_pack import (
 )
 from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
 from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.internet_connection import (
     CONNECTIVITY_TIMEOUT_SECONDS,
@@ -82,10 +83,15 @@ class NodeState(BaseModel):
     flood_risk: FloodRisk
     nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
+    community_warnings: list[CommunityWarning]
 
 
 class OpenShelters(BaseModel):
     open: list[str]
+
+
+class WarningLog(BaseModel):
+    warnings: list[CommunityWarning]
 
 
 class RegistryAccept(BaseModel):
@@ -163,14 +169,55 @@ def create_app(
         if measurements is None:
             return
         reading = CommunityReading.from_measurements(
-            node=mesh.identity, seq=next(sequence), position=position, readings=measurements
+            node=mesh.identity,
+            seq=next(sequence),
+            position=position,
+            readings=measurements,
+            river_km=settings.river_km,
         )
         store.record(mesh.identity, reading, clock())
+        warn_about_new_surges()
         mesh.publish(reading)
 
     def store_reading_from(sender: str, message: Message) -> None:
         if isinstance(message, CommunityReading):
             store.record(sender, message, clock())
+            warn_about_new_surges()
+
+    heard_warnings = HeardCommunityWarnings()
+    hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
+    surges_without_river_km: set[str] = set()
+
+    def hear_community_warning(_: str, message: Message) -> None:
+        if isinstance(message, CommunityWarning):
+            heard_warnings.hear(message)
+
+    def warn_about_new_surges() -> None:
+        """Hub only: warn about each Registered Node whose Surge has not been warned about yet."""
+        if not hub_warnings:
+            return
+        snapshot = store.snapshot(clock())
+        surged = flood_risk(snapshot.recent, heard_registry.registered_ids()).surged
+        placed = {node: snapshot.recent[node][-1].river_km for node in surged}
+        for node in surged:
+            if placed[node] is None and node not in surges_without_river_km:
+                logger.warning("Node %s is surging but has no NODE_RIVER_KM, so no warning", node)
+        surges_without_river_km.intersection_update(surged)
+        surges_without_river_km.update(node for node in surged if placed[node] is None)
+        event = event_clock.current(clock())
+        now = int(clock().timestamp())
+        # With no replay running the Surge happened now, on the Hub's own clock.
+        surge_t = now if event.state == "stopped" else event.event_t
+        for warning in hub_warnings.issue_for_new_surges(
+            {node: km for node, km in placed.items() if km is not None}, surge_t, now
+        ):
+            # The Hub does not hear its own broadcasts, so it keeps the warning itself.
+            heard_warnings.hear(warning)
+            try:
+                mesh.publish(warning)
+            except Exception:
+                # The Hub already shows it and has it in its log.
+                logger.exception("could not send Community Warning %s", warning.id)
 
     shelter_status = HeardShelterStatus()
 
@@ -303,6 +350,7 @@ def create_app(
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_event_clock)
     mesh.subscribe(hear_official_alert)
+    mesh.subscribe(hear_community_warning)
     mesh.subscribe(hear_shelter_status)
     mesh.subscribe(hear_registry)
     mesh.subscribe(hear_sign_up)
@@ -442,6 +490,7 @@ def create_app(
                 for node in snapshot.nodes
             ],
             official_alerts=official_alerts.shown_at(event_clock.current(clock())),
+            community_warnings=heard_warnings.shown_at(event_clock.current(clock())),
         )
 
     @app.post("/api/registry/signup")
@@ -548,8 +597,15 @@ def create_app(
         # Not defined, these would fall through to the dashboard's static mount and answer 405.
         @app.get("/api/registry")
         @app.post("/api/registry/accept")
+        @app.get("/api/warnings")
         def not_on_a_sensor() -> None:
-            raise HTTPException(status_code=404, detail="only the Hub keeps the registry")
+            raise HTTPException(status_code=404, detail="only the Hub keeps the registry and log")
+
+    if hub_warnings:
+
+        @app.get("/api/warnings")
+        def warning_log() -> WarningLog:
+            return WarningLog(warnings=hub_warnings.sent())
 
     if hub_registry:
 

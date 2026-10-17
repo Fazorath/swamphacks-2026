@@ -4,10 +4,11 @@ import { useState } from "react";
 import type { Shelter } from "./evacuationPlan";
 import { RegistryTab, type RegistrySummary } from "./RegistryTab";
 import { ReplayControls } from "./ReplayControls";
+import { WarningsTab, type WarningLog } from "./WarningsTab";
 import type { EventClockFeed } from "./useEventClock";
 import { usePolledJson } from "./usePolledJson";
 
-const TABS = ["Registry", "Replay", "Shelters"] as const;
+const TABS = ["Registry", "Replay", "Warnings", "Shelters"] as const;
 type Tab = (typeof TABS)[number];
 const REGISTRY_POLL_MS = 1000;
 
@@ -44,6 +45,10 @@ export function HubPanel({
   const [tab, setTab] = useState<Tab>("Registry");
   // Polled whichever tab is showing, so the Registry badge counts Sign-ups as they arrive.
   const registry = usePolledJson<RegistrySummary>("/api/registry", REGISTRY_POLL_MS);
+  const warningLog = usePolledJson<WarningLog>(
+    tab === "Warnings" ? "/api/warnings" : null,
+    REGISTRY_POLL_MS,
+  );
   const waitingSignUps = registry?.nodes.filter((row) => row.status === "waiting").length ?? 0;
 
   const setStatus = async (shelter: Shelter, open: boolean) => {
@@ -85,6 +90,7 @@ export function HubPanel({
       </div>
       {tab === "Registry" && <RegistryTab registry={registry} />}
       {tab === "Replay" && <ReplayControls eventClock={eventClock} />}
+      {tab === "Warnings" && <WarningsTab log={warningLog} registry={registry} />}
       {tab === "Shelters" && (
         <>
           {shelters.length === 0 && <p>No Shelters yet: this Hub has no Cache Pack.</p>}

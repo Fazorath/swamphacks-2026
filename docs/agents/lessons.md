@@ -242,3 +242,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `pkill -f "storm_shield.main import run"` inside a compound Bash command can match and kill the command's own shell (exit 144); run it alone.
 - `test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed once in a full run and passed alone, with and without this change.
 - **0060 and 0012 were each green alone and clashed once merged**: 0060's Surge test started S0 to S3 without registering them, and 0012 makes Flood Risk (so `surged`) ignore unregistered Nodes. The test now signs each Sensor up and accepts it on the Hub. A test written on a branch cut before 0012 that reads Flood Risk needs the same; rerun the full Commands after every merge of `main`, not only before it.
+
+## Community Warnings (ticket 0013)
+
+- **The Hub gets a Node's River km from its reading** (`river_km`, from `NODE_RIVER_KM`), not from a new message. A Surging Node without it starts no warning; check `NODE_RIVER_KM` first if a Surge shows no warning. `scripts/run-demo.sh` now sets it for the Hub and S0 to S3 (spec table values), only syntax-checked, not run.
+- **The Hub checks for new Surges whenever a reading arrives** (its own or heard), not on a timer, so tests need no waiting. `HubWarnings` forgets a Node once it stops surging, so a second Surge warns again.
+- Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
+- Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
