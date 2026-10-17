@@ -1,6 +1,7 @@
 """The recorded weather for the Cache Pack: a Weather Grid of one Open-Meteo archive request."""
 
 import math
+import time
 from typing import Any
 
 import httpx
@@ -18,6 +19,10 @@ SOURCE = "Open-Meteo archive (reanalysis), roughly 10 to 25 km per cell"
 CREDIT = "Weather data by Open-Meteo.com (CC BY 4.0)"
 GRID_STEP_DEGREES = 0.1
 COORDINATE_DECIMALS = 2
+# The answer is three days of five variables at 35 points, so give it longer than the tiles get.
+REQUEST_TIMEOUT_SECONDS = 180
+ATTEMPTS = 5
+RETRY_PAUSE_SECONDS = 10
 
 BBox = tuple[float, float, float, float]  # (south, west, north, east)
 
@@ -70,19 +75,29 @@ def weather_replay_from_archive(
 def fetch_weather_replay(
     client: httpx.Client, bbox: BBox, first_day: str, last_day: str
 ) -> dict[str, Any]:
-    """Ask the archive once for every grid point (UTC hours, m/s) and shape the answer."""
+    """Ask the archive for every grid point (UTC hours, m/s) and shape the answer.
+
+    One request, retried on a network error or an error status: a single failure must not
+    abort a build that has not yet fetched its tiles.
+    """
     _, _, points = grid_points(bbox)
-    response = client.get(
-        ARCHIVE_URL,
-        params={
-            "latitude": ",".join(str(lat) for lat, _ in points),
-            "longitude": ",".join(str(lon) for _, lon in points),
-            "start_date": first_day,
-            "end_date": last_day,
-            "hourly": ",".join(VARIABLES),
-            "wind_speed_unit": "ms",
-            "timezone": "UTC",
-        },
-    )
-    response.raise_for_status()
+    params = {
+        "latitude": ",".join(str(lat) for lat, _ in points),
+        "longitude": ",".join(str(lon) for _, lon in points),
+        "start_date": first_day,
+        "end_date": last_day,
+        "hourly": ",".join(VARIABLES),
+        "wind_speed_unit": "ms",
+        "timezone": "UTC",
+    }
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            response = client.get(ARCHIVE_URL, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+            response.raise_for_status()
+            break
+        except httpx.HTTPError as error:
+            if attempt == ATTEMPTS:
+                raise
+            print(f"weather archive attempt {attempt} failed ({error}); retrying", flush=True)
+            time.sleep(RETRY_PAUSE_SECONDS)
     return weather_replay_from_archive(response.json(), bbox)

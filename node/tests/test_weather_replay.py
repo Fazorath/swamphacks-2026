@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 from fixture_pack import WEATHER_PATH, WEATHER_REPLAY, build_fixture_pack
 from pack_weather import (
+    ATTEMPTS,
     CREDIT,
     VARIABLES,
     fetch_weather_replay,
@@ -159,3 +160,39 @@ def test_weather_corrupted_on_disk_discards_the_pack_at_startup(tmp_path: Path) 
     with _node(tmp_path, source.client) as restarted:
         assert restarted.get("/api/weather/replay").status_code == 404
         assert not restarted.get("/api/cache-pack").json()["available"]
+
+
+def _flaky_archive(failures: list[httpx.Response | Exception]) -> tuple[httpx.Client, list[int]]:
+    """A client whose first answers are the given failures, then a good archive answer."""
+    calls: list[int] = []
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        if len(calls) <= len(failures):
+            failure = failures[len(calls) - 1]
+            if isinstance(failure, Exception):
+                raise failure
+            return failure
+        return httpx.Response(200, json=_archive_answer())
+
+    return httpx.Client(transport=httpx.MockTransport(answer)), calls
+
+
+def test_a_failed_archive_request_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("pack_weather.RETRY_PAUSE_SECONDS", 0)
+    client, calls = _flaky_archive([httpx.Response(503), httpx.ConnectError("reset")])
+
+    weather = fetch_weather_replay(client, BBOX, "2026-08-26", "2026-08-26")
+
+    assert len(calls) == 3
+    assert len(weather["times"]) == 3
+
+
+def test_the_archive_request_gives_up_after_its_attempts(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("pack_weather.RETRY_PAUSE_SECONDS", 0)
+    client, calls = _flaky_archive([httpx.Response(503)] * 99)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        fetch_weather_replay(client, BBOX, "2026-08-26", "2026-08-26")
+
+    assert len(calls) == ATTEMPTS
