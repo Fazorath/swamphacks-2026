@@ -32,6 +32,14 @@ _Avoid_: trusted node, verified device
 A Node the Hub does not know; its readings are shown but never counted.
 _Avoid_: rogue node, guest
 
+**Sign-up**:
+A Node's signed request, sent over the Mesh, to be added to the Node registry under its Node name; it waits until the Hub operator accepts it.
+_Avoid_: enrolment, pairing, join request
+
+**Node registry**:
+The Hub's signed list of Registered Nodes (Node id and Node name), always including the Hub itself; with no registry received yet, no Node counts.
+_Avoid_: allowlist, roster, trust list
+
 **Hub**:
 The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend

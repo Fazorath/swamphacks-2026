@@ -61,14 +61,15 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 ```
 
 - `ver` goes up on every change; a Node keeps the highest `ver` it has received in full.
-- `part` / `of` let a list span several packets (about 6 Nodes per packet at 12-character ids; the demo has 5).
+- `part` / `of` are reserved for a list that spans several packets. **For now the Hub always sends `part: 1, of: 1`** and refuses an accept (409) that would no longer fit one signed packet; receivers ignore a registry with `of` above 1 (decided 2026-10-17, ticket 0012).
+- The Hub always lists itself. It saves `ver` and the list in `NODE_DATA_DIR/registry.json` and starts every restart at saved `ver` + 1, as for Shelter status.
 - The Hub republishes the current snapshot every 30 s, so late joiners and Nodes that missed a packet converge.
-- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted.
+- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted. Before any registry has arrived every Node is Unverified, this one included, and nothing counts.
 
 ### Hub identity and sign-up
 
 - Each Node learns who the Hub is from config: the Hub prints its Reticulum identity hash at startup and every other Node sets it once as `HUB_IDENTITY` (documented in `.env.example`). Nobody is trusted for announcing themselves as the Hub.
-- A Node signs up with one addressed message to the Hub: `{ "v": 1, "kind": "signup", "name": "garage" }`. The Hub operator sees it and accepts it; accepting bumps the registry `ver`.
+- A Node signs up with a broadcast message, signed by the Node like a reading: `{ "v": 1, "kind": "signup", "node": "91c2e0b47a3d", "name": "garage" }`. It carries `node` because the Mesh has no addressed send and checks every kind without a `node` against the Hub key. Nodes other than the Hub ignore it. The Hub operator sees it and accepts it; accepting bumps the registry `ver` (changed from "one addressed message" on 2026-10-17, ticket 0012).
 - If the Hub is restarted with a new identity, every Node's `HUB_IDENTITY` must be updated. Ticket 0004 notes this.
 
 ## Official Alert (`kind: "alert"`)
