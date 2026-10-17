@@ -1,11 +1,16 @@
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork
 from storm_shield.settings import Settings
+from storm_shield.shelter_status import ShelterStatus
+
+HUB = "hub"
 
 
 class MeshedNodes:
@@ -17,12 +22,22 @@ class MeshedNodes:
         self._now = datetime.now(UTC)
         self._hand_fed: dict[str, tuple[InMemoryMesh, int]] = {}
 
-    def start(self, *names: str) -> None:
+    def start(self, *names: str, cache_pack: tuple[Path, bytes] | None = None) -> None:
+        """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
         for name in names:
-            mesh = self._network.join(name)
-            self._clients[name] = TestClient(
-                create_app(Settings(name=name), mesh, clock=lambda: self._now)
-            )
+            mesh = self._network.join(name, HUB)
+            settings = Settings(name=name, hub_identity=HUB)
+            if cache_pack:
+                directory, pack = cache_pack
+                settings = settings.model_copy(update={"cache_pack_dir": directory / name})
+                CachePack(directory / name).install(pack)
+            self._clients[name] = TestClient(create_app(settings, mesh, clock=lambda: self._now))
+
+    def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:
+        """Have a Node that is not running an app publish one Shelter status."""
+        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
+        self._hand_fed[sender] = mesh
+        mesh[0].publish(ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids))
 
     def advance(self, seconds: float) -> None:
         """Move every Node's clock forward without waiting."""

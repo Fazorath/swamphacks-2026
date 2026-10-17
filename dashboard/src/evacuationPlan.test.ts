@@ -90,6 +90,12 @@ test("closed Shelters are skipped", () => {
   expect(result.lines.join(" ")).toContain("Near Plain, 1.1 km away");
 });
 
+test("when the nearest Shelter closes the plan picks the next nearest", () => {
+  const open = ["near-plain", "far-both", "nearest-flagged"];
+  expect(plan({ openShelterIds: open }).shelter).toBe(NEAREST_FLAGGED);
+  expect(plan({ openShelterIds: open.slice(0, 2) }).shelter).toBe(NEAR_PLAIN);
+});
+
 test("a household with no needs can get a Shelter flagged special-needs, and sees the flag", () => {
   const result = plan();
   expect(result.shelter).toBe(NEAREST_FLAGGED);

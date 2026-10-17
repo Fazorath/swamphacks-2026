@@ -65,7 +65,6 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Evacuation Plan (ticket 0009)
 
-- **Every Shelter is open at startup, on purpose.** Until 0015 adds the Hub operator toggle, each Node seeds its open-Shelter list with every Shelter in its own Cache Pack. That is demo scaffolding, not real shelter data; the wire format says nothing counts as open until listed.
 - **"Nearest" Shelter is straight-line distance** until 0010 ranks by road distance.
 - **Map tiles stutter** because every tile is fetched live from CARTO through the Node; ticket 0026 serves them from the Cache Pack first.
 - **The open-Shelter list is read from the pack on every request** (`CachePack.shelter_ids()`), not copied at startup, so a Node whose pack arrives late still lists its Shelters. It is empty until a valid pack is on disk.
@@ -76,3 +75,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Shelter status carries no `node` field**, so the Reticulum Mesh cannot look up its signer from the message. `verify` checks it against the key of the configured `HUB_IDENTITY` instead; a blank or wrong id (or a Hub that has not announced yet) drops it silently. That is the safe failure, so when a Node shows nothing open, check `HUB_IDENTITY` first.
 - Both Meshes filter on the Hub identity before any listener runs, so later features never re-check the sender. `InMemoryNetwork.join(name, hub_identity)` takes it as a second argument.
 - Listeners now receive `CommunityReading | ShelterStatus`; narrow with `isinstance` before use.
+
+## Shelters on Nodes (ticket 0028)
+
+- **Nothing is open until the Hub has announced it**, and the Hub does not hear itself, so until 0029 gives the Hub its own status a Hub also lists no open Shelter. `MeshedNodes.start(..., cache_pack=(dir, zip))` installs a pack before the app starts and `announce_shelters(ver, ids, sender=...)` publishes a hand-made Hub status.
