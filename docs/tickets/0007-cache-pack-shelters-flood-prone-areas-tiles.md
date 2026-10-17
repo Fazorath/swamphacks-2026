@@ -26,4 +26,4 @@
 - [x] `CACHE_PACK_URL` and `CACHE_PACK_DIR` are in `.env.example`, and a short build-and-publish note sits next to the script
 - [x] Seam A tests, using a tiny fixture pack built by a test helper: a Node downloads and serves it; the source is shut down and the Node still serves the manifest, Shelters, flood zones and a tile; a corrupt pack is refused; a sensor downloads from a Hub Node
 - [x] Manual check: the real pack builds, is uploaded as a Release asset, and two Nodes download it (Release `cache-pack-v1`; while the repo is private the Hub must download from a laptop serving the zip, not the Release link)
-- [ ] All **Commands** pass (Node: ruff, mypy, pytest pass. Dashboard `pnpm typecheck/lint/test` not run: `pnpm` was not installed in the build session and this ticket does not touch the dashboard; run them once and tick this)
+- [x] All **Commands** pass (dashboard run with `npx pnpm@10`)
