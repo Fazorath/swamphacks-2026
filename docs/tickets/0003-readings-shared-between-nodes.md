@@ -4,9 +4,9 @@
 
 **Blocked by:** 0002, and the Community Reading message format in the UI design doc (owned by whoever does the UI after 0001)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/storm-shield.md`
 
