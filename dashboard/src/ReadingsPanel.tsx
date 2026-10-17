@@ -15,6 +15,14 @@ function post(path: string) {
   fetch(path, { method: "POST" }).catch(console.error);
 }
 
+function groupByNode(readings: Reading[]): [string, Reading[]][] {
+  const byNode = new Map<string, Reading[]>();
+  for (const reading of readings) {
+    byNode.set(reading.node, [...(byNode.get(reading.node) ?? []), reading]);
+  }
+  return [...byNode];
+}
+
 export function ReadingsPanel() {
   const readings = useReadings();
 
@@ -30,15 +38,18 @@ export function ReadingsPanel() {
   return (
     <section aria-label="Readings">
       <h2>Readings</h2>
-      {readings.map((reading) => (
-        <ul key={reading.t}>
-          {measurements(reading).map(([label, text]) => (
-            <li key={label}>
-              {label}: {text}
-              {reading.sim && <span className="simulated"> (simulated)</span>}
-            </li>
-          ))}
-        </ul>
+      {groupByNode(readings).map(([node, nodeReadings]) => (
+        <section key={node} aria-label={`Node ${node}`}>
+          <h3>{node}</h3>
+          <ul>
+            {nodeReadings.map((reading) => (
+              <li key={reading.kind}>
+                {KIND_LABELS[reading.kind]}: {reading.value} {reading.unit}
+                {reading.simulated && <span className="simulated"> (simulated)</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
       ))}
       <button onClick={() => post("/api/scenario/step")}>Step scenario (n)</button>{" "}
       <button onClick={() => post("/api/scenario/reset")}>Reset (r)</button>

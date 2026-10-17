@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
 export type Reading = {
-  t: number;
-  sim: boolean;
-  pressure_hpa: number;
-  water_m: number;
-  rain_mmh: number;
-  soil_pct: number;
+  node: string;
+  kind: "pressure" | "rain_rate" | "water_level" | "soil_moisture";
+  value: number;
+  unit: string;
+  timestamp: string;
+  simulated: boolean;
 };
 
 const POLL_MS = 1000;

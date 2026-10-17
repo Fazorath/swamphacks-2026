@@ -21,11 +21,11 @@ One message per Sensor Node per tick, all four measurements together.
 ```
 
 - `node`: the sender's short Reticulum identity (first 12 hex characters). **This 12-character id is the only Node id**: warnings, the registry and the API all use it as is.
-- `seq`: counter that goes up by one per reading from that Node. Receivers ignore a `seq` they have already seen, which stops duplicates and old relayed copies.
+- `seq`: counter that goes up by one per reading from that Node. It starts from the Unix time at startup, so a restarted Node is never behind the `seq` others last saw (ticket 0022). Receivers ignore a `seq` they have already seen, which stops duplicates and old relayed copies.
 - `t`: the sender's clock, informational only. **Age is always measured on the receiving Node's own clock** (time since the last accepted reading from that Node), because the Pi has no battery clock.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
-- Units are in the field names: `water_m` is metres, `soil_pct` a whole-number percentage. Simulated Readings use these same fields and units inside the Node too; the Node adds `v`, `kind`, `node`, `seq` and `pos` only when it publishes.
+- Units are in the field names: `water_m` is metres, `soil_pct` a percentage. A Node may hold readings in another shape internally; the conversion happens where a message is built or received.
 
 ### Timing (one config module, tunable)
 
@@ -111,7 +111,7 @@ Every Node computes Flood Risk from the Community Readings it holds plus the reg
 
 The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering. This replaces the server-sent events in the spec's Node HTTP API paragraph.
 
-**Until `/api/state` exists** (it grows ticket by ticket), `GET /api/readings` returns a list of Community Readings in the shape above, minus the publish-time fields: one entry for this Node now, one per Node once ticket 0003 lands. The dashboard polls it every second.
+**Until `/api/state` exists** (it grows ticket by ticket), `GET /api/readings` returns the latest reading of every Node, this one included, as one entry per measurement (`node`, `kind`, `value`, `unit`, `position`, `timestamp`, `simulated`). That is the Node's internal shape, not the wire format, and ticket 0019 replaces it with `/api/state`.
 
 - `GET /api/state` returns everything the screen needs in one consistent object: this Node's identity, role and `online` / `mesh_only` status; readings (with `registered`, `stale`, `age_s` and `sim`); Flood Risk with reason codes; Official Alerts; verified Community Warnings only; Shelter open ids; Scenario step.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
