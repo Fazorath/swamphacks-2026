@@ -20,12 +20,12 @@ One message per Sensor Node per tick, all four measurements together.
   "pressure_hpa": 991.2, "water_m": 0.84, "rain_mmh": 14.8, "soil_pct": 91 }
 ```
 
-- `node`: the sender's short Reticulum identity (first 12 hex characters).
-- `seq`: counter that goes up by one per reading from that Node. Receivers ignore a `seq` they have already seen, which stops duplicates and old relayed copies.
+- `node`: the sender's short Reticulum identity (first 12 hex characters). **This 12-character id is the only Node id**: warnings, the registry and the API all use it as is.
+- `seq`: counter that goes up by one per reading from that Node. It starts from the Unix time at startup, so a restarted Node is never behind the `seq` others last saw (ticket 0022). Receivers ignore a `seq` they have already seen, which stops duplicates and old relayed copies.
 - `t`: the sender's clock, informational only. **Age is always measured on the receiving Node's own clock** (time since the last accepted reading from that Node), because the Pi has no battery clock.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
-- Units are in the field names.
+- Units are in the field names: `water_m` is metres, `soil_pct` a percentage. A Node may hold readings in another shape internally; the conversion happens where a message is built or received.
 
 ### Timing (one config module, tunable)
 
@@ -42,11 +42,11 @@ Sent by the Hub only, when two or more Registered Nodes are High.
 
 ```json
 { "v": 1, "kind": "warning", "id": 7, "t": 1760650928,
-  "nodes": ["b7e1", "91c2"], "reasons": ["water_high", "rain_heavy"] }
+  "nodes": ["b7e1f40a92c5", "91c2e0b47a3d"], "reasons": ["water_high", "rain_heavy"] }
 ```
 
 - `id`: Hub-issued counter. Used for deduplication and for the once-per-warning modal on each device.
-- `nodes`: short Node ids; the dashboard looks up names in the registry.
+- `nodes`: Node ids, the same 12-character ids readings use; the dashboard looks up names in the registry.
 - `reasons`: codes from a small fixed list (`water_high`, `water_rising`, `rain_heavy`, `pressure_falling`). The dashboard writes the sentence.
 - There is **no text field**. The "Community Warning · not official" label and the "check official sources for any evacuation decision" line are fixed UI and cannot be dropped or altered by a message.
 - Only the Hub identity configured on the receiving Node may send this kind.
@@ -57,11 +57,11 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 
 ```json
 { "v": 1, "kind": "registry", "ver": 4, "part": 1, "of": 1, "t": 1760650928,
-  "nodes": [ { "id": "b7e1", "name": "garage" }, { "id": "91c2", "name": "kitchen" } ] }
+  "nodes": [ { "id": "b7e1f40a92c5", "name": "garage" }, { "id": "91c2e0b47a3d", "name": "kitchen" } ] }
 ```
 
 - `ver` goes up on every change; a Node keeps the highest `ver` it has received in full.
-- `part` / `of` let a list span several packets (about 8 Nodes per packet; the demo has 5).
+- `part` / `of` let a list span several packets (about 6 Nodes per packet at 12-character ids; the demo has 5).
 - The Hub republishes the current snapshot every 30 s, so late joiners and Nodes that missed a packet converge.
 - A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted.
 
@@ -109,7 +109,9 @@ Every Node computes Flood Risk from the Community Readings it holds plus the reg
 
 ## Node HTTP API (dashboard seam)
 
-The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering.
+The dashboard polls **one snapshot** every second and shows "Node unreachable" if it stops answering. This replaces the server-sent events in the spec's Node HTTP API paragraph.
+
+**Until `/api/state` exists** (it grows ticket by ticket), `GET /api/readings` returns the latest reading of every Node, this one included, as one entry per measurement (`node`, `kind`, `value`, `unit`, `position`, `timestamp`, `simulated`). That is the Node's internal shape, not the wire format, and ticket 0019 replaces it with `/api/state`.
 
 - `GET /api/state` returns everything the screen needs in one consistent object: this Node's identity, role and `online` / `mesh_only` status; readings (with `registered`, `stale`, `age_s` and `sim`); Flood Risk with reason codes; Official Alerts; verified Community Warnings only; Shelter open ids; Scenario step.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
