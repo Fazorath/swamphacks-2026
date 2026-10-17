@@ -177,7 +177,7 @@ One file, the same shape for the recorded weather and the forecast. Fixed in tic
 }
 ```
 
-- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell.
+- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid covers the pack box and may run up to one step past its north and east edges (the valley file ends at 85.48 E, box edge 85.47).
 - `times` are hourly, UTC, ISO 8601 with a `Z`. The recorded file holds 72 hours (25 to 27 Aug 2026; 08:37 NPT on the 26th is `2026-08-26T02:52Z`).
 - Each variable is a list with one flat array per entry of `times`, each of `rows * cols` numbers in row-major order (index `row * cols + col`). The wind direction is where the wind blows from, in degrees clockwise from north. Precipitation is the hour's total, so mm/h.
 - The values are reanalysis at model resolution: context for the valley, not a measurement at a village.

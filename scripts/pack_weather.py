@@ -23,19 +23,19 @@ BBox = tuple[float, float, float, float]  # (south, west, north, east)
 
 
 def grid_points(
-    bbox: BBox, step: float = GRID_STEP_DEGREES
+    bbox: BBox,
 ) -> tuple[int, int, list[tuple[float, float]]]:
     """Rows, columns and (lat, lon) of a grid that starts at the box's south-west corner and covers it.
 
     Points run south to north, then west to east: the order the file stores its values in.
     """
     south, west, north, east = bbox
-    rows = math.ceil(round((north - south) / step, 6)) + 1
-    cols = math.ceil(round((east - west) / step, 6)) + 1
+    rows = math.ceil(round((north - south) / GRID_STEP_DEGREES, 6)) + 1
+    cols = math.ceil(round((east - west) / GRID_STEP_DEGREES, 6)) + 1
     points = [
         (
-            round(south + row * step, COORDINATE_DECIMALS),
-            round(west + col * step, COORDINATE_DECIMALS),
+            round(south + row * GRID_STEP_DEGREES, COORDINATE_DECIMALS),
+            round(west + col * GRID_STEP_DEGREES, COORDINATE_DECIMALS),
         )
         for row in range(rows)
         for col in range(cols)
@@ -44,10 +44,10 @@ def grid_points(
 
 
 def weather_replay_from_archive(
-    answers: list[dict[str, Any]], bbox: BBox, step: float = GRID_STEP_DEGREES
+    answers: list[dict[str, Any]], bbox: BBox
 ) -> dict[str, Any]:
     """The `weather_replay.json` content from the archive's answer, one entry per grid point in order."""
-    rows, cols, points = grid_points(bbox, step)
+    rows, cols, points = grid_points(bbox)
     if len(answers) != len(points):
         raise ValueError(f"asked for {len(points)} points, the archive answered {len(answers)}")
     times = answers[0]["hourly"]["time"]
@@ -60,7 +60,7 @@ def weather_replay_from_archive(
     return {
         "source": SOURCE,
         "credit": CREDIT,
-        "grid": {"south": bbox[0], "west": bbox[1], "rows": rows, "cols": cols, "step_deg": step},
+        "grid": {"south": bbox[0], "west": bbox[1], "rows": rows, "cols": cols, "step_deg": GRID_STEP_DEGREES},
         "times": [f"{time}Z" for time in times],
         "units": UNITS,
         "variables": variables,

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 from fixture_pack import WEATHER_PATH, WEATHER_REPLAY, build_fixture_pack
 from pack_weather import (
@@ -91,19 +92,11 @@ def test_the_grid_keeps_the_coordinates_we_asked_for_not_the_models() -> None:
 def test_an_answer_with_gaps_or_missing_points_is_refused() -> None:
     answer = _archive_answer()
     answer[2]["hourly"]["cloud_cover"][1] = None
-    try:
+    with pytest.raises(ValueError, match="cloud_cover"):
         weather_replay_from_archive(answer, BBOX)
-    except ValueError as error:
-        assert "cloud_cover" in str(error)
-    else:
-        raise AssertionError("a gap in the archive answer was accepted")
 
-    try:
+    with pytest.raises(ValueError, match="4 points"):
         weather_replay_from_archive(_archive_answer(points=3), BBOX)
-    except ValueError as error:
-        assert "4 points" in str(error)
-    else:
-        raise AssertionError("a missing point was accepted")
 
 
 def test_one_request_asks_for_every_point() -> None:
