@@ -76,6 +76,15 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Node with no `NODE_LATITUDE` now sits at Betrawati**, so tests that read a Node's shared position see (27.974, 85.186). Tests that pass their own coordinates keep Gainesville ones.
 - **Tests that leave Nodes running** (`test_reticulum_nodes.py`) fail the next run on busy ports; `pkill -f "storm_shield.main import run"` before rerunning if `[loopback]` or `[tcp]` fails for no reason you can see.
 
+## On-device rerouting (ticket 0018)
+
+- **The Road graph builder (`pack_routes.build_road_graph`, `build_cache_pack.py --roads-pbf`) has only run on a toy graph.** The real Nepal extract and `pyrosm` were not run, so `cache-pack-v3` still has no `roads.json` and the valley demo cannot block a road until a pack is rebuilt with it.
+- **A "route is affected" check that measures distance to the blocked road's points fires at every junction** (the Route's first point is the blocked side road's end). The check uses the blocked segment's middle instead.
+- **The plan is rebuilt every second**, so `rerouteHome` and `routeIsAffected` (via `rememberLastAnswer`) keep their last answer and only search again when their inputs change (same objects). Tests that call them with fresh objects each time are unaffected.
+- **Leaflet taps in jsdom have no usable position**, so tapping a specific road is tested on `roadNear` directly; the flow tests start from a stored Blocked Road.
+- `test_reticulum_nodes.py::...[loopback]` failed once in a full `pytest` run (101 s) and passed alone; no stray Node was listening. Rerun it alone before chasing it.
+- **Do not run `ruff format` on `scripts/*.py`**: they are not formatted by it, and it rewraps lines you did not touch (and hides the real diff). Write new lines at 100 columns by hand.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.
@@ -216,3 +225,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Rain is flat before the flood on 26 Aug 2026**: mean 0.03 to 0.12 mm/h across the 08:30 to 10:30 NPT Replay window, wet only from about 10:45 NPT onward (numbers in ticket 0052). The Rain layer looks nearly empty during the Replay; do not "fix" it by scaling the colours.
 - Real build helper run: 35 points, 72 hours, 54 KB of JSON, one request. The full `build_cache_pack.py` was not rerun (needs `CARTO_API_KEY`), so no `cache-pack-v4` with weather exists yet; a Node whose pack lacks weather answers 404 on `/api/weather/replay` and still works.
 - `pack_weather.py` sits in `scripts/` beside `pack_routes.py`, so the Node tests import it through the same `../scripts` path.
+
+## Replay Sensors publish through their Surge (ticket 0060)
+
+- **A replay-track Sensor publishes every `REPLAY_PUBLISH_EVERY_SECONDS` (1 s, 30 event seconds)**, or the Node's `publish_every_seconds` if that is shorter; the Scenario keeps 3 s. No timeline time moved: at 3 s (90 event seconds) the miss depends on where the Sensor's publishes fall, and only one of nine tried offsets (30 event seconds after the start) lost S0's Surge.
+- **A test of "a run can miss the ramp" must try several publish offsets**; the first offsets tried (0, 10, 20) passed even with the old 3 s interval. Check such a test by putting the old value back (`test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start`).
+- `pkill -f "storm_shield.main import run"` inside a compound Bash command can match and kill the command's own shell (exit 144); run it alone.
+- `test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed once in a full run and passed alone, with and without this change.

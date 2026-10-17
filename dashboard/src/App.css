@@ -189,6 +189,12 @@ button:disabled {
   stroke-opacity: 0.85;
 }
 
+.blocked-road {
+  stroke: var(--high);
+  stroke-width: 6;
+  stroke-dasharray: 8 6;
+}
+
 .shelter-marker {
   display: grid;
   place-items: center;
