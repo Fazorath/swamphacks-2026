@@ -4,9 +4,9 @@
 
 **Blocked by:** 0004
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
