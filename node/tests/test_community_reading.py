@@ -48,4 +48,5 @@ def test_a_fuzzed_position_stays_within_200_metres_of_the_real_one() -> None:
     east_west = (
         (fuzzed_longitude - longitude) * metres_per_degree * math.cos(math.radians(latitude))
     )
+    assert (fuzzed_latitude, fuzzed_longitude) != (latitude, longitude)
     assert math.hypot(north_south, east_west) <= 200

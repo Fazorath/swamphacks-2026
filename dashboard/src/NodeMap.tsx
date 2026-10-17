@@ -3,7 +3,8 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
 
-import { formatAge, type NodeOnMap } from "./nodesOnMap";
+import { NodeTags } from "./NodeTags";
+import type { NodeOnMap } from "./nodesOnMap";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
@@ -52,10 +53,7 @@ export function NodeMap({ nodes, selectedId, onSelect }: Props) {
               <Tooltip permanent direction="right" className={`node-label ${state}`}>
                 <strong>{node.label}</strong>
                 {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
-                {node.simulated && <span className="tag simulated">SIMULATED</span>}
-                {node.stale && (
-                  <span className="tag stale">STALE · {formatAge(node.ageSeconds)}</span>
-                )}
+                <NodeTags node={node} />
               </Tooltip>
             </CircleMarker>
           );

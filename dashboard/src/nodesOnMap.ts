@@ -1,7 +1,7 @@
 import type { NodeIdentity } from "./useNodeIdentity";
 import type { Reading } from "./useReadings";
 
-export const STALE_AFTER_SECONDS = 15;
+const STALE_AFTER_SECONDS = 15;
 
 export type NodeOnMap = {
   id: string;

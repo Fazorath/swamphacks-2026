@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-import { formatAge, type NodeOnMap } from "./nodesOnMap";
+import { NodeTags } from "./NodeTags";
+import type { NodeOnMap } from "./nodesOnMap";
 import type { Reading } from "./useReadings";
 
 const KIND_LABELS: Record<Reading["kind"], string> = {
@@ -42,9 +43,8 @@ export function ReadingsPanel({ nodes, selectedId, onSelect }: Props) {
           onClick={() => onSelect(node.id)}
         >
           <h3>
-            {node.label}
-            {node.simulated && <span className="tag simulated">SIMULATED</span>}
-            {node.stale && <span className="tag stale">STALE · {formatAge(node.ageSeconds)}</span>}
+            <button>{node.label}</button>
+            <NodeTags node={node} />
           </h3>
           <ul>
             {node.readings.map((reading) => (
