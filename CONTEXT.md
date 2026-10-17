@@ -96,6 +96,10 @@ _Avoid_: user profile, account, settings
 A public building opened by the county to house evacuees during a storm.
 _Avoid_: refuge, safe place
 
+**Shelter status**:
+Whether a Shelter is open or closed, set by the Hub operator and announced over the Mesh; a Shelter counts as open only once the Hub has announced it.
+_Avoid_: availability, capacity
+
 **Flood-Prone Area**:
 Land approximated from FEMA flood zones and creek floodplains; Alachua County has no lettered evacuation zones.
 _Avoid_: evacuation zone, surge zone

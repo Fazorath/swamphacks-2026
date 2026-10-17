@@ -8,7 +8,7 @@
 
 **Owner:** Fazorath
 
-**Spec:** `docs/specs/storm-shield.md`
+**Spec:** `docs/specs/shelter-status.md` (parent: `docs/specs/storm-shield.md`)
 
 - [ ] The Hub can set a Shelter's status through its API and dashboard
 - [ ] Shelter status updates are sent over Mesh, signed by the Hub; Nodes keep the latest per Shelter
