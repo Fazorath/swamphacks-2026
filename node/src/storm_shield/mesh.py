@@ -7,11 +7,19 @@ from typing import Annotated, Any, Protocol, get_args
 from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.node_registry import NodeRegistryMessage, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.shelter_status import ShelterStatus
 
-Message = CommunityReading | ShelterStatus | ReplayClockMessage | OfficialAlert
+Message = (
+    CommunityReading
+    | SignUp
+    | NodeRegistryMessage
+    | ShelterStatus
+    | ReplayClockMessage
+    | OfficialAlert
+)
 
 # The sender is whatever the Mesh verified, never something the message claims about itself.
 MessageListener = Callable[[str, Message], None]
@@ -126,8 +134,11 @@ class InMemoryMesh:
         self._listeners.append(listener)
 
     def receive(self, sender: str, message: Message) -> None:
-        # Same rule as the radio: only readings may come from any Node; the rest count only from
-        # the Hub this Node was told about.
-        if not isinstance(message, CommunityReading) and sender != self._hub_identity:
+        # Same rule as the radio: readings and Sign-ups may come from any Node, and only as
+        # themselves; the rest count only from the Hub this Node was told about.
+        if isinstance(message, CommunityReading | SignUp):
+            if message.node != sender:
+                return
+        elif sender != self._hub_identity:
             return
         deliver_to_listeners(self._listeners, sender, message)

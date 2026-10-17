@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
     # converges.
     shelter_repeat_seconds: float = 30
+    # How often the Hub repeats the Node registry, so a Node that joined late or missed a packet
+    # converges.
+    registry_repeat_seconds: float = 30
+    # How often a Node that pressed "Sign up" resends it until the Hub has accepted it.
+    sign_up_repeat_seconds: float = 10
     # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
     # converges.
     replay_repeat_seconds: float = 10

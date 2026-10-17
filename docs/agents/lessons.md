@@ -205,6 +205,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **macOS ships bash 3.2, where `"${arr[@]}"` on an empty array is "unbound variable" under `set -u`**; use `${arr[@]+"${arr[@]}"}` in traps that may run before anything starts.
 - "Cut the internet" has two halves: stop the pack server and take away the laptop's upstream. Nodes decide online/Mesh-only by probing gstatic themselves; there is no switch.
 
+## Node registry (ticket 0012)
+
+- **Strict counting changed every Flood Risk test**: no registry heard means nobody counts, this Node included. `MeshedNodes.register(*names)` publishes a hand-made Hub registry listing the Hub and those names; call it after the last `start(...)`, because a Node only hears a registry published after it joins. `register` and `announce_registry` use the hand-fed Hub mesh, which **replaces the Hub app's own mesh** in the in-memory network; with a running `start_hub()` register Nodes through `/api/registry/signup` and `/accept` instead.
+- **A registry is capped by one signed packet** (464 bytes with the 64-byte signature), about 4 to 5 Nodes with 32-character names, 8 with short ones. The Hub answers 409 on an accept that would not fit. Multi-packet registries are out of scope.
+- **Sign-up is a broadcast signed by the Node**, so `verify` finds the key from `node` like for a reading. Only the Hub's listener keeps it; a restarted Hub forgets waiting Sign-ups, and a Node that pressed Sign up resends every `NODE_SIGN_UP_REPEAT_SECONDS` (10) until it hears itself registered.
+- **Dashboard**: the Hub Panel now has tabs (Registry is the default, then Replay and Shelters), so a test that needs the Replay controls or Shelters clicks the tab first. The Node button shows only when `window.location.hostname` is localhost, evaluated at render so a test can stub `location`.
+- Rehearsed on loopback Reticulum (Hub slot 40 / port 8710, Sensor slot 41 / port 8711, `HUB_IDENTITY` set): Sign-up arrived as `waiting`, accept made the Sensor `registered` within seconds and the Hub's registry showed `ver` 2. `scripts/run-demo.sh`'s new `register_sensor` step was only syntax-checked (`bash -n`), not run end to end: it needs the pack download and `ifconfig`. Software path only, not a Pi check.
+
 ## Map tiles from the Cache Pack (ticket 0026)
 
 - **The map picks its tile URL from the pack's deepest tile zoom (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
@@ -219,6 +227,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - The Scenario cannot produce a Surge (its largest water step is 35 cm), so Surge tests hand-feed readings with `hear_from`.
 - **Running a Hub and a Replay sensor on one laptop**: a sensor follows the Replay clock only with `HUB_IDENTITY` set to the Hub's id (printed at startup as `Node <id> (hub-1) is up as hub`); the id changes if `NODE_DATA_DIR` is wiped. Without it the sensor publishes the Scenario and the Hub's Flood Risk never moves. Start the Hub first, then the sensor, and make sure no Node from another worktree still holds loopback ports 4250 and 4251, or the sensor dials that one instead (`Get-NetTCPConnection -State Listen -LocalPort 4250`).
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
+- **A Hub with no `registry.json` starts `ver` at the Unix time** (like `seq`), so deleting the file no longer leaves running Nodes ignoring it. In a `MeshedNodes` test the first Hub start also uses the clock, so `advance(...)` before a start-over or the new `ver` can equal the old one.
 
 ## Replay weather in the Cache Pack (ticket 0052)
 
@@ -233,3 +242,4 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A test of "a run can miss the ramp" must try several publish offsets**; the first offsets tried (0, 10, 20) passed even with the old 3 s interval. Check such a test by putting the old value back (`test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start`).
 - `pkill -f "storm_shield.main import run"` inside a compound Bash command can match and kill the command's own shell (exit 144); run it alone.
 - `test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed once in a full run and passed alone, with and without this change.
+- **0060 and 0012 were each green alone and clashed once merged**: 0060's Surge test started S0 to S3 without registering them, and 0012 makes Flood Risk (so `surged`) ignore unregistered Nodes. The test now signs each Sensor up and accepts it on the Hub. A test written on a branch cut before 0012 that reads Flood Risk needs the same; rerun the full Commands after every merge of `main`, not only before it.

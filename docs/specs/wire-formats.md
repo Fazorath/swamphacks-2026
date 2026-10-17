@@ -61,14 +61,15 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 ```
 
 - `ver` goes up on every change; a Node keeps the highest `ver` it has received in full.
-- `part` / `of` let a list span several packets (about 6 Nodes per packet at 12-character ids; the demo has 5).
+- `part` / `of` are reserved for a list that spans several packets. **For now the Hub always sends `part: 1, of: 1`** and refuses an accept (409) that would no longer fit one signed packet; receivers ignore a registry with `of` above 1 (decided 2026-10-17, ticket 0012).
+- The Hub always lists itself. It saves `ver` and the list in `NODE_DATA_DIR/registry.json` and starts every restart at saved `ver` + 1, as for Shelter status. With no file (first start, or the file deleted) it starts at the current Unix time, like `seq`, so a Hub that starts over still beats the `ver` running Nodes hold.
 - The Hub republishes the current snapshot every 30 s, so late joiners and Nodes that missed a packet converge.
-- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted.
+- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted. Before any registry has arrived every Node is Unverified, this one included, and nothing counts.
 
 ### Hub identity and sign-up
 
 - Each Node learns who the Hub is from config: the Hub prints its Reticulum identity hash at startup and every other Node sets it once as `HUB_IDENTITY` (documented in `.env.example`). Nobody is trusted for announcing themselves as the Hub.
-- A Node signs up with one addressed message to the Hub: `{ "v": 1, "kind": "signup", "name": "garage" }`. The Hub operator sees it and accepts it; accepting bumps the registry `ver`.
+- A Node signs up with a broadcast message, signed by the Node like a reading: `{ "v": 1, "kind": "signup", "node": "91c2e0b47a3d", "name": "garage" }`. It carries `node` because the Mesh has no addressed send and checks every kind without a `node` against the Hub key. Nodes other than the Hub ignore it. The Hub operator sees it and accepts it; accepting bumps the registry `ver` (changed from "one addressed message" on 2026-10-17, ticket 0012).
 - If the Hub is restarted with a new identity, every Node's `HUB_IDENTITY` must be updated. Ticket 0004 notes this.
 
 ## Official Alert (`kind: "alert"`)
@@ -136,7 +137,7 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" a
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements}`, where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). Still to come: `registered` on each entry; verified Community Warnings only; Shelter open ids.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). Still to come: verified Community Warnings only; Shelter open ids.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.

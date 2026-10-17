@@ -121,6 +121,34 @@ start_node s1 sensor 2 28.2528 85.3667 S1
 start_node s2 sensor 3 28.1632 85.3391 S2
 start_node s3 sensor 4 27.9215 85.1460 S3
 
+# Strict counting: until the Hub has registered a Sensor, nobody counts its readings. The Hub keeps
+# its registry in .demo/hub/data, so a second start finds the Sensors already registered.
+register_sensor() {
+  local name=$1 slot=$2 id registry
+  for _ in $(seq 60); do
+    id="$(sed -n "s/.*Node \([0-9a-f]*\) ($name) is up.*/\1/p" "$demo_dir/logs/$name.log")"
+    [ -n "$id" ] && curl -fsS -X POST "http://127.0.0.1:$((base_port + slot))/api/registry/signup" \
+      >/dev/null 2>&1 && break
+    sleep 1
+  done
+  for _ in $(seq 60); do
+    registry="$(curl -fsS "http://127.0.0.1:$base_port/api/registry" 2>/dev/null || true)"
+    case "$registry" in
+      *"\"id\":\"$id\",\"name\":\"$name\",\"status\":\"registered\""*) return 0 ;;
+      *"\"id\":\"$id\",\"name\":\"$name\",\"status\":\"waiting\""*)
+        curl -fsS -X POST -H 'Content-Type: application/json' -d "{\"id\":\"$id\"}" \
+          "http://127.0.0.1:$base_port/api/registry/accept" >/dev/null && return 0
+        ;;
+    esac
+    sleep 1
+  done
+  echo "could not register $name with the Hub; its readings will not count" >&2
+}
+register_sensor s0 1
+register_sensor s1 2
+register_sensor s2 3
+register_sensor s3 4
+
 echo "Hub identity: $hub_identity"
 echo "Projector (Hub Panel): http://localhost:$base_port"
 # Every address except loopback, link-local and Tailscale (printed below); the hotspot's is one.

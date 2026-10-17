@@ -40,6 +40,7 @@ afterEach(() => {
 async function openHubPanel() {
   render(<App />);
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Replay" }));
   return screen.getByRole("dialog", { name: "Hub Panel" });
 }
 

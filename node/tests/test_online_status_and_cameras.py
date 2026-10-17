@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from storm_shield.cameras import CAMERAS
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
+from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode
 from storm_shield.settings import Settings
 
 JPEG = b"\xff\xd8\xff fake camera picture"
@@ -54,15 +55,21 @@ def _running_node(
     outside: Outside,
     name: str = "porch",
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    registered: bool = False,
 ) -> Iterator[TestClient]:
-    settings = Settings(name=name, internet_check_seconds=0.01)
+    settings = Settings(name=name, internet_check_seconds=0.01, hub_identity="hub")
+    network = InMemoryNetwork()
     app = create_app(
         settings,
-        InMemoryNetwork().join(name),
+        network.join(name, "hub"),
         clock=clock,
         internet_source=outside.internet_source(),
         camera_source=outside.camera_source(),
     )
+    if registered:
+        network.join("hub").publish(
+            NodeRegistryMessage(ver=1, t=0, nodes=[RegisteredNode(id=name, name=name)])
+        )
     with TestClient(app) as client:
         yield client
 
@@ -196,7 +203,7 @@ def test_a_picture_too_old_to_call_live_is_unavailable() -> None:
 
 def test_readings_and_flood_risk_keep_updating_while_the_node_is_mesh_only() -> None:
     outside = Outside()
-    with _running_node(outside) as client:
+    with _running_node(outside, registered=True) as client:
         _wait_until(lambda: _status(client) == "online", "the Node to report online")
         outside.internet_up = False
         _wait_until(lambda: _status(client) == "mesh_only", "the Node to report mesh_only")

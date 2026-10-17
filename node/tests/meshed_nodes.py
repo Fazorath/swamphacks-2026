@@ -8,6 +8,7 @@ from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
+from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
@@ -28,6 +29,7 @@ class MeshedNodes:
         self._now = datetime.now(UTC)
         self._hand_fed: dict[str, tuple[InMemoryMesh, int]] = {}
         self._running: list[TestClient] = []
+        self._registry_ver = 0
 
     def start(self, *names: str, cache_pack: tuple[Path, bytes] | None = None) -> None:
         """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
@@ -41,7 +43,12 @@ class MeshedNodes:
             self._clients[name] = TestClient(create_app(settings, mesh, clock=lambda: self._now))
 
     def start_sensor(
-        self, name: str, *, replay_track: str = "", publish_every_seconds: float = 0.02
+        self,
+        name: str,
+        *,
+        replay_track: str = "",
+        publish_every_seconds: float = 0.02,
+        sign_up_repeat_seconds: float = 10,
     ) -> None:
         """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
         settings = self._settings(
@@ -49,6 +56,7 @@ class MeshedNodes:
             hub_identity=HUB,
             replay_track=replay_track,
             publish_every_seconds=publish_every_seconds,
+            sign_up_repeat_seconds=sign_up_repeat_seconds,
         )
         client = TestClient(create_app(settings, self._network.join(name, HUB), clock=self._clock))
         client.__enter__()
@@ -93,6 +101,10 @@ class MeshedNodes:
             **overrides,
         )
 
+    def data_dir(self, name: str) -> Path:
+        """Where a Node keeps its saved files."""
+        return self._directory / name / "data"
+
     def stop_hub(self) -> None:
         """Stop the Hub as a power cut would; `start_hub` with the same directory brings it back."""
         client = self._clients.pop(HUB)
@@ -117,6 +129,28 @@ class MeshedNodes:
         self._hand_fed_mesh(sender).publish(
             ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids)
         )
+
+    def announce_registry(
+        self, ver: int, names: list[str], *, sender: str = HUB, of: int = 1
+    ) -> None:
+        """Have a Node that is not running an app publish one Node registry; a name is its own id."""
+        self._hand_fed_mesh(sender).publish(
+            NodeRegistryMessage(
+                ver=ver,
+                of=of,
+                t=int(self._now.timestamp()),
+                nodes=[RegisteredNode(id=name, name=name) for name in names],
+            )
+        )
+
+    def announce_sign_up(self, node: str, name: str) -> None:
+        """Have a Node that is not running an app publish its Sign-up."""
+        self._hand_fed_mesh(node).publish(SignUp(node=node, name=name))
+
+    def register(self, *names: str) -> None:
+        """Have the Hub's registry list these Nodes (and the Hub), so their readings count."""
+        self._registry_ver += 1
+        self.announce_registry(self._registry_ver, [HUB, *names])
 
     def announce_official_alert(self, alert: OfficialAlert, *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Official Alert."""
