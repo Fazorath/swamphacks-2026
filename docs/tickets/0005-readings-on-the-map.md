@@ -13,6 +13,6 @@
 - [x] Each Node has a configured location; it is fuzzed to about 200 m before anything is published
 - [x] The dashboard map shows a marker per Node at its fuzzed position with its latest readings
 - [x] Markers show staleness (age of the latest reading) and the simulated label
-- [x] The map uses online tiles for now; offline tiles come in 0007
+- [x] The map uses online tiles for now; offline tiles come in 0025
 - [x] Seam A tests: positions another Node sees are never the exact configured location, and they stay within about 200 m of it
 - [x] All **Commands** pass
