@@ -13,7 +13,11 @@ let fetchSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   localStorage.clear();
-  fetchSpy = vi.fn(async () => Response.json({ id: "porch", name: "porch", role: "hub" }));
+  fetchSpy = vi.fn(async (path: string) =>
+    Response.json(
+      path === "/api/cameras" ? [] : { id: "porch", name: "porch", role: "hub", status: "online" },
+    ),
+  );
   vi.stubGlobal("fetch", fetchSpy);
   vi.stubGlobal("EventSource", SilentEventSource);
 });

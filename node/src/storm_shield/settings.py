@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     tcp_peers: str = ""
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
+    # How often this Node checks whether it has internet, and whether a camera picture is due.
+    internet_check_seconds: float = 5
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")

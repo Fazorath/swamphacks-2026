@@ -19,8 +19,14 @@ from storm_shield.cache_pack import (
     RETRY_EVERY_SECONDS,
     CachePack,
 )
+from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
+from storm_shield.internet_connection import (
+    CONNECTIVITY_TIMEOUT_SECONDS,
+    InternetConnection,
+    Status,
+)
 from storm_shield.mesh import InMemoryNetwork, Mesh
 from storm_shield.reading_store import NodeReading, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
@@ -35,10 +41,11 @@ PUBLISH_EVERY_SECONDS = 3
 logger = logging.getLogger(__name__)
 
 
-class NodeIdentity(BaseModel):
+class NodeInfo(BaseModel):
     id: str
     name: str
     role: Role
+    status: Status
 
 
 class ScenarioState(BaseModel):
@@ -60,12 +67,18 @@ def create_app(
     pack_source: httpx.Client | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     tile_source: httpx.Client | None = None,
+    internet_source: httpx.Client | None = None,
+    camera_source: httpx.Client | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
     pack_source = pack_source or httpx.Client(
         timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True
     )
     tile_source = tile_source or httpx.Client(timeout=TILE_TIMEOUT_SECONDS)
+    internet = InternetConnection(
+        internet_source or httpx.Client(timeout=CONNECTIVITY_TIMEOUT_SECONDS)
+    )
+    cameras = Cameras(camera_source or httpx.Client(timeout=FETCH_TIMEOUT_SECONDS))
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
@@ -109,7 +122,29 @@ def create_app(
                     logger.exception("could not get the Cache Pack, retrying")
                     await asyncio.sleep(RETRY_EVERY_SECONDS)
 
-        tasks = [asyncio.create_task(keep_sharing())]
+        async def keep_checking_internet() -> None:
+            while True:
+                try:
+                    await asyncio.to_thread(internet.probe)
+                except Exception:
+                    logger.exception("could not check whether this Node has internet")
+                await asyncio.sleep(settings.internet_check_seconds)
+
+        # Apart from the internet check, so slow cameras never delay noticing the cable is out.
+        async def keep_cameras_fresh() -> None:
+            while True:
+                try:
+                    if internet.status == "online":
+                        await asyncio.to_thread(cameras.refresh_due, clock())
+                except Exception:
+                    logger.exception("could not refresh the camera pictures")
+                await asyncio.sleep(settings.internet_check_seconds)
+
+        tasks = [
+            asyncio.create_task(keep_sharing()),
+            asyncio.create_task(keep_checking_internet()),
+            asyncio.create_task(keep_cameras_fresh()),
+        ]
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -119,8 +154,27 @@ def create_app(
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
     @app.get("/api/node")
-    def node_identity() -> NodeIdentity:
-        return NodeIdentity(id=mesh.identity, name=settings.name, role=settings.role)
+    def node_info() -> NodeInfo:
+        return NodeInfo(
+            id=mesh.identity, name=settings.name, role=settings.role, status=internet.status
+        )
+
+    @app.get("/api/cameras")
+    def camera_tiles() -> list[CameraTile]:
+        return cameras.tiles(internet.status, clock())
+
+    @app.get("/api/cameras/{camera_id}.jpg")
+    def camera_picture(camera_id: int) -> Response:
+        if not cameras.knows(camera_id):
+            raise HTTPException(status_code=404, detail="no such camera")
+        picture = cameras.picture(camera_id, internet.status, clock())
+        if picture is None:
+            raise HTTPException(
+                status_code=503,
+                detail="no live picture: this Node is Mesh-only or the camera failed",
+            )
+        # A cached copy shown later would look live, which is exactly what this must never do.
+        return Response(picture, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
     @app.get("/api/readings")
     def readings() -> list[NodeReading]:

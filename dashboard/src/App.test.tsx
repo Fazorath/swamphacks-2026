@@ -64,11 +64,11 @@ const LOW_FROM_STORM_SIGNAL = {
 };
 
 function stubFloodRisk(floodRisk: object) {
-  vi.stubGlobal("fetch", async (path: string) =>
-    Response.json(
-      path === "/api/flood-risk" ? floodRisk : { id: "porch", name: "porch", role: "hub" },
-    ),
-  );
+  vi.stubGlobal("fetch", async (path: string) => {
+    if (path === "/api/flood-risk") return Response.json(floodRisk);
+    if (path === "/api/cameras") return Response.json([]);
+    return Response.json({ id: "porch", name: "porch", role: "hub", status: "online" });
+  });
 }
 
 beforeEach(() => {

@@ -36,7 +36,7 @@ main {
   grid-template-areas:
     "top top top"
     "readings map alerts"
-    "readings map plan";
+    "cameras map plan";
   gap: 0.75rem;
   padding: 0.75rem;
   background: var(--map-bg);
@@ -333,6 +333,10 @@ section[aria-label="Readings"] {
   grid-area: readings;
 }
 
+section[aria-label="Cameras"] {
+  grid-area: cameras;
+}
+
 section[aria-label="Alerts"] {
   grid-area: alerts;
 }
@@ -351,7 +355,8 @@ section[aria-label="Evacuation Plan"] {
       "map"
       "alerts"
       "plan"
-      "readings";
+      "readings"
+      "cameras";
   }
 
   section[aria-label="Map"] {
@@ -359,7 +364,58 @@ section[aria-label="Evacuation Plan"] {
   }
 }
 
-.flood-risk-chip {
+.connection-badge.online {
+  color: var(--low);
+}
+
+.connection-badge.mesh_only {
+  color: var(--elevated);
+}
+
+.camera-tile {
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.camera-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.camera-tile p {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.camera-tile.offline,
+.camera-tile.unavailable {
+  display: grid;
+  aspect-ratio: 16 / 9;
+  place-content: center;
+  text-align: center;
+}
+
+.camera-tile.offline {
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.camera-tile.unavailable {
+  border-style: dashed;
+  border-color: var(--elevated);
+}
+
+.camera-tile.unavailable strong {
+  color: var(--elevated);
+}
+
+.flood-risk-chip,
+.connection-badge {
   padding: 0 0.5rem;
   border: 1px solid currentcolor;
   border-radius: 0.25rem;
