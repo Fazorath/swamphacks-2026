@@ -133,7 +133,7 @@ class HubRegistry:
             # Nodes already hold the saved `ver`, and only a higher one replaces it.
             self._commit(saved.ver + 1, saved.nodes)
         else:
-            # Starts from the clock like a reading's `seq`, so a Hub whose file was deleted still
+            # Starts from the clock, so a Hub whose file was deleted still
             # beats the `ver` the running Nodes hold.
             self._commit(unix_seconds(), [hub])
 

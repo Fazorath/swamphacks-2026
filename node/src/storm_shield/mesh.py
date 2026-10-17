@@ -101,12 +101,18 @@ class InMemoryNetwork:
     def join(self, identity: str, hub_identity: str = "") -> "InMemoryMesh":
         mesh = InMemoryMesh(identity, self, hub_identity)
         with self._lock:
+            if identity in self._meshes:
+                raise ValueError(f"a Node named {identity} has already joined")
             self._meshes[identity] = mesh
         return mesh
 
     def leave(self, identity: str) -> None:
         with self._lock:
             self._meshes.pop(identity, None)
+
+    def has_joined(self, mesh: "InMemoryMesh") -> bool:
+        with self._lock:
+            return self._meshes.get(mesh.identity) is mesh
 
     def deliver(self, sender: str, message: Message) -> None:
         self.deliver_bytes(sender, message.model_dump_json().encode())
@@ -131,7 +137,9 @@ class InMemoryMesh:
         self._listeners: list[MessageListener] = []
 
     def publish(self, message: Message) -> None:
-        self._network.deliver(self.identity, message)
+        # A Node that has left is off the air: a half-stopped one must not reach the others.
+        if self._network.has_joined(self):
+            self._network.deliver(self.identity, message)
 
     def subscribe(self, listener: MessageListener) -> None:
         with self._listeners_lock:

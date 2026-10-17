@@ -31,6 +31,7 @@ export function fakeNodeSnapshot(id: string, overrides: Partial<NodeSnapshot> = 
     simulated: true,
     age_s: 2,
     stale: false,
+    counts: true,
     measurements: { pressure: { value: 1015, unit: "hPa" } },
     registered: true,
     name: id,

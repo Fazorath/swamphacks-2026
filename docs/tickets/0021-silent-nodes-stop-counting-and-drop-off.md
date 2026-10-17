@@ -4,24 +4,25 @@
 
 **Blocked by:** 0019
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] A Node silent for 60 s is reported as not counting; the field is in the state snapshot, ready for Flood Risk (0006) and Community Warnings (0013) to read
-- [ ] A Node silent for 10 min is removed from the readings the snapshot lists
-- [ ] The 15 s, 60 s and 10 min values live in one place, with the stale value from 0019
-- [ ] A Node that has left the in-memory Mesh can no longer publish to the others
-- [ ] Joining the in-memory Mesh under a name that is already taken fails loudly instead of replacing the earlier Node
-- [ ] Seam A tests with a controllable clock: a Node that published and then left shows stale, then not counting, then gone, while the others keep working
-- [ ] All **Commands** pass
+- [x] A Node silent for 60 s is reported as not counting; the field is in the state snapshot, ready for Flood Risk (0006) and Community Warnings (0013) to read
+- [x] A Node silent for 10 min is removed from the readings the snapshot lists
+- [x] The 15 s, 60 s and 10 min values live in one place, with the stale value from 0019
+- [x] A Node that has left the in-memory Mesh can no longer publish to the others
+- [x] Joining the in-memory Mesh under a name that is already taken fails loudly instead of replacing the earlier Node
+- [x] Seam A tests with a controllable clock: a Node that published and then left shows stale, then not counting, then gone, while the others keep working
+- [x] All **Commands** pass
 
 ## Decisions (2026-10-17, grilled)
 
 - No new spec: the Timing table in `docs/specs/wire-formats.md` already holds the 15 s, 60 s and 10 min values.
-- `NodeSnapshot` gains `counts` (true within 60 s of silence); Flood Risk's `_counts` reads it, so Community Warnings follow without extra code.
+- `NodeSnapshot` gains `counts` (true within 60 s of silence). Built: the reading store leaves silent Nodes out of `recent` with the same rule, so Flood Risk and Community Warnings skip them and `_counts` is unchanged.
 - Past 10 min a Node leaves the snapshot's `nodes` and `recent` but its history stays in the store, so it reappears the moment it speaks; the registry is untouched.
 - Joining a taken name raises `ValueError`; a Node that has left may rejoin. `publish` on a mesh that has left is a quiet no-op.
 - `DROPS_OFF_AFTER_SECONDS = 600` joins the other two in `timing.py`. No `CONTEXT.md` or ADR change.
+- A Registered Node silent past 10 min shows "not heard" in the Hub Panel registry (its age comes from the snapshot); the row itself stays.

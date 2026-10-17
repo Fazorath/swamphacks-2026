@@ -86,6 +86,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - `test_reticulum_nodes.py::...[loopback]` failed once in a full `pytest` run (101 s) and passed alone; no stray Node was listening. Rerun it alone before chasing it.
 - **Do not run `ruff format` on `scripts/*.py`**: they are not formatted by it, and it rewraps lines you did not touch (and hides the real diff). Write new lines at 100 columns by hand.
 
+## Restarted Node is heard again (ticket 0022)
+
+- **`seq` starts at 0 and the freshness test is on the receiver's clock**: `ReadingStore.record` drops a non-increasing `seq` only while the last accepted reading is at most `STALE_AFTER_SECONDS` old, and an ignored reading does not refresh that age. A Node that reboots faster than 15 s with a low `seq` is therefore silent to peers for up to 15 s.
+- `test_a_restarted_node_is_heard_again...` used to patch `time.time` to get ahead of the old counter; it now advances the `MeshedNodes` clock 16 s instead. A test that relied on the clock-seeded `seq` fails with the old pressure still showing.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.
@@ -287,3 +292,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **`_counts` already kept an Unverified Node's Surge out of Flood Risk and warnings**; 0061 only added the missing Seam A test (`test_unverified_surge.py`). Breaking `_counts` to `return True` makes it fail.
 - **The ticket's "100 cm jump" predates 0062**: a Surge is 300 cm or more now, so the test jumps 20 to 340 cm.
+
+## Silent Nodes stop counting and drop off (ticket 0021)
+
+- **The reading store does the dropping, not Flood Risk**: `snapshot().recent` leaves out a Node silent for 60 s and `nodes` leaves out one silent for 10 min, so `_counts` and the Community Warning (which reads `surged`) needed no change. A Node's history stays in the store, so it reappears the moment it speaks. `NodeSnapshot.counts` is the 60 s flag for the dashboard.
+- `InMemoryNetwork.join` now raises on a taken name; `leave` makes that mesh's `publish` a quiet no-op. A Node that `leave`d may rejoin under its name.
+- `test_reticulum_nodes.py` errored (not failed) in a full run while another `pytest` was still going in the background; it passed alone. Run one `pytest` at a time.
