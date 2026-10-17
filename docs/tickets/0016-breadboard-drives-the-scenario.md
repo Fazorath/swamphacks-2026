@@ -10,6 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
+**Design:** `docs/design/ui.md` ("Node Panel"); canvas artboard `D-Node-Scenario`.
+
 - [ ] Digital GPIO buttons and switches map to Scenario steps and reset on the Pi
 - [ ] On a non-Pi machine the Node starts without GPIO and falls back to keyboard/HTTP steps
 - [ ] The Pi runs its own Wi-Fi hotspot with no internet; setup notes are kept next to the code

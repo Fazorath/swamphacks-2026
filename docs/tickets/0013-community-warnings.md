@@ -10,6 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
+**Design:** `docs/design/ui.md` ("Alerts Panel", "Hub Panel"); canvas artboards `C-Alerts`, `D-Hub-Warnings`, `P-Alerts`.
+
 - [ ] The Hub issues a Community Warning when the second Registered Node goes High, naming the Nodes and the reasons
 - [ ] It does not re-issue while the condition still holds
 - [ ] Each warning is signed with the Hub identity; Nodes show only warnings whose signature verifies

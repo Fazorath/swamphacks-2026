@@ -10,6 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
+**Design:** `docs/design/ui.md` ("Hub Panel", "Node Panel"); canvas artboards `D-Hub-Registry`, `D-Node-Registration`, `D-StaleUnverified`.
+
 - [ ] Node sign-up through the API; the Hub records the Node's identity as Registered once accepted
 - [ ] The Hub publishes the registry over Mesh, signed with its identity; Nodes keep the latest valid one
 - [ ] Flood Risk counts only readings from Registered Nodes

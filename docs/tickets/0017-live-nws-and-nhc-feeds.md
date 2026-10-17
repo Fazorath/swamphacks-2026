@@ -10,6 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
+**Design:** `docs/design/ui.md` ("Hub Panel"); canvas artboard `D-Hub-Feeds`.
+
 - [ ] The Hub polls `api.weather.gov/alerts/active?zone=FLZ136` (with a User-Agent header) and NHC `CurrentStorms.json` while online
 - [ ] Live alerts go through the same normalization as replay and are tagged live
 - [ ] Config picks live or replay; the demo defaults to replay
