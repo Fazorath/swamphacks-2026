@@ -64,14 +64,13 @@ def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
     assert tuple(from_porch["position"]) == (27.974, 85.186)
 
 
-def test_a_restarted_node_is_heard_again(
-    meshed_nodes: MeshedNodes, monkeypatch: pytest.MonkeyPatch
+def test_a_restarted_node_is_heard_again_though_its_seq_starts_over(
+    meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch", "garage")
     meshed_nodes["porch"].post("/api/scenario/step")
     meshed_nodes.remove("porch")
-    restarted_at = time.time() + 60
-    monkeypatch.setattr(time, "time", lambda: restarted_at)
+    meshed_nodes.advance(16)
     meshed_nodes.start("porch")
     meshed_nodes["porch"].post("/api/scenario/reset")
     pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]

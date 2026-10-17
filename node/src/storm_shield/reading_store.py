@@ -53,9 +53,13 @@ class ReadingStore:
     def record(self, sender: str, reading: CommunityReading, received_at: datetime) -> None:
         with self._lock:
             history = self._history.setdefault(sender, deque())
-            # A repeated or relayed-late copy must not overwrite a newer reading.
+            # A repeated or relayed-late copy must not overwrite a newer reading, but a Node
+            # silent past the stale window may have restarted with its counter back at 0 (the Pi
+            # has no battery clock), so it is heard again whatever its seq.
             if history and reading.seq <= history[-1].reading.seq:
-                return
+                age_s = (received_at - history[-1].received_at).total_seconds()
+                if age_s <= STALE_AFTER_SECONDS:
+                    return
             history.append(HeardReading(reading, received_at))
             while history[0].received_at < received_at - self._history_window:
                 history.popleft()

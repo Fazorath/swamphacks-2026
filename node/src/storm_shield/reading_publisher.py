@@ -1,6 +1,5 @@
 import itertools
 import threading
-import time
 from collections.abc import Callable
 
 from storm_shield.community_reading import CommunityReading, Position
@@ -24,8 +23,7 @@ class ReadingPublisher:
         self._river_km = river_km
         self._measurements = measurements
         self._keep = keep
-        # Starting from the clock keeps a restarted Node ahead of the seq others last saw from it.
-        self._sequence = itertools.count(int(time.time()))
+        self._sequence = itertools.count()
         # A tick and a Scenario step run on different threads; without this a tick that read the
         # old Scenario could take its seq after the step and hide the step's reading from others.
         # Whoever changes what the measurements say takes it too, then calls `share`.
