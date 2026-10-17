@@ -265,6 +265,9 @@ def test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start(
     meshed_nodes.start_hub()
     for track in SENSORS_AND_SILENCE:
         meshed_nodes.start_sensor(track.lower(), replay_track=track)
+        # Only Registered Nodes count toward Flood Risk, and a Surge is read from Flood Risk.
+        meshed_nodes[track.lower()].post("/api/registry/signup")
+        meshed_nodes["hub"].post("/api/registry/accept", json={"id": track.lower()})
     _start_replay(meshed_nodes)
     # Where a Sensor's publishes fall against the ramp depends on when it joined, so try several.
     meshed_nodes.advance(first_publish_event_seconds / RATE)
