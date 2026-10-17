@@ -225,3 +225,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Rain is flat before the flood on 26 Aug 2026**: mean 0.03 to 0.12 mm/h across the 08:30 to 10:30 NPT Replay window, wet only from about 10:45 NPT onward (numbers in ticket 0052). The Rain layer looks nearly empty during the Replay; do not "fix" it by scaling the colours.
 - Real build helper run: 35 points, 72 hours, 54 KB of JSON, one request. The full `build_cache_pack.py` was not rerun (needs `CARTO_API_KEY`), so no `cache-pack-v4` with weather exists yet; a Node whose pack lacks weather answers 404 on `/api/weather/replay` and still works.
 - `pack_weather.py` sits in `scripts/` beside `pack_routes.py`, so the Node tests import it through the same `../scripts` path.
+
+## Replay Sensors publish through their Surge (ticket 0060)
+
+- **A replay-track Sensor publishes every `REPLAY_PUBLISH_EVERY_SECONDS` (1 s, 30 event seconds)**, or the Node's `publish_every_seconds` if that is shorter; the Scenario keeps 3 s. No timeline time moved: at 3 s (90 event seconds) the miss depends on where the Sensor's publishes fall, and only one of nine tried offsets (30 event seconds after the start) lost S0's Surge.
+- **A test of "a run can miss the ramp" must try several publish offsets**; the first offsets tried (0, 10, 20) passed even with the old 3 s interval. Check such a test by putting the old value back (`test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start`).
+- `pkill -f "storm_shield.main import run"` inside a compound Bash command can match and kill the command's own shell (exit 144); run it alone.
+- `test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed once in a full run and passed alone, with and without this change.
