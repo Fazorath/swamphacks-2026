@@ -276,3 +276,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Node with no copy retries every 30 s** (the Hub may not have fetched yet), and hourly once it has one. Tests that wait on a retry patch `storm_shield.main.RETRY_EVERY_SECONDS`.
 - **A Hub started with its lifespan in a test would call the real api.open-meteo.com**: `MeshedNodes.start_hub` injects an offline `weather_source`; do the same for any new test that enters a Hub as `with TestClient(app)`.
 - Rehearsed on loopback (Hub 8710 / slot 30, Sensor 8711 / slot 31) against the real Open-Meteo: both served 120 KB of forecast, and after the Hub was stopped the Sensor still served it. Software path only, not a Pi check.
+
+## Tidy Community Reading mapping (ticket 0024)
+
+- **Three boxes were left open on purpose.** `store_reading_from` is now `hear_community_reading` because the listener still needs its `isinstance` filter; the only other `datetime.now(UTC)` is the default clock and the Scenario's own stamp; the Mesh listeners take any `Message`, so no parameter says Community Reading. The ticket is done on the other four bullets.
+- **`Position` is a distinct NamedTuple**, so tests build `Position(lat, lon)` and mypy rejects a bare tuple. The six test files changed only for that.
+- The sequence, the `publishing` lock from 0020 and `share()` now live in `reading_publisher.py` (`publisher.lock`); `create_app` only wires them up.
