@@ -126,6 +126,10 @@ _Avoid_: popup, alarm, klaxon, notification
 A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk. The age is shown on the Node's map marker and Node card.
 _Avoid_: offline node, dead node, timed out
 
+**Node unreachable**:
+The dashboard's state when a Viewer gets no answer from the Node it is connected to. It is about the Viewer's link to its own Node, not the Mesh: a Node can be Mesh-only or have Stale peers and still be reachable. While it lasts, live readings and Flood Risk are not shown, and what the Cache Pack holds stays.
+_Avoid_: offline, disconnected, down
+
 **Layer rail**:
 The column of buttons along the left edge of the dashboard that shows and hides map layers and Panels, each with a live count where one applies.
 _Avoid_: sidebar, toolbar, nav
