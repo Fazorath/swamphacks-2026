@@ -4,7 +4,7 @@
 
 **Blocked by:** 0002, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** refloow-0
 
