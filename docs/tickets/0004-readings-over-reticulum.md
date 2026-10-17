@@ -4,9 +4,9 @@
 
 **Blocked by:** 0003, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/storm-shield.md`
 
