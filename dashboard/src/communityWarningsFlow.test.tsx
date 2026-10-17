@@ -76,6 +76,10 @@ test("a Community Warning names the Sensor and how far upstream it is, labelled 
     within(card).getByText("Check official sources for any evacuation decision."),
   ).toBeVisible();
   expect(screen.queryByRole("article", { name: "Official Alert" })).toBeNull();
+  expect(within(card).getByRole("link", { name: "Official source: DHM Nepal" })).toHaveAttribute(
+    "href",
+    "https://www.hydrology.gov.np/",
+  );
 });
 
 test("the lead-time line compares the warning with the first Official Alert", async () => {

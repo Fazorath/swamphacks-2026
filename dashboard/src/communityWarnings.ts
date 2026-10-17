@@ -14,6 +14,9 @@ export type CommunityWarning = {
   surge_t: number;
 };
 
+// Nepal's Department of Hydrology and Meteorology, the authority whose flood warnings count.
+export const OFFICIAL_SOURCE = { name: "DHM Nepal", url: "https://www.hydrology.gov.np/" };
+
 export const REASON_SENTENCES: Record<CommunityWarningReason, string> = {
   water_surge: "Water is surging",
   water_high: "Water is high",

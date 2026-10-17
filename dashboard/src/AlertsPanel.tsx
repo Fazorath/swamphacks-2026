@@ -7,7 +7,7 @@ import {
   SOURCE_LABELS,
   type OfficialAlert,
 } from "./officialAlerts";
-import { warningSentence, type CommunityWarning } from "./communityWarnings";
+import { OFFICIAL_SOURCE, warningSentence, type CommunityWarning } from "./communityWarnings";
 import type { NodeSnapshot } from "./nodeState";
 
 // "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
@@ -72,6 +72,13 @@ export function AlertsPanel({
           <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
           <p>Signed by the Hub · verified</p>
           <p>Check official sources for any evacuation decision.</p>
+          {online ? (
+            <a href={OFFICIAL_SOURCE.url} target="_blank" rel="noreferrer">
+              Official source: {OFFICIAL_SOURCE.name}
+            </a>
+          ) : (
+            <p>Official source link opens when online</p>
+          )}
         </article>
       ))}
     </section>
