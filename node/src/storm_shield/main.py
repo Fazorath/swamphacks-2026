@@ -28,7 +28,7 @@ from storm_shield.internet_connection import (
     Status,
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
-from storm_shield.reading_store import NodeReading, ReadingStore
+from storm_shield.reading_store import NodeReading, NodeSnapshot, ReadingStore
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
@@ -56,6 +56,16 @@ class NodeStatusReport(BaseModel):
 
 class ScenarioState(BaseModel):
     step: str
+
+
+class NodeState(BaseModel):
+    id: str
+    name: str
+    role: Role
+    status: Status
+    scenario: ScenarioState
+    flood_risk: FloodRisk
+    nodes: list[NodeSnapshot]
 
 
 class OpenShelters(BaseModel):
@@ -209,6 +219,19 @@ def create_app(
     def node_status_report() -> NodeStatusReport:
         return NodeStatusReport(
             id=mesh.identity, name=settings.name, role=settings.role, status=internet.status
+        )
+
+    @app.get("/api/state")
+    def node_state() -> NodeState:
+        view = store.view(clock())
+        return NodeState(
+            id=mesh.identity,
+            name=settings.name,
+            role=settings.role,
+            status=internet.status,
+            scenario=ScenarioState(step=scenario.step_name),
+            flood_risk=flood_risk(view.recent),
+            nodes=view.nodes,
         )
 
     @app.get("/api/cameras")

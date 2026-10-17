@@ -1,15 +1,43 @@
 import threading
 from collections import deque
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+
+from pydantic import BaseModel
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.scenario import Reading, ReadingKind
+from storm_shield.timing import STALE_AFTER_SECONDS
 
 
 class NodeReading(Reading):
     node: str
     position: tuple[float, float]
     age_s: float
+
+
+class Measurement(BaseModel):
+    value: float
+    unit: str
+
+
+class NodeSnapshot(BaseModel):
+    """What this Node last heard from one Node, grouped so the flags cannot disagree."""
+
+    id: str
+    position: tuple[float, float]
+    simulated: bool
+    age_s: float
+    stale: bool
+    measurements: dict[ReadingKind, Measurement]
+
+
+@dataclass
+class StoreView:
+    """Every Node's latest readings and the histories Flood Risk needs, from one instant."""
+
+    nodes: list[NodeSnapshot]
+    recent: dict[str, list[CommunityReading]]
 
 
 class ReadingStore:
@@ -36,12 +64,23 @@ class ReadingStore:
         A Node that has said nothing within the window still keeps its last reading, because
         nothing yet drops silent Nodes (ticket 0021).
         """
+        with self._lock:
+            return self._recent_locked(now)
+
+    def view(self, now: datetime) -> StoreView:
+        with self._lock:
+            nodes = [
+                _node_snapshot(sender, history[-1], now)
+                for sender, history in sorted(self._history.items())
+            ]
+            return StoreView(nodes=nodes, recent=self._recent_locked(now))
+
+    def _recent_locked(self, now: datetime) -> dict[str, list[CommunityReading]]:
         since = now - self._history_window
         recent: dict[str, list[CommunityReading]] = {}
-        with self._lock:
-            for sender, history in self._history.items():
-                in_window = [reading for reading, received_at in history if received_at >= since]
-                recent[sender] = in_window or [history[-1][0]]
+        for sender, history in self._history.items():
+            in_window = [reading for reading, received_at in history if received_at >= since]
+            recent[sender] = in_window or [history[-1][0]]
         return recent
 
     def latest(self, now: datetime) -> list[NodeReading]:
@@ -57,6 +96,24 @@ class ReadingStore:
             for sender, (reading, received_at) in latest
             for measurement in _measurements(reading, received_at)
         ]
+
+
+def _node_snapshot(
+    sender: str, latest: tuple[CommunityReading, datetime], now: datetime
+) -> NodeSnapshot:
+    reading, received_at = latest
+    age_s = (now - received_at).total_seconds()
+    return NodeSnapshot(
+        id=sender,
+        position=reading.pos,
+        simulated=reading.sim,
+        age_s=age_s,
+        stale=age_s > STALE_AFTER_SECONDS,
+        measurements={
+            m.kind: Measurement(value=m.value, unit=m.unit)
+            for m in _measurements(reading, received_at)
+        },
+    )
 
 
 def _measurements(reading: CommunityReading, received_at: datetime) -> list[Reading]:
