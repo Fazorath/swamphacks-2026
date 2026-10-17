@@ -27,7 +27,7 @@
 | [0022-restarted-node-is-heard-again](0022-restarted-node-is-heard-again.md) | done | leonardorofaDV |
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | done | refloow-0 |
-| [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | ready-for-agent | unclaimed |
+| [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | in-progress | leonardorofaDV |
 | [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | done | Fazorath |
 | [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | done | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
@@ -63,5 +63,5 @@
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV |
-| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | ready-for-agent | unclaimed |
+| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | done | leonardorofaDV |
 | [0062-flood-levels-fit-the-river](0062-flood-levels-fit-the-river.md) | done | refloow-0 |
