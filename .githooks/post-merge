@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# After every git pull or merge: flag setup problems (still behind main, a Node
+# left running on old code, missing tools) right away. Never fails the merge.
+
+doctor="$(git rev-parse --show-toplevel)/scripts/doctor.sh"
+# Older branches predate doctor.sh.
+[ -x "$doctor" ] || exit 0
+problems="$("$doctor" --quiet 2>/dev/null)"
+if [ -n "$problems" ]; then
+  echo "post-merge: setup problems found by scripts/doctor.sh:"
+  echo "$problems"
+fi
+exit 0

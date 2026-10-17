@@ -16,8 +16,9 @@ done < <(git diff --cached --name-only --diff-filter=ACMR)
 # 2. Key-shaped strings in added lines.
 patterns=(
   'AKIA[0-9A-Z]{16}'                                   # AWS access key
-  'sk-[A-Za-z0-9_-]{20,}'                              # OpenAI / Anthropic style
-  'sk-ant-[A-Za-z0-9_-]{20,}'
+  # Not inside a word, so slugs like "flood-risk-levels-..." pass.
+  '(^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}'              # OpenAI / Anthropic style
+  '(^|[^A-Za-z0-9])sk-ant-[A-Za-z0-9_-]{20,}'
   'gh[pousr]_[A-Za-z0-9]{30,}'                         # GitHub tokens
   'github_pat_[A-Za-z0-9_]{30,}'
   'xox[abprs]-[A-Za-z0-9-]{10,}'                       # Slack
@@ -42,7 +43,22 @@ if [ $fail -ne 0 ]; then
   exit 1
 fi
 
-# 3. Keep the ticket progress table in docs/tickets/README.md current.
+# 3. Claims go through scripts/claim.sh, which commits on main from a detached
+# worktree. A claim committed on a branch is invisible to teammates (two people
+# claimed 0009 that way). Handing a ticket back (Owner: unclaimed) is fine, and
+# a merge brings in other people's claims.
+git_dir="$(git rev-parse --git-dir)"
+if git symbolic-ref -q HEAD >/dev/null && [ ! -f "$git_dir/MERGE_HEAD" ]; then
+  claimed="$(git diff --cached -U0 -- 'docs/tickets/[0-9]*.md' | grep -E '^\+\*\*Owner:\*\*' | grep -v unclaimed)"
+  if [ -n "$claimed" ]; then
+    echo "pre-commit: this commit claims a ticket by editing its Owner line on a branch:" >&2
+    echo "$claimed" >&2
+    echo "Unstage that change and run scripts/claim.sh NNNN instead; it pushes the claim to main so teammates see it." >&2
+    exit 1
+  fi
+fi
+
+# 4. Keep the ticket progress table in docs/tickets/README.md current.
 if git diff --cached --name-only --diff-filter=ACMRD | grep -qE '^docs/tickets/[0-9][^/]*\.md$'; then
   scripts/ticket-status.sh --markdown > docs/tickets/README.md
   git add docs/tickets/README.md

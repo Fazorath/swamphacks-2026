@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Warns, never blocks:
+# - pushing a branch that is behind origin/main (merge main in now, not at the end);
+# - pushing Node or dashboard code to main: runs scripts/check.sh and shouts if it fails.
+# SKIP_CHECK=1 git push ... skips the check (claims and ticket edits never run it).
+
+zero=0000000000000000000000000000000000000000
+repo="$(git rev-parse --show-toplevel)"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  case "$remote_ref" in
+    refs/heads/main)
+      [ "${SKIP_CHECK:-}" = 1 ] && continue
+      if [ "$remote_sha" = "$zero" ] || ! git cat-file -e "$remote_sha" 2>/dev/null; then
+        changed="$(git diff --name-only origin/main "$local_sha" 2>/dev/null)"
+      else
+        changed="$(git diff --name-only "$remote_sha" "$local_sha")"
+      fi
+      if grep -qE '^(node|dashboard)/' <<<"$changed"; then
+        echo "pre-push: code is going to main; running scripts/check.sh (SKIP_CHECK=1 to skip)" >&2
+        # stdin carries the remaining refs for this loop; keep the check off it.
+        if ! "$repo/scripts/check.sh" </dev/null >&2; then
+          echo >&2
+          echo "pre-push: WARNING: main is getting code that fails the Commands. Fix it right after this push; main must stay demoable." >&2
+        fi
+      fi
+      ;;
+    *)
+      behind="$(git rev-list --count "$local_sha..origin/main" 2>/dev/null || echo 0)"
+      if [ "$behind" -gt 0 ]; then
+        echo "pre-push: ${remote_ref#refs/heads/} is $behind commits behind origin/main. Merge it in soon: git fetch && git merge origin/main" >&2
+      fi
+      ;;
+  esac
+done
+exit 0
