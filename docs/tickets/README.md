@@ -43,6 +43,6 @@
 | [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | ready-for-agent | unclaimed |
 | [0038-cameras-panel-states](0038-cameras-panel-states.md) | ready-for-agent | unclaimed |
 | [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | ready-for-agent | unclaimed |
-| [0040-node-serves-state-snapshot](0040-node-serves-state-snapshot.md) | ready-for-agent | unclaimed |
+| [0040-node-serves-state-snapshot](0040-node-serves-state-snapshot.md) | in-progress | leonardorofaDV |
 | [0041-dashboard-reads-the-state-snapshot](0041-dashboard-reads-the-state-snapshot.md) | ready-for-agent | unclaimed |
 | [0042-node-unreachable](0042-node-unreachable.md) | ready-for-agent | unclaimed |
