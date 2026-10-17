@@ -77,7 +77,12 @@ def _wait_until(condition: Callable[[], bool], what: str) -> None:
 
 
 def _status(client: TestClient) -> str:
-    return str(client.get("/api/node").json()["status"])
+    return str(client.get("/api/state").json()["status"])
+
+
+def _own_values(client: TestClient) -> dict[str, float]:
+    [own] = client.get("/api/state").json()["nodes"]
+    return {kind: measurement["value"] for kind, measurement in own["measurements"].items()}
 
 
 def _tile_states(client: TestClient) -> dict[int, str]:
@@ -195,17 +200,17 @@ def test_readings_and_flood_risk_keep_updating_while_the_node_is_mesh_only() -> 
         _wait_until(lambda: _status(client) == "online", "the Node to report online")
         outside.internet_up = False
         _wait_until(lambda: _status(client) == "mesh_only", "the Node to report mesh_only")
-        before = {r["kind"]: r["value"] for r in client.get("/api/readings").json()}
-        assert client.get("/api/flood-risk").json()["level"] is None
+        before = _own_values(client)
+        assert client.get("/api/state").json()["flood_risk"]["level"] is None
         for _ in range(3):
             client.post("/api/scenario/step")
-        after = {r["kind"]: r["value"] for r in client.get("/api/readings").json()}
+        after = _own_values(client)
         assert after["pressure"] < before["pressure"] - 5
-        assert client.get("/api/flood-risk").json()["level"] is not None
+        assert client.get("/api/state").json()["flood_risk"]["level"] is not None
 
 
 def test_a_viewer_cannot_change_a_nodes_connection_state_or_cameras() -> None:
     with _running_node(Outside()) as client:
-        for path in ("/api/node", "/api/cameras", f"/api/cameras/{CAMERAS[0].id}.jpg"):
+        for path in ("/api/state", "/api/cameras", f"/api/cameras/{CAMERAS[0].id}.jpg"):
             for send in (client.post, client.put, client.delete):
                 assert send(path).status_code == 405

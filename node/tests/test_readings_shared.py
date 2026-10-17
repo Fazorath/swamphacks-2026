@@ -7,8 +7,9 @@ from meshed_nodes import MeshedNodes
 
 def _values_by_node_and_kind(client: TestClient) -> dict[tuple[str, str], float]:
     return {
-        (reading["node"], reading["kind"]): reading["value"]
-        for reading in client.get("/api/readings").json()
+        (entry["id"], kind): measurement["value"]
+        for entry in client.get("/api/state").json()["nodes"]
+        for kind, measurement in entry["measurements"].items()
     }
 
 
@@ -28,15 +29,15 @@ def test_a_reading_stepped_on_one_node_shows_up_on_another(meshed_nodes: MeshedN
     assert _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")] < normal_day - 5
 
 
-def test_readings_from_other_nodes_are_timestamped_and_labeled_simulated(
+def test_readings_from_other_nodes_are_aged_and_labeled_simulated(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch", "garage")
     meshed_nodes["porch"].post("/api/scenario/step")
-    readings = meshed_nodes["garage"].get("/api/readings").json()
-    from_porch = [reading for reading in readings if reading["node"] == "porch"]
-    assert from_porch
-    assert all(reading["simulated"] and reading["timestamp"] for reading in from_porch)
+    nodes = meshed_nodes["garage"].get("/api/state").json()["nodes"]
+    [from_porch] = [entry for entry in nodes if entry["id"] == "porch"]
+    assert from_porch["simulated"]
+    assert from_porch["age_s"] >= 0
 
 
 def test_removing_a_node_leaves_the_others_working(meshed_nodes: MeshedNodes) -> None:
@@ -56,12 +57,9 @@ def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
 ) -> None:
     meshed_nodes.start("porch", "garage")
     meshed_nodes["porch"].post("/api/scenario/reset")
-    from_porch = [
-        reading
-        for reading in meshed_nodes["garage"].get("/api/readings").json()
-        if reading["node"] == "porch"
-    ]
-    assert {tuple(reading["position"]) for reading in from_porch} == {(29.652, -82.324)}
+    nodes = meshed_nodes["garage"].get("/api/state").json()["nodes"]
+    [from_porch] = [entry for entry in nodes if entry["id"] == "porch"]
+    assert tuple(from_porch["position"]) == (29.652, -82.324)
 
 
 def test_a_restarted_node_is_heard_again(

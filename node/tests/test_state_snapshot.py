@@ -115,3 +115,15 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
         "stale",
         "measurements",
     }
+
+
+def test_the_endpoints_the_state_replaced_are_gone(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    for path in (
+        "/api/node",
+        "/api/readings",
+        "/api/readings/stream",
+        "/api/flood-risk",
+        "/api/scenario",
+    ):
+        assert meshed_nodes["porch"].get(path).status_code == 404, path

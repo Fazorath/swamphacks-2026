@@ -10,7 +10,7 @@ def _step(client: TestClient, times: int = 1) -> None:
 
 
 def _flood_risk(client: TestClient) -> dict[str, Any]:
-    return client.get("/api/flood-risk").json()  # type: ignore[no-any-return]
+    return client.get("/api/state").json()["flood_risk"]  # type: ignore[no-any-return]
 
 
 def _reason_codes(client: TestClient) -> set[str]:
