@@ -733,3 +733,45 @@ section p.storm-signal {
   font-size: 0.8rem;
   font-weight: bold;
 }
+
+section p.flood-prone-caption {
+  position: absolute;
+  z-index: 1000;
+  bottom: 1.6rem;
+  left: 0.75rem;
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--surface-glass);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.flood-prone-area {
+  stroke: var(--community);
+  stroke-width: 2;
+  fill: var(--community);
+  fill-opacity: 0.12;
+}
+
+.shelter-pin {
+  display: grid;
+  place-items: center;
+  background: var(--low);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  color: var(--surface);
+  font-weight: bold;
+}
+
+.shelter-pin.closed {
+  background: var(--surface-2);
+  border-color: var(--muted);
+  color: var(--muted);
+}
+
+.leaflet-tooltip.shelter-label {
+  background: var(--surface-glass);
+  border-color: var(--line);
+  color: var(--text);
+}

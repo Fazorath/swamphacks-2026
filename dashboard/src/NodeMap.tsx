@@ -14,9 +14,11 @@ import {
 } from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
+import { FLOOD_PRONE_CAPTION, PackLayers } from "./PackLayers";
 import { MAP_CREDIT, onlineUrlForMissingPackTile, tileUrlTemplate } from "./mapTiles";
 import { stormSignalSentence } from "./floodRiskSentences";
 import type { Shelter } from "./evacuationPlan";
+import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
@@ -26,8 +28,6 @@ const BETRAWATI: [number, number] = [27.9731, 85.186];
 
 const DRAFT_HOME_ICON = divIcon({ className: "home-draft-marker", html: "⌂", iconSize: [28, 28] });
 const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
-
-const SHELTER_ICON = divIcon({ className: "shelter-marker", html: "+", iconSize: [28, 28] });
 
 function PickHomeOnClick({ onPick }: { onPick: (home: Home) => void }) {
   useMapEvents({ click: (event) => onPick({ lat: event.latlng.lat, lon: event.latlng.lng }) });
@@ -75,7 +75,11 @@ type Props = {
   onSelect: (id: string) => void;
   stormSignal: FloodRisk["storm_signal"] | null;
   home: Home | null;
-  // Only the Shelter the Evacuation Plan chose.
+  // From the Cache Pack; empty until a Node holds one.
+  shelters: Shelter[];
+  openShelterIds: string[];
+  floodProne: FloodProneAreas | null;
+  // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   route: LatLon[] | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
@@ -98,6 +102,9 @@ export function NodeMap({
   onSelect,
   stormSignal,
   home,
+  shelters,
+  openShelterIds,
+  floodProne,
   shelter,
   route,
   draftHome,
@@ -113,6 +120,9 @@ export function NodeMap({
   return (
     <section aria-label="Map">
       {stormSignal?.on && <p className="storm-signal">{stormSignalSentence(stormSignal)}</p>}
+      {floodProne && floodProne.features.length > 0 && (
+        <p className="flood-prone-caption">{FLOOD_PRONE_CAPTION}</p>
+      )}
       {picking && (
         <div className="pick-banner">
           Tap the map to place your home
@@ -164,7 +174,12 @@ export function NodeMap({
         )}
         {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
         {route && <Polyline positions={route} className="evacuation-route" />}
-        {shelter && <Marker position={shelter.pos} icon={SHELTER_ICON} interactive={false} />}
+        <PackLayers
+          shelters={shelters}
+          openShelterIds={openShelterIds}
+          chosenShelterId={shelter?.id ?? null}
+          floodProne={floodProne}
+        />
         {nodes.map((node) => {
           const selected = node.id === selectedId;
           // Leaflet fixes a path's class when it is created, so a state change remounts the marker.

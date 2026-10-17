@@ -191,6 +191,9 @@ export function App() {
           onSelect={toggleSelected}
           stormSignal={floodRisk?.storm_signal ?? null}
           home={profile?.home ?? null}
+          shelters={cachePack?.shelters ?? []}
+          openShelterIds={openShelterIds}
+          floodProne={cachePack?.floodProne ?? null}
           shelter={plan.shelter}
           route={plan.route}
           draftHome={panelOpen ? draftHome : null}

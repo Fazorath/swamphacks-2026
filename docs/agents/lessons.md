@@ -298,3 +298,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The reading store does the dropping, not Flood Risk**: `snapshot().recent` leaves out a Node silent for 60 s and `nodes` leaves out one silent for 10 min, so `_counts` and the Community Warning (which reads `surged`) needed no change. A Node's history stays in the store, so it reappears the moment it speaks. `NodeSnapshot.counts` is the 60 s flag for the dashboard.
 - `InMemoryNetwork.join` now raises on a taken name; `leave` makes that mesh's `publish` a quiet no-op. A Node that `leave`d may rejoin under its name.
 - `test_reticulum_nodes.py` errored (not failed) in a full run while another `pytest` was still going in the background; it passed alone. Run one `pytest` at a time.
+
+## The map shows the Cache Pack (ticket 0025)
+
+- **react-leaflet `GeoJSON` throws "Invalid GeoJSON object" on a fixture like `{ features: [] }`** (no `type`) or a feature without `type: "Feature"`. Older flow tests had such fixtures because nothing drew the overlay; they are valid GeoJSON now. A test that stubs `flood_prone.geojson` needs `type: "FeatureCollection"`.
+- **The "approximate" caption shows only when the overlay has a feature**, so a pack with an empty corridor shows none.
+- The closed-Shelter wording follows the Evacuation Plan: before the Hub's first announcement every Shelter reads Closed. Final pins and the hatch are 0035.
+- Not seen in a real browser or on a phone yet; jsdom draws markers, tooltips and the path but not tiles.

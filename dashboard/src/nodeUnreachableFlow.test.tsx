@@ -72,7 +72,8 @@ beforeEach(() => {
     if (path.startsWith("/api/cache-pack")) {
       if (path === "/api/cache-pack") return Response.json({ available: true, manifest: null });
       if (path.endsWith("shelters.json")) return Response.json(SHELTERS);
-      if (path.endsWith("flood_prone.geojson")) return Response.json({ features: [] });
+      if (path.endsWith("flood_prone.geojson"))
+        return Response.json({ type: "FeatureCollection", features: [] });
     }
     if (nodeAnswer === "down") throw new TypeError("Failed to fetch");
     if (nodeAnswer === "hangs") return hangUntilGivenUp(init?.signal);

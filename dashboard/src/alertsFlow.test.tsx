@@ -31,6 +31,8 @@ const AROUND_HOME = {
   type: "FeatureCollection",
   features: [
     {
+      type: "Feature",
+      properties: {},
       geometry: {
         type: "Polygon",
         coordinates: [

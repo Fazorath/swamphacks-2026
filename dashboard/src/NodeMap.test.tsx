@@ -22,6 +22,9 @@ function renderMap(packTileMaxZoom: number | null) {
       onSelect={() => {}}
       stormSignal={null}
       home={null}
+      shelters={[]}
+      openShelterIds={[]}
+      floodProne={null}
       shelter={null}
       route={null}
       draftHome={null}
