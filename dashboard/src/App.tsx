@@ -40,7 +40,7 @@ export function App() {
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const cachePack = useCachePack();
-  const [openShelterIds, setOpenShelterIds] = useOpenShelterIds();
+  const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk });
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
@@ -105,7 +105,7 @@ export function App() {
         <HubPanel
           shelters={cachePack?.shelters ?? []}
           openShelterIds={openShelterIds}
-          onOpenShelterIdsChanged={setOpenShelterIds}
+          onOpenShelterIdsChanged={showOpenShelterIds}
           onClose={() => setHubPanelOpen(false)}
         />
       )}
