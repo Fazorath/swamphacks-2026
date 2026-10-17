@@ -1,27 +1,17 @@
 import threading
 from collections.abc import Callable
-from typing import Literal, Protocol
+from typing import Protocol
 
-from pydantic import BaseModel
-
-from storm_shield.scenario import Reading
-
-
-class CommunityReadingsMessage(BaseModel):
-    kind: Literal["community_readings"] = "community_readings"
-    readings: list[Reading]
-
-
-MeshMessage = CommunityReadingsMessage
+from storm_shield.community_reading import CommunityReading
 
 # The sender is whatever the Mesh verified, never something the message claims about itself.
-MessageListener = Callable[[str, MeshMessage], None]
+MessageListener = Callable[[str, CommunityReading], None]
 
 
 class Mesh(Protocol):
     identity: str
 
-    def publish(self, message: MeshMessage) -> None: ...
+    def publish(self, message: CommunityReading) -> None: ...
 
     def subscribe(self, listener: MessageListener) -> None: ...
 
@@ -43,11 +33,13 @@ class InMemoryNetwork:
         with self._lock:
             self._meshes.pop(identity, None)
 
-    def deliver(self, sender: str, message: MeshMessage) -> None:
+    def deliver(self, sender: str, message: CommunityReading) -> None:
         with self._lock:
             receivers = [mesh for name, mesh in self._meshes.items() if name != sender]
+        # Through JSON, as on the radio, so a field the wire format lacks can't sneak across.
+        wire_copy = CommunityReading.model_validate_json(message.model_dump_json())
         for mesh in receivers:
-            mesh.receive(sender, message)
+            mesh.receive(sender, wire_copy)
 
 
 class InMemoryMesh:
@@ -56,12 +48,12 @@ class InMemoryMesh:
         self._network = network
         self._listeners: list[MessageListener] = []
 
-    def publish(self, message: MeshMessage) -> None:
+    def publish(self, message: CommunityReading) -> None:
         self._network.deliver(self.identity, message)
 
     def subscribe(self, listener: MessageListener) -> None:
         self._listeners.append(listener)
 
-    def receive(self, sender: str, message: MeshMessage) -> None:
+    def receive(self, sender: str, message: CommunityReading) -> None:
         for listener in self._listeners:
             listener(sender, message)

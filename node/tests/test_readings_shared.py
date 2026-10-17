@@ -1,3 +1,6 @@
+import time
+
+import pytest
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
@@ -46,3 +49,30 @@ def test_removing_a_node_leaves_the_others_working(meshed_nodes: MeshedNodes) ->
     porch_as_seen_by_creek = _values_by_node_and_kind(meshed_nodes["creek"])
     assert creek_as_seen_by_porch[("creek", "rain_rate")] > 5
     assert porch_as_seen_by_creek[("porch", "pressure")] < 1010
+
+
+def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch", "garage")
+    meshed_nodes["porch"].post("/api/scenario/reset")
+    from_porch = [
+        reading
+        for reading in meshed_nodes["garage"].get("/api/readings").json()
+        if reading["node"] == "porch"
+    ]
+    assert {tuple(reading["position"]) for reading in from_porch} == {(29.652, -82.324)}
+
+
+def test_a_restarted_node_is_heard_again(
+    meshed_nodes: MeshedNodes, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    meshed_nodes.start("porch", "garage")
+    meshed_nodes["porch"].post("/api/scenario/step")
+    meshed_nodes.remove("porch")
+    restarted_at = time.time() + 60
+    monkeypatch.setattr(time, "time", lambda: restarted_at)
+    meshed_nodes.start("porch")
+    meshed_nodes["porch"].post("/api/scenario/reset")
+    pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
+    assert pressure > 1010
