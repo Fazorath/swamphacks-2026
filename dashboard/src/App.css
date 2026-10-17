@@ -634,3 +634,102 @@ section p.storm-signal {
   font-weight: 700;
   color: var(--high);
 }
+
+/* Unverified Nodes: shown, but visibly not part of Flood Risk. */
+.node-dot.unverified {
+  fill: none;
+  stroke: var(--muted);
+  stroke-dasharray: 4 3;
+}
+
+.leaflet-tooltip.node-label.unverified {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.tag.not-counted {
+  color: var(--muted);
+}
+
+.node-card.unverified {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.not-counted-divider {
+  margin: 0.75rem 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tabs button[aria-selected="true"] {
+  border-color: var(--community);
+  color: var(--community);
+}
+
+.tab-badge {
+  min-width: 1.2rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--community);
+  color: var(--bg);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.registry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registry-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.registry-list code {
+  color: var(--muted);
+}
+
+/* Community Warnings: violet dashed edge, never the Official style. */
+.community-warning {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px dashed var(--warning);
+  border-radius: 0.5rem;
+}
+
+.community-warning h3 {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+
+.community-warning p {
+  margin: 0.2rem 0;
+}
+
+.community-warning-tag {
+  color: var(--warning);
+  font-size: 0.8rem;
+  font-weight: bold;
+}

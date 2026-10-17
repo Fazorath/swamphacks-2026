@@ -5,6 +5,13 @@ import pytest
 import RNS
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.community_warning import CommunityWarning
+from storm_shield.node_registry import (
+    MAX_SIGNED_MESSAGE_BYTES,
+    NodeRegistryMessage,
+    RegisteredNode,
+    SignUp,
+)
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.reticulum_mesh import (
     SIGNATURE_LENGTH,
@@ -136,6 +143,25 @@ def test_the_event_clock_signed_by_the_hub_verifies_and_one_signed_by_another_no
     assert len(sign(hub, clock)) <= RNS.Packet.PLAIN_MDU
 
 
+def test_a_community_warning_signed_by_the_hub_verifies_and_one_signed_by_another_node_is_dropped() -> (
+    None
+):
+    hub, rogue = RNS.Identity(), RNS.Identity()
+    known = {node_id(hub): hub, node_id(rogue): rogue}
+    warning = CommunityWarning(
+        id=1_787_716_020,
+        t=1_787_716_021,
+        nodes=["b7e1f40a92c5"],
+        reasons=["water_surge"],
+        origin="b7e1f40a92c5",
+        origin_km=-12.2,
+        surge_t=1_787_716_020,
+    )
+    assert verify(sign(hub, warning), known, node_id(hub)) == (node_id(hub), warning)
+    assert verify(sign(rogue, warning), known, node_id(hub)) is None
+    assert len(sign(hub, warning)) <= RNS.Packet.PLAIN_MDU
+
+
 def test_a_node_keeps_its_identity_in_a_file_only_its_owner_can_read(tmp_path: Path) -> None:
     path = tmp_path / "identity"
     first = load_or_create_identity(path)
@@ -156,3 +182,35 @@ def test_a_damaged_identity_file_stops_the_node_and_names_the_file(tmp_path: Pat
     path.write_bytes(b"cut short")
     with pytest.raises(ValueError, match="identity.*Delete it"):
         load_or_create_identity(path)
+
+
+def test_a_sign_up_verifies_against_the_node_it_names_and_a_forged_one_is_dropped() -> None:
+    porch, intruder, hub = RNS.Identity(), RNS.Identity(), RNS.Identity()
+    known = {node_id(porch): porch, node_id(intruder): intruder, node_id(hub): hub}
+    sign_up = SignUp(node=node_id(porch), name="garage")
+    assert verify(sign(porch, sign_up), known, node_id(hub)) == (node_id(porch), sign_up)
+    assert verify(sign(intruder, sign_up), known, node_id(hub)) is None
+
+
+def test_a_sign_up_from_a_node_that_has_not_announced_is_dropped() -> None:
+    porch, hub = RNS.Identity(), RNS.Identity()
+    sign_up = SignUp(node=node_id(porch), name="garage")
+    assert verify(sign(porch, sign_up), {node_id(hub): hub}, node_id(hub)) is None
+
+
+def test_a_registry_signed_by_anyone_but_the_hub_is_dropped() -> None:
+    hub, rogue = RNS.Identity(), RNS.Identity()
+    known = {node_id(hub): hub, node_id(rogue): rogue}
+    registry = NodeRegistryMessage(
+        ver=4, t=1_760_650_928, nodes=[RegisteredNode(id=node_id(rogue), name="rogue")]
+    )
+    assert verify(sign(hub, registry), known, node_id(hub)) == (node_id(hub), registry)
+    assert verify(sign(rogue, registry), known, node_id(hub)) is None
+
+
+def test_the_largest_registry_the_hub_accepts_fits_one_unencrypted_packet() -> None:
+    assert MAX_SIGNED_MESSAGE_BYTES == RNS.Packet.PLAIN_MDU
+    hub = RNS.Identity()
+    nodes = [RegisteredNode(id=f"{n:012x}", name="x" * 8) for n in range(8)]
+    full = NodeRegistryMessage(ver=4, t=1_760_650_928, nodes=nodes)
+    assert len(sign(hub, full)) <= RNS.Packet.PLAIN_MDU

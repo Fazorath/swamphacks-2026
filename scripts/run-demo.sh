@@ -81,7 +81,7 @@ echo "$!" >"$demo_dir/pack-server.pid"
 hub_identity=""
 
 start_node() {
-  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 pack_url
+  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url
   if [ "$role" = hub ]; then
     pack_url="http://127.0.0.1:$pack_port/cache-pack.zip"
   else
@@ -91,7 +91,7 @@ start_node() {
   # stopping uv would leave the Node running and holding its ports.
   env NODE_NAME="$name" NODE_ROLE="$role" NODE_PORT=$((base_port + slot)) \
     NODE_MESH_INTERFACE=loopback NODE_LOOPBACK_SLOT=$((slot_base + slot)) \
-    NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_REPLAY_TRACK="$track" \
+    NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \
     node/.venv/bin/storm-shield-node >"$demo_dir/logs/$name.log" 2>&1 &
@@ -99,7 +99,7 @@ start_node() {
 }
 
 # Positions are the spec's Demo Nodes (docs/specs/flash-flood-replay.md, "Region and Nodes").
-start_node hub hub 0 27.9731 85.1860 ""
+start_node hub hub 0 27.9731 85.1860 "" 45.6
 hub_pid=$!
 
 for _ in $(seq 60); do
@@ -116,10 +116,38 @@ if [ -z "$hub_identity" ]; then
   exit 1
 fi
 
-start_node s0 sensor 1 28.3517 85.4477 S0
-start_node s1 sensor 2 28.2528 85.3667 S1
-start_node s2 sensor 3 28.1632 85.3391 S2
-start_node s3 sensor 4 27.9215 85.1460 S3
+start_node s0 sensor 1 28.3517 85.4477 S0 -12.2
+start_node s1 sensor 2 28.2528 85.3667 S1 3.4
+start_node s2 sensor 3 28.1632 85.3391 S2 14.6
+start_node s3 sensor 4 27.9215 85.1460 S3 54.0
+
+# Strict counting: until the Hub has registered a Sensor, nobody counts its readings. The Hub keeps
+# its registry in .demo/hub/data, so a second start finds the Sensors already registered.
+register_sensor() {
+  local name=$1 slot=$2 id registry
+  for _ in $(seq 60); do
+    id="$(sed -n "s/.*Node \([0-9a-f]*\) ($name) is up.*/\1/p" "$demo_dir/logs/$name.log")"
+    [ -n "$id" ] && curl -fsS -X POST "http://127.0.0.1:$((base_port + slot))/api/registry/signup" \
+      >/dev/null 2>&1 && break
+    sleep 1
+  done
+  for _ in $(seq 60); do
+    registry="$(curl -fsS "http://127.0.0.1:$base_port/api/registry" 2>/dev/null || true)"
+    case "$registry" in
+      *"\"id\":\"$id\",\"name\":\"$name\",\"status\":\"registered\""*) return 0 ;;
+      *"\"id\":\"$id\",\"name\":\"$name\",\"status\":\"waiting\""*)
+        curl -fsS -X POST -H 'Content-Type: application/json' -d "{\"id\":\"$id\"}" \
+          "http://127.0.0.1:$base_port/api/registry/accept" >/dev/null && return 0
+        ;;
+    esac
+    sleep 1
+  done
+  echo "could not register $name with the Hub; its readings will not count" >&2
+}
+register_sensor s0 1
+register_sensor s1 2
+register_sensor s2 3
+register_sensor s3 4
 
 echo "Hub identity: $hub_identity"
 echo "Projector (Hub Panel): http://localhost:$base_port"

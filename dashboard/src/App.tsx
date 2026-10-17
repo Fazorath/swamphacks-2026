@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { AlertsPanel } from "./AlertsPanel";
+import { firstSurgeAt } from "./communityWarnings";
 import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { EventClockTag } from "./EventClockTag";
@@ -10,6 +11,7 @@ import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
 import type { Home } from "./householdProfile";
 import { NodeMap } from "./NodeMap";
+import { NodePanel } from "./NodePanel";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { blockedRoadLines, roadNear } from "./rerouting";
@@ -25,6 +27,11 @@ import { useRoutes } from "./useRoutes";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
+
+// Only the person at the Node's own machine may change that Node's registration; a phone cannot.
+function onThisNodesOwnMachine(): boolean {
+  return ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
+}
 
 const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
   unreadable:
@@ -61,6 +68,7 @@ export function App() {
   // Kept while unreachable: each carries its own issue time, and losing an evacuation order to a
   // Wi-Fi drop is worse than showing one a few seconds old.
   const officialAlerts = lastAnswer?.state.official_alerts ?? [];
+  const communityWarnings = lastAnswer?.state.community_warnings ?? [];
   const plan = evacuationPlan({
     profile,
     pack: cachePack,
@@ -72,17 +80,25 @@ export function App() {
   });
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
+  const [nodePanelOpen, setNodePanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
-  // Both panels slide in over the same edge, so only one is open at a time.
+  // The panels slide in over the same edge, so only one is open at a time.
   const openPanel = () => {
     setHubPanelOpen(false);
+    setNodePanelOpen(false);
     setDraftHome(profile?.home ?? null);
     setPanelOpen(true);
   };
   const openHubPanel = () => {
     closePanel();
+    setNodePanelOpen(false);
     setHubPanelOpen(true);
+  };
+  const openNodePanel = () => {
+    closePanel();
+    setHubPanelOpen(false);
+    setNodePanelOpen(true);
   };
   const closePanel = () => {
     setPanelOpen(false);
@@ -110,6 +126,11 @@ export function App() {
         <button type="button" onClick={openPanel}>
           My household
         </button>
+        {onThisNodesOwnMachine() && identity && (
+          <button type="button" onClick={openNodePanel}>
+            Node
+          </button>
+        )}
         {identity?.role === "hub" && (
           <button type="button" onClick={openHubPanel}>
             Hub
@@ -147,6 +168,13 @@ export function App() {
           onClose={() => setHubPanelOpen(false)}
         />
       )}
+      {nodePanelOpen && state && (
+        <NodePanel
+          registration={state.registration}
+          onSignedUp={refresh}
+          onClose={() => setNodePanelOpen(false)}
+        />
+      )}
       <div className="areas">
         <ReadingsPanel
           nodes={nodes}
@@ -181,9 +209,11 @@ export function App() {
         />
         <AlertsPanel
           alerts={officialAlerts}
+          warnings={communityWarnings}
+          nodes={lastAnswer?.state.nodes ?? []}
+          thisNodeId={lastAnswer?.state.id ?? ""}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
-          // Community Warnings arrive with ticket 0013; until then there is no lead time to show.
-          firstCommunityWarningAt={null}
+          firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
           online={state?.status === "online"}
         />
       </div>

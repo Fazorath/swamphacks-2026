@@ -12,6 +12,7 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - **Check who owns a ticket right before you claim it.** A claim pushed to your own branch is not visible on `main`; two people claimed 0009 minutes apart and the conflict showed up on `git pull`. Pull `main`, check the Owner line, then claim and push the claim to `main` at once.
 - **A Node left running blocks the Node tests and your next run.** `tests/test_reticulum_nodes.py` binds fixed ports (HTTP 8101 to 8103, TCP 4250 to 4252 and 4350 to 4352), and a stray Node on 8000 keeps serving old code beside a fresh one. A Node on a new port shows what is on disk; check `Get-NetTCPConnection -State Listen -LocalPort 8000` before trusting a browser tab.
 - A branch named after its ticket (`NNNN-<slug>`) may already exist from the claim commit. A worktree starts on `worktree-<name>`; push it with `git push origin HEAD:NNNN-<slug>` rather than renaming.
+- **Workflow scripts (2026-10-17)** cover the repeat problems above: `scripts/claim.sh` (claim on `main` in one step; `issue-tracker.md` used to say "on its branch", which is how claims went unseen), `scripts/check.sh` (every Command, with the uv/pnpm/Node 20/`node_modules` fallbacks built in), `scripts/stop-nodes.sh`, `scripts/doctor.sh`. The secret scan's `sk-` pattern now ignores matches inside a word, so a slug with "risk-" passes. `pre-push` only warns. Nobody remembers to run scripts, so they run themselves: `implement` claims with `claim.sh` and finishes with `check.sh`, `doctor.sh --quiet` runs at Claude Code session start and in `post-merge`, and `pre-commit` refuses a hand-edited claim on a branch. Git hooks come from the main checkout's `.githooks` (`core.hooksPath` is absolute there), so a hook change reaches every worktree only after the main checkout pulls.
 
 ## Rehearsing without devices
 
@@ -211,6 +212,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **macOS ships bash 3.2, where `"${arr[@]}"` on an empty array is "unbound variable" under `set -u`**; use `${arr[@]+"${arr[@]}"}` in traps that may run before anything starts.
 - "Cut the internet" has two halves: stop the pack server and take away the laptop's upstream. Nodes decide online/Mesh-only by probing gstatic themselves; there is no switch.
 
+## Node registry (ticket 0012)
+
+- **Strict counting changed every Flood Risk test**: no registry heard means nobody counts, this Node included. `MeshedNodes.register(*names)` publishes a hand-made Hub registry listing the Hub and those names; call it after the last `start(...)`, because a Node only hears a registry published after it joins. `register` and `announce_registry` use the hand-fed Hub mesh, which **replaces the Hub app's own mesh** in the in-memory network; with a running `start_hub()` register Nodes through `/api/registry/signup` and `/accept` instead.
+- **A registry is capped by one signed packet** (464 bytes with the 64-byte signature), about 4 to 5 Nodes with 32-character names, 8 with short ones. The Hub answers 409 on an accept that would not fit. Multi-packet registries are out of scope.
+- **Sign-up is a broadcast signed by the Node**, so `verify` finds the key from `node` like for a reading. Only the Hub's listener keeps it; a restarted Hub forgets waiting Sign-ups, and a Node that pressed Sign up resends every `NODE_SIGN_UP_REPEAT_SECONDS` (10) until it hears itself registered.
+- **Dashboard**: the Hub Panel now has tabs (Registry is the default, then Replay and Shelters), so a test that needs the Replay controls or Shelters clicks the tab first. The Node button shows only when `window.location.hostname` is localhost, evaluated at render so a test can stub `location`.
+- Rehearsed on loopback Reticulum (Hub slot 40 / port 8710, Sensor slot 41 / port 8711, `HUB_IDENTITY` set): Sign-up arrived as `waiting`, accept made the Sensor `registered` within seconds and the Hub's registry showed `ver` 2. `scripts/run-demo.sh`'s new `register_sensor` step was only syntax-checked (`bash -n`), not run end to end: it needs the pack download and `ifconfig`. Software path only, not a Pi check.
+
 ## Map tiles from the Cache Pack (ticket 0026)
 
 - **The map picks its tile URL from the pack's deepest tile zoom (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
@@ -225,6 +234,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - The Scenario cannot produce a Surge (its largest water step is 35 cm), so Surge tests hand-feed readings with `hear_from`.
 - **Running a Hub and a Replay sensor on one laptop**: a sensor follows the Replay clock only with `HUB_IDENTITY` set to the Hub's id (printed at startup as `Node <id> (hub-1) is up as hub`); the id changes if `NODE_DATA_DIR` is wiped. Without it the sensor publishes the Scenario and the Hub's Flood Risk never moves. Start the Hub first, then the sensor, and make sure no Node from another worktree still holds loopback ports 4250 and 4251, or the sensor dials that one instead (`Get-NetTCPConnection -State Listen -LocalPort 4250`).
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
+- **A Hub with no `registry.json` starts `ver` at the Unix time** (like `seq`), so deleting the file no longer leaves running Nodes ignoring it. In a `MeshedNodes` test the first Hub start also uses the clock, so `advance(...)` before a start-over or the new `ver` can equal the old one.
 
 ## Replay weather in the Cache Pack (ticket 0052)
 
@@ -239,3 +249,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A test of "a run can miss the ramp" must try several publish offsets**; the first offsets tried (0, 10, 20) passed even with the old 3 s interval. Check such a test by putting the old value back (`test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start`).
 - `pkill -f "storm_shield.main import run"` inside a compound Bash command can match and kill the command's own shell (exit 144); run it alone.
 - `test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed once in a full run and passed alone, with and without this change.
+- **0060 and 0012 were each green alone and clashed once merged**: 0060's Surge test started S0 to S3 without registering them, and 0012 makes Flood Risk (so `surged`) ignore unregistered Nodes. The test now signs each Sensor up and accepts it on the Hub. A test written on a branch cut before 0012 that reads Flood Risk needs the same; rerun the full Commands after every merge of `main`, not only before it.
+
+## Community Warnings (ticket 0013)
+
+- **The Hub gets a Node's River km from its reading** (`river_km`, from `NODE_RIVER_KM`), not from a new message. A Surging Node without it starts no warning; check `NODE_RIVER_KM` first if a Surge shows no warning. `scripts/run-demo.sh` now sets it for the Hub and S0 to S3 (spec table values), only syntax-checked, not run.
+- **The Hub checks for new Surges whenever a reading arrives** (its own or heard), not on a timer, so tests need no waiting. `HubWarnings` forgets a Node once it stops surging, so a second Surge warns again.
+- Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
+- Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
+- **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.

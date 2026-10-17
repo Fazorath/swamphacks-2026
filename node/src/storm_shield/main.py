@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import logging
+import threading
 import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -21,6 +22,7 @@ from storm_shield.cache_pack import (
 )
 from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
 from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.internet_connection import (
     CONNECTIVITY_TIMEOUT_SECONDS,
@@ -28,6 +30,18 @@ from storm_shield.internet_connection import (
     Status,
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
+from storm_shield.node_registry import (
+    NODE_NAME_MAX_LENGTH,
+    HeardRegistry,
+    HubRegistry,
+    NodeRegistryMessage,
+    NoWaitingSignUp,
+    RegisteredNode,
+    RegistrationState,
+    RegistryFull,
+    RegistrySummary,
+    SignUp,
+)
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
@@ -52,19 +66,36 @@ class ScenarioState(BaseModel):
     step: str
 
 
+class NodeEntry(NodeSnapshot):
+    """A Node's latest readings plus whether it counts; `name` is its registry name."""
+
+    registered: bool
+    name: str | None
+
+
 class NodeState(BaseModel):
     id: str
     name: str
     role: Role
     status: Status
+    registration: RegistrationState
     scenario: ScenarioState
     flood_risk: FloodRisk
-    nodes: list[NodeSnapshot]
+    nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
+    community_warnings: list[CommunityWarning]
 
 
 class OpenShelters(BaseModel):
     open: list[str]
+
+
+class WarningLog(BaseModel):
+    warnings: list[CommunityWarning]
+
+
+class RegistryAccept(BaseModel):
+    id: str
 
 
 class ShelterChange(BaseModel):
@@ -138,14 +169,52 @@ def create_app(
         if measurements is None:
             return
         reading = CommunityReading.from_measurements(
-            node=mesh.identity, seq=next(sequence), position=position, readings=measurements
+            node=mesh.identity,
+            seq=next(sequence),
+            position=position,
+            readings=measurements,
+            river_km=settings.river_km,
         )
         store.record(mesh.identity, reading, clock())
+        warn_about_new_surges()
         mesh.publish(reading)
 
     def store_reading_from(sender: str, message: Message) -> None:
         if isinstance(message, CommunityReading):
             store.record(sender, message, clock())
+            warn_about_new_surges()
+
+    heard_warnings = HeardCommunityWarnings()
+    hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
+
+    def hear_community_warning(_: str, message: Message) -> None:
+        if isinstance(message, CommunityWarning):
+            heard_warnings.hear(message)
+
+    def repeat_community_warnings() -> None:
+        if hub_warnings:
+            for warning in hub_warnings.sent():
+                mesh.publish(warning)
+
+    def warn_about_new_surges() -> None:
+        """Hub only: warn about each Registered Node whose Surge has not been warned about yet."""
+        if not hub_warnings:
+            return
+        snapshot = store.snapshot(clock())
+        surged = flood_risk(snapshot.recent, heard_registry.registered_ids()).surged
+        river_km = {node: snapshot.recent[node][-1].river_km for node in surged}
+        event = event_clock.current(clock())
+        now = int(clock().timestamp())
+        # With no replay running the Surge happened now, on the Hub's own clock.
+        surge_t = now if event.state == "stopped" else event.event_t
+        for warning in hub_warnings.issue_for_new_surges(river_km, surge_t, now):
+            # The Hub does not hear its own broadcasts, so it keeps the warning itself.
+            heard_warnings.hear(warning)
+            try:
+                mesh.publish(warning)
+            except Exception:
+                # The Hub already shows it and has it in its log.
+                logger.exception("could not send Community Warning %s", warning.id)
 
     shelter_status = HeardShelterStatus()
 
@@ -172,6 +241,56 @@ def create_app(
         status = shelter_registry.snapshot()
         if status:
             announce_shelters(status)
+
+    heard_registry = HeardRegistry()
+    sign_up_pressed = threading.Event()
+
+    def hear_registry(_: str, message: Message) -> None:
+        if isinstance(message, NodeRegistryMessage):
+            heard_registry.hear(message)
+
+    def registration() -> RegistrationState:
+        if settings.role == "hub" or mesh.identity in heard_registry.registered_ids():
+            return "registered"
+        return "waiting" if sign_up_pressed.is_set() else "unverified"
+
+    def send_sign_up() -> None:
+        try:
+            mesh.publish(SignUp(node=mesh.identity, name=settings.name[:NODE_NAME_MAX_LENGTH]))
+        except Exception:
+            # Nothing is lost: the next repeat sends it again.
+            logger.exception("could not send the Sign-up")
+
+    def repeat_sign_up() -> None:
+        if sign_up_pressed.is_set() and registration() != "registered":
+            send_sign_up()
+
+    hub_registry = (
+        HubRegistry(
+            RegisteredNode(id=mesh.identity, name=settings.name),
+            lambda: int(clock().timestamp()),
+            settings.data_dir / "registry.json",
+        )
+        if settings.role == "hub"
+        else None
+    )
+
+    def hear_sign_up(_: str, message: Message) -> None:
+        if hub_registry and isinstance(message, SignUp):
+            hub_registry.hear_sign_up(message, clock())
+
+    def announce_registry(registry: NodeRegistryMessage) -> None:
+        # The Hub does not hear its own broadcasts, so it takes the registry itself.
+        heard_registry.hear(registry)
+        try:
+            mesh.publish(registry)
+        except Exception:
+            # The change already stands on the Hub, and the next repeat sends it again.
+            logger.exception("could not announce the Node registry")
+
+    def repeat_registry() -> None:
+        if hub_registry:
+            announce_registry(hub_registry.snapshot())
 
     def hear_event_clock(_: str, message: Message) -> None:
         if isinstance(message, ReplayClockMessage):
@@ -228,10 +347,14 @@ def create_app(
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_event_clock)
     mesh.subscribe(hear_official_alert)
+    mesh.subscribe(hear_community_warning)
     mesh.subscribe(hear_shelter_status)
+    mesh.subscribe(hear_registry)
+    mesh.subscribe(hear_sign_up)
     share_own_readings()
     if settings.role == "hub":
         repeat_shelter_status()
+        repeat_registry()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -286,6 +409,30 @@ def create_app(
                 except Exception:
                     logger.exception("could not repeat the Shelter status")
 
+        async def keep_repeating_registry() -> None:
+            while True:
+                await asyncio.sleep(settings.registry_repeat_seconds)
+                try:
+                    repeat_registry()
+                except Exception:
+                    logger.exception("could not repeat the Node registry")
+
+        async def keep_repeating_warnings() -> None:
+            while True:
+                await asyncio.sleep(settings.warning_repeat_seconds)
+                try:
+                    repeat_community_warnings()
+                except Exception:
+                    logger.exception("could not repeat the Community Warnings")
+
+        async def keep_signing_up() -> None:
+            while True:
+                await asyncio.sleep(settings.sign_up_repeat_seconds)
+                try:
+                    repeat_sign_up()
+                except Exception:
+                    logger.exception("could not repeat the Sign-up")
+
         async def keep_repeating_event_clock() -> None:
             while True:
                 await asyncio.sleep(settings.replay_repeat_seconds)
@@ -312,9 +459,12 @@ def create_app(
             asyncio.create_task(keep_sharing()),
             asyncio.create_task(keep_checking_internet()),
             asyncio.create_task(keep_cameras_fresh()),
+            asyncio.create_task(keep_signing_up()),
         ]
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
+            tasks.append(asyncio.create_task(keep_repeating_registry()))
+            tasks.append(asyncio.create_task(keep_repeating_warnings()))
             tasks.append(asyncio.create_task(keep_repeating_event_clock()))
             tasks.append(asyncio.create_task(keep_following_the_timeline()))
         if settings.cache_pack_url:
@@ -328,16 +478,34 @@ def create_app(
     @app.get("/api/state")
     def node_state() -> NodeState:
         snapshot = store.snapshot(clock())
+        registered_ids = heard_registry.registered_ids()
         return NodeState(
             id=mesh.identity,
             name=settings.name,
             role=settings.role,
             status=internet.status,
+            registration=registration(),
             scenario=ScenarioState(step=scenario.step_name),
-            flood_risk=flood_risk(snapshot.recent),
-            nodes=snapshot.nodes,
+            flood_risk=flood_risk(snapshot.recent, registered_ids),
+            nodes=[
+                NodeEntry(
+                    **node.model_dump(),
+                    registered=node.id in registered_ids,
+                    name=heard_registry.name_of(node.id),
+                )
+                for node in snapshot.nodes
+            ],
             official_alerts=official_alerts.shown_at(event_clock.current(clock())),
+            community_warnings=heard_warnings.shown_at(event_clock.current(clock())),
         )
+
+    @app.post("/api/registry/signup")
+    def sign_up_with_hub() -> dict[str, RegistrationState]:
+        # The press is kept in memory only: after a restart an unregistered Node starts over.
+        if registration() == "unverified":
+            sign_up_pressed.set()
+            send_sign_up()
+        return {"registration": registration()}
 
     @app.get("/api/cameras")
     def camera_tiles() -> list[CameraTile]:
@@ -430,6 +598,44 @@ def create_app(
                 ) from None
             announce_shelters(status)
             return OpenShelters(open=status.open)
+
+    if not hub_registry:
+        # Not defined, these would fall through to the dashboard's static mount and answer 405.
+        @app.get("/api/registry")
+        @app.post("/api/registry/accept")
+        @app.get("/api/warnings")
+        def not_on_a_sensor() -> None:
+            raise HTTPException(status_code=404, detail="only the Hub keeps the registry and log")
+
+    if hub_warnings:
+
+        @app.get("/api/warnings")
+        def warning_log() -> WarningLog:
+            return WarningLog(warnings=hub_warnings.sent())
+
+    if hub_registry:
+
+        @app.get("/api/registry")
+        def registry_summary() -> RegistrySummary:
+            now = clock()
+            heard = {node.id: node.age_s for node in store.snapshot(now).nodes}
+            return hub_registry.summary(heard, now)
+
+        @app.post("/api/registry/accept")
+        def accept_sign_up(accept: RegistryAccept) -> RegistrySummary:
+            try:
+                registry = hub_registry.accept(accept.id)
+            except NoWaitingSignUp:
+                raise HTTPException(
+                    status_code=404, detail=f"no Sign-up from Node {accept.id!r} is waiting"
+                ) from None
+            except RegistryFull:
+                raise HTTPException(
+                    status_code=409,
+                    detail="the registry would no longer fit one packet; nothing was accepted",
+                ) from None
+            announce_registry(registry)
+            return registry_summary()
 
     if settings.role == "hub":
 

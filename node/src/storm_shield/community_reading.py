@@ -25,6 +25,8 @@ class CommunityReading(BaseModel):
     t: int
     sim: bool
     pos: tuple[float, float]
+    # Where the operator put this Node along the river; the Hub reads it to place a Community Warning.
+    river_km: float | None = None
     pressure_hpa: float
     water_m: float
     rain_mmh: float
@@ -32,7 +34,12 @@ class CommunityReading(BaseModel):
 
     @classmethod
     def from_measurements(
-        cls, node: str, seq: int, position: tuple[float, float], readings: list[Reading]
+        cls,
+        node: str,
+        seq: int,
+        position: tuple[float, float],
+        readings: list[Reading],
+        river_km: float | None = None,
     ) -> Self:
         value: dict[ReadingKind, float] = {reading.kind: reading.value for reading in readings}
         return cls(
@@ -41,6 +48,7 @@ class CommunityReading(BaseModel):
             t=int(readings[0].timestamp.timestamp()),
             sim=all(reading.simulated for reading in readings),
             pos=position,
+            river_km=river_km,
             pressure_hpa=value["pressure"],
             water_m=round(value["water_level"] / 100, 3),
             rain_mmh=value["rain_rate"],

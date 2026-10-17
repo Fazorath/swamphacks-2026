@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Betrawati until the operator sets the real spot; only a fuzzed copy leaves the Node.
     latitude: float = 27.9731
     longitude: float = 85.1860
+    # Kilometres down the river from the Lhende-Kyirong confluence (negative above it); blank for a
+    # Node that is not on the river, which then cannot start a Community Warning.
+    river_km: float | None = None
     # Resolved from this file, not the cwd, so the Node starts from any directory.
     dashboard_dir: Path = Path(__file__).resolve().parents[3] / "dashboard" / "dist"
     # "memory" is a Node that hears only itself; tests and the dashboard dev server use it.
@@ -39,9 +42,17 @@ class Settings(BaseSettings):
     # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
     # converges.
     shelter_repeat_seconds: float = 30
+    # How often the Hub repeats the Node registry, so a Node that joined late or missed a packet
+    # converges.
+    registry_repeat_seconds: float = 30
+    # How often a Node that pressed "Sign up" resends it until the Hub has accepted it.
+    sign_up_repeat_seconds: float = 10
     # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
     # converges.
     replay_repeat_seconds: float = 10
+    # How often the Hub sends every Community Warning again, so a Node that joined late or missed a
+    # packet still gets it.
+    warning_repeat_seconds: float = 10
     # How often the Hub checks whether the Event clock has reached a replayed Official Alert or
     # the end of the replay.
     alert_check_seconds: float = 1

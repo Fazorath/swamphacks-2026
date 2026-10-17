@@ -1,3 +1,4 @@
+import type { CommunityWarning } from "./communityWarnings";
 import type { OfficialAlert } from "./officialAlerts";
 
 export type NodeLevel = "elevated" | "high";
@@ -26,13 +27,21 @@ export type Measurement = { value: number; unit: string };
 export type NodeSnapshot = {
   id: string;
   position: [number, number];
+  // Where the operator put it along the river; null when it was not told.
+  river_km: number | null;
   simulated: boolean;
   age_s: number;
   stale: boolean;
   measurements: Partial<Record<ReadingKind, Measurement>>;
+  // Only Registered Nodes count toward Flood Risk; `name` is the Hub's name for it, null if none.
+  registered: boolean;
+  name: string | null;
 };
 
 type NodeStatus = "online" | "mesh_only";
+
+// Where this Node stands with the Hub; the Hub itself is always registered.
+export type Registration = "unverified" | "waiting" | "registered";
 
 // The answer of GET /api/state: one consistent instant of this Node's view of the Mesh.
 export type NodeState = {
@@ -40,8 +49,11 @@ export type NodeState = {
   name: string;
   role: "sensor" | "hub";
   status: NodeStatus;
+  registration: Registration;
   scenario: { step: string };
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
   official_alerts: OfficialAlert[];
+  // Only warnings whose Hub signature this Node verified.
+  community_warnings: CommunityWarning[];
 };

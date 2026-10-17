@@ -10,6 +10,7 @@ import RNS
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.mesh import Message, MessageListener, decode_message, deliver_to_listeners
+from storm_shield.node_registry import SignUp
 from storm_shield.settings import Settings
 
 APP_NAME = "storm_shield"
@@ -85,7 +86,8 @@ def verify(
 ) -> tuple[str, Message] | None:
     """The verified sender and message, or None if it is unknown, forged or not from who may send it.
 
-    A reading names its Node. Every other kind names nobody, so it must verify against the Hub key.
+    A reading or a Sign-up names its Node. Every other kind names nobody, so it must verify
+    against the Hub key.
     """
     if len(data) <= SIGNATURE_LENGTH:
         return None
@@ -93,7 +95,7 @@ def verify(
     message = decode_message(body)
     if message is None:
         return None
-    sender_id = message.node if isinstance(message, CommunityReading) else hub_identity
+    sender_id = message.node if isinstance(message, CommunityReading | SignUp) else hub_identity
     sender = known_nodes.get(sender_id)
     # Nothing to log for an unknown sender: until its announce arrives that is the normal case.
     if sender is None:

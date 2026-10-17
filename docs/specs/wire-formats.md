@@ -16,7 +16,7 @@ One message per Sensor Node per tick, all four measurements together.
 
 ```json
 { "v": 1, "kind": "reading", "node": "91c2e0b47a3d", "seq": 412, "t": 1760650928,
-  "sim": true, "pos": [29.652, -82.325],
+  "sim": true, "pos": [29.652, -82.325], "river_km": -12.2,
   "pressure_hpa": 991.2, "water_m": 0.84, "rain_mmh": 14.8, "soil_pct": 91 }
 ```
 
@@ -25,6 +25,7 @@ One message per Sensor Node per tick, all four measurements together.
 - `t`: the sender's clock, informational only. **Age is always measured on the receiving Node's own clock** (time since the last accepted reading from that Node), because the Pi has no battery clock.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
+- `river_km`: the operator's `NODE_RIVER_KM`, or `null`. The Hub reads it from the surging Node's reading to fill a warning's `origin_km`; a Node without it can surge but starts no warning (ticket 0013).
 - Units are in the field names: `water_m` is metres, `soil_pct` a percentage. A Node may hold readings in another shape internally; the conversion happens where a message is built or received.
 
 ### Timing (one config module, tunable)
@@ -38,7 +39,7 @@ One message per Sensor Node per tick, all four measurements together.
 
 ## Community Warning (`kind: "warning"`)
 
-Sent by the Hub only, when two or more Registered Nodes are High.
+Sent by the Hub only, once per Registered Node's Surge (ticket 0013; it was two or more Registered Nodes High). The example below is the original shape; `origin`, `origin_km` and `surge_t` are added under "Flash flood additions".
 
 ```json
 { "v": 1, "kind": "warning", "id": 7, "t": 1760650928,
@@ -61,14 +62,15 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 ```
 
 - `ver` goes up on every change; a Node keeps the highest `ver` it has received in full.
-- `part` / `of` let a list span several packets (about 6 Nodes per packet at 12-character ids; the demo has 5).
+- `part` / `of` are reserved for a list that spans several packets. **For now the Hub always sends `part: 1, of: 1`** and refuses an accept (409) that would no longer fit one signed packet; receivers ignore a registry with `of` above 1 (decided 2026-10-17, ticket 0012).
+- The Hub always lists itself. It saves `ver` and the list in `NODE_DATA_DIR/registry.json` and starts every restart at saved `ver` + 1, as for Shelter status. With no file (first start, or the file deleted) it starts at the current Unix time, like `seq`, so a Hub that starts over still beats the `ver` running Nodes hold.
 - The Hub republishes the current snapshot every 30 s, so late joiners and Nodes that missed a packet converge.
-- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted.
+- A Node not in the latest registry is Unverified: shown greyed out, tagged NOT COUNTED, never counted. Before any registry has arrived every Node is Unverified, this one included, and nothing counts.
 
 ### Hub identity and sign-up
 
 - Each Node learns who the Hub is from config: the Hub prints its Reticulum identity hash at startup and every other Node sets it once as `HUB_IDENTITY` (documented in `.env.example`). Nobody is trusted for announcing themselves as the Hub.
-- A Node signs up with one addressed message to the Hub: `{ "v": 1, "kind": "signup", "name": "garage" }`. The Hub operator sees it and accepts it; accepting bumps the registry `ver`.
+- A Node signs up with a broadcast message, signed by the Node like a reading: `{ "v": 1, "kind": "signup", "node": "91c2e0b47a3d", "name": "garage" }`. It carries `node` because the Mesh has no addressed send and checks every kind without a `node` against the Hub key. Nodes other than the Hub ignore it. The Hub operator sees it and accepts it; accepting bumps the registry `ver` (changed from "one addressed message" on 2026-10-17, ticket 0012).
 - If the Hub is restarted with a new identity, every Node's `HUB_IDENTITY` must be updated. Ticket 0004 notes this.
 
 ## Official Alert (`kind: "alert"`)
@@ -107,7 +109,7 @@ Details (name, position, special-needs, pet-friendly) live in the Cache Pack. On
 
 ## Flash flood replay additions
 
-From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044) and the `alert.source` values are built (0014); the `warning` additions are not yet (0013).
+From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The `replay` message is built (0044), the `alert.source` values (0014) and the `warning` additions (0013).
 
 - **Community Warning** gains `origin` (the surging Node's id), `origin_km` (its River km) and `surge_t` (event time of the Surge, Unix seconds), and the reason code `water_surge`. It is sent when one Registered Node reports a Surge, not when two are High.
 
@@ -136,7 +138,7 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" a
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements}`, where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). Still to come: `registered` on each entry; verified Community Warnings only; Shelter open ids.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). Still to come: verified Community Warnings only; Shelter open ids.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.

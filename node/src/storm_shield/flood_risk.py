@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from typing import Literal
 
@@ -104,10 +104,14 @@ class _NodeView:
         return "elevated" if self.water_rising else None
 
 
-def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
+def flood_risk(
+    recent: dict[str, list[CommunityReading]], registered_ids: Collection[str]
+) -> FloodRisk:
     """Flood Risk for everything this Node can see, from each counted Node's recent readings."""
     views = {
-        node: _NodeView.of(readings) for node, readings in recent.items() if _counts(node, readings)
+        node: _NodeView.of(readings)
+        for node, readings in recent.items()
+        if _counts(node, registered_ids)
     }
     node_levels = {node: view.level for node, view in views.items()}
 
@@ -165,10 +169,10 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
     )
 
 
-def _counts(node: str, readings: list[CommunityReading]) -> bool:
-    # The one place that decides whether a Node's readings count. Only registered Nodes (0012)
-    # and Nodes not silent for 60 s (0021) will count, and they will change this check alone.
-    return True
+def _counts(node: str, registered_ids: Collection[str]) -> bool:
+    # The one place that decides whether a Node's readings count. Nodes not silent for 60 s (0021)
+    # will count too, and will change this check alone.
+    return node in registered_ids
 
 
 def _surge_reason(surging: list[_NodeView]) -> Reason | None:

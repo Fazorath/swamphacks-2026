@@ -235,6 +235,7 @@ test("the plan says how long ago Shelter status was last confirmed, and the age 
 test("on an unreachable Hub the Replay controls wait instead of offering Start", async () => {
   await showLiveData();
   fireEvent.click(screen.getByRole("button", { name: "Hub" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Replay" }));
   const replay = () => within(screen.getByRole("region", { name: "Replay controls" }));
   expect(replay().getByRole("button", { name: "Pause" })).toBeInTheDocument();
 
@@ -251,6 +252,7 @@ test("on an unreachable Hub the Replay controls wait instead of offering Start",
 test("back from unreachable, the Replay controls wait for the Event clock, never offering Start", async () => {
   await showLiveData();
   fireEvent.click(screen.getByRole("button", { name: "Hub" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Replay" }));
   nodeAnswer = "down";
   await seconds(5);
   eventClockDown = true;

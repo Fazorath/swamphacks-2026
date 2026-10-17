@@ -20,6 +20,7 @@ class NodeSnapshot(BaseModel):
 
     id: str
     position: tuple[float, float]
+    river_km: float | None
     simulated: bool
     age_s: float
     stale: bool
@@ -82,6 +83,7 @@ def _node_snapshot(
     return NodeSnapshot(
         id=sender,
         position=reading.pos,
+        river_km=reading.river_km,
         simulated=reading.sim,
         age_s=age_s,
         stale=age_s > STALE_AFTER_SECONDS,

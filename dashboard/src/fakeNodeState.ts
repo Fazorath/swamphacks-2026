@@ -7,6 +7,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
     name: "porch",
     role: "hub",
     status: "online",
+    registration: "registered",
     scenario: { step: "normal_day" },
     flood_risk: {
       level: null,
@@ -17,6 +18,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
     },
     nodes: [],
     official_alerts: [],
+    community_warnings: [],
     ...overrides,
   };
 }
@@ -25,10 +27,13 @@ export function fakeNodeSnapshot(id: string, overrides: Partial<NodeSnapshot> = 
   return {
     id,
     position: [29.652, -82.324],
+    river_km: null,
     simulated: true,
     age_s: 2,
     stale: false,
     measurements: { pressure: { value: 1015, unit: "hPa" } },
+    registered: true,
+    name: id,
     ...overrides,
   };
 }

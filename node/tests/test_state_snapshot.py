@@ -75,6 +75,7 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("porch")
     for _ in range(2):
         meshed_nodes["porch"].post("/api/scenario/step")
     state = _state(meshed_nodes["porch"])
@@ -86,6 +87,7 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
 
 def test_flood_risk_and_the_node_entries_list_the_same_nodes(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
+    meshed_nodes.register("porch", "garage")
     meshed_nodes.hear_from("garage", rain_mmh=30, water_cm=650)
     state = _state(meshed_nodes["porch"])
 
@@ -110,10 +112,13 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
     assert set(state["nodes"][0]) == {
         "id",
         "position",
+        "river_km",
         "simulated",
         "age_s",
         "stale",
         "measurements",
+        "registered",
+        "name",
     }
 
 

@@ -27,6 +27,7 @@ def test_a_community_reading_carries_the_agreed_fields() -> None:
         "t",
         "sim",
         "pos",
+        "river_km",
         "pressure_hpa",
         "water_m",
         "rain_mmh",
