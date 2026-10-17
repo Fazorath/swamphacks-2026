@@ -80,12 +80,14 @@ export function App() {
         <p>
           {identity
             ? `${identity.name} · ${ROLE_LABELS[identity.role]}`
-            : connection === "connecting" && "Connecting…"}
+            : connection === "connecting"
+              ? "Connecting…"
+              : null}
         </p>
         {state && (
           <span className={`connection-badge ${state.status}`}>{STATUS_LABELS[state.status]}</span>
         )}
-        <EventClockTag clock={eventClock} />
+        <EventClockTag clock={eventClock.clock} />
         <FloodRiskChip floodRisk={floodRisk} />
         <p className="household-status">
           {profile ? "Household profile saved" : "Fill in your household profile"}
@@ -124,7 +126,6 @@ export function App() {
       {hubPanelOpen && (
         <HubPanel
           eventClock={eventClock}
-          hubReachable={!unreachable}
           shelters={cachePack?.shelters ?? []}
           openShelterIds={openShelterIds}
           onOpenShelterIdsChanged={showOpenShelterIds}

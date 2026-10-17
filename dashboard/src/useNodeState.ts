@@ -30,8 +30,14 @@ export function useNodeState(): NodeStateFeed {
     let polling = false;
     let askedWhilePolling = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    // Before any answer the wait counts from when polling began.
-    let lastGoodAt = Date.now();
+    // Its own timer rather than a check when a poll fails, so a Node that hangs from the start is
+    // caught at 5 s like any other, not at the end of whichever 2 s request is in flight.
+    let unreachableTimer: ReturnType<typeof setTimeout> | undefined;
+    const startUnreachableWait = () => {
+      clearTimeout(unreachableTimer);
+      unreachableTimer = setTimeout(() => setConnection("unreachable"), UNREACHABLE_AFTER_MS);
+    };
+    startUnreachableWait();
 
     const poll = async () => {
       clearTimeout(timer);
@@ -43,16 +49,13 @@ export function useNodeState(): NodeStateFeed {
         });
         if (!response.ok) throw new Error(`Node API returned ${response.status}`);
         const answer: NodeState = await response.json();
-        lastGoodAt = Date.now();
         if (!stopped) {
-          setLastAnswer({ state: answer, at: lastGoodAt });
+          startUnreachableWait();
+          setLastAnswer({ state: answer, at: Date.now() });
           setConnection("connected");
         }
       } catch (error) {
         console.error(error);
-        if (!stopped && Date.now() - lastGoodAt >= UNREACHABLE_AFTER_MS) {
-          setConnection("unreachable");
-        }
       }
       polling = false;
       if (stopped) return;
@@ -74,6 +77,7 @@ export function useNodeState(): NodeStateFeed {
     return () => {
       stopped = true;
       clearTimeout(timer);
+      clearTimeout(unreachableTimer);
     };
   }, []);
   const refresh = useCallback(() => pollNow.current(), []);

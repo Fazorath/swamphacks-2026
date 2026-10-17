@@ -177,7 +177,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Node unreachable (ticket 0042)
 
-- **The 5 s rule is checked when a poll fails, against the time of the last good answer**, so errors and hangs both trip it at 5 s: a hanging Node's first request starts 1 s after the last answer and is given up on at 3 s, the next at 5 s. The spec first said "about 6 s for a hang"; the test showed 5.
+- **The 5 s rule is its own timer, restarted by each good answer**, not a check when a poll fails: checked on failure, a Node that hangs from page open was caught only at 6 s (requests end at 2, 4, 6 s). Found in review.
+- **A null Event clock means "no replay" only once `/api/replay` has answered**; `useEventClock` returns `heard`, and the Replay controls wait until it is true, or Start flashes on first load and after every reconnect.
 - **To test the 2 s request timeout on fake timers**, spy on `AbortSignal.timeout` and return a controller aborted by a (faked) `setTimeout(ms)`; the real one runs on a clock fake timers cannot move (`nodeUnreachableFlow.test.tsx`).
 - `usePolledJson(null)` stops a poll and drops its last answer; cameras and the Event clock use it while unreachable. `useNodeState` returns `state` (null while unreachable) and `lastAnswer` (kept, for name, role and Official Alerts).
-- **`evacuationFlow.test.tsx` "the Route request names a Grid point" failed 1 full run in 4** (passed alone and in the other runs): it reads the requests as soon as "Nearest open Shelter" shows, which can be before the Route file is asked for. Not fixed here.
+- **`evacuationFlow.test.tsx` "the Route request names a Grid point" failed about 1 full parallel run in 3**: it read the requests as soon as "Nearest open Shelter" showed, which the straight-line plan does before the Route file is asked for. It now waits for the request with `waitFor`. This may be the 0031 flake whose cause was not found.

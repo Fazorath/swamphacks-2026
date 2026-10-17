@@ -31,8 +31,9 @@ const SHELTERS = [{ id: "test-gym", name: "Test Gym", pos: [29.66, -82.32] }].ma
 // How the fake Node answers: well, with an HTTP error, not at all, or by hanging until the request
 // is given up on.
 let nodeAnswer: "ok" | "error" | "down" | "hangs";
-// Lets one poll of the open-Shelter list fail while the rest of the Node answers.
+// Let the open-Shelter list or the Event clock fail while the rest of the Node answers.
 let sheltersDown: boolean;
+let eventClockDown: boolean;
 let requests: string[];
 
 function hangUntilGivenUp(signal?: AbortSignal | null) {
@@ -57,6 +58,7 @@ beforeEach(() => {
   );
   nodeAnswer = "ok";
   sheltersDown = false;
+  eventClockDown = false;
   requests = [];
   vi.useFakeTimers({ shouldAdvanceTime: true });
   // The real timeout runs on a clock fake timers cannot move; this one runs on the fake clock.
@@ -93,6 +95,7 @@ beforeEach(() => {
     }
     if (path === "/api/cameras") return Response.json([TILE]);
     if (path === "/api/replay") {
+      if (eventClockDown) throw new TypeError("Failed to fetch");
       return Response.json({ state: "playing", event_t: 1787715660, rate: 30 });
     }
     if (path === "/api/shelters") {
@@ -160,6 +163,15 @@ test("a page whose Node never answers says Connecting…, then Node unreachable 
   await seconds(1);
   expect(banner()).toBeInTheDocument();
   expect(screen.queryByText("Connecting…")).not.toBeInTheDocument();
+});
+
+test("a page whose Node hangs from the start shows the warning after 5 s too", async () => {
+  nodeAnswer = "hangs";
+  render(<App />);
+  await seconds(4);
+  expect(screen.getByText("Connecting…")).toBeInTheDocument();
+  await seconds(1);
+  expect(banner()).toBeInTheDocument();
 });
 
 test("failures broken by a good answer never add up to the warning", async () => {
@@ -233,6 +245,20 @@ test("on an unreachable Hub the Replay controls wait instead of offering Start",
   nodeAnswer = "ok";
   await seconds(1);
   expect(await replay().findByRole("button", { name: "Pause" })).toBeInTheDocument();
+});
+
+test("back from unreachable, the Replay controls wait for the Event clock, never offering Start", async () => {
+  await showLiveData();
+  fireEvent.click(screen.getByRole("button", { name: "Hub" }));
+  nodeAnswer = "down";
+  await seconds(5);
+  eventClockDown = true;
+  nodeAnswer = "ok";
+  await seconds(3);
+  expect(screen.getByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
+  const replay = within(screen.getByRole("region", { name: "Replay controls" }));
+  expect(replay.getByText("Waiting for the Hub to answer")).toBeInTheDocument();
+  expect(replay.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
 });
 
 test("the next good answer clears the warning and the Shelter line and restores the data", async () => {

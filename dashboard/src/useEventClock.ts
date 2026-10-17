@@ -10,12 +10,20 @@ export type EventClock = {
 // not carry the Event clock.
 const CLOCK_POLL_MS = 1000;
 
-// Null while no replay is running, which is also what a Node that predates the replay answers.
+export type EventClockFeed = {
+  // Null while no replay is running, which is also what a Node that predates the replay answers.
+  clock: EventClock | null;
+  // False until the Node has answered, and again while it is unreachable: a null clock then means
+  // "not known", not "no replay", so the Replay controls must not offer Start.
+  heard: boolean;
+};
+
 // Pass false while the Node is unreachable: no clock, and no polling until it answers again.
-export function useEventClock(polling: boolean): EventClock | null {
-  const clock = usePolledJson<{ state: string } & EventClock>(
+export function useEventClock(polling: boolean): EventClockFeed {
+  const answer = usePolledJson<{ state: string } & EventClock>(
     polling ? "/api/replay" : null,
     CLOCK_POLL_MS,
   );
-  return clock && (clock.state === "playing" || clock.state === "paused") ? clock : null;
+  const running = answer && (answer.state === "playing" || answer.state === "paused");
+  return { clock: running ? answer : null, heard: answer !== null };
 }
