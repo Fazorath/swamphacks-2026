@@ -1,4 +1,5 @@
 import logging
+import os
 import threading
 import time
 from collections.abc import Mapping
@@ -121,7 +122,7 @@ class ReticulumMesh:
         (config_dir / "config").write_text(reticulum_config(settings))
         RNS.Reticulum(configdir=str(config_dir), loglevel=RNS.LOG_WARNING)
 
-        self._key = _load_or_create_identity(settings.data_dir / "identity")
+        self._key = load_or_create_identity(settings.data_dir / "identity")
         self.identity = node_id(self._key)
         self._hub_identity = settings.hub_identity
         self._known_nodes: dict[str, Any] = {}
@@ -199,9 +200,20 @@ class _NodeAnnounces:
         self._known_nodes[node_id(announced_identity)] = announced_identity
 
 
-def _load_or_create_identity(path: Path) -> Any:
+def load_or_create_identity(path: Path) -> Any:
+    """This Node's identity. The file holds its private key, so only its owner may read it."""
     if path.exists():
-        return RNS.Identity.from_file(str(path))
+        key = RNS.Identity.from_file(str(path))
+        if key is None:
+            raise ValueError(
+                f"{path} is not a Reticulum identity (a write cut short?). Delete it to give this "
+                "Node a new id; if it is the Hub, every Node then needs the new HUB_IDENTITY"
+            )
+        # Identity files written before this check are readable by everyone on the machine.
+        path.chmod(0o600)
+        return key
     key = RNS.Identity()
-    key.to_file(str(path))
+    # Not Identity.to_file: it leaves the key readable by everyone and only logs a failed write.
+    with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as file:
+        file.write(key.get_private_key())
     return key

@@ -80,6 +80,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.
 - Audit 2026-10-17: `MeshedNodes` used the checkout's `dashboard/dist`, `cache-pack/` and `node/data/`, so `test_a_sensor_has_no_such_route` got 405 (from the dashboard's static mount) instead of 404 on any machine that had built the dashboard. Every test Node now gets its own folders under `tmp_path`; a new harness setting that touches disk belongs in `MeshedNodes._settings`.
 - Audit 2026-10-17: the Evacuation Plan test's Shelter-marker check failed about 1 run in 12, before and after 0010, because it checked the map right after the plan text appeared. Map assertions wait with `waitFor`.
+- 0004 review 2026-10-17: **`RNS.Identity.from_file` returns `None` for a damaged file** instead of raising, and `Identity.to_file` writes the private key readable by everyone (644) and only logs a failed write. `load_or_create_identity` now stops the Node with an error naming the file, writes the key 600 itself, and locks down an older 644 file when it loads it. Deleting the file gives the Node a new id; for the Hub, every Node then needs the new `HUB_IDENTITY`.
 
 ## Flood Risk (ticket 0006)
 

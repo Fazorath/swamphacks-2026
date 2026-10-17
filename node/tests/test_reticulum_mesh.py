@@ -1,8 +1,18 @@
+import stat
+from pathlib import Path
+
+import pytest
 import RNS
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.replay import ReplayClockMessage
-from storm_shield.reticulum_mesh import SIGNATURE_LENGTH, node_id, sign, verify
+from storm_shield.reticulum_mesh import (
+    SIGNATURE_LENGTH,
+    load_or_create_identity,
+    node_id,
+    sign,
+    verify,
+)
 from storm_shield.shelter_status import ShelterStatus
 
 
@@ -102,3 +112,25 @@ def test_the_event_clock_signed_by_the_hub_verifies_and_one_signed_by_another_no
     assert verify(sign(hub, clock), known, node_id(hub)) == (node_id(hub), clock)
     assert verify(sign(rogue, clock), known, node_id(hub)) is None
     assert len(sign(hub, clock)) <= RNS.Packet.PLAIN_MDU
+
+
+def test_a_node_keeps_its_identity_in_a_file_only_its_owner_can_read(tmp_path: Path) -> None:
+    path = tmp_path / "identity"
+    first = load_or_create_identity(path)
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert node_id(load_or_create_identity(path)) == node_id(first)
+
+
+def test_an_identity_file_readable_by_everyone_is_locked_down_on_load(tmp_path: Path) -> None:
+    path = tmp_path / "identity"
+    load_or_create_identity(path)
+    path.chmod(0o644)
+    load_or_create_identity(path)
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_a_damaged_identity_file_stops_the_node_and_names_the_file(tmp_path: Path) -> None:
+    path = tmp_path / "identity"
+    path.write_bytes(b"cut short")
+    with pytest.raises(ValueError, match="identity.*Delete it"):
+        load_or_create_identity(path)
