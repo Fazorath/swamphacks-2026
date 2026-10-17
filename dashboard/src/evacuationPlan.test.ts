@@ -371,6 +371,22 @@ describe("with a Wave ETA", () => {
     expect(result.lines.join(" ")).toContain("Nearest Shelter Far Both");
   });
 
+  test("a reachable Shelter that does not fit loses to higher ground", () => {
+    const result = plan({
+      wave: wave(60),
+      profile: profile({ needsPetFriendlyShelter: true }),
+      openShelterIds: ["near-plain", "far-both"],
+    });
+    expect(result.shelter).toBeNull();
+    expect(result.lines.join(" ")).toContain("Nearest Shelter Far Both");
+  });
+
+  test("higher ground still carries the area line and the official sources line", () => {
+    const result = plan({ wave: wave(1), openShelterIds: ["near-plain"] });
+    expect(result.lines[0]).toContain("Flood-Prone Area");
+    expect(result.officialLine).toBe(OFFICIAL_LINE);
+  });
+
   test("with no open Shelter the plan keeps its own message", () => {
     const result = plan({ wave: wave(60), openShelterIds: [] });
     expect(result.lines).toContain("No open Shelter announced yet. Follow official sources.");

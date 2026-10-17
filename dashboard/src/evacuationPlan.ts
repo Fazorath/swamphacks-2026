@@ -38,17 +38,17 @@ export type EvacuationPlan = {
 };
 
 export const OFFICIAL_LINE = "Evacuation decisions come from official sources.";
-export const HIGHER_GROUND_LINE =
+const HIGHER_GROUND_LINE =
   "No Shelter you can reach in time. Get to higher ground, away from the river, now.";
 
 // When the wave reaches home, on the Event clock (Unix seconds), and what the clock says now.
 export type WaveWindow = { arrivalAt: number; eventT: number };
 
 // A Shelter must be reached this long before the wave, to leave room for a slower walk.
-export const SAFETY_MARGIN_SECONDS = 5 * 60;
+const SAFETY_MARGIN_SECONDS = 5 * 60;
 // Roads and paths wind, so the walk is longer than the straight line.
-export const DETOUR_FACTOR = 1.4;
-export const WALKING_SPEED_KMH = 4;
+const DETOUR_FACTOR = 1.4;
+const WALKING_SPEED_KMH = 4;
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -70,18 +70,20 @@ function routeLengthKm(route: LatLon[]): number {
   return total;
 }
 
+const secondsUntil = ({ arrivalAt, eventT }: WaveWindow) => arrivalAt - eventT;
+
 function walkingSeconds(from: Home, to: LatLon): number {
   return ((distanceKm(from, to) * DETOUR_FACTOR) / WALKING_SPEED_KMH) * 3600;
 }
 
-const minutesUp = (seconds: number) => Math.ceil(seconds / 60);
+const minutesRoundedUp = (seconds: number) => Math.ceil(seconds / 60);
 
 function waveWords(secondsLeft: number): string {
-  return secondsLeft > 0 ? `wave in ${minutesUp(secondsLeft)} min` : "wave expected now";
+  return secondsLeft > 0 ? `wave in ${minutesRoundedUp(secondsLeft)} min` : "wave expected now";
 }
 
 function walkAndWave(home: Home, shelter: Shelter, secondsLeft: number): string {
-  const walk = minutesUp(walkingSeconds(home, shelter.pos));
+  const walk = minutesRoundedUp(walkingSeconds(home, shelter.pos));
   return `${walk} min walk, ${waveWords(secondsLeft)}.`;
 }
 
@@ -136,7 +138,7 @@ function nearestFittingShelter(
       lines: ["No open Shelter matches this household. Follow official sources."],
     };
   }
-  const secondsLeft = wave ? wave.arrivalAt - wave.eventT : 0;
+  const secondsLeft = wave ? secondsUntil(wave) : 0;
   const reachable = wave
     ? fitting.filter(
         (shelter) =>
@@ -183,7 +185,7 @@ function nearestFittingShelter(
 function reroutedPlan(
   profile: HouseholdProfile,
   pack: CachePackContents,
-  fitting: Shelter[],
+  reachable: Shelter[],
   nearest: Candidate,
   { graph, blocked }: Rerouting,
   wave: WaveWindow | null,
@@ -195,7 +197,7 @@ function reroutedPlan(
   const reached = rerouteHome({
     graph,
     home: profile.home,
-    shelters: fitting,
+    shelters: reachable,
     blocked,
     floodProne: pack.floodProne,
   });
@@ -216,7 +218,7 @@ function reroutedPlan(
   }
   const [best] = reached;
   const lines = [describe(best, wave !== null)];
-  if (wave) lines.push(walkAndWave(profile.home, best.shelter, wave.arrivalAt - wave.eventT));
+  if (wave) lines.push(walkAndWave(profile.home, best.shelter, secondsUntil(wave)));
   if (blocked.length > 0) {
     lines.push(`Rerouted around ${blocked.length} blocked road${blocked.length === 1 ? "" : "s"}.`);
   }
