@@ -12,6 +12,7 @@
 
 - [ ] A message with an unknown `kind` is dropped without an error reaching any Node
 - [ ] A message with extra fields is accepted and the extras are ignored
+- [ ] A message with a format version `v` this Node does not know is dropped the same way as an unknown `kind`
 - [ ] A message that fails to parse is dropped and logged, and the Mesh keeps delivering later messages
 - [ ] One listener raising does not stop the other listeners or other Nodes from receiving the message
 - [ ] Tests cover each case through the Node API on both the in-memory and the Reticulum Mesh
