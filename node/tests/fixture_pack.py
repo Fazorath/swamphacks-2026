@@ -7,14 +7,25 @@ SHELTERS = [
     {
         "id": "test-gym",
         "name": "Test Gym",
-        "pos": [29.65, -82.32],
+        "pos": [27.97857, 85.18407],
+        "height_above_river_m": 96,
         "special_needs": True,
         "pet_friendly": False,
     }
 ]
 FLOOD_PRONE = {"type": "FeatureCollection", "features": []}
+RIVER = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {"reach": "border to Betrawati", "speed_kmh": 68, "km": [44.5, 45.0]},
+            "geometry": {"type": "LineString", "coordinates": [[85.18, 27.98], [85.186, 27.9731]]},
+        }
+    ],
+}
 TILE = b"\x89PNG fixture tile"
-TILE_PATH = "tiles/11/563/859.png"
+TILE_PATH = "tiles/10/754/429.png"
 
 
 def build_fixture_pack(
@@ -27,12 +38,13 @@ def build_fixture_pack(
     files = {
         "shelters.json": json.dumps(shelters).encode(),
         "flood_prone.geojson": json.dumps(FLOOD_PRONE).encode(),
+        "river.geojson": json.dumps(RIVER).encode(),
         TILE_PATH: TILE,
     }
     manifest = {
         "v": 1,
         "built": "2026-10-16T00:00:00Z",
-        "bbox": [29.6, -82.37, 29.7, -82.27],
+        "bbox": [27.86, 85.08, 28.46, 85.47],
         "files": {path: hashlib.sha256(content).hexdigest() for path, content in files.items()},
     }
     if corrupt_tile:

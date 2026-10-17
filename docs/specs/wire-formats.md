@@ -147,15 +147,16 @@ Built by a script ahead of the event. The Hub downloads it while online; other N
 
 ```
 cache-pack.zip
-├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }, "files": { "<path>": "<sha256>" } }
+├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }?, "files": { "<path>": "<sha256>" } }
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
-│                             "special_needs": true, "pet_friendly": false } ]
-├── flood_prone.geojson   FEMA flood zones plus the Hogtown Creek and Sweetwater Branch floodplains
-├── tiles/{z}/{x}/{y}.png dark map tiles for the neighborhood (credit shown on the map)
-└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell
+│                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
+├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
+├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
+├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
+└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
 ```
 
 - `bbox` is `[south, west, north, east]`, the demo box the pack covers.
-- The route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
+- The valley pack has no `route_grid` and no `routes/` (the plan works without them). When Routes are built, the route grid is a fixed spacing (about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
 - Polylines use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.

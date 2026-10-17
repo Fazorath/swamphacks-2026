@@ -4,7 +4,7 @@ from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
-from fixture_pack import FLOOD_PRONE, SHELTERS, TILE, TILE_PATH, build_fixture_pack
+from fixture_pack import FLOOD_PRONE, RIVER, SHELTERS, TILE, TILE_PATH, build_fixture_pack
 
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
@@ -52,9 +52,10 @@ def test_node_downloads_the_pack_and_serves_it_after_the_source_is_gone(tmp_path
         source.running = False
 
         status = node.get("/api/cache-pack").json()
-        assert status["manifest"]["bbox"] == [29.6, -82.37, 29.7, -82.27]
+        assert status["manifest"]["bbox"] == [27.86, 85.08, 28.46, 85.47]
         assert node.get("/api/cache-pack/files/shelters.json").json() == SHELTERS
         assert node.get("/api/cache-pack/files/flood_prone.geojson").json() == FLOOD_PRONE
+        assert node.get("/api/cache-pack/files/river.geojson").json() == RIVER
         assert node.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE
 
 
