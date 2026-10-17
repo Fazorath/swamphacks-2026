@@ -47,7 +47,7 @@
 | [0042-node-unreachable](0042-node-unreachable.md) | ready-for-agent | unclaimed |
 | [0043-valley-cache-pack](0043-valley-cache-pack.md) | ready-for-agent | unclaimed |
 | [0044-replay-drives-the-sensor-nodes](0044-replay-drives-the-sensor-nodes.md) | done | Fazorath |
-| [0045-hub-replay-controls](0045-hub-replay-controls.md) | ready-for-agent | unclaimed |
+| [0045-hub-replay-controls](0045-hub-replay-controls.md) | in-progress | Fazorath |
 | [0046-surge-makes-flood-risk-high](0046-surge-makes-flood-risk-high.md) | ready-for-agent | unclaimed |
 | [0047-wave-eta-counts-down-at-home](0047-wave-eta-counts-down-at-home.md) | ready-for-agent | unclaimed |
 | [0048-shelter-or-higher-ground](0048-shelter-or-higher-ground.md) | ready-for-agent | unclaimed |
