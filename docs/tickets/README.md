@@ -13,12 +13,12 @@
 | [0007-cache-pack-shelters-flood-prone-areas-tiles](0007-cache-pack-shelters-flood-prone-areas-tiles.md) | done | Fazorath |
 | [0008-household-profile](0008-household-profile.md) | done | Fazorath |
 | [0009-evacuation-plan-panel](0009-evacuation-plan-panel.md) | done | Fazorath |
-| [0010-route-to-the-shelter](0010-route-to-the-shelter.md) | ready-for-agent | unclaimed |
+| [0010-route-to-the-shelter](0010-route-to-the-shelter.md) | in-progress | refloow-0 |
 | [0011-online-status-and-camera-tiles](0011-online-status-and-camera-tiles.md) | in-progress | leonardorofaDV |
 | [0012-node-registry-and-unverified-nodes](0012-node-registry-and-unverified-nodes.md) | ready-for-agent | unclaimed |
 | [0013-community-warnings](0013-community-warnings.md) | ready-for-agent | unclaimed |
 | [0014-official-alerts-helene-replay](0014-official-alerts-helene-replay.md) | ready-for-agent | unclaimed |
-| [0015-shelter-status-updates](0015-shelter-status-updates.md) | ready-for-agent | unclaimed |
+| [0015-shelter-status-updates](0015-shelter-status-updates.md) | in-progress | Fazorath |
 | [0016-breadboard-drives-the-scenario](0016-breadboard-drives-the-scenario.md) | ready-for-agent | unclaimed |
 | [0017-live-nws-and-nhc-feeds](0017-live-nws-and-nhc-feeds.md) | ready-for-agent | unclaimed |
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | ready-for-agent | unclaimed |

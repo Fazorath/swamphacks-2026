@@ -4,9 +4,9 @@
 
 **Blocked by:** 0009, and the Shelter status format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Spec:** `docs/specs/storm-shield.md`
 
