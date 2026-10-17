@@ -1,0 +1,270 @@
+<title>Beacon Mesh</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column with a sticky "decisions" summary up top, then sections that alternate prose, tables and one wireframe. */
+:root {
+  --bg: #f2f6f4;
+  --surface: #ffffff;
+  --fg: #12201b;
+  --muted: #55655f;
+  --line: #d3ddd8;
+  --accent: #0b6b5e;
+  --accent-soft: #dcefe9;
+  --real: #0b6b5e;      --real-bg: #d6eee7;
+  --sim: #8a5a00;       --sim-bg: #fbecc9;
+  --feed: #2b4f9e;      --feed-bg: #dde7fa;
+  --tbd: #a2322f;       --tbd-bg: #f9dcda;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1613; --surface: #142019; --fg: #e4eee9; --muted: #93a79f; --line: #26382f;
+    --accent: #4fc9b0; --accent-soft: #163a32;
+    --real: #6fe0c8; --real-bg: #12372f;
+    --sim: #f1c35a; --sim-bg: #3d2f0b;
+    --feed: #8fb0f5; --feed-bg: #1a2a52;
+    --tbd: #f0928e; --tbd-bg: #44201f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1613; --surface: #142019; --fg: #e4eee9; --muted: #93a79f; --line: #26382f;
+  --accent: #4fc9b0; --accent-soft: #163a32;
+  --real: #6fe0c8; --real-bg: #12372f;
+  --sim: #f1c35a; --sim-bg: #3d2f0b;
+  --feed: #8fb0f5; --feed-bg: #1a2a52;
+  --tbd: #f0928e; --tbd-bg: #44201f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 400 16px/1.6 var(--font-body);
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(48px, 9vw, 84px); letter-spacing: 0.01em; text-transform: uppercase; }
+h2 { font-size: 34px; text-transform: uppercase; letter-spacing: 0.02em; }
+h3 { font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.label { font: 500 12px/1 var(--font-data); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.head { display: flex; flex-direction: column; gap: 6px; }
+
+/* masthead */
+.mast { padding-top: 40px; display: flex; flex-direction: column; gap: 18px; border-bottom: 2px solid var(--fg); padding-bottom: 28px; }
+.mast-top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.lede { font-size: 19px; max-width: 62ch; }
+.status { display: inline-flex; gap: 8px; align-items: center; font: 500 12px/1 var(--font-data); text-transform: uppercase; letter-spacing: 0.08em; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sim); }
+
+/* chips */
+.chip { display: inline-block; font: 500 11px/1 var(--font-data); letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; border-radius: 4px; white-space: nowrap; }
+.chip.real { color: var(--real); background: var(--real-bg); }
+.chip.sim  { color: var(--sim);  background: var(--sim-bg); }
+.chip.feed { color: var(--feed); background: var(--feed-bg); }
+.chip.tbd  { color: var(--tbd);  background: var(--tbd-bg); }
+
+/* decisions */
+.decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.decision { background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.decision p { font-size: 15px; }
+
+/* tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 640px; }
+th { text-align: left; font: 500 12px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+
+/* demo storyboard: a real sequence, so numbered */
+ol.story { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+ol.story li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); padding: 16px 16px 16px 56px; position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+ol.story li::before { content: counter(s); position: absolute; left: 14px; top: 12px; font: 700 34px/1 var(--font-display); color: var(--accent); }
+ol.story strong { font-weight: 600; }
+ol.story span { font-size: 14px; color: var(--muted); }
+ol.story li.climax { border-color: var(--accent); background: var(--accent-soft); }
+
+/* wireframe */
+.frame { border: 1px solid var(--line); background: var(--surface); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; align-items: center; font: 500 12px/1 var(--font-data); text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 4px 10px; border-bottom: 1px solid var(--line); }
+.bar .net { display: inline-flex; gap: 6px; align-items: center; }
+.bar .net i { width: 8px; height: 8px; border-radius: 50%; background: var(--real); display: inline-block; }
+.grid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas:
+  "alert alert alert alert"
+  "map map map evac"
+  "map map map evac"
+  "baro soil temp evac"
+  "cams cams feed feed"; }
+.tile { border: 1px dashed var(--line); padding: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 84px; min-width: 0; background: var(--bg); }
+.tile b { font: 600 14px/1.3 var(--font-body); }
+.tile small { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.tile .num { font: 500 22px/1 var(--font-data); }
+.t-alert { grid-area: alert; border: 1px solid var(--tbd); background: var(--tbd-bg); border-style: solid; }
+.t-map { grid-area: map; min-height: 230px; }
+.t-evac { grid-area: evac; border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+.t-baro { grid-area: baro; } .t-soil { grid-area: soil; } .t-temp { grid-area: temp; }
+.t-cams { grid-area: cams; } .t-feed { grid-area: feed; }
+.layers { display: flex; flex-wrap: wrap; gap: 6px; }
+.layers span { font: 500 11px/1 var(--font-data); border: 1px solid var(--line); padding: 4px 6px; border-radius: 3px; color: var(--muted); }
+@media (max-width: 680px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "alert alert" "map map" "evac evac" "baro soil" "temp temp" "cams cams" "feed feed"; }
+}
+
+/* mermaid sits on its own scroll container */
+.diagram { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); padding: 16px; }
+
+/* open questions */
+.qs { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+.q { background: var(--surface); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.q p { font-size: 15px; }
+ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 68ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 14px; color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding-top: 16px; font-size: 14px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mast-top">
+      <span class="label">SwampHacks · Project brief</span>
+      <span class="status"><span class="dot"></span>Planning · no code yet</span>
+    </div>
+    <h1>Beacon Mesh</h1>
+    <p class="lede">An open-source, peer-to-peer storm dashboard for Gainesville. Neighborhood sensor nodes share local readings, and when the internet goes down the dashboard keeps working, including a cached evacuation plan with shelters and a route out.</p>
+    <p class="muted">“Beacon Mesh” is a working name. Change it freely.</p>
+  </header>
+
+  <section id="decisions">
+    <div class="head"><span class="label">Where we landed</span><h2>Decisions so far</h2></div>
+    <div class="decisions">
+      <div class="decision"><span class="label">Primary user</span><h3>Gainesville residents</h3><p>People in the Gainesville and Alachua County area who need to know when to leave, where to go, and how, even with no connection.</p></div>
+      <div class="decision"><span class="label">Hero hazard</span><h3>Surge / flood and hurricane approach</h3><p>These are the events that trigger an evacuation, so they drive the most convincing demo.</p></div>
+      <div class="decision"><span class="label">Hero demo</span><h3>Offline evacuation plan</h3><p>Internet off, dashboard still shows your zone, the open shelters and a route to the nearest one.</p></div>
+      <div class="decision"><span class="label">Hardware</span><h3>Real where we can, simulated elsewhere</h3><p>Real barometric pressure, temperature and soil moisture sensors from the hackathon. Other inputs are fed in by wiring or a replay.</p></div>
+      <div class="decision"><span class="label">UI style</span><h3>Data-aggregator layout</h3><p>A tiled view like an online data aggregator: map, live sensor tiles, alerts, camera footage and the evacuation panel on one screen.</p></div>
+      <div class="decision"><span class="label">Mesh software</span><h3>Not chosen yet</h3><p>Needs research before we commit. Candidates are listed under open questions.</p></div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="head"><span class="label">What the judges see</span><h2>Hero demo, step by step</h2></div>
+    <p>One storyline, told in order. Everything we build should serve one of these steps.</p>
+    <ol class="story">
+      <li><strong>Normal day</strong><span>Dashboard shows live readings from our real nodes, plus the simulated rain, water and wind inputs.</span></li>
+      <li><strong>Pressure starts falling</strong><span>Barometric trend across nodes triggers a “storm approaching” signal on the map.</span></li>
+      <li><strong>Official alert arrives</strong><span>NWS/NHC alert is pulled in and shown next to community readings, clearly labeled as official.</span></li>
+      <li><strong>Flood risk rises</strong><span>Soil moisture plus simulated rainfall and water level push the flood-risk layer up.</span></li>
+      <li><strong>Internet goes off</strong><span>A visible toggle cuts the connection. Nodes keep sharing over the mesh and the dashboard keeps updating.</span></li>
+      <li class="climax"><strong>Evacuation plan, from cache</strong><span>The resident’s zone, open shelters and route to the nearest one appear with zero internet.</span></li>
+    </ol>
+  </section>
+
+  <section id="data">
+    <div class="head"><span class="label">Inputs</span><h2>Where each data point comes from</h2></div>
+    <div class="legend">
+      <span class="chip real">Real</span> physical sensor we have
+      <span class="chip sim">Simulated</span> fed in by us
+      <span class="chip feed">Official feed</span> public agency data
+      <span class="chip tbd">Undecided</span>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>Input</th><th>Source</th><th>What it feeds</th></tr></thead>
+      <tbody>
+        <tr><td>Barometric pressure</td><td><span class="chip real">Real</span></td><td>Storm approach and intensity signal, pressure trend, interpolated pressure map.</td></tr>
+        <tr><td>Temperature</td><td><span class="chip real">Real</span></td><td>Heat index and comfort tiles, supporting input for inference.</td></tr>
+        <tr><td>Soil moisture</td><td><span class="chip real">Real</span></td><td>Ground saturation for flash-flood risk. In Gainesville this also matters for sinkhole and flooded-lowland risk.</td></tr>
+        <tr><td>Rainfall</td><td><span class="chip sim">Simulated</span></td><td>Flood-risk model. Could come from a replay of a past storm.</td></tr>
+        <tr><td>Water level</td><td><span class="chip sim">Simulated</span></td><td>Surge and flood visual, creek and low-area alerts.</td></tr>
+        <tr><td>Wind speed</td><td><span class="chip sim">Simulated</span></td><td>Hurricane approach tile and severity.</td></tr>
+        <tr><td>Weather alerts, storm track</td><td><span class="chip feed">Official feed</span></td><td>NWS and NHC alerts. Always labeled official, never mixed up with community data.</td></tr>
+        <tr><td>Tide and river gauges</td><td><span class="chip feed">Official feed</span></td><td>Ground truth to check our simulated and real readings against (NOAA, USGS).</td></tr>
+        <tr><td>Evacuation zones, shelters, roads</td><td><span class="chip feed">Official feed</span></td><td>Pre-downloaded “cache pack” that powers the offline evacuation plan.</td></tr>
+        <tr><td>Camera footage</td><td><span class="chip tbd">Undecided</span></td><td>Aggregator-style video tiles. Source and legality still to decide, and online only (see open questions).</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">Simulated inputs would be fed through wiring (resistors, potentiometers, signal injection) or a replay of a past storm such as Idalia (2023). Exact method is still to decide.</p>
+  </section>
+
+  <section id="ui">
+    <div class="head"><span class="label">Interface</span><h2>Dashboard layout, first sketch</h2></div>
+    <p>An aggregator-style screen: everything on one page, with the alert strip on top and the evacuation panel always visible. This is a wireframe of intent, not a final design.</p>
+    <div class="frame" role="img" aria-label="Wireframe of the dashboard: alert strip, map, evacuation panel, three sensor tiles, camera tiles and an activity feed">
+      <div class="bar"><span>Beacon Mesh · Gainesville, FL</span><span class="net"><i></i>Mesh: 7 nodes · Internet: online</span></div>
+      <div class="grid">
+        <div class="tile t-alert"><b>Alert strip</b><small>Official alert text, labeled with source and time. Community signals shown below it, never above.</small></div>
+        <div class="tile t-map"><b>Map</b><small>Node locations, interpolated layers, surge and flood overlay, shelters and route.</small>
+          <div class="layers"><span>Pressure</span><span>Soil moisture</span><span>Flood risk</span><span>Shelters</span><span>Route</span></div></div>
+        <div class="tile t-evac"><b>Evacuation plan</b><small>Your zone, status (stay / prepare / leave), nearest open shelter, route steps. Works offline.</small></div>
+        <div class="tile t-baro"><b>Pressure</b><span class="num">— hPa</span><small>trend sparkline</small></div>
+        <div class="tile t-soil"><b>Soil moisture</b><span class="num">— %</span><small>trend sparkline</small></div>
+        <div class="tile t-temp"><b>Temperature</b><span class="num">— °F</span><small>trend sparkline</small></div>
+        <div class="tile t-cams"><b>Camera footage</b><small>Video and still tiles. Greyed out with “needs internet” when offline.</small></div>
+        <div class="tile t-feed"><b>Activity feed</b><small>New readings, alerts, node online/offline events.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <div class="head"><span class="label">How it fits together</span><h2>Architecture, high level</h2></div>
+    <p>Three kinds of participants. Sensor nodes produce readings. Relay nodes (phones, laptops, boards) pass data along and cache it. A gateway node with internet pulls official feeds and the cache pack, then shares them into the mesh.</p>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  S["Sensor nodes<br>pressure, temp, soil"] -->|"LoRa or Wi-Fi"| R["Relay nodes<br>phones, laptops, boards"]
+  R --> D["Resident dashboard<br>offline-first web app"]
+  G["Gateway node<br>has internet"] <--> R
+  F["NWS, NHC, NOAA, USGS"] --> G
+  G --> C["Cache pack<br>zones, shelters, routes, map tiles"]
+  C --> D
+</pre>
+    </div>
+  </section>
+
+  <section id="open">
+    <div class="head"><span class="label">Before we write code</span><h2>Open questions</h2></div>
+    <div class="qs">
+      <div class="q"><span class="chip tbd">Research</span><h3>Which mesh software?</h3>
+        <p>Candidates to compare, not yet judged:</p>
+        <ul class="plain">
+          <li><b>Meshtastic:</b> ready-made LoRa mesh on cheap boards. Very small message size.</li>
+          <li><b>Reticulum:</b> flexible networking over many radio types, more work to build on.</li>
+          <li><b>libp2p or Hypercore:</b> IP-based peer-to-peer, good for phones and laptops on Wi-Fi, not long-range radio.</li>
+        </ul></div>
+      <div class="q"><span class="chip tbd">Scope</span><h3>What does “evacuate” mean in Gainesville?</h3>
+        <p>Gainesville is inland, so classic coastal surge zones do not apply directly. We need to check Alachua County’s actual evacuation guidance (flood-prone areas, mobile homes, low-lying creek areas) and whether the demo also covers coastal neighbors who shelter here.</p></div>
+      <div class="q"><span class="chip tbd">Limits</span><h3>Video does not fit on a mesh</h3>
+        <p>Low-bandwidth radio mesh cannot carry video. Camera tiles can only work while a gateway has internet, so the offline demo should rely on small data: readings, alerts and the cache pack.</p></div>
+      <div class="q"><span class="chip tbd">Trust</span><h3>Bad or fake readings</h3>
+        <p>Anyone can send data. Plan for signed readings, comparison against neighboring nodes and official gauges, and a clear official versus community label.</p></div>
+      <div class="q"><span class="chip tbd">Offline routing</span><h3>How do we route without internet?</h3>
+        <p>Need an approach for storing road data and computing a route on the device, limited to the Gainesville area.</p></div>
+      <div class="q"><span class="chip tbd">Hardware</span><h3>Exact parts and wiring</h3>
+        <p>List the sensors and boards we can actually get at the event, and decide how simulated inputs will be fed in.</p></div>
+    </div>
+  </section>
+
+  <section id="scope">
+    <div class="head"><span class="label">Boundaries</span><h2>Not in scope for now</h2></div>
+    <ul class="plain">
+      <li>Replacing NWS or NHC forecasts. We add local readings next to them.</li>
+      <li>Live traffic or contraflow information. It needs the internet.</li>
+      <li>Statewide coverage. We focus on Gainesville and Alachua County.</li>
+      <li>Hazards beyond flood, surge and hurricane approach, for example wildfire or tornadoes.</li>
+    </ul>
+  </section>
+
+  <footer>Planning page for the SwampHacks team. Update the decisions above as the group changes its mind.</footer>
+</div>

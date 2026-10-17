@@ -1,0 +1,74 @@
+# .context: handoff from the planning session
+
+Paste or point your Claude at this file at the start of a session in this repo. It carries everything decided so far, because the earlier planning session ran in the wrong folder (the parent `SwampHacks/`, not this repo) and nothing from it was committed.
+
+## Your job in this session
+1. Read `AGENTS.md` and `CLAUDE.md` (this repo's workflow rules). Follow them over anything here if they conflict.
+2. Start the **grilling session** on the project below (use the `grilling` skill, `/model opus`). Question the user relentlessly about the plan, one decision at a time, and record answers.
+3. **Do not write project code yet.** Planning only until the user says otherwise.
+4. After grilling: `to-spec` writes `docs/specs/<feature>.md`, then `to-tickets` writes `docs/tickets/NNNN-<slug>.md`. Fill in the TBDs in `AGENTS.md` (Idea, Stack, Commands) once, and push once.
+5. No AI attribution in commits or PRs (repo rule; the commit-msg hook strips it). Do not push unless the user asks.
+
+## The project (working name: Beacon Mesh)
+An open-source, peer-to-peer natural disaster dashboard for **Florida, starting with Gainesville / Alachua County**. Neighborhood sensor nodes share local readings over a mesh. When the internet goes down, the dashboard keeps working, including a **cached evacuation plan** (zone, open shelters, route to the nearest one). Pitch it as resilience first. It adds hyperlocal ground truth next to NWS/NHC; it does not replace them.
+
+### Decisions made
+- **Primary users:** Gainesville-area residents.
+- **Hero hazards:** storm surge / flood and hurricane approach (the events that trigger evacuation).
+- **Hero demo:** internet off, dashboard still shows the resident's zone, open shelters and a route out, from cache.
+- **Hardware:** real sensors from the hackathon for barometric pressure, temperature and soil moisture. Other inputs (rainfall, water level, wind) are simulated, fed in by wiring (resistors, potentiometers, signal injection) or a replay script. Exact method TBD.
+- **UI:** data-aggregator style tiled dashboard: alert strip, map with layers, evacuation panel, sensor tiles with sparklines, camera footage tiles, activity feed.
+- **Mesh software:** NOT chosen. Needs research.
+- **Inference ideas:** interpolate node readings into maps; pressure trend across nodes as storm-approach signal; soil saturation plus rainfall and water level as flood-risk score. Storm surge itself comes from official NHC/SLOSH maps and tide gauges; our nodes validate, not replace.
+
+### Planned demo storyline (in order)
+1. Normal day: live readings from real nodes plus simulated inputs.
+2. Pressure starts falling: "storm approaching" signal on the map.
+3. Official NWS/NHC alert arrives, labeled official next to community readings.
+4. Flood risk rises (soil moisture plus simulated rain and water level).
+5. Internet toggled off; nodes keep sharing over the mesh; dashboard keeps updating.
+6. Evacuation plan appears from cache with zero internet.
+
+### Data sources
+| Input | Source |
+|---|---|
+| Barometric pressure, temperature, soil moisture | Real sensors |
+| Rainfall, water level, wind speed | Simulated |
+| NWS/NHC alerts and storm track; NOAA/USGS tide and river gauges | Official feeds (ground truth) |
+| Evacuation zones, shelters, roads | Pre-downloaded "cache pack" for offline use |
+| Camera footage | Source undecided; online only |
+
+### Architecture (high level)
+Sensor nodes (readings) -> relay nodes (phones, laptops, boards; pass data along and cache) -> offline-first web dashboard. A gateway node with internet pulls official feeds and the cache pack and shares them into the mesh.
+
+## Open questions to grill on
+- **Mesh software:** compare Meshtastic (ready-made LoRa mesh, tiny messages), Reticulum (flexible, more work), libp2p/Hypercore (IP-based, good on Wi-Fi, not long-range radio). None judged yet.
+- **What "evacuate" means in Gainesville:** it is inland, so coastal surge zones do not apply directly. Check real Alachua County guidance (flood-prone areas, mobile homes, low-lying creek areas). Does the demo also cover coastal neighbors who shelter here?
+- **Video cannot cross a low-bandwidth mesh.** Camera tiles only work while a gateway has internet; the offline demo should use small data only (readings, alerts, cache pack). Where does footage come from, and is it legal to aggregate?
+- **Trust:** signed readings, cross-checking against neighbor nodes and official gauges, clear official vs community labeling. A false community "evacuate now" is a real safety risk.
+- **Offline routing:** how to store Gainesville road data and compute a route on-device.
+- **Privacy:** fuzz node locations so vulnerable people are not exposed.
+- **Hardware:** exact sensors and boards available at the event, and how simulated inputs get fed in.
+- **Primary demo hazard:** surge/flood or hurricane approach as the single hero.
+
+## Out of scope for now
+Replacing NWS/NHC forecasts; live traffic or contraflow (needs internet); statewide coverage; wildfire, tornadoes and other hazards.
+
+## Team workflow and merge-conflict plan (4 people)
+Follow `AGENTS.md`: one branch per ticket (`NNNN-<slug>`) off up-to-date `main`, merge yourself, pull `main` often.
+
+Conflict hot spots and rules:
+- **`AGENTS.md`:** the user fills in Idea/Stack/Commands once after grilling and pushes before anyone branches. Others do not edit it.
+- **Ticket numbers:** only the user runs `to-tickets` and pushes the whole set at once. Everyone else claims a ticket in the group chat.
+- **`.env.example`:** add a key only when a ticket needs it, small additions.
+- **Package manager, formatter, folder layout:** decided at kickoff; one early scaffold ticket lands on `main` before feature branches.
+- **Shared interfaces** (sensor reading format, node message format, cache-pack format): write them into the spec first; changes need everyone's agreement.
+- **Ownership by feature folder** (e.g. firmware/sensors, mesh, dashboard UI, evacuation pack, simulation); stay in your area.
+- Rejected push to `main` means `git pull --rebase` (or merge `main`) and push again. `resolving-merge-conflicts` skill exists.
+
+## Artifacts and leftovers
+- Shared planning page (private; owner must share it): https://claude.ai/artifact/Fu6WJ4QLQdsQnr728DzA7e
+- Its source file is at `/Users/exempt/.claude/jobs/0c2added/tmp/beacon-mesh.html` on the user's machine only. Copy it to `docs/plan.html` to version it.
+- `.claude/worktrees/` shows as untracked; add it to `.gitignore`.
+- Remote branch `origin/grill-with-docs` adds a skill and is not merged; ask the user before touching it.
+- This `.context` file is untracked scratch. Commit it only if the user wants the team to have it.
