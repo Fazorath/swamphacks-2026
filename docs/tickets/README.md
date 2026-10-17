@@ -34,4 +34,4 @@
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | done | Fazorath |
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | done | Fazorath |
 | [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | done | Fazorath |
-| [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | ready-for-agent | unclaimed |
+| [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | in-progress | Fazorath |
