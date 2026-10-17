@@ -21,7 +21,7 @@ One message per Sensor Node per tick, all four measurements together.
 ```
 
 - `node`: the sender's short Reticulum identity (first 12 hex characters). **This 12-character id is the only Node id**: warnings, the registry and the API all use it as is.
-- `seq`: counter that goes up by one per reading from that Node. It starts from the Unix time at startup, so a restarted Node is never behind the `seq` others last saw (ticket 0022). Receivers ignore a `seq` they have already seen, which stops duplicates and old relayed copies.
+- `seq`: counter that goes up by one per reading from that Node. It starts at 0 at startup. While the last reading accepted from a Node is fresh (heard no more than 15 s ago on the receiver's own clock), receivers ignore a `seq` that is not higher than the last one accepted, which stops duplicates and old relayed copies. Once that Node has been silent for more than 15 s, any `seq` is accepted, so a Node that restarts with a wrong clock or a counter back at 0 is heard again (ticket 0022). Ignored readings do not refresh the Node's age.
 - `t`: the sender's clock, informational only. **Age is always measured on the receiving Node's own clock** (time since the last accepted reading from that Node), because the Pi has no battery clock.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
