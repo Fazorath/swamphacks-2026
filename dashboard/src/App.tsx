@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { AlertsPanel } from "./AlertsPanel";
+import { firstSurgeAt } from "./communityWarnings";
 import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { EventClockTag } from "./EventClockTag";
@@ -212,11 +213,7 @@ export function App() {
           nodes={lastAnswer?.state.nodes ?? []}
           thisNodeId={lastAnswer?.state.id ?? ""}
           appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
-          firstCommunityWarningAt={
-            communityWarnings.length > 0
-              ? Math.min(...communityWarnings.map((w) => w.surge_t))
-              : null
-          }
+          firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
           online={state?.status === "online"}
         />
       </div>

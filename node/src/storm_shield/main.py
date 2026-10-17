@@ -186,11 +186,15 @@ def create_app(
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
-    surges_without_river_km: set[str] = set()
 
     def hear_community_warning(_: str, message: Message) -> None:
         if isinstance(message, CommunityWarning):
             heard_warnings.hear(message)
+
+    def repeat_community_warnings() -> None:
+        if hub_warnings:
+            for warning in hub_warnings.sent():
+                mesh.publish(warning)
 
     def warn_about_new_surges() -> None:
         """Hub only: warn about each Registered Node whose Surge has not been warned about yet."""
@@ -198,19 +202,12 @@ def create_app(
             return
         snapshot = store.snapshot(clock())
         surged = flood_risk(snapshot.recent, heard_registry.registered_ids()).surged
-        placed = {node: snapshot.recent[node][-1].river_km for node in surged}
-        for node in surged:
-            if placed[node] is None and node not in surges_without_river_km:
-                logger.warning("Node %s is surging but has no NODE_RIVER_KM, so no warning", node)
-        surges_without_river_km.intersection_update(surged)
-        surges_without_river_km.update(node for node in surged if placed[node] is None)
+        river_km = {node: snapshot.recent[node][-1].river_km for node in surged}
         event = event_clock.current(clock())
         now = int(clock().timestamp())
         # With no replay running the Surge happened now, on the Hub's own clock.
         surge_t = now if event.state == "stopped" else event.event_t
-        for warning in hub_warnings.issue_for_new_surges(
-            {node: km for node, km in placed.items() if km is not None}, surge_t, now
-        ):
+        for warning in hub_warnings.issue_for_new_surges(river_km, surge_t, now):
             # The Hub does not hear its own broadcasts, so it keeps the warning itself.
             heard_warnings.hear(warning)
             try:
@@ -420,6 +417,14 @@ def create_app(
                 except Exception:
                     logger.exception("could not repeat the Node registry")
 
+        async def keep_repeating_warnings() -> None:
+            while True:
+                await asyncio.sleep(settings.warning_repeat_seconds)
+                try:
+                    repeat_community_warnings()
+                except Exception:
+                    logger.exception("could not repeat the Community Warnings")
+
         async def keep_signing_up() -> None:
             while True:
                 await asyncio.sleep(settings.sign_up_repeat_seconds)
@@ -459,6 +464,7 @@ def create_app(
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
             tasks.append(asyncio.create_task(keep_repeating_registry()))
+            tasks.append(asyncio.create_task(keep_repeating_warnings()))
             tasks.append(asyncio.create_task(keep_repeating_event_clock()))
             tasks.append(asyncio.create_task(keep_following_the_timeline()))
         if settings.cache_pack_url:

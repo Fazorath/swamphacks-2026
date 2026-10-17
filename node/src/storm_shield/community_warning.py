@@ -1,3 +1,4 @@
+import logging
 import threading
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
@@ -10,6 +11,9 @@ if TYPE_CHECKING:
 WarningReason = Literal[
     "water_surge", "water_high", "water_rising", "rain_heavy", "pressure_falling"
 ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommunityWarning(BaseModel):
@@ -26,7 +30,6 @@ class CommunityWarning(BaseModel):
     t: int
     nodes: list[str]
     reasons: list[WarningReason]
-    # The Node whose Surge this is, where it sits on the river, and when on the Event clock.
     origin: str
     origin_km: float
     surge_t: int
@@ -40,19 +43,27 @@ class HubWarnings:
         self._lock = threading.Lock()
         self._next_id = first_id
         self._warned: set[str] = set()
+        self._unplaced: set[str] = set()
         self._sent: list[CommunityWarning] = []
 
     def issue_for_new_surges(
-        self, surging_km: Mapping[str, float], surge_t: int, now: int
+        self, surging_km: Mapping[str, float | None], surge_t: int, now: int
     ) -> list[CommunityWarning]:
         """One warning for each Node in `surging_km` (id to River km) not already warned about.
 
-        A Node is forgotten once it stops surging, so a second Surge from it warns again.
+        A Node is forgotten once it stops surging, so a second Surge from it warns again. A Node
+        with no River km cannot be placed on the river, so it gets no warning, and a log line once.
         """
         with self._lock:
             self._warned &= surging_km.keys()
+            self._unplaced &= surging_km.keys()
             issued: list[CommunityWarning] = []
             for node, river_km in sorted(surging_km.items()):
+                if river_km is None:
+                    if node not in self._unplaced:
+                        logger.warning("Node %s is surging but has no NODE_RIVER_KM", node)
+                        self._unplaced.add(node)
+                    continue
                 if node in self._warned:
                     continue
                 issued.append(
@@ -77,6 +88,10 @@ class HubWarnings:
             return self._sent[::-1]
 
 
+def _id(warning: CommunityWarning) -> int:
+    return warning.id
+
+
 class HeardCommunityWarnings:
     """Every Community Warning this Node has heard from the Hub, by id."""
 
@@ -99,4 +114,6 @@ class HeardCommunityWarnings:
             warnings = list(self._by_id.values())
         if event.state != "stopped":
             warnings = [warning for warning in warnings if warning.surge_t <= event.event_t]
-        return sorted(warnings, key=lambda warning: warning.id)
+        # A replay run again warns about the same Node under a new id; only the newest shows.
+        newest_per_origin = {warning.origin: warning for warning in sorted(warnings, key=_id)}
+        return sorted(newest_per_origin.values(), key=_id)

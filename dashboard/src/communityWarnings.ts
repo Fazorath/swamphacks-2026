@@ -11,7 +11,6 @@ export type CommunityWarning = {
   reasons: CommunityWarningReason[];
   origin: string;
   origin_km: number;
-  // Event time of the Surge, Unix seconds.
   surge_t: number;
 };
 
@@ -25,6 +24,10 @@ export const REASON_SENTENCES: Record<CommunityWarningReason, string> = {
 
 export function reasonsSentence(warning: CommunityWarning): string {
   return warning.reasons.map((reason) => REASON_SENTENCES[reason]).join(", ");
+}
+
+export function firstSurgeAt(warnings: CommunityWarning[]): number | null {
+  return warnings.length > 0 ? Math.min(...warnings.map((warning) => warning.surge_t)) : null;
 }
 
 export function riverKm(km: number): string {

@@ -71,6 +71,7 @@ class MeshedNodes:
         shelter_repeat_seconds: float = 30,
         replay_repeat_seconds: float = 10,
         alert_check_seconds: float = 0.02,
+        warning_repeat_seconds: float = 10,
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
         settings = self._settings(
@@ -79,6 +80,7 @@ class MeshedNodes:
             shelter_repeat_seconds=shelter_repeat_seconds,
             replay_repeat_seconds=replay_repeat_seconds,
             alert_check_seconds=alert_check_seconds,
+            warning_repeat_seconds=warning_repeat_seconds,
         )
         if cache_pack:
             directory, pack = cache_pack

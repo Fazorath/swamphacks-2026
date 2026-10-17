@@ -1,3 +1,4 @@
+import time
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -156,3 +157,36 @@ def test_a_replay_reset_hides_a_warning_the_replay_has_not_reached_again(
 def test_a_sensor_has_no_warning_log(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
     assert meshed_nodes["porch"].get("/api/warnings").status_code == 404
+
+
+def test_a_node_that_joins_after_the_warning_gets_it_from_the_hubs_repeat(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub(warning_repeat_seconds=0.02)
+    _register(meshed_nodes, "s0")
+    _surge(meshed_nodes, "s0")
+
+    meshed_nodes.start("latecomer")
+
+    deadline = time.monotonic() + 5
+    while not _warnings_shown_on(meshed_nodes["latecomer"]):
+        assert time.monotonic() < deadline, "the repeat never reached the late Node"
+        time.sleep(0.01)
+    assert len(_warnings_shown_on(meshed_nodes["latecomer"])) == 1
+
+
+def test_a_replay_run_again_shows_one_card_per_node(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start("porch")
+    _register(meshed_nodes, "s0")
+    meshed_nodes["hub"].post("/api/replay/start")
+    _surge(meshed_nodes, "s0")
+    meshed_nodes["hub"].post("/api/replay/reset")
+    meshed_nodes.advance(200)
+    meshed_nodes.hear_from("s0", water_cm=20, river_km=S0_RIVER_KM)
+
+    meshed_nodes["hub"].post("/api/replay/start")
+    _surge(meshed_nodes, "s0")
+
+    assert len(_warning_log(meshed_nodes)) == 2
+    assert len(_warnings_shown_on(meshed_nodes["porch"])) == 1

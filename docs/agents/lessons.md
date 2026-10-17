@@ -249,3 +249,4 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Hub checks for new Surges whenever a reading arrives** (its own or heard), not on a timer, so tests need no waiting. `HubWarnings` forgets a Node once it stops surging, so a second Surge warns again.
 - Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
+- **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.

@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     # How often the Hub repeats the Event clock, so a Node that joined late or missed a packet
     # converges.
     replay_repeat_seconds: float = 10
+    # How often the Hub sends every Community Warning again, so a Node that joined late or missed a
+    # packet still gets it.
+    warning_repeat_seconds: float = 10
     # How often the Hub checks whether the Event clock has reached a replayed Official Alert or
     # the end of the replay.
     alert_check_seconds: float = 1
