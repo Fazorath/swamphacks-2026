@@ -258,3 +258,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
 - **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.
+
+## Pi hardware check (ticket 0004)
+
+- **AutoInterface works between a Pi and a laptop over Ethernet and over an iPhone hotspot**: peers found each other in 10 to 18 s with nothing configured. The iPhone hotspot passes the IPv6 multicast discovery needs.
+- **firewalld blocks AutoInterface on Arch**: a NetworkManager shared cable is zone `nm-shared` (only ping, DHCP, DNS, SSH) and Wi-Fi is `public`. Open UDP 29716 and 42671 on the zone of the link the Mesh should use (`sudo firewall-cmd --zone=<zone> --add-port=29716/udp --add-port=42671/udp`, gone at reboot). Leaving them closed on one link keeps the Mesh off it while SSH still works there.
+- **Docker blocks NetworkManager's connection sharing**: it sets the forward policy to drop, so a Pi behind a shared cable gets DNS but no internet. `sudo iptables -I DOCKER-USER -i <cable> -o <wifi> -j ACCEPT`, plus the reverse rule for `RELATED,ESTABLISHED`.
+- **Give every Node its own `NODE_LATITUDE`/`NODE_LONGITUDE`**: two Nodes on the default position stack on the map and a watcher sees one Node while `/api/state` lists two.
+- **Wait a few seconds before restarting a Node you just killed**: started at once, it exited 255 with an empty log, most likely because Reticulum had not let go of its ports.
+- **`pkill -f storm-shield-node` over SSH kills the remote shell too** (its command line holds the pattern; ssh exits 255). Use `pkill -f "[s]torm-shield-node"`.
+- **Start a Node over SSH with only the Node in the background**: `cd dir || exit 1; setsid nohup <node> > log 2>&1 < /dev/null &`. Backgrounding a whole `cd && ... &` chain kept the ssh session open until it timed out.
+- A Pi user's `uv` is in `~/.local/bin`, which a non-interactive SSH command does not have on its `PATH`; call `node/.venv/bin/storm-shield-node` directly.

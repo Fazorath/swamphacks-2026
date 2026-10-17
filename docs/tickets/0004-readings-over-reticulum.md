@@ -4,21 +4,21 @@
 
 **Blocked by:** 0003, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** in-progress (the code is done and merged; what is left needs the Raspberry Pis and two laptops, see "Handoff" at the bottom)
+**Status:** done (hardware checks passed on a Pi and a laptop on 2026-10-17, see "Hardware check" at the bottom)
 
 **Owner:** amitathik7
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] A Reticulum implementation of the Mesh interface (AutoInterface over the local Wi-Fi), chosen by config (built and proven on loopback and fixed TCP addresses; AutoInterface itself is untried until the Pis)
+- [x] A Reticulum implementation of the Mesh interface (AutoInterface over the local Wi-Fi), chosen by config (proven on loopback, fixed TCP addresses, and AutoInterface between a Pi and a laptop over Ethernet and Wi-Fi)
 - [x] Each Node has a persistent Reticulum identity; incoming messages carry the verified sender identity
 - [x] A Node's id (12 hex characters of that identity) is the sender id other Nodes and the API use; the operator's Node name is only a label, and until the registry (0012) the dashboard shows a remote Node by its id
 - [x] Each Node keeps its Reticulum config and identity in its own gitignored folder (`NODE_DATA_DIR`, in `.env.example`), so a restart keeps the same id and Nodes never share Reticulum state
 - [x] Reticulum is the default Mesh and the choice stays a setting, documented in `.env.example` so later work follows the same convention; tests ask for the in-memory Mesh explicitly
-- [ ] Nodes find each other automatically on the same network
-- [ ] Rehearsed on the Pi's own hotspot from the first run; if automatic discovery fails there, a documented fixed-address fallback to the Pi is added, and only then
-- [ ] Manual check: two laptops on one Wi-Fi show each other's readings; turning one off leaves the other working
-- [ ] Manual check: still works with the internet unplugged
+- [x] Nodes find each other automatically on the same network
+- Obsolete: rehearsed on the Pi's own hotspot. The stage now runs on the demo laptop's hotspot (`docs/specs/flash-flood-replay.md`, Stage); discovery worked on a phone hotspot, so no fallback was added
+- [x] Manual check: two machines (a Pi and a laptop) on one Wi-Fi show each other's readings; turning one off leaves the other working
+- [x] Manual check: still works with the internet unplugged (the Pi's; the laptop kept its internet)
 - [x] Short setup and run notes for teammates, kept next to the code
 - [x] Seam A tests still run on the in-memory Mesh and pass
 - [x] All **Commands** pass
@@ -83,3 +83,19 @@ Written on 2026-10-17 when refloow-0 handed this ticket on. **The code is finish
 - Mesh packets arrive on a Reticulum thread and call `ReadingStore.record`; confirm the store is safe for that before the Pi rehearsal.
 - `NODE_DATA_DIR` holds the Node's private key. Only `node/data/` is gitignored, so keep it there.
 - A replay of the newest signed packet is accepted, and Node ids are 48 bits. Acceptable for a demo; say so if a judge asks.
+
+## Hardware check (2026-10-17, amitathik7)
+
+A Raspberry Pi (Debian 13, aarch64, rns 1.5.7, Python 3.13) and an Arch laptop, both with `NODE_MESH_INTERFACE=auto` (the default), each with its own `NODE_NAME` and `NODE_DATA_DIR`. Results read from each Node's `GET /api/state`; a second laptop watched the Pi's dashboard over SSH on the phone hotspot.
+
+| Check | Over Ethernet (laptop shares its connection to the Pi) | Over Wi-Fi (an iPhone hotspot) |
+|---|---|---|
+| Find each other, no addresses configured | passed, within about 10 s | passed, 12 to 18 s |
+| Laptop off: the Pi keeps going, the laptop turns Stale, comes back with the same id | passed | not run |
+| Pi off: the laptop keeps going, the Pi turns Stale, comes back with the same id | not run | passed |
+| Pi with no internet: Mesh-only, readings keep flowing both ways | passed | passed |
+
+- For the Wi-Fi run the Ethernet cable stayed in for SSH, with the AutoInterface ports closed on the laptop's side of it, so readings could only cross the hotspot.
+- "No internet" was the Pi with no default route (NetworkManager `never-default` on its connections) and gstatic unreachable.
+
+Still unproven: both Nodes without internet at once (the laptop ran the agent, so it stayed online), two laptops, and a run on the demo laptop's own hotspot.
