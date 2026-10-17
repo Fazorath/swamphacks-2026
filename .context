@@ -57,16 +57,14 @@ A neighborhood disaster dashboard for Gainesville / Alachua County, FL. Communit
 - **Feeds:** NWS alerts `https://api.weather.gov/alerts/active?zone=FLZ136` (User-Agent required); NHC `https://www.nhc.noaa.gov/CurrentStorms.json`; roads from Geofabrik Florida OSM extract.
 - **Reticulum:** Python stack (`pip install rns`), AutoInterface discovers peers on the same LAN; Node identities give signatures for free.
 
-## Left for the spec (facts/formats, not decisions)
-- Exact public camera source (e.g. FL511 / FDOT) and its terms.
-- Message formats: Community Reading, Community Warning, Shelter status update, Cache Pack layout. Agree these in the spec; changes need everyone.
-- Flood Risk thresholds.
+## Deferred (tracked, not blocking the spec)
+The spec names these as open and moves on; don't stall `to-spec` on them.
+- **Public camera source:** any free, accessible public feed (FL511 / FDOT, Flock, etc.). Pick it when the camera ticket comes up.
+- **Message formats:** Community Reading, Community Warning, Shelter status update, Cache Pack layout. Decide them in the UI design doc that follows the spec, since they're designed with the dashboard. Changes after that need everyone.
+- **Flood Risk thresholds** (Low / Elevated / High): set once the Node backend and its sensor types exist.
 
 ## Team workflow (4 people)
 Branch per ticket `NNNN-<slug>` off up-to-date `main`; merge yourself. Only the user runs `to-tickets` and fills `AGENTS.md`. Shared formats live in the spec. Stay in your feature folder. Rejected push → `git pull --rebase` and retry.
 
 ## Leftovers
 - Planning page artifact (pre-grilling, still says Beacon Mesh): https://claude.ai/artifact/Fu6WJ4QLQdsQnr728DzA7e ; copy at `docs/plan.html` is outdated, the spec supersedes it.
-- `.claude/worktrees/` shows as untracked in the main checkout; add it to `.gitignore`.
-- Remote branch `origin/grill-with-docs` is unmerged; ask the user before touching it.
-- This grilling work is on branch `worktree-grill-storm-shield`; merge it into `main` before speccing.

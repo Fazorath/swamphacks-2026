@@ -6,6 +6,7 @@
 # agent scratch (handoffs, throwaway notes)
 .scratch/
 .claude/settings.local.json
+.claude/worktrees/
 
 # deps / builds (common stacks)
 node_modules/
