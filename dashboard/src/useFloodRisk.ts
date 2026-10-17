@@ -18,7 +18,11 @@ export function useFloodRisk(): FloodRisk | null {
           return response.json();
         })
         .then(setFloodRisk)
-        .catch(console.error);
+        .catch((error) => {
+          console.error(error);
+          // A stale level on screen would look current.
+          setFloodRisk(null);
+        });
     poll();
     const timer = setInterval(poll, POLL_EVERY_MS);
     return () => clearInterval(timer);

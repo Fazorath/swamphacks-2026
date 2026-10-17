@@ -13,6 +13,7 @@ RAIN_HEAVY_MMH = 20
 PRESSURE_FALLING_HPA = 3  # lost across the counting window
 
 FloodRiskLevel = Literal["low", "elevated", "high"]
+_LEVELS_LOWEST_FIRST: list[FloodRiskLevel] = ["low", "elevated", "high"]
 ReasonCode = Literal["water_high", "water_rising", "rain_heavy"]
 
 _REASON_TEXT: dict[ReasonCode, str] = {
@@ -52,7 +53,7 @@ def flood_risk(recent: dict[str, list[CommunityReading]]) -> FloodRisk:
         if readings[0].pressure_hpa - readings[-1].pressure_hpa >= PRESSURE_FALLING_HPA:
             pressure_falling.append(node)
     return FloodRisk(
-        level="high" if "high" in levels else "elevated" if "elevated" in levels else "low",
+        level=max(levels, key=_LEVELS_LOWEST_FIRST.index),
         reasons=[
             Reason(code=code, nodes=nodes, text=f"{_REASON_TEXT[code]} at {_count(nodes)}")
             for code, nodes in nodes_by_reason.items()
