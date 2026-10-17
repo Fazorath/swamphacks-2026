@@ -41,7 +41,7 @@ PUBLISH_EVERY_SECONDS = 3
 logger = logging.getLogger(__name__)
 
 
-class NodeInfo(BaseModel):
+class NodeStatusReport(BaseModel):
     id: str
     name: str
     role: Role
@@ -154,8 +154,8 @@ def create_app(
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
     @app.get("/api/node")
-    def node_info() -> NodeInfo:
-        return NodeInfo(
+    def node_status_report() -> NodeStatusReport:
+        return NodeStatusReport(
             id=mesh.identity, name=settings.name, role=settings.role, status=internet.status
         )
 

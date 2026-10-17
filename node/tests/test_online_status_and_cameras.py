@@ -189,13 +189,23 @@ def test_a_picture_too_old_to_call_live_is_unavailable() -> None:
         assert client.get(f"/api/cameras/{CAMERAS[0].id}.jpg").status_code == 503
 
 
-def test_readings_keep_updating_while_the_node_is_mesh_only() -> None:
+def test_readings_and_flood_risk_keep_updating_while_the_node_is_mesh_only() -> None:
     outside = Outside()
     with _running_node(outside) as client:
         _wait_until(lambda: _status(client) == "online", "the Node to report online")
         outside.internet_up = False
         _wait_until(lambda: _status(client) == "mesh_only", "the Node to report mesh_only")
         before = {r["kind"]: r["value"] for r in client.get("/api/readings").json()}
-        client.post("/api/scenario/step")
+        assert client.get("/api/flood-risk").json()["level"] is None
+        for _ in range(3):
+            client.post("/api/scenario/step")
         after = {r["kind"]: r["value"] for r in client.get("/api/readings").json()}
         assert after["pressure"] < before["pressure"] - 5
+        assert client.get("/api/flood-risk").json()["level"] is not None
+
+
+def test_a_viewer_cannot_change_a_nodes_connection_state_or_cameras() -> None:
+    with _running_node(Outside()) as client:
+        for path in ("/api/node", "/api/cameras", f"/api/cameras/{CAMERAS[0].id}.jpg"):
+            for send in (client.post, client.put, client.delete):
+                assert send(path).status_code == 405

@@ -34,6 +34,12 @@ CAMERAS = (
 )
 
 
+@dataclass(frozen=True)
+class Picture:
+    jpeg: bytes
+    taken_at: datetime
+
+
 class CameraTile(BaseModel):
     id: int
     label: str
@@ -48,7 +54,7 @@ class Cameras:
 
     def __init__(self, source: httpx.Client) -> None:
         self._source = source
-        self._pictures: dict[int, tuple[bytes, datetime]] = {}
+        self._pictures: dict[int, Picture] = {}
         self._last_tried: dict[int, datetime] = {}
 
     def knows(self, camera_id: int) -> bool:
@@ -67,7 +73,7 @@ class Cameras:
         if status == "mesh_only":
             return None
         live = self._live_picture(camera_id, now)
-        return live[0] if live else None
+        return live.jpeg if live else None
 
     def tiles(self, status: Status, now: datetime) -> list[CameraTile]:
         return [self._tile(camera, status, now) for camera in CAMERAS]
@@ -78,18 +84,17 @@ class Cameras:
         live = self._live_picture(camera.id, now)
         if live is None:
             return CameraTile(id=camera.id, label=camera.label, state="unavailable")
-        taken_at = live[1]
         return CameraTile(
             id=camera.id,
             label=camera.label,
             state="live",
-            taken_at=taken_at,
-            age_s=(now - taken_at).total_seconds(),
+            taken_at=live.taken_at,
+            age_s=(now - live.taken_at).total_seconds(),
         )
 
-    def _live_picture(self, camera_id: int, now: datetime) -> tuple[bytes, datetime] | None:
+    def _live_picture(self, camera_id: int, now: datetime) -> Picture | None:
         picture = self._pictures.get(camera_id)
-        if picture is None or (now - picture[1]).total_seconds() > LIVE_FOR_SECONDS:
+        if picture is None or (now - picture.taken_at).total_seconds() > LIVE_FOR_SECONDS:
             return None
         return picture
 
@@ -103,4 +108,4 @@ class Cameras:
         if upstream.status_code != 200 or not is_picture or not upstream.content:
             logger.warning("camera %s gave no picture (HTTP %s)", camera.id, upstream.status_code)
             return
-        self._pictures[camera.id] = (upstream.content, now)
+        self._pictures[camera.id] = Picture(upstream.content, now)
