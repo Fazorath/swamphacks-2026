@@ -85,6 +85,7 @@ function plan(overrides: Partial<Parameters<typeof evacuationPlan>[0]> = {}) {
     openShelterIds: ["near-plain", "far-both", "nearest-flagged"],
     floodRisk: null,
     routes: null,
+    rerouting: null,
     officialAlerts: [],
     ...overrides,
   });

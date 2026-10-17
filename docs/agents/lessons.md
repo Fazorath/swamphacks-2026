@@ -76,6 +76,15 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Node with no `NODE_LATITUDE` now sits at Betrawati**, so tests that read a Node's shared position see (27.974, 85.186). Tests that pass their own coordinates keep Gainesville ones.
 - **Tests that leave Nodes running** (`test_reticulum_nodes.py`) fail the next run on busy ports; `pkill -f "storm_shield.main import run"` before rerunning if `[loopback]` or `[tcp]` fails for no reason you can see.
 
+## On-device rerouting (ticket 0018)
+
+- **The Road graph builder (`pack_routes.build_road_graph`, `build_cache_pack.py --roads-pbf`) has only run on a toy graph.** The real Nepal extract and `pyrosm` were not run, so `cache-pack-v3` still has no `roads.json` and the valley demo cannot block a road until a pack is rebuilt with it.
+- **A "route is affected" check that measures distance to the blocked road's points fires at every junction** (the Route's first point is the blocked side road's end). The check uses the blocked segment's middle instead.
+- **The plan is rebuilt every second**, so `rerouteHome` and `routeIsAffected` keep their last answer and only search again when their inputs change (same objects). Tests that call them with fresh objects each time are unaffected.
+- **Leaflet taps in jsdom have no usable position**, so tapping a specific road is tested on `roadNear` directly; the flow tests start from a stored Blocked Road.
+- `test_reticulum_nodes.py::...[loopback]` failed once in a full `pytest` run (101 s) and passed alone; no stray Node was listening. Rerun it alone before chasing it.
+- `ruff format` from `node/` re-wraps `scripts/*.py` at 100 columns although they were written at 88; use `ruff format --isolated --line-length 88` on them.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.

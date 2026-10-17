@@ -33,6 +33,11 @@ function PickHomeOnClick({ onPick }: { onPick: (home: Home) => void }) {
   return null;
 }
 
+function TapRoadOnClick({ onTap }: { onTap: (point: Home) => void }) {
+  useMapEvents({ click: (event) => onTap({ lat: event.latlng.lat, lon: event.latlng.lng }) });
+  return null;
+}
+
 // This Node hears itself before it hears anyone else, so the view is re-framed as new Nodes
 // appear, until the resident pans or zooms. After that it is never moved again.
 function FitToNodesUntilMoved({ nodes }: { nodes: NodeOnMap[] }) {
@@ -76,6 +81,12 @@ type Props = {
   picking: boolean;
   onPickHome: (home: Home) => void;
   onDonePicking: () => void;
+  blockedRoadLines: LatLon[][];
+  // False until the Cache Pack has a Road graph to block roads on.
+  canBlockRoads: boolean;
+  blocking: boolean;
+  onToggleBlocking: () => void;
+  onTapRoad: (point: Home) => void;
 };
 
 export function NodeMap({
@@ -90,6 +101,11 @@ export function NodeMap({
   picking,
   onPickHome,
   onDonePicking,
+  blockedRoadLines,
+  canBlockRoads,
+  blocking,
+  onToggleBlocking,
+  onTapRoad,
 }: Props) {
   return (
     <section aria-label="Map">
@@ -102,10 +118,18 @@ export function NodeMap({
           </button>
         </div>
       )}
+      {canBlockRoads && (
+        <div className="pick-banner">
+          {blocking ? "Tap a road to block it, or a blocked road to clear it" : "Road closed?"}
+          <button type="button" onClick={onToggleBlocking}>
+            {blocking ? "Done" : "Block a road"}
+          </button>
+        </div>
+      )}
       <MapContainer
         center={BETRAWATI}
         zoom={13}
-        className={picking ? "node-map picking" : "node-map"}
+        className={picking || blocking ? "node-map picking" : "node-map"}
       >
         <TileLayer
           url="/api/tiles/{z}/{x}/{y}.png"
@@ -113,6 +137,10 @@ export function NodeMap({
         />
         <FitToNodesUntilMoved nodes={nodes} />
         {picking && <PickHomeOnClick onPick={onPickHome} />}
+        {blocking && !picking && <TapRoadOnClick onTap={onTapRoad} />}
+        {blockedRoadLines.map((line, index) => (
+          <Polyline key={index} positions={line} className="blocked-road" interactive={false} />
+        ))}
         {draftHome && (
           <Marker
             position={[draftHome.lat, draftHome.lon]}

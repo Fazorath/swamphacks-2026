@@ -9,6 +9,7 @@ gh release create cache-pack-v1 build/cache-pack.zip              # or `gh relea
 
 Then set `CACHE_PACK_URL` on the Hub to the Release asset's download URL. Sensor Nodes set it to the Hub's `/api/cache-pack.zip`.
 
+- `--roads-pbf <nepal-latest.osm.pbf>` (download from Geofabrik `asia/nepal`, run with `uv run --project node --with pyrosm`) adds `roads.json`, the Road graph the phone reroutes on (ticket 0018). Without it the pack has no graph and Blocked Roads are unavailable. Not yet run against the real extract.
 - Needs `httpx` (a Node dependency) and `CARTO_API_KEY` exported (see `.env.example`).
 - The pack covers the Bhote Koshi valley, from the Lhende Khola down to below Trishuli (`BBOX` in the script, about 66 x 40 km). Tiles are zoom 10 to 14 so it stays small. There is no route grid: the plan works without one, and Road Routes are a stretch ticket (`pack_routes.py` is kept for it).
 - The build takes a few minutes: it fetches CARTO Dark Matter tiles politely (identifying `User-Agent`, delay between requests). Tiles are credited "© OpenStreetMap contributors © CARTO" on the map.
