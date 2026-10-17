@@ -17,6 +17,7 @@ const NEAR_PLAIN: Shelter = {
   pos: [29.66, -82.32],
   special_needs: false,
   pet_friendly: false,
+  height_above_river_m: 80,
 };
 const FAR_BOTH: Shelter = {
   id: "far-both",
@@ -24,6 +25,7 @@ const FAR_BOTH: Shelter = {
   pos: [29.7, -82.32],
   special_needs: true,
   pet_friendly: true,
+  height_above_river_m: 80,
 };
 const NEAREST_FLAGGED: Shelter = {
   id: "nearest-flagged",
@@ -31,6 +33,7 @@ const NEAREST_FLAGGED: Shelter = {
   pos: [29.651, -82.32],
   special_needs: true,
   pet_friendly: false,
+  height_above_river_m: 80,
 };
 
 // A square from lat 29.64 to 29.66 and lon -82.33 to -82.31, with a hole around the Home.
@@ -88,6 +91,7 @@ function plan(overrides: Partial<Parameters<typeof evacuationPlan>[0]> = {}) {
     routes: null,
     rerouting: null,
     officialAlerts: [],
+    wave: null,
     ...overrides,
   });
 }
@@ -307,4 +311,82 @@ test("with no Official Alert there is no evacuation language", () => {
   expect(result.officialAlerts).toEqual([]);
   const sentences = [...(result.risk?.reasons ?? []), ...result.lines];
   for (const sentence of sentences) expect(sentence).not.toMatch(/\bevacuat/i);
+});
+
+// Walking to NEAR_PLAIN (1.1 km straight) takes 24 min; to FAR_BOTH (5.6 km) 118 min.
+const EVENT_T = 1_000_000;
+const wave = (minutesAway: number) => ({
+  arrivalAt: EVENT_T + minutesAway * 60,
+  eventT: EVENT_T,
+});
+
+describe("with a Wave ETA", () => {
+  test("a reachable Shelter is shown with the walk, the wave and its height", () => {
+    const result = plan({ wave: wave(43), openShelterIds: ["near-plain"] });
+    expect(result.shelter).toBe(NEAR_PLAIN);
+    expect(result.lines.join(" ")).toContain("80 m above the river");
+    expect(result.lines).toContain("24 min walk, wave in 43 min.");
+  });
+
+  test("a reachable Shelter beats a nearer one inside the Flood-Prone Area", () => {
+    // Around NEAREST_FLAGGED (29.651) only.
+    const ring: [number, number][] = [
+      [-82.321, 29.6505],
+      [-82.319, 29.6505],
+      [-82.319, 29.6515],
+      [-82.321, 29.6515],
+      [-82.321, 29.6505],
+    ];
+    const floodProne = {
+      features: [{ geometry: { type: "Polygon" as const, coordinates: [ring] } }],
+    };
+    const result = plan({
+      wave: wave(60),
+      pack: pack({ floodProne }),
+      openShelterIds: ["near-plain", "nearest-flagged"],
+    });
+    expect(result.shelter).toBe(NEAR_PLAIN);
+  });
+
+  test("walking time plus the 5 min margin past the ETA means higher ground", () => {
+    const tooLate = plan({ wave: wave(28), openShelterIds: ["near-plain"] });
+    expect(tooLate.shelter).toBeNull();
+    expect(tooLate.route).toBeNull();
+    expect(tooLate.lines).toContain("Nearest Shelter Near Plain: 24 min walk, wave in 28 min.");
+    expect(tooLate.lines).toContain(
+      "No Shelter you can reach in time. Get to higher ground, away from the river, now.",
+    );
+    expect(plan({ wave: wave(29), openShelterIds: ["near-plain"] }).shelter).toBe(NEAR_PLAIN);
+  });
+
+  test("at the arrival time it is always higher ground", () => {
+    const result = plan({ wave: wave(0), openShelterIds: ["near-plain"] });
+    expect(result.lines).toContain("Nearest Shelter Near Plain: 24 min walk, wave expected now.");
+    expect(result.shelter).toBeNull();
+  });
+
+  test("closed Shelters are skipped", () => {
+    const result = plan({ wave: wave(60), openShelterIds: ["far-both"] });
+    expect(result.shelter).toBeNull();
+    expect(result.lines.join(" ")).toContain("Nearest Shelter Far Both");
+  });
+
+  test("with no open Shelter the plan keeps its own message", () => {
+    const result = plan({ wave: wave(60), openShelterIds: [] });
+    expect(result.lines).toContain("No open Shelter announced yet. Follow official sources.");
+  });
+
+  test("higher ground never sends anyone to a basement or towards the river", () => {
+    const result = plan({ wave: wave(1), openShelterIds: ["near-plain"] });
+    expect(result.lines.join(" ")).not.toMatch(
+      /basement|towards the river|toward the river|evacuate|must leave/i,
+    );
+    expect(result.officialLine).toBe(OFFICIAL_LINE);
+  });
+
+  test("with no wave the plan is as before", () => {
+    const result = plan({ wave: null, openShelterIds: ["near-plain"] });
+    expect(result.lines.join(" ")).not.toContain("min walk");
+    expect(result.lines.join(" ")).not.toContain("above the river");
+  });
 });

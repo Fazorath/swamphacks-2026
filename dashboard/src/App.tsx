@@ -72,6 +72,16 @@ export function App() {
   // Wi-Fi drop is worse than showing one a few seconds old.
   const officialAlerts = lastAnswer?.state.official_alerts ?? [];
   const communityWarnings = lastAnswer?.state.community_warnings ?? [];
+  // The home never leaves the device: the profile's, or else where the connected Node sits.
+  const thisNode = lastAnswer?.state.nodes.find((node) => node.id === lastAnswer.state.id);
+  const waveHome: Home | null =
+    profile?.home ?? (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
+  const eventT = eventClock.clock?.event_t ?? null;
+  const arrival = river && waveHome && waveArrival(river, waveHome, communityWarnings);
+  const planWave =
+    arrival && arrival.kind === "expected" && eventT !== null
+      ? { arrivalAt: arrival.at, eventT }
+      : null;
   const plan = evacuationPlan({
     profile,
     pack: cachePack,
@@ -80,13 +90,8 @@ export function App() {
     routes,
     rerouting: roadGraph && { graph: roadGraph, blocked: blockedRoads },
     officialAlerts,
+    wave: planWave,
   });
-  // The home never leaves the device: the profile's, or else where the connected Node sits.
-  const thisNode = lastAnswer?.state.nodes.find((node) => node.id === lastAnswer.state.id);
-  const waveHome: Home | null =
-    profile?.home ?? (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
-  const eventT = eventClock.clock?.event_t ?? null;
-  const arrival = river && waveHome && waveArrival(river, waveHome, communityWarnings);
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [nodePanelOpen, setNodePanelOpen] = useState(false);
