@@ -4,7 +4,7 @@
 
 **Blocked by:** 0003, 0006 (both done)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 

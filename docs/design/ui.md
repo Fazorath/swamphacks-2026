@@ -52,7 +52,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
 ```
 
 - **The map fills the viewport** under the top bar and above the status strip; Panels float over it. Sizes below are CSS pixels before the 120% zoom, so a 1440 × 900 screen is laid out at 1200 × 750. With one Panel open per side, about 40% of the width stays clear map.
-- **Layer rail** on the far left. Eight buttons, one visual treatment, brightness showing on or off:
+- **Layer rail** on the far left. Nine buttons, one visual treatment, brightness showing on or off:
 
   | Button | Kind | Count badge |
   |---|---|---|
@@ -62,6 +62,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Shelters | map layer | open Shelters |
   | Route | map layer | none |
   | Storm Signal | map layer | none |
+  | Weather | map layer, one of Wind / Temperature / Cloud cover / Rain / Off (`docs/specs/weather-layers.md`) | none |
   | Cameras | Panel | live cameras |
   | Alerts | Panel | unacknowledged warnings |
 
@@ -103,7 +104,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Nearest open Shelter for you | Open pin with a cyan ring, name always shown |
   | Home | Cyan house icon |
   | Route | 5 px cyan line with a dark casing |
-  | Storm Signal | Slow, static darkening at the map's edges, plus the top-bar pill; no animated weather |
+  | Storm Signal | Slow, static darkening at the map's edges, plus the top-bar pill; the Storm Signal itself shows no animated weather (the Weather layers' wind particles are a separate, chosen layer) |
 
 ## Readings Panel
 

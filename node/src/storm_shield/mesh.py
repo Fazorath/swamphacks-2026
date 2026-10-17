@@ -3,9 +3,10 @@ from collections.abc import Callable
 from typing import Protocol
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.replay import ReplayClockMessage
 from storm_shield.shelter_status import ShelterStatus
 
-Message = CommunityReading | ShelterStatus
+Message = CommunityReading | ShelterStatus | ReplayClockMessage
 
 # The sender is whatever the Mesh verified, never something the message claims about itself.
 MessageListener = Callable[[str, Message], None]
@@ -59,8 +60,9 @@ class InMemoryMesh:
         self._listeners.append(listener)
 
     def receive(self, sender: str, message: Message) -> None:
-        # Same rule as the radio: Shelter status counts only from the Hub this Node was told about.
-        if isinstance(message, ShelterStatus) and sender != self._hub_identity:
+        # Same rule as the radio: only readings may come from any Node; the rest count only from
+        # the Hub this Node was told about.
+        if not isinstance(message, CommunityReading) and sender != self._hub_identity:
             return
         for listener in self._listeners:
             listener(sender, message)

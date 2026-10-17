@@ -29,8 +29,9 @@ from storm_shield.internet_connection import (
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
 from storm_shield.reading_store import NodeReading, NodeSnapshot, ReadingStore
+from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
-from storm_shield.scenario import Scenario
+from storm_shield.scenario import Reading, Scenario
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
     HeardShelterStatus,
@@ -42,7 +43,6 @@ from storm_shield.shelter_status import (
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
 READINGS_PUSH_SECONDS = 2
-PUBLISH_EVERY_SECONDS = 3
 
 logger = logging.getLogger(__name__)
 
@@ -108,9 +108,27 @@ def create_app(
     # Starting from the clock keeps a restarted Node ahead of the seq others last saw from it.
     sequence = itertools.count(int(time.time()))
 
+    timeline = load_timeline()
+    if settings.replay_track and settings.replay_track not in timeline.tracks:
+        raise ValueError(
+            f"NODE_REPLAY_TRACK {settings.replay_track!r} is not in the replay timeline "
+            f"({', '.join(timeline.tracks)})"
+        )
+    event_clock = EventClock()
+
+    def own_measurements() -> list[Reading] | None:
+        """None once this Node's replay track has ended: it goes silent and turns Stale."""
+        event = event_clock.current(clock())
+        if not settings.replay_track or event.state == "stopped":
+            return scenario.readings()
+        return timeline.readings_at(settings.replay_track, event.event_t, clock())
+
     def share_own_readings() -> None:
+        measurements = own_measurements()
+        if measurements is None:
+            return
         reading = CommunityReading.from_measurements(
-            node=mesh.identity, seq=next(sequence), position=position, readings=scenario.readings()
+            node=mesh.identity, seq=next(sequence), position=position, readings=measurements
         )
         store.record(mesh.identity, reading, clock())
         mesh.publish(reading)
@@ -145,7 +163,21 @@ def create_app(
         if status:
             announce_shelters(status)
 
+    def hear_event_clock(_: str, message: Message) -> None:
+        if isinstance(message, ReplayClockMessage):
+            event_clock.hear(message, clock())
+
+    def announce_event_clock(message: ReplayClockMessage) -> None:
+        # The Hub does not hear its own broadcasts, so it sets its own clock too.
+        event_clock.hear(message, clock())
+        try:
+            mesh.publish(message)
+        except Exception:
+            # The clock already runs on the Hub, and the next repeat sends it again.
+            logger.exception("could not announce the Event clock")
+
     mesh.subscribe(store_reading_from)
+    mesh.subscribe(hear_event_clock)
     mesh.subscribe(hear_shelter_status)
     share_own_readings()
     if settings.role == "hub":
@@ -155,7 +187,7 @@ def create_app(
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         async def keep_sharing() -> None:
             while True:
-                await asyncio.sleep(PUBLISH_EVERY_SECONDS)
+                await asyncio.sleep(settings.publish_every_seconds)
                 try:
                     share_own_readings()
                 except Exception:
@@ -200,6 +232,16 @@ def create_app(
                 except Exception:
                     logger.exception("could not repeat the Shelter status")
 
+        async def keep_repeating_event_clock() -> None:
+            while True:
+                await asyncio.sleep(settings.replay_repeat_seconds)
+                try:
+                    event = event_clock.current(clock())
+                    if event.state != "stopped":
+                        announce_event_clock(event)
+                except Exception:
+                    logger.exception("could not repeat the Event clock")
+
         tasks = [
             asyncio.create_task(keep_sharing()),
             asyncio.create_task(keep_checking_internet()),
@@ -207,6 +249,7 @@ def create_app(
         ]
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
+            tasks.append(asyncio.create_task(keep_repeating_event_clock()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -285,6 +328,10 @@ def create_app(
         share_own_readings()
         return ScenarioState(step=scenario.step_name)
 
+    @app.get("/api/replay")
+    def replay_clock() -> ReplayClockMessage:
+        return event_clock.current(clock())
+
     @app.get("/api/cache-pack")
     def cache_pack_status() -> CachePackStatus:
         manifest = cache_pack.manifest
@@ -324,6 +371,15 @@ def create_app(
                 ) from None
             announce_shelters(status)
             return OpenShelters(open=status.open)
+
+    if settings.role == "hub":
+
+        @app.post("/api/replay/start")
+        def start_replay() -> ReplayClockMessage:
+            announce_event_clock(
+                ReplayClockMessage(state="playing", event_t=timeline.start_unix, rate=timeline.rate)
+            )
+            return event_clock.current(clock())
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:

@@ -62,6 +62,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Known limits (code-review, not fixed):** a Grid point is kept if a road *node* is within 100 m, so a long straight stretch between nodes can lose a file a home on it would want; the 5 MB budget counts only the route files (2.8 MB), not the tiles beside them; a failed Route-file request (not a 404) shows "no road route available" and only logs the cause; the route length starts at the Grid point, up to about 100 m from home.
 - **ESLint `react-hooks/set-state-in-effect` rejects `setX(null)` at the top of an effect**; `useRoutes` stores the file with the Routes and derives "still loading" instead.
 
+## Replay drives the Sensor Nodes (ticket 0044)
+
+- **The replay timeline is `node/src/storm_shield/replay_timeline.json`.** Syabrubesi's last gauge reading (1.62 m at 08:40) and its 08:50 silence are from the Kathmandu Post piece, checked 2026-10-17; every other water value, and all rain, soil and pressure values, are invented and marked `reconstructed`. Its 08:37 is the earthquake, which the spec calls the collapse.
+- **A Sensor with a track plays it only while the Event clock is playing or paused**; before the Hub starts the replay (or after a stop) it keeps the Scenario. Past `silent_at` it publishes nothing, so its reading ages and turns Stale.
+- **Tests drive a Sensor's publish loop with `MeshedNodes.start_sensor`** (loop every 20 ms on the injected clock) and move time with `advance`; 1 s of real time is 30 s of event time.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.

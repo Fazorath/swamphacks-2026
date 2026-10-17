@@ -10,6 +10,7 @@ from pydantic import Field, TypeAdapter, ValidationError
 
 from storm_shield.community_reading import CommunityReading
 from storm_shield.mesh import Message, MessageListener
+from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
 from storm_shield.shelter_status import ShelterStatus
 
@@ -26,7 +27,7 @@ LOOPBACK_BASE_PORT = 4250
 logger = logging.getLogger(__name__)
 
 _MESSAGE: TypeAdapter[Message] = TypeAdapter(
-    Annotated[CommunityReading | ShelterStatus, Field(discriminator="kind")]
+    Annotated[CommunityReading | ShelterStatus | ReplayClockMessage, Field(discriminator="kind")]
 )
 
 
@@ -90,7 +91,7 @@ def verify(
 ) -> tuple[str, Message] | None:
     """The verified sender and message, or None if it is unknown, forged or not from who may send it.
 
-    A reading names its Node. Shelter status names nobody, so it must verify against the Hub key.
+    A reading names its Node. Every other kind names nobody, so it must verify against the Hub key.
     """
     if len(data) <= SIGNATURE_LENGTH:
         return None
