@@ -2,7 +2,7 @@
 
 **What to build:** The Hub replays the recorded Hurricane Helene NWS alerts and the Alachua County evacuation order, and every Node shows them over the mesh in a distinct Official Alerts panel labeled "OFFICIAL · REPLAY". A resident with a mobile-home Household Profile sees in their Evacuation Plan that the county order applies to them.
 
-**Blocked by:** 0003, 0009, and the Official Alert message format in the UI design doc
+**Blocked by:** 0003, 0009, and the Official Alert format (decided, `docs/specs/wire-formats.md`)
 
 **Status:** ready-for-agent
 

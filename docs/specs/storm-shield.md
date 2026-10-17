@@ -129,7 +129,7 @@ For the hackathon, the Nodes are one Raspberry Pi 4 with a breadboard of buttons
 
 ### Message formats
 
-The wire formats for Community Reading, Community Warning, registry update, Shelter status update and the Cache Pack layout are **deferred to the UI design doc** that follows this spec, because they are designed with the dashboard. After that doc, changing a format needs the whole team. Fixed now: every mesh message carries its kind, sender identity, timestamp and a signature (Reticulum provides it). Community Readings carry the simulated flag and a fuzzed position. Official Alerts carry source and live or replay.
+The wire formats for Community Reading, Community Warning, registry update, Shelter status update and the Cache Pack layout are **decided in `docs/specs/wire-formats.md`** , written after this spec because they are designed with the dashboard. From now on, changing a format needs the whole team. Fixed now: every mesh message carries its kind, sender identity, timestamp and a signature (Reticulum provides it). Community Readings carry the simulated flag and a fuzzed position. Official Alerts carry source and live or replay.
 
 ### Build order
 
@@ -185,7 +185,7 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
   7. A phone with a mobile-home profile shows Flood Risk High, the county order, the nearest open Shelter and its route, offline.
 
   Judges only see this demo, so build what shows on stage first.
-- **Deferred, tracked, not blocking:** the public camera source, the message formats (UI design doc), and the Flood Risk thresholds.
+- **Deferred, tracked, not blocking:** the public camera source, and the Flood Risk thresholds.
 - **Sources:**
   - Helene evacuation order: https://alachuacounty.us/News/Article/Pages/Hurricane-Helene-Update-11-–-Evacuation-Order-in-Effect.aspx
   - FEMA open shelters: https://gis.fema.gov/arcgis/rest/services/NSS/OpenShelters/FeatureServer/0
@@ -194,4 +194,4 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
   - NHC current storms: https://www.nhc.noaa.gov/CurrentStorms.json
   - Santa Fe River USGS gauges 02321975, 02321958, 02321500 and 02320700, and the Cedar Key tide gauge 8727520, are possible context layers. No live gauge exists on Hogtown Creek or Sweetwater Branch, so Storm Shield's Nodes would be the only live creek data there.
 - `docs/plan.html` (pre-grilling, still says "Beacon Mesh") is superseded by this spec.
-- Next: the UI design doc (message formats), then `to-tickets`, then fill in Idea / Stack / Commands in `AGENTS.md`.
+- Next: UI design doc and `docs/specs/wire-formats.md` are done; then `to-tickets`, then fill in Idea / Stack / Commands in `AGENTS.md`.

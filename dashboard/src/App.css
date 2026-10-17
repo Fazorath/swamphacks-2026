@@ -1,25 +1,128 @@
+:root {
+  --bg: #0a111d;
+  --map-bg: radial-gradient(circle at 40% 40%, #12203a 0%, #0a111d 70%);
+  --surface: #111b2d;
+  --surface-glass: rgb(17 27 45 / 72%);
+  --surface-2: #17243a;
+  --line: #243450;
+  --text: #e8eef8;
+  --muted: #9fb0ca;
+  --community: #4cc9f0;
+  --low: #3dd68c;
+  --elevated: #f5a524;
+  --high: #ff9494;
+  --official: #f2f5fa;
+  --official-ink: #0b1f4d;
+  --official-blue: #1e40af;
+  --warning: #c0a8ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: #f5f7fa;
-  color: #1a2433;
+  background: var(--bg);
+  color: var(--text);
 }
 
-header,
-.areas {
-  padding: 1rem;
-}
-
-.areas {
+main {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  height: 100vh;
+  grid-template-columns: 16rem 1fr 22rem;
+  grid-template-rows: auto 1fr 1fr;
+  grid-template-areas:
+    "top top top"
+    "readings map alerts"
+    "readings map plan";
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--map-bg);
+}
+
+header {
+  grid-area: top;
+  display: flex;
+  align-items: baseline;
   gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface-glass);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  backdrop-filter: blur(8px);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--community);
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.areas {
+  display: contents;
 }
 
 section {
-  background: white;
-  border: 1px solid #d5dce6;
+  background: var(--surface-glass);
+  border: 1px solid var(--line);
   border-radius: 0.5rem;
   padding: 1rem;
-  min-height: 8rem;
+  backdrop-filter: blur(8px);
+  overflow: auto;
+}
+
+section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+section p {
+  margin: 0;
+  color: var(--muted);
+}
+
+section[aria-label="Map"] {
+  grid-area: map;
+  background: transparent;
+  border-style: dashed;
+}
+
+section[aria-label="Readings"] {
+  grid-area: readings;
+}
+
+section[aria-label="Alerts"] {
+  grid-area: alerts;
+}
+
+section[aria-label="Evacuation Plan"] {
+  grid-area: plan;
+}
+
+@media (width <= 48rem) {
+  main {
+    height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas:
+      "top"
+      "map"
+      "alerts"
+      "plan"
+      "readings";
+  }
+
+  section[aria-label="Map"] {
+    min-height: 40vh;
+  }
 }
