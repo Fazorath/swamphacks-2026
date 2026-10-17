@@ -8,6 +8,7 @@ from storm_shield.scenario import Reading, ReadingKind
 class NodeReading(Reading):
     node: str
     position: tuple[float, float]
+    age_s: float
 
 
 class ReadingStore:
@@ -25,11 +26,16 @@ class ReadingStore:
                 return
             self._latest[sender] = (reading, received_at)
 
-    def latest(self) -> list[NodeReading]:
+    def latest(self, now: datetime) -> list[NodeReading]:
         with self._lock:
             latest = sorted(self._latest.items())
         return [
-            NodeReading(node=sender, position=reading.pos, **measurement.model_dump())
+            NodeReading(
+                node=sender,
+                position=reading.pos,
+                age_s=(now - received_at).total_seconds(),
+                **measurement.model_dump(),
+            )
             for sender, (reading, received_at) in latest
             for measurement in _measurements(reading, received_at)
         ]

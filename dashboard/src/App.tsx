@@ -1,12 +1,20 @@
+import { useState } from "react";
+
+import { NodeMap } from "./NodeMap";
+import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { useNodeIdentity } from "./useNodeIdentity";
+import { useReadings } from "./useReadings";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 
-const PLACEHOLDER_AREAS = ["Map", "Alerts", "Evacuation Plan"];
+const PLACEHOLDER_AREAS = ["Alerts", "Evacuation Plan"];
 
 export function App() {
   const { identity, failed } = useNodeIdentity();
+  const nodes = nodesOnMap(useReadings(), identity);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   return (
     <main>
       <header>
@@ -20,7 +28,8 @@ export function App() {
         </p>
       </header>
       <div className="areas">
-        <ReadingsPanel />
+        <ReadingsPanel nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
+        <NodeMap nodes={nodes} selectedId={selectedId} onSelect={toggleSelected} />
         {PLACEHOLDER_AREAS.map((title) => (
           <section key={title} aria-label={title}>
             <h2>{title}</h2>
