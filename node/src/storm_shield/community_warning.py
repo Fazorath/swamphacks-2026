@@ -84,9 +84,9 @@ class HubWarnings:
                     continue
                 if node in self._warned:
                     continue
-                measured = self._measure(node, river_km, surge_t)
-                if measured is not None:
-                    index, update = measured
+                found = self._measure_with(node, river_km, surge_t)
+                if found is not None:
+                    index, update = found
                     self._sent[index] = update
                     issued.append(update)
                     self._warned.add(node)
@@ -107,7 +107,7 @@ class HubWarnings:
                 self._warned.add(node)
             return issued
 
-    def _measure(
+    def _measure_with(
         self, node: str, river_km: float, surge_t: int
     ) -> tuple[int, CommunityWarning] | None:
         """The newest unmeasured warning this Node's Surge measures, with that warning updated.
