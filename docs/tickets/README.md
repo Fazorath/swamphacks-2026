@@ -30,7 +30,7 @@
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | ready-for-agent | unclaimed |
 | [0025-map-shows-the-cache-pack](0025-map-shows-the-cache-pack.md) | ready-for-agent | unclaimed |
 | [0026-map-tiles-from-the-cache-pack-first](0026-map-tiles-from-the-cache-pack-first.md) | ready-for-agent | unclaimed |
-| [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | ready-for-agent | unclaimed |
+| [0027-mesh-carries-a-second-message-kind](0027-mesh-carries-a-second-message-kind.md) | in-progress | Fazorath |
 | [0028-nodes-lay-shelter-status-over-the-cache-pack](0028-nodes-lay-shelter-status-over-the-cache-pack.md) | ready-for-agent | unclaimed |
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | ready-for-agent | unclaimed |
 | [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | ready-for-agent | unclaimed |
