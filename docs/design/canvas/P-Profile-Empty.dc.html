@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone household, empty</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden; position: relative">
+<header class="ss-topbar" style="gap: 8px; padding: 8px 12px">
+<div class="ss-brand" style="font-size: 16px"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+<button class="ss-chip ss-chip--none" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>NO RISK<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill" role="status" aria-label="Online" style="padding: 0 9px"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg></span>
+</div>
+</header>
+<main aria-label="My household" style="position: relative; flex: 1; min-height: 0; overflow: hidden; ">
+<div style="position: absolute; inset: 0; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px"><div style="display: flex; align-items: center; gap: 8px"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path> <path d="M12 11h4"></path> <path d="M12 16h4"></path> <path d="M8 11h.01"></path> <path d="M8 16h.01"></path></svg><h2 style="font-size: 18px; font-weight: 700">My household</h2></div>
+<p style="display: flex; gap: 8px; font-size: 13px; line-height: 1.45; color: var(--text-secondary)"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 1px"><path d="M10 16h.01"></path> <path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path> <path d="M21.946 12.013H2.054"></path> <path d="M6 16h.01"></path></svg>Stored only in this browser. Only the Grid point nearest your home is shared, with the Node you're connected to, to fetch your Route.</p>
+<div class="ss-field"><span>Home location</span>
+<button class="ss-pick"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path> <circle cx="12" cy="10" r="3"></circle></svg><span style="display: flex; flex-direction: column; gap: 3px"><b style="font-weight: 600">Tap the map where your home is</b><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">No address typing, works offline</span></span><span style="margin-left: auto"></span></button></div>
+<fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0"><legend style="font-size: 14px; font-weight: 600; margin-bottom: 4px">Housing type</legend>
+<label class="ss-check"><input type="radio" name="housing-emptyp">Site-built house or apartment</label>
+<label class="ss-check"><input type="radio" name="housing-emptyp">Mobile home or RV</label></fieldset>
+<fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column"><legend style="font-size: 14px; font-weight: 600; margin-bottom: 4px">Shelter needs</legend>
+<label class="ss-check"><input type="checkbox">Special-needs Shelter</label>
+<label class="ss-check"><input type="checkbox">Pet-friendly Shelter</label></fieldset>
+<div style="display: flex; gap: 8px; margin-top: 4px"><span style="flex: 1"></span><button class="ss-btn ss-btn--primary ss-btn--lg is-disabled" disabled>Save</button></div>
+<p class="ss-hint" style="text-align: right">Set your home on the map to save.</p></div>
+</main>
+<nav class="ss-tabbar" aria-label="Sections" style="position: relative; z-index: 2"><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path> <path d="M15 5.764v15"></path> <path d="M9 3.236v15"></path></svg>Map</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>Readings</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path> <path d="M12 9v4"></path> <path d="M12 17h.01"></path></svg>Alerts</a><a href="#" aria-current="page"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path> <path d="M12 11h4"></path> <path d="M12 16h4"></path> <path d="M8 11h.01"></path> <path d="M8 16h.01"></path></svg>Plan</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

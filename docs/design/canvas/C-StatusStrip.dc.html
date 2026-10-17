@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Status strip and banners</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Status strip and banners</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">The strip reports freshness per source at the bottom of desktop screens. Banners sit under the top bar: acknowledged warnings stay there until the warning ends, and problems explain themselves.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Status strip</h2></div>
+<div style="display: flex; flex-direction: column; gap: 18px">
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><footer class="ss-strip" aria-label="Freshness" style="position: relative; z-index: 2">
+<span><span class="ss-live-dot"></span>Readings <b>1 s</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"></path> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"></path> <path d="M14 18v-7"></path> <path d="M18 18v-7"></path> <path d="M3 22h18"></path> <path d="M6 18v-7"></path></svg>Official Alerts <b>40 s ago</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9"></path> <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"></path> <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path> <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z"></path></svg>Cache Pack <b>v3</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg>Cameras <b>live</b></span>
+<span style="margin-left: auto"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>Online</span>
+</footer></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Online</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><footer class="ss-strip" aria-label="Freshness" style="position: relative; z-index: 2">
+<span><span class="ss-live-dot"></span>Readings <b>1 s</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"></path> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"></path> <path d="M14 18v-7"></path> <path d="M18 18v-7"></path> <path d="M3 22h18"></path> <path d="M6 18v-7"></path></svg>Official Alerts <b>2 min ago, held on the Mesh</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9"></path> <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"></path> <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path> <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z"></path></svg>Cache Pack <b>v3</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.564 14.558a3 3 0 1 1-4.122-4.121"></path> <path d="m2 2 20 20"></path> <path d="M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175"></path> <path d="M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344"></path></svg>Cameras <b>offline</b></span>
+<span style="margin-left: auto"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent)"><rect x="16" y="16" width="6" height="6" rx="1"></rect> <rect x="2" y="16" width="6" height="6" rx="1"></rect> <rect x="9" y="2" width="6" height="6" rx="1"></rect> <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path> <path d="M12 12V8"></path></svg><b style="color: var(--accent)">Mesh-only</b> · Mesh features keep working</span>
+</footer></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Mesh-only</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><footer class="ss-strip" aria-label="Freshness" style="position: relative; z-index: 2">
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 6v6l4 2"></path></svg>Readings <b>38 s</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"></path> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"></path> <path d="M14 18v-7"></path> <path d="M18 18v-7"></path> <path d="M3 22h18"></path> <path d="M6 18v-7"></path></svg>Official Alerts <b>40 s ago</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9"></path> <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"></path> <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path> <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z"></path></svg>Cache Pack <b>v3</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg>Cameras <b>live</b></span>
+<span style="margin-left: auto"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>Online</span>
+</footer></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Node unreachable · readings stale</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><footer class="ss-strip" aria-label="Freshness" style="position: relative; z-index: 2">
+<span><span class="ss-live-dot"></span>Readings <b>1 s</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"></path> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"></path> <path d="M14 18v-7"></path> <path d="M18 18v-7"></path> <path d="M3 22h18"></path> <path d="M6 18v-7"></path></svg>Official Alerts <b>40 s ago</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9"></path> <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"></path> <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path> <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z"></path></svg>Cache Pack <b>not yet</b></span>
+<span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg>Cameras <b>live</b></span>
+<span style="margin-left: auto"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>Online</span>
+</footer></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">No Cache Pack yet</figcaption>
+</figure>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Banners</h2></div>
+<div style="display: flex; flex-direction: column; gap: 18px">
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div role="status" aria-label="Acknowledged warnings" style="position: relative; z-index: 2; display: flex; flex-direction: column">
+<div class="ss-banner ss-banner--official"><span class="ss-tag ss-tag--official"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"></path> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"></path> <path d="M14 18v-7"></path> <path d="M18 18v-7"></path> <path d="M3 22h18"></path> <path d="M6 18v-7"></path></svg>OFFICIAL · REPLAY</span><strong>Evacuation order: mobile homes, RVs, flood-prone areas</strong><span>Alachua County</span><span class="ss-push ss-ack"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>ACKNOWLEDGED ON THIS DEVICE</span></div>
+
+</div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">acknowledged Official Alert</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div role="status" aria-label="Acknowledged warnings" style="position: relative; z-index: 2; display: flex; flex-direction: column">
+
+<div class="ss-banner ss-banner--community"><span class="ss-tag ss-tag--community"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"></path> <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"></path> <path d="M8 6v8"></path></svg>COMMUNITY WARNING · NOT OFFICIAL</span><strong>Water is high at garage and kitchen.</strong><span class="ss-muted">Check official sources for any evacuation decision.</span><span class="ss-push ss-ack ss-muted"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>ACKNOWLEDGED ON THIS DEVICE</span></div>
+</div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">acknowledged Community Warning</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div class="ss-banner ss-banner--notice" role="alert" style="position: relative; z-index: 2"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 5 3-3"></path> <path d="m2 22 3-3"></path> <path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"></path> <path d="M7.5 13.5 10 11"></path> <path d="M10.5 16.5 13 14"></path> <path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"></path></svg><strong>porch is not answering.</strong><span class="ss-muted">Last heard 38 s ago. Showing what it last sent, marked stale.</span></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Node unreachable</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div class="ss-banner ss-banner--notice" role="alert" style="position: relative; z-index: 2"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <line x1="12" x2="12" y1="8" y2="12"></line> <line x1="12" x2="12.01" y1="16" y2="16"></line></svg><strong>Your saved household profile could not be read,</strong><span class="ss-muted">so it is treated as missing. It was not deleted.</span></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">storage problem · unreadable</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div class="ss-banner ss-banner--notice" role="alert" style="position: relative; z-index: 2"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <line x1="12" x2="12" y1="8" y2="12"></line> <line x1="12" x2="12.01" y1="16" y2="16"></line></svg><strong>Your household profile will not be remembered</strong><span class="ss-muted">after you close this page.</span></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">storage problem · unsaved</figcaption>
+</figure>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

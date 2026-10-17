@@ -1,0 +1,741 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-17T00:30:00Z"
+  },
+  "title": "Storm Shield — UI Design Reference",
+  "launch": {
+    "view": "canvas",
+    "page": "foundations"
+  },
+  "pages": [
+    {
+      "id": "foundations",
+      "name": "Foundations"
+    },
+    {
+      "id": "components",
+      "name": "Components"
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop"
+    },
+    {
+      "id": "phone",
+      "name": "Phone"
+    },
+    {
+      "id": "flows",
+      "name": "Flows"
+    }
+  ],
+  "designSystems": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2200,
+      "title": "Cover · Start here",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "F-Color.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 2050,
+      "title": "Foundations · Color roles",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "F-Type.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1500,
+      "title": "Foundations · Type and numbers",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "F-Spacing.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1700,
+      "title": "Foundations · Spacing, surfaces, layout",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "F-Motion.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 2050,
+      "title": "Foundations · Motion and performance",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "F-Icons.dc.html": {
+      "x": 7600,
+      "y": 0,
+      "w": 1440,
+      "h": 2250,
+      "title": "Foundations · Icon inventory",
+      "page": "foundations",
+      "expand": "fill"
+    },
+    "C-Controls.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2400,
+      "title": "Components · Control kit",
+      "page": "components",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "C-Tags.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1450,
+      "title": "Components · Tags, chips, pills, popover",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Rail.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1250,
+      "title": "Components · Layer rail",
+      "page": "components",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "C-Panel.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 1300,
+      "title": "Components · Panel shell",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-NodeCard.dc.html": {
+      "x": 0,
+      "y": 2720,
+      "w": 1440,
+      "h": 1500,
+      "title": "Components · Node card",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Markers.dc.html": {
+      "x": 1520,
+      "y": 2720,
+      "w": 1440,
+      "h": 1650,
+      "title": "Components · Map markers and layers",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Alerts.dc.html": {
+      "x": 3040,
+      "y": 2720,
+      "w": 1440,
+      "h": 1500,
+      "title": "Components · Alert cards",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Plan.dc.html": {
+      "x": 4560,
+      "y": 2720,
+      "w": 1440,
+      "h": 2050,
+      "title": "Components · Evacuation Plan states",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Cameras.dc.html": {
+      "x": 0,
+      "y": 5090,
+      "w": 1440,
+      "h": 1050,
+      "title": "Components · Camera tiles",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-TopBar.dc.html": {
+      "x": 1520,
+      "y": 5090,
+      "w": 1440,
+      "h": 1250,
+      "title": "Components · Top bar",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-StatusStrip.dc.html": {
+      "x": 3040,
+      "y": 5090,
+      "w": 1440,
+      "h": 1150,
+      "title": "Components · Status strip and banners",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Takeover.dc.html": {
+      "x": 4560,
+      "y": 5090,
+      "w": 1440,
+      "h": 1700,
+      "title": "Components · Warning Takeover",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-Join.dc.html": {
+      "x": 0,
+      "y": 7110,
+      "w": 1440,
+      "h": 900,
+      "title": "Components · Join card",
+      "page": "components",
+      "expand": "fill"
+    },
+    "C-States.dc.html": {
+      "x": 1520,
+      "y": 7110,
+      "w": 1440,
+      "h": 1150,
+      "title": "Components · Loading and empty states",
+      "page": "components",
+      "expand": "fill"
+    },
+    "D-Normal.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Normal day · Hub on the projector",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-PressureDrop.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Pressure drop · Storm Signal on",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Raining.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Raining · Flood Risk Low",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Elevated.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Elevated · a resident laptop (kitchen) with a profile",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Storm.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Storm · High, warnings acknowledged",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-MeshOnly.dc.html": {
+      "x": 7600,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Mesh-only · cable pulled mid-storm",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Takeover-Official.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Warning Takeover · Official, 1 of 2",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Takeover-Community.dc.html": {
+      "x": 1520,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Warning Takeover · Community, 2 of 2",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-RiskPopover.dc.html": {
+      "x": 3040,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · Flood Risk reasons popover",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-StaleUnverified.dc.html": {
+      "x": 4560,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Stale Node, Unverified Node, a Node selected",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Hub-Registry.dc.html": {
+      "x": 0,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Hub Panel · Registry (sign-up waiting)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Hub-Warnings.dc.html": {
+      "x": 1520,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Hub Panel · Community Warning log",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Hub-Shelters.dc.html": {
+      "x": 3040,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Hub Panel · Shelters",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Hub-Feeds.dc.html": {
+      "x": 4560,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Hub Panel · Feeds (live / replay)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Node-Scenario.dc.html": {
+      "x": 6080,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Node Panel · Scenario (localhost only)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Node-Registration.dc.html": {
+      "x": 7600,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Node Panel · Registration (waiting for the Hub)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Household.dc.html": {
+      "x": 0,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Household Profile slide-over (saved)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Household-Picking.dc.html": {
+      "x": 1520,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Household Profile · picking home on the map",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Connecting.dc.html": {
+      "x": 3040,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Connecting (first load)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-Unreachable.dc.html": {
+      "x": 4560,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · Node unreachable (last data kept, marked stale)",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "D-NoCachePack.dc.html": {
+      "x": 6080,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · No Cache Pack yet",
+      "page": "desktop",
+      "expand": "fill"
+    },
+    "P-Map-Calm.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Map tab, calm day",
+      "page": "phone"
+    },
+    "P-Map-Storm.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Map tab, storm",
+      "page": "phone"
+    },
+    "P-Map-Selected.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Map tab, Node selected (bottom sheet)",
+      "page": "phone"
+    },
+    "P-Readings.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Readings tab",
+      "page": "phone"
+    },
+    "P-Alerts.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Alerts tab",
+      "page": "phone"
+    },
+    "P-Plan-NoProfile.dc.html": {
+      "x": 0,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Plan, no Household Profile",
+      "page": "phone"
+    },
+    "P-Plan-Calm.dc.html": {
+      "x": 470,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Plan, calm day",
+      "page": "phone"
+    },
+    "P-Plan-Storm.dc.html": {
+      "x": 940,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Plan, storm (the demo ending)",
+      "page": "phone"
+    },
+    "P-Plan-NoShelter.dc.html": {
+      "x": 1410,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Plan, no open Shelter",
+      "page": "phone"
+    },
+    "P-Plan-NoRoute.dc.html": {
+      "x": 1880,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Plan, no Route from your Grid point",
+      "page": "phone"
+    },
+    "P-Plan-NoCachePack.dc.html": {
+      "x": 2350,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Plan, no Cache Pack yet",
+      "page": "phone"
+    },
+    "P-Route.dc.html": {
+      "x": 2820,
+      "y": 1264,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Route to the Shelter",
+      "page": "phone"
+    },
+    "P-Profile-Empty.dc.html": {
+      "x": 0,
+      "y": 2528,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Household Profile, empty",
+      "page": "phone"
+    },
+    "P-Profile-Picking.dc.html": {
+      "x": 470,
+      "y": 2528,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Household Profile, picking home",
+      "page": "phone"
+    },
+    "P-Profile-Saved.dc.html": {
+      "x": 940,
+      "y": 2528,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Household Profile, saved",
+      "page": "phone"
+    },
+    "P-Takeover.dc.html": {
+      "x": 0,
+      "y": 3792,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Warning Takeover (full-screen sheet)",
+      "page": "phone"
+    },
+    "P-Takeover-Community.dc.html": {
+      "x": 470,
+      "y": 3792,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Warning Takeover, Community 2 of 2",
+      "page": "phone"
+    },
+    "P-Connecting.dc.html": {
+      "x": 940,
+      "y": 3792,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Connecting",
+      "page": "phone"
+    },
+    "P-Unreachable.dc.html": {
+      "x": 1410,
+      "y": 3792,
+      "w": 390,
+      "h": 844,
+      "title": "SIMPLE · Phone · Node unreachable",
+      "page": "phone"
+    },
+    "P-MeshOnly.dc.html": {
+      "x": 1880,
+      "y": 3792,
+      "w": 390,
+      "h": 844,
+      "title": "MUST · Phone · Mesh-only (Readings tab scrolled to Cameras)",
+      "page": "phone"
+    },
+    "Flow-Demo.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1250,
+      "title": "Flows · The 3-minute demo",
+      "page": "flows",
+      "expand": "fill"
+    },
+    "Flow-Transitions.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1350,
+      "title": "Flows · State transitions",
+      "page": "flows",
+      "expand": "fill"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "F-Color.dc.html",
+    "F-Type.dc.html",
+    "F-Spacing.dc.html",
+    "F-Motion.dc.html",
+    "F-Icons.dc.html",
+    "C-Controls.dc.html",
+    "C-Tags.dc.html",
+    "C-Rail.dc.html",
+    "C-Panel.dc.html",
+    "C-NodeCard.dc.html",
+    "C-Markers.dc.html",
+    "C-Alerts.dc.html",
+    "C-Plan.dc.html",
+    "C-Cameras.dc.html",
+    "C-TopBar.dc.html",
+    "C-StatusStrip.dc.html",
+    "C-Takeover.dc.html",
+    "C-Join.dc.html",
+    "C-States.dc.html",
+    "D-Normal.dc.html",
+    "D-PressureDrop.dc.html",
+    "D-Raining.dc.html",
+    "D-Elevated.dc.html",
+    "D-Storm.dc.html",
+    "D-MeshOnly.dc.html",
+    "D-Takeover-Official.dc.html",
+    "D-Takeover-Community.dc.html",
+    "D-RiskPopover.dc.html",
+    "D-StaleUnverified.dc.html",
+    "D-Hub-Registry.dc.html",
+    "D-Hub-Warnings.dc.html",
+    "D-Hub-Shelters.dc.html",
+    "D-Hub-Feeds.dc.html",
+    "D-Node-Scenario.dc.html",
+    "D-Node-Registration.dc.html",
+    "D-Household.dc.html",
+    "D-Household-Picking.dc.html",
+    "D-Connecting.dc.html",
+    "D-Unreachable.dc.html",
+    "D-NoCachePack.dc.html",
+    "P-Map-Calm.dc.html",
+    "P-Map-Storm.dc.html",
+    "P-Map-Selected.dc.html",
+    "P-Readings.dc.html",
+    "P-Alerts.dc.html",
+    "P-Plan-NoProfile.dc.html",
+    "P-Plan-Calm.dc.html",
+    "P-Plan-Storm.dc.html",
+    "P-Plan-NoShelter.dc.html",
+    "P-Plan-NoRoute.dc.html",
+    "P-Plan-NoCachePack.dc.html",
+    "P-Route.dc.html",
+    "P-Profile-Empty.dc.html",
+    "P-Profile-Picking.dc.html",
+    "P-Profile-Saved.dc.html",
+    "P-Takeover.dc.html",
+    "P-Takeover-Community.dc.html",
+    "P-Connecting.dc.html",
+    "P-Unreachable.dc.html",
+    "P-MeshOnly.dc.html",
+    "Flow-Demo.dc.html",
+    "Flow-Transitions.dc.html"
+  ],
+  "notes": {
+    "t-found": {
+      "kind": "title1",
+      "text": "Foundations",
+      "x": 0,
+      "y": -300,
+      "maxW": 6000,
+      "page": "foundations"
+    },
+    "t-comp": {
+      "kind": "title1",
+      "text": "Components",
+      "x": 0,
+      "y": -300,
+      "maxW": 6000,
+      "page": "components"
+    },
+    "t-d1": {
+      "kind": "title1",
+      "text": "Resident · from calm to storm",
+      "x": 0,
+      "y": -300,
+      "maxW": 9120,
+      "page": "desktop"
+    },
+    "t-d2": {
+      "kind": "title1",
+      "text": "Warnings, reasons and Node states",
+      "x": 0,
+      "y": 1020,
+      "maxW": 6080,
+      "page": "desktop"
+    },
+    "t-d3": {
+      "kind": "title1",
+      "text": "Operators · Hub Panel and Node Panel",
+      "x": 0,
+      "y": 2340,
+      "maxW": 9120,
+      "page": "desktop"
+    },
+    "t-d4": {
+      "kind": "title1",
+      "text": "Household and edge states",
+      "x": 0,
+      "y": 3660,
+      "maxW": 7600,
+      "page": "desktop"
+    },
+    "t-p1": {
+      "kind": "title1",
+      "text": "Phone · the four tabs",
+      "x": 0,
+      "y": -300,
+      "maxW": 2350,
+      "page": "phone"
+    },
+    "t-p2": {
+      "kind": "title1",
+      "text": "Phone · Evacuation Plan and Route",
+      "x": 0,
+      "y": 964,
+      "maxW": 3290,
+      "page": "phone"
+    },
+    "t-p3": {
+      "kind": "title1",
+      "text": "Phone · Household Profile",
+      "x": 0,
+      "y": 2228,
+      "maxW": 1410,
+      "page": "phone"
+    },
+    "t-p4": {
+      "kind": "title1",
+      "text": "Phone · takeover and edge states",
+      "x": 0,
+      "y": 3492,
+      "maxW": 2350,
+      "page": "phone"
+    },
+    "t-flows": {
+      "kind": "title1",
+      "text": "Flows",
+      "x": 0,
+      "y": -300,
+      "maxW": 2960,
+      "page": "flows"
+    }
+  }
+}

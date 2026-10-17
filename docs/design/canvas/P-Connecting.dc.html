@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone connecting</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden; position: relative">
+<header class="ss-topbar" style="gap: 8px; padding: 8px 12px">
+<div class="ss-brand" style="font-size: 16px"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+<span class="ss-skel" style="width: 92px; height: 32px"></span>
+</div>
+</header>
+<main aria-label="Connecting" style="position: relative; flex: 1; min-height: 0; overflow: hidden; ">
+<div style="position: absolute; inset: 0"><svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block" role="img" aria-label="Neighborhood map">
+<defs>
+<pattern id="m40-hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" style="fill: var(--flood-prone); fill-opacity: 0.08"></rect><path d="M0 0V10" style="stroke: var(--flood-prone); stroke-width: 2; stroke-opacity: 0.45"></path></pattern>
+<radialGradient id="m40-storm" cx="50%" cy="50%" r="75%"><stop offset="55%" style="stop-color: var(--ink-black); stop-opacity: 0"></stop><stop offset="100%" style="stop-color: var(--ink-black); stop-opacity: 0.7"></stop></radialGradient>
+</defs>
+<rect width="1200" height="700" style="fill: var(--map-ground)"></rect>
+
+
+</svg></div><div role="status" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center"><svg class="ss-i" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent)"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path> <path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"></path> <circle cx="12" cy="9" r="2"></circle> <path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"></path> <path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"></path> <path d="M9.5 18h5"></path> <path d="m8 22 4-11 4 11"></path></svg><strong style="font-size: 18px">Connecting to garage…</strong><span style="font-size: 14px; line-height: 1.45; color: var(--text-secondary)">Storm Shield runs on this neighborhood's Nodes. No internet needed.</span></div>
+</main>
+<nav class="ss-tabbar" aria-label="Sections" style="position: relative; z-index: 2"><a href="#" aria-current="page"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path> <path d="M15 5.764v15"></path> <path d="M9 3.236v15"></path></svg>Map</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>Readings</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path> <path d="M12 9v4"></path> <path d="M12 17h.01"></path></svg>Alerts</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path> <path d="M12 11h4"></path> <path d="M12 16h4"></path> <path d="M8 11h.01"></path> <path d="M8 16h.01"></path></svg>Plan</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

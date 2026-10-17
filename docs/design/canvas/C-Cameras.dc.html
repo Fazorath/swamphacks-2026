@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Camera tiles</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Camera tiles</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Four fixed I-75 road cameras. Live shows the picture and its age; a new picture cross-fades in. Offline never shows a frozen frame. Unavailable means one camera failed while the Node is Online, and looks different from Offline.</p>
+</header>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><section class="ss-panel" aria-label="Cameras" style="">
+<div class="ss-panel-head"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg><h2>Cameras</h2><span class="ss-label" style="margin-left: auto">4 LIVE</span><button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="Collapse Cameras" aria-expanded="true"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg></button></div>
+<div class="ss-panel-body">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<article aria-label="Camera I-75 at SR-24 Archer Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-24 Archer Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 40 s ago</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-26 Newberry Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-26 Newberry Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 12 s ago</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-121 Williston Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-121 Williston Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated  ago</span></div>
+</article>
+<article aria-label="Camera I-75 at Paynes Prairie" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at Paynes Prairie</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 55 s ago</span></div>
+</article>
+</div>
+<p class="ss-mono" style="font-size: 11px; color: var(--text-dim)">FL511 road cameras · fetched once a minute by this Node</p>
+</div>
+</section></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Online · all live</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><section class="ss-panel" aria-label="Cameras" style="">
+<div class="ss-panel-head"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg><h2>Cameras</h2><span class="ss-label" style="margin-left: auto">3 LIVE</span><button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="Collapse Cameras" aria-expanded="true"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg></button></div>
+<div class="ss-panel-body">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<article aria-label="Camera I-75 at SR-24 Archer Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-24 Archer Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 40 s ago</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-26 Newberry Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-26 Newberry Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 12 s ago</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-121 Williston Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-strong); background: var(--surface-raised)"><span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-primary)"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <line x1="12" x2="12" y1="8" y2="12"></line> <line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em">UNAVAILABLE</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-121 Williston Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">camera not responding</span></div>
+</article>
+<article aria-label="Camera I-75 at Paynes Prairie" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--map-ground)"><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%" role="img" aria-label="Placeholder road image"><rect width="160" height="90" style="fill: var(--surface-raised)"></rect><path d="M0 62L160 40V90H0Z" style="fill: var(--map-road)"></path><path d="M0 76L160 58" style="stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 8 6"></path><rect x="56" y="58" width="12" height="6" rx="1" style="fill: var(--text-secondary)"></rect><rect x="104" y="48" width="10" height="5" rx="1" style="fill: var(--text-secondary)"></rect></svg>
+<span style="position: absolute; left: 6px; top: 6px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; background: var(--scrim); font: 600 10px/1 var(--font-mono); letter-spacing: 0.06em"><span class="ss-live-dot"></span>LIVE</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at Paynes Prairie</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">updated 55 s ago</span></div>
+</article>
+</div>
+<p class="ss-mono" style="font-size: 11px; color: var(--text-dim)">FL511 road cameras · fetched once a minute by this Node</p>
+</div>
+</section></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Online · one Unavailable</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><section class="ss-panel" aria-label="Cameras" style="">
+<div class="ss-panel-head"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.75 12h3.632a1 1 0 0 1 .894 1.447l-2.034 4.069a1 1 0 0 1-1.708.134l-2.124-2.97"></path> <path d="M17.106 9.053a1 1 0 0 1 .447 1.341l-3.106 6.211a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.92 2.92 0 0 1 3.92-1.3z"></path> <path d="M2 19h3.76a2 2 0 0 0 1.8-1.1L9 15"></path> <path d="M2 21v-4"></path> <path d="M7 9h.01"></path></svg><h2>Cameras</h2><span class="ss-label" style="margin-left: auto">OFFLINE</span><button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="Collapse Cameras" aria-expanded="true"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg></button></div>
+<div class="ss-panel-body">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<article aria-label="Camera I-75 at SR-24 Archer Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px dashed var(--border-strong); background: var(--surface-panel)"><span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-secondary)"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.564 14.558a3 3 0 1 1-4.122-4.121"></path> <path d="m2 2 20 20"></path> <path d="M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175"></path> <path d="M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344"></path></svg><span style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em">OFFLINE · INTERNET DOWN</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-24 Archer Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">no picture while Mesh-only</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-26 Newberry Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px dashed var(--border-strong); background: var(--surface-panel)"><span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-secondary)"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.564 14.558a3 3 0 1 1-4.122-4.121"></path> <path d="m2 2 20 20"></path> <path d="M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175"></path> <path d="M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344"></path></svg><span style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em">OFFLINE · INTERNET DOWN</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-26 Newberry Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">no picture while Mesh-only</span></div>
+</article>
+<article aria-label="Camera I-75 at SR-121 Williston Rd" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px dashed var(--border-strong); background: var(--surface-panel)"><span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-secondary)"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.564 14.558a3 3 0 1 1-4.122-4.121"></path> <path d="m2 2 20 20"></path> <path d="M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175"></path> <path d="M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344"></path></svg><span style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em">OFFLINE · INTERNET DOWN</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at SR-121 Williston Rd</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">no picture while Mesh-only</span></div>
+</article>
+<article aria-label="Camera I-75 at Paynes Prairie" style="display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; border: 1px dashed var(--border-strong); background: var(--surface-panel)"><span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-secondary)"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.564 14.558a3 3 0 1 1-4.122-4.121"></path> <path d="m2 2 20 20"></path> <path d="M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175"></path> <path d="M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344"></path></svg><span style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em">OFFLINE · INTERNET DOWN</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 600; line-height: 1.3">I-75 at Paynes Prairie</span><span class="ss-mono" style="font-size: 11px; color: var(--text-secondary)">no picture while Mesh-only</span></div>
+</article>
+</div>
+<p class="ss-mono" style="font-size: 11px; color: var(--text-dim)">FL511 road cameras · fetched once a minute by this Node</p>
+</div>
+</section></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Mesh-only · Offline</figcaption>
+</figure></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 # Dashboard UI design
 
-How the Storm Shield dashboard looks, where things go and how it moves. **The visual source of truth is the design canvas: https://claude.ai/artifact/722U2tKJ78hvbbbNUnx2dQ**, organized in five pages: Foundations, Components, Desktop, Phone and Flows. Build from it; if a view or state is missing, add an artboard there first (see "Changing the design"). Message and API shapes: `docs/specs/wire-formats.md`. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
+How the Storm Shield dashboard looks, where things go and how it moves. **The visual source of truth is the design canvas: https://claude.ai/artifact/722U2tKJ78hvbbbNUnx2dQ**, organized in five pages: Foundations, Components, Desktop, Phone and Flows. Build from it; if a view or state is missing, add an artboard there first (see "Changing the design").
+
+**Agents: build from the copy in this repo, `docs/design/canvas/`.** The online canvas is private and other accounts' agents cannot read its markup. Each `<name>.dc.html` there is one artboard as plain HTML; `canvas.json` lists every artboard with its title and page; `theme.css` holds every color role and component style. Prefixes: `F-` Foundations, `C-` Components, `D-` Desktop screens, `P-` Phone screens, `Flow-` Flows; `Main.dc.html` is the cover with the view-to-ticket index. Tickets name the artboards they build from. When the canvas changes, refresh this copy in the same commit. Message and API shapes: `docs/specs/wire-formats.md`. Spec: `docs/specs/storm-shield.md`. Words follow `CONTEXT.md`.
 
 ## Reference
 

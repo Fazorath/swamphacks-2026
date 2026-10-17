@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Top bar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Top bar</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Left: who you are connected to. Center: the mesh-wide Flood Risk and the Storm Signal. Right: connection, My household, and the operator buttons that only exist where they apply.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Desktop</h2></div>
+<div style="display: flex; flex-direction: column; gap: 22px">
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">porch · Hub</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><button class="ss-chip ss-chip--none" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>NO FLOOD RISK<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button></div>
+<div style="display: flex; align-items: center; gap: 6px">
+<span class="ss-pill" role="status"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>ONLINE</span>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H3"></path> <path d="M12 19H3"></path> <path d="M14 3v4"></path> <path d="M16 17v4"></path> <path d="M21 12h-9"></path> <path d="M21 19h-5"></path> <path d="M21 5h-7"></path> <path d="M8 10v4"></path> <path d="M8 12H3"></path></svg>Node</button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="14" rx="2"></rect> <path d="M6.01 18H6"></path> <path d="M10.01 18H10"></path> <path d="M15 10v4"></path> <path d="M17.84 7.17a4 4 0 0 0-5.66 0"></path> <path d="M20.66 4.34a8 8 0 0 0-11.31 0"></path></svg>Hub</button>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Hub on its own screen · calm</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">porch · Hub</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><button class="ss-chip ss-chip--high" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>FLOOD RISK · HIGH<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill ss-pill--storm"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"></path> <path d="m13 12-3 5h4l-3 5"></path></svg>STORM SIGNAL</span></div>
+<div style="display: flex; align-items: center; gap: 6px">
+<span class="ss-pill" role="status"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>ONLINE</span>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H3"></path> <path d="M12 19H3"></path> <path d="M14 3v4"></path> <path d="M16 17v4"></path> <path d="M21 12h-9"></path> <path d="M21 19h-5"></path> <path d="M21 5h-7"></path> <path d="M8 10v4"></path> <path d="M8 12H3"></path></svg>Node</button>
+<button class="ss-btn ss-btn--secondary ss-btn--sm" aria-pressed="true"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="14" rx="2"></rect> <path d="M6.01 18H6"></path> <path d="M10.01 18H10"></path> <path d="M15 10v4"></path> <path d="M17.84 7.17a4 4 0 0 0-5.66 0"></path> <path d="M20.66 4.34a8 8 0 0 0-11.31 0"></path></svg>Hub</button>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Hub · storm · Hub Panel open</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">porch · Hub</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><button class="ss-chip ss-chip--high" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>FLOOD RISK · HIGH<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill ss-pill--storm"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"></path> <path d="m13 12-3 5h4l-3 5"></path></svg>STORM SIGNAL</span></div>
+<div style="display: flex; align-items: center; gap: 6px">
+<span class="ss-pill ss-pill--mesh" role="status"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"></rect> <rect x="2" y="16" width="6" height="6" rx="1"></rect> <rect x="9" y="2" width="6" height="6" rx="1"></rect> <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path> <path d="M12 12V8"></path></svg>MESH-ONLY</span>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H3"></path> <path d="M12 19H3"></path> <path d="M14 3v4"></path> <path d="M16 17v4"></path> <path d="M21 12h-9"></path> <path d="M21 19h-5"></path> <path d="M21 5h-7"></path> <path d="M8 10v4"></path> <path d="M8 12H3"></path></svg>Node</button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="14" rx="2"></rect> <path d="M6.01 18H6"></path> <path d="M10.01 18H10"></path> <path d="M15 10v4"></path> <path d="M17.84 7.17a4 4 0 0 0-5.66 0"></path> <path d="M20.66 4.34a8 8 0 0 0-11.31 0"></path></svg>Hub</button>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Hub · Mesh-only</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">kitchen · Sensor Node</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><button class="ss-chip ss-chip--elevated" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>FLOOD RISK · ELEVATED<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill ss-pill--storm"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"></path> <path d="m13 12-3 5h4l-3 5"></path></svg>STORM SIGNAL</span></div>
+<div style="display: flex; align-items: center; gap: 6px">
+<span class="ss-pill" role="status"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>ONLINE</span>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+<button class="ss-btn ss-btn--ghost ss-btn--sm" aria-pressed="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H3"></path> <path d="M12 19H3"></path> <path d="M14 3v4"></path> <path d="M16 17v4"></path> <path d="M21 12h-9"></path> <path d="M21 19h-5"></path> <path d="M21 5h-7"></path> <path d="M8 10v4"></path> <path d="M8 12H3"></path></svg>Node</button>
+
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Sensor Node on its own screen (Node button, no Hub button)</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">garage · Sensor Node</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><button class="ss-chip ss-chip--low" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>FLOOD RISK · LOW<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill ss-pill--storm"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"></path> <path d="m13 12-3 5h4l-3 5"></path></svg>STORM SIGNAL</span></div>
+<div style="display: flex; align-items: center; gap: 6px">
+<span class="ss-pill" role="status"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg>ONLINE</span>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+
+
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Resident laptop viewing a Node (no operator buttons)</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="position: relative; z-index: 3">
+<div class="ss-brand"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<span class="ss-nodeid">Connecting to garage…</span>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0"><span class="ss-skel" style="width: 170px; height: 36px"></span></div>
+<div style="display: flex; align-items: center; gap: 6px">
+
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="My household" aria-pressed="false"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+
+
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Connecting</figcaption>
+</figure>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Phone</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(390px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="gap: 8px; padding: 8px 12px">
+<div class="ss-brand" style="font-size: 16px"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+<button class="ss-chip ss-chip--none" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>NO RISK<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill" role="status" aria-label="Online" style="padding: 0 9px"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path> <path d="M2 12h20"></path></svg></span>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">calm · Online</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="gap: 8px; padding: 8px 12px">
+<div class="ss-brand" style="font-size: 16px"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+<button class="ss-chip ss-chip--high" aria-expanded="false" aria-haspopup="dialog"><span class="ss-dot"></span>HIGH<svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="m6 9 6 6 6-6"></path></svg></button><span class="ss-pill ss-pill--mesh" role="status" aria-label="Mesh-only"><svg class="ss-i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"></rect> <rect x="2" y="16" width="6" height="6" rx="1"></rect> <rect x="9" y="2" width="6" height="6" rx="1"></rect> <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path> <path d="M12 12V8"></path></svg>MESH</span>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">storm · Mesh-only</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><header class="ss-topbar" style="gap: 8px; padding: 8px 12px">
+<div class="ss-brand" style="font-size: 16px"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="color: var(--accent)"><path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"></path><path d="M8 12.5c1.3-1.4 2.7-1.4 4 0s2.7 1.4 4 0"></path></svg>Storm Shield</div>
+<div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+<span class="ss-skel" style="width: 92px; height: 32px"></span>
+</div>
+</header></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">connecting</figcaption>
+</figure></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

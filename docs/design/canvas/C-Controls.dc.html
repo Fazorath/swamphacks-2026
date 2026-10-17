@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Control kit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Control kit</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Everything interactive in every view is one of these. 6 px radius, labels never wrap, 120 ms press feedback, a 2 px cyan focus ring on keyboard focus. Phones always use 44 px or taller.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Buttons × states</h2></div>
+<div style="border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; background: var(--surface-panel)"><div style="min-width: 900px">
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border)"><span class="ss-label">Variant</span><span class="ss-label">default</span><span class="ss-label">hover</span><span class="ss-label">pressed</span><span class="ss-label">focus</span><span class="ss-label">disabled</span><span class="ss-label">busy</span></div>
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>primary</strong></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary">Show route</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary is-hover">Show route</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary is-pressed">Show route</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary is-focus">Show route</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary is-disabled" disabled>Show route</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--primary is-busy">Show route<span class="ss-busy-dots"><i></i><i></i><i></i></span></button></span></div>
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>secondary</strong></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary">Restart</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary is-hover">Restart</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary is-pressed">Restart</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary is-focus">Restart</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary is-disabled" disabled>Restart</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--secondary is-busy">Restart<span class="ss-busy-dots"><i></i><i></i><i></i></span></button></span></div>
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>ghost</strong></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost">Cancel</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost is-hover">Cancel</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost is-pressed">Cancel</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost is-focus">Cancel</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost is-disabled" disabled>Cancel</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--ghost is-busy">Cancel<span class="ss-busy-dots"><i></i><i></i><i></i></span></button></span></div>
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>danger</strong></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger">Delete</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger is-hover">Delete</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger is-pressed">Delete</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger is-focus">Delete</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger is-disabled" disabled>Delete</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--danger is-busy">Delete<span class="ss-busy-dots"><i></i><i></i><i></i></span></button></span></div>
+<div style="display: grid; grid-template-columns: 120px repeat(6, minmax(0, 1fr)); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>official</strong></span><span style="min-width: 0"><button class="ss-btn ss-btn--official">Acknowledge</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--official is-hover">Acknowledge</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--official is-pressed">Acknowledge</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--official is-focus">Acknowledge</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--official is-disabled" disabled>Acknowledge</button></span><span style="min-width: 0"><button class="ss-btn ss-btn--official is-busy">Acknowledge<span class="ss-busy-dots"><i></i><i></i><i></i></span></button></span></div>
+</div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Sizes</h2></div>
+<div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap">
+<button class="ss-btn ss-btn--primary ss-btn--sm">32 · small</button><button class="ss-btn ss-btn--primary">40 · default</button><button class="ss-btn ss-btn--primary ss-btn--lg">44 · phone</button>
+<button class="ss-btn ss-btn--ghost ss-btn--icon ss-btn--sm" aria-label="Close"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path> <path d="m6 6 12 12"></path></svg></button><button class="ss-btn ss-btn--ghost ss-btn--icon" aria-label="Zoom in"><svg class="ss-i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path> <path d="M12 5v14"></path></svg></button><button class="ss-btn ss-btn--secondary ss-btn--icon ss-btn--lg" aria-label="My household"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+<div style="width: 360px"><button class="ss-btn ss-btn--official ss-btn--xl"><svg class="ss-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>64 · Acknowledge</button></div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Text and map-pick fields</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-field"><span>Node name</span><input class="ss-input" placeholder="garage"></label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">default</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-field"><span>Node name</span><input class="ss-input is-focus" value="kitchen"></label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">focus</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-field"><span>Node name</span><input class="ss-input is-error" value=""><span class="ss-error">Give this Node a name people will recognize.</span></label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">error</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-field"><span>Node id</span><input class="ss-input" value="5d07aa1f9c42" disabled></label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">disabled</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><button class="ss-pick"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-secondary)"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path> <circle cx="12" cy="10" r="3"></circle></svg><span>Tap the map where your home is</span></button></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">map pick · empty</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><button class="ss-pick is-set"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent)"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path> <circle cx="12" cy="10" r="3"></circle></svg><span>Home set on the map</span><span style="margin-left: auto">Change</span></button></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">map pick · set</figcaption>
+</figure></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Choices</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-check"><input type="radio" name="r1">Site-built</label><label class="ss-check"><input type="radio" name="r1" checked>Mobile home or RV</label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">radio</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-check"><input type="checkbox">Special-needs Shelter</label><label class="ss-check"><input type="checkbox" checked>Pet-friendly Shelter</label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">checkbox</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><label class="ss-check"><input type="checkbox" class="is-focus" checked>Focused</label><label class="ss-check is-disabled"><input type="checkbox" disabled>Disabled</label></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">focus · disabled</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="display: flex; gap: 14px; align-items: center; height: 44px"><button class="ss-switch" role="switch" aria-checked="false" aria-label="Off"></button><button class="ss-switch" role="switch" aria-checked="true" aria-label="On"></button><button class="ss-switch is-focus" role="switch" aria-checked="true" aria-label="Focused"></button><button class="ss-switch" role="switch" aria-checked="false" aria-label="Disabled" disabled></button></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">switch · off, on, focus, disabled</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div class="ss-seg" role="group" aria-label="Source"><button aria-pressed="true">LIVE</button><button aria-pressed="false">REPLAY</button></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">segmented</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="display: flex; gap: 8px; align-items: center; height: 44px"><span class="ss-kbd">N</span><span class="ss-muted" style="font-size: 13px">step</span><span class="ss-kbd">R</span><span class="ss-muted" style="font-size: 13px">reset</span></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">keyboard hint</figcaption>
+</figure></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Tabs</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="background: var(--surface-panel); border-radius: 8px"><div class="ss-tabs" role="tablist"><button class="ss-tab" role="tab" aria-selected="true"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h8"></path> <path d="M13 12h8"></path> <path d="M13 19h8"></path> <path d="m3 17 2 2 4-4"></path> <path d="m3 7 2 2 4-4"></path></svg>Registry<span class="ss-badge">1</span></button><button class="ss-tab" role="tab" aria-selected="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12h-5"></path> <path d="M15 8h-5"></path> <path d="M19 17V5a2 2 0 0 0-2-2H4"></path> <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"></path></svg>Warnings</button><button class="ss-tab" role="tab" aria-selected="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h4"></path> <path d="M10 8h4"></path> <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path> <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path> <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path></svg>Shelters</button><button class="ss-tab" role="tab" aria-selected="false"><svg class="ss-i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"></path> <path d="M4 4a16 16 0 0 1 16 16"></path> <circle cx="5" cy="19" r="1"></circle></svg>Feeds</button></div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">slide-over tabs · with count</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="width: 390px; max-width: 100%"><div class="ss" style="width: 390px; height: auto; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+
+<nav class="ss-tabbar" aria-label="Sections" style="position: relative; z-index: 2"><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path> <path d="M15 5.764v15"></path> <path d="M9 3.236v15"></path></svg>Map</a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>Readings</a><a href="#" aria-current="page"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path> <path d="M12 9v4"></path> <path d="M12 17h.01"></path></svg>Alerts<span class="ss-badge">2</span></a><a href="#" aria-current="false"><svg class="ss-i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path> <path d="M12 11h4"></path> <path d="M12 16h4"></path> <path d="M8 11h.01"></path> <path d="M8 16h.01"></path></svg>Plan</a></nav>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">phone tab bar · with unacknowledged count</figcaption>
+</figure></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

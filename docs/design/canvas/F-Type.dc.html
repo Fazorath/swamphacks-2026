@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type and numbers</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Foundations</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Type and numbers</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">IBM Plex Sans for words, IBM Plex Mono for labels, tags and every number. Both are bundled with the dashboard (@fontsource 5.3.0), never fetched from Google Fonts, because a Mesh-only Node has no internet. Desktop renders at 120% for the projector; these are the base sizes.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Scale</h2></div>
+<div style="border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; background: var(--surface-panel)"><div style="min-width: 900px">
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border)"><span class="ss-label">Role</span><span class="ss-label">Spec</span><span class="ss-label">Sample</span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Takeover headline</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">34 px · Plex Sans 700 · 1.15</span></span><span style="min-width: 0"><span style="font-size: 34px; font-weight: 700; line-height: 1.15">Evacuation order</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Screen title</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">20 px · Plex Sans 700</span></span><span style="min-width: 0"><span style="font-size: 20px; font-weight: 700">Evacuation Plan</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Card title</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">16 px · Plex Sans 600–700</span></span><span style="min-width: 0"><span style="font-size: 16px; font-weight: 600">Eastside High School</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Body</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">15 px · Plex Sans 400 · 1.5</span></span><span style="min-width: 0"><span style="font-size: 15px; line-height: 1.5">Your Household Profile never leaves your device.</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Small</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">13 px · Plex Sans 400</span></span><span style="min-width: 0"><span style="font-size: 13px; color: var(--text-secondary)">Signed by the Hub · verified</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Panel title</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">12 px · Plex Mono 600 · caps · 0.08em</span></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase">Readings</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Hero number</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">28 px · Plex Mono 600 · tabular</span></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 28px; font-weight: 600">90 <small style="font-size: 13px; color: var(--text-secondary)">cm</small></span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Metric</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">15 px · Plex Mono 600 · tabular</span></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 15px; font-weight: 600">1002 hPa</span></span></div>
+<div style="display: grid; grid-template-columns: 200px 300px minmax(0, 1fr); gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--border); align-items: center; font-size: 14px; line-height: 1.45"><span style="min-width: 0"><strong>Tag</strong></span><span style="min-width: 0"><span class="ss-mono" style="font-size: 12px; color: var(--text-secondary)">11 px · Plex Mono 600 · caps · 0.06em</span></span><span style="min-width: 0"><span class="ss-tag"><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path> <path d="M6.453 15h11.094"></path> <path d="M8.5 2h7"></path></svg>SIMULATED</span></span></div>
+</div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Tabular figures</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">Numbers update every second. Tabular figures and fixed-width value slots mean a changing number never moves its neighbours.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div class="ss-mono" style="display: grid; grid-template-columns: 80px 1fr; gap: 6px 12px; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums"><span style="text-align: right">20</span><span style="font-size: 13px; color: var(--text-secondary); align-self: center">cm</span><span style="text-align: right">35</span><span style="font-size: 13px; color: var(--text-secondary); align-self: center">cm</span><span style="text-align: right">90</span><span style="font-size: 13px; color: var(--text-secondary); align-self: center">cm</span><span style="text-align: right">111</span><span style="font-size: 13px; color: var(--text-secondary); align-self: center">cm</span></div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Do: tabular, right-aligned slot</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: grid; gap: 6px; font-size: 22px; font-weight: 600; font-variant-numeric: proportional-nums"><span>20 cm</span><span>35 cm</span><span>90 cm</span><span>111 cm</span></div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Don't: proportional figures in a sans font</figcaption>
+</figure></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

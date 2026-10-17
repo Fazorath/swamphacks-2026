@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Loading and empty states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Loading and empty states</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Calm and static. Skeleton blocks, never shimmer or a spinner. Never blank out data already on screen; mark it stale. Every empty Panel says why in one line.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Loading</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div class="ss-panel is-solid" style="padding: 14px; gap: 10px"><span class="ss-skel" style="height: 14px; width: 60%"></span><span class="ss-skel" style="height: 104px"></span><span class="ss-skel" style="height: 104px"></span></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Readings loading</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div role="status" style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px 0"><svg class="ss-i" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent)"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path> <path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"></path> <circle cx="12" cy="9" r="2"></circle> <path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"></path> <path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"></path> <path d="M9.5 18h5"></path> <path d="m8 22 4-11 4 11"></path></svg><strong style="font-size: 18px">Connecting to garage…</strong><span style="font-size: 14px; color: var(--text-secondary)">No internet needed.</span></div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Connecting message</figcaption>
+</figure></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Empty</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path> <path d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"></path> <circle cx="12" cy="9" r="2"></circle> <path d="M16.2 4.8c2 2 2.26 5.11.8 7.47"></path> <path d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1"></path> <path d="M9.5 18h5"></path> <path d="m8 22 4-11 4 11"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">No Nodes heard yet. Readings appear as soon as a Node on this Wi-Fi shares one.</p>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Readings</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path> <path d="M12 9v4"></path> <path d="M12 17h.01"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">No Official Alerts or Community Warnings right now.</p>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Alerts</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">Set up your household once to get the nearest open Shelter that fits you.</p><a class="ss-btn ss-btn--primary ss-btn--lg" href="#">Set up your household</a>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Plan · no profile</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h4"></path> <path d="M10 8h4"></path> <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path> <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path> <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">No open Shelter announced yet. Follow official sources.</p>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Plan · no open Shelter</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-9"></path> <path d="M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z"></path> <path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path> <path d="M21 12.43a1.93 1.93 0 0 0 0-3.36L8.83 2.2a1.64 1.64 0 0 0-1.63 0L3 4.57a1.93 1.93 0 0 0 0 3.36l12.18 6.86a1.636 1.636 0 0 0 1.63 0z"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">Shelters and routes arrive once this Node has the Cache Pack.</p>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Plan · no Cache Pack</figcaption>
+</figure>
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel); "><div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 18px 8px; color: var(--text-secondary)">
+<span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); color: var(--text-secondary)"><svg class="ss-i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12h-5"></path> <path d="M15 8h-5"></path> <path d="M19 17V5a2 2 0 0 0-2-2H4"></path> <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"></path></svg></span>
+<p style="font-size: 14px; line-height: 1.45; max-width: 260px">No Community Warnings issued. One goes out when two Registered Nodes reach High.</p>
+</div></div></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Hub · Warnings log</figcaption>
+</figure></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
