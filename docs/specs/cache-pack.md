@@ -96,7 +96,7 @@ A build script prepares one Cache Pack ahead of the event for a single demo box 
 
 ## Routes (ticket 0010)
 
-Ticket 0010 adds `routes/` to the pack; the manifest lists and checksums those files like any other. Decisions from the 0010 grill:
+Ticket 0010 added `routes/` to the Gainesville pack; the valley pack (0043) has none, and the build no longer makes them (`scripts/pack_routes.py` is kept for a stretch ticket); the manifest lists and checksums those files like any other. Decisions from the 0010 grill:
 
 - **Grid points.** About 100 m apart, kept only within about 100 m of a drivable road, so homes on a road always have one. Coordinates are rounded to 5 decimals. If the zip grows past about 5 MB, the spacing coarsens to about 250 m.
 - **Build.** The script reads the Geofabrik Florida extract clipped to `bbox` with `pyrosm` and runs one Dijkstra per Shelter (plain Python in `scripts/pack_routes.py`, so its tests run with the Node's); `pyrosm` lives in the build-only dependency group (`uv sync --group build`), never in the Node's runtime dependencies. The manifest gains `route_grid` (`south`, `west`, `lat_step`, `lon_step`) so a Viewer can find its Grid point's file; a pack without it has no Routes. The extract stays out of git.
