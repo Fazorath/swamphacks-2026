@@ -1,8 +1,8 @@
 # 0015: Shelter status updates over the mesh
 
-**What to build:** The Hub operator marks a Shelter open or closed. The change reaches every Node over the mesh, and residents' Evacuation Plans pick a different Shelter if theirs closes, all without internet and without downloading the Cache Pack again.
+**What to build:** This is the umbrella; the work is split into 0027 to 0031 and this ticket is done when they have all merged. The Hub operator marks a Shelter open or closed. The change reaches every Node over the mesh, and residents' Evacuation Plans pick a different Shelter if theirs closes, all without internet and without downloading the Cache Pack again.
 
-**Blocked by:** 0009, and the Shelter status format (decided, `docs/specs/wire-formats.md`)
+**Blocked by:** 0027, 0028, 0029, 0030, 0031 (0009 is done; the format is decided in `docs/specs/wire-formats.md`)
 
 **Status:** in-progress
 
