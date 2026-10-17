@@ -1,4 +1,4 @@
-from storm_shield.community_reading import CommunityReading
+from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.mesh import InMemoryNetwork, Message
 from storm_shield.shelter_status import ShelterStatus
 
@@ -15,7 +15,7 @@ def _reading(node: str) -> CommunityReading:
         seq=1,
         t=1_760_650_928,
         sim=True,
-        pos=(29.652, -82.324),
+        pos=Position(29.652, -82.324),
         pressure_hpa=1015,
         water_m=0.2,
         rain_mmh=0,

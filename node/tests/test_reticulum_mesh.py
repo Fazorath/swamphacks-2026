@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import RNS
 
-from storm_shield.community_reading import CommunityReading
+from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.community_warning import CommunityWarning
 from storm_shield.node_registry import (
     MAX_SIGNED_MESSAGE_BYTES,
@@ -29,7 +29,7 @@ def _reading(node: str) -> CommunityReading:
         seq=1_760_650_928,
         t=1_760_650_928,
         sim=True,
-        pos=(29.652, -82.324),
+        pos=Position(29.652, -82.324),
         pressure_hpa=991.2,
         water_m=0.84,
         rain_mmh=14.8,

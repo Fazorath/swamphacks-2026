@@ -5,7 +5,7 @@ import pytest
 from fixture_pack import SHELTERS, build_fixture_pack
 from meshed_nodes import MeshedNodes
 
-from storm_shield.community_reading import CommunityReading
+from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.mesh import Message, decode_message, deliver_to_listeners
 from storm_shield.shelter_status import ShelterStatus
 
@@ -104,7 +104,7 @@ def test_decoding_drops_an_unknown_kind_or_version_and_ignores_extra_fields() ->
         seq=1,
         t=1,
         sim=True,
-        pos=(29.652, -82.324),
+        pos=Position(29.652, -82.324),
         pressure_hpa=1015,
         water_m=0.2,
         rain_mmh=0,

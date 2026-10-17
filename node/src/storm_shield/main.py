@@ -1,8 +1,6 @@
 import asyncio
-import itertools
 import logging
 import threading
-import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -43,6 +41,7 @@ from storm_shield.node_registry import (
     SignUp,
 )
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
+from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
@@ -145,13 +144,6 @@ def create_app(
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
     store = ReadingStore(HISTORY_WINDOW_SECONDS)
-    position = fuzz_position(settings.latitude, settings.longitude)
-    # Starting from the clock keeps a restarted Node ahead of the seq others last saw from it.
-    sequence = itertools.count(int(time.time()))
-    # A tick and a Scenario step run on different threads; without this a tick that read the old
-    # Scenario could take its seq after the step and hide the step's reading from other Nodes.
-    publishing = threading.RLock()
-
     timeline = load_timeline()
     if settings.replay_track and settings.replay_track not in timeline.tracks:
         raise ValueError(
@@ -167,26 +159,21 @@ def create_app(
             return scenario.readings()
         return timeline.readings_at(settings.replay_track, event.event_t, clock())
 
-    def share_own_readings() -> None:
-        with publishing:
-            measurements = own_measurements()
-            if measurements is None:
-                return
-            reading = CommunityReading.from_measurements(
-                node=mesh.identity,
-                seq=next(sequence),
-                position=position,
-                readings=measurements,
-                river_km=settings.river_km,
-            )
-            store.record(mesh.identity, reading, clock())
-            warn_about_new_surges()
-            mesh.publish(reading)
+    def keep_reading(sender: str, reading: CommunityReading) -> None:
+        store.record(sender, reading, clock())
+        warn_about_new_surges()
 
-    def store_reading_from(sender: str, message: Message) -> None:
+    def hear_community_reading(sender: str, message: Message) -> None:
         if isinstance(message, CommunityReading):
-            store.record(sender, message, clock())
-            warn_about_new_surges()
+            keep_reading(sender, message)
+
+    publisher = ReadingPublisher(
+        mesh,
+        fuzz_position(settings.latitude, settings.longitude),
+        settings.river_km,
+        own_measurements,
+        keep_reading,
+    )
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
@@ -348,14 +335,14 @@ def create_app(
         for alert in due_official_alerts():
             forward_official_alert(alert)
 
-    mesh.subscribe(store_reading_from)
+    mesh.subscribe(hear_community_reading)
     mesh.subscribe(hear_event_clock)
     mesh.subscribe(hear_official_alert)
     mesh.subscribe(hear_community_warning)
     mesh.subscribe(hear_shelter_status)
     mesh.subscribe(hear_registry)
     mesh.subscribe(hear_sign_up)
-    share_own_readings()
+    publisher.share()
     if settings.role == "hub":
         repeat_shelter_status()
         repeat_registry()
@@ -370,7 +357,7 @@ def create_app(
             while True:
                 await asyncio.sleep(publish_every_seconds)
                 try:
-                    share_own_readings()
+                    publisher.share()
                 except Exception:
                     # One bad tick must not silence this Node for the rest of the storm.
                     logger.exception("could not share this Node's readings")
@@ -530,16 +517,16 @@ def create_app(
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:
-        with publishing:
+        with publisher.lock:
             scenario.step()
-            share_own_readings()
+            publisher.share()
             return ScenarioState(step=scenario.step_name)
 
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
-        with publishing:
+        with publisher.lock:
             scenario.reset()
-            share_own_readings()
+            publisher.share()
             return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")

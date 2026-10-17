@@ -10,10 +10,10 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
-- [ ] Turning a Community Reading into displayed readings lives on `CommunityReading`, next to `from_measurements`, so the kind, unit and scale tables are in one module
-- [ ] `ReadingStore` holds a small named record instead of a `(reading, received_at)` tuple that it indexes into
-- [ ] A fuzzed position has one small type instead of a bare `(float, float)` passed around
+- [x] Turning a Community Reading into displayed readings lives on `CommunityReading`, next to `from_measurements`, so the kind, unit and scale tables are in one module
+- [x] `ReadingStore` holds a small named record instead of a `(reading, received_at)` tuple that it indexes into
+- [x] A fuzzed position has one small type instead of a bare `(float, float)` passed around
 - [ ] The one-line `store_reading_from` wrapper and the repeated `datetime.now(UTC)` calls are gone
-- [ ] `create_app` hands the publish loop and sequencing to a small unit of its own
+- [x] `create_app` hands the publish loop and sequencing to a small unit of its own
 - [ ] The Mesh parameters say Community Reading where only readings flow
 - [ ] All existing tests pass unchanged, plus **Commands**
