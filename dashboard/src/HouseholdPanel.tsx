@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import type { HouseholdProfile } from "./householdProfile";
+import type { HouseholdProfile, Home } from "./householdProfile";
 
 type Props = {
   profile: HouseholdProfile | null;
-  home: HouseholdProfile["home"] | null;
+  home: Home | null;
   // Hidden while the map is in pick mode, but kept mounted so the form keeps what was typed.
   hidden: boolean;
   onPickHome: () => void;

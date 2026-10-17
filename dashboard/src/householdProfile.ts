@@ -1,5 +1,7 @@
+export type Home = { lat: number; lon: number };
+
 export type HouseholdProfile = {
-  home: { lat: number; lon: number };
+  home: Home;
   housing: "site-built" | "mobile-home-rv";
   needsSpecialNeedsShelter: boolean;
   needsPetFriendlyShelter: boolean;

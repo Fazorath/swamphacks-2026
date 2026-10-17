@@ -27,7 +27,7 @@ export function useHouseholdProfile(): HouseholdProfileState {
   const [state, setState] = useState<Loaded>(loadFromBrowser);
 
   // The profile stays in memory even when the browser refuses to store it.
-  const change = (profile: HouseholdProfile | null, write: () => void) => {
+  const commit = (profile: HouseholdProfile | null, write: () => void) => {
     try {
       write();
       setState({ profile, storageProblem: null });
@@ -39,7 +39,7 @@ export function useHouseholdProfile(): HouseholdProfileState {
 
   return {
     ...state,
-    save: (profile) => change(profile, () => saveProfile(window.localStorage, profile)),
-    remove: () => change(null, () => deleteProfile(window.localStorage)),
+    save: (profile) => commit(profile, () => saveProfile(window.localStorage, profile)),
+    remove: () => commit(null, () => deleteProfile(window.localStorage)),
   };
 }

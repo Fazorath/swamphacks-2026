@@ -13,13 +13,15 @@ import {
 } from "react-leaflet";
 
 import { NodeTags } from "./NodeTags";
+import type { Home } from "./householdProfile";
 import type { NodeOnMap } from "./nodesOnMap";
 
 const GAINESVILLE: [number, number] = [29.6516, -82.3248];
 
+const DRAFT_HOME_ICON = divIcon({ className: "home-draft-marker", html: "⌂", iconSize: [28, 28] });
 const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
 
-function PickHomeOnClick({ onPick }: { onPick: (home: { lat: number; lon: number }) => void }) {
+function PickHomeOnClick({ onPick }: { onPick: (home: Home) => void }) {
   useMapEvents({ click: (event) => onPick({ lat: event.latlng.lat, lon: event.latlng.lng }) });
   return null;
 }
@@ -57,9 +59,11 @@ type Props = {
   nodes: NodeOnMap[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  home: { lat: number; lon: number } | null;
+  home: Home | null;
+  // The unsaved spot being chosen in the form; the saved Home is `home`.
+  draftHome: Home | null;
   picking: boolean;
-  onPickHome: (home: { lat: number; lon: number }) => void;
+  onPickHome: (home: Home) => void;
   onDonePicking: () => void;
 };
 
@@ -68,6 +72,7 @@ export function NodeMap({
   selectedId,
   onSelect,
   home,
+  draftHome,
   picking,
   onPickHome,
   onDonePicking,
@@ -93,6 +98,13 @@ export function NodeMap({
         />
         <FitToNodesUntilMoved nodes={nodes} />
         {picking && <PickHomeOnClick onPick={onPickHome} />}
+        {draftHome && (
+          <Marker
+            position={[draftHome.lat, draftHome.lon]}
+            icon={DRAFT_HOME_ICON}
+            interactive={false}
+          />
+        )}
         {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
         {nodes.map((node) => {
           const selected = node.id === selectedId;

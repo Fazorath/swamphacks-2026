@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { HouseholdPanel } from "./HouseholdPanel";
-import type { HouseholdProfile } from "./householdProfile";
+import type { Home } from "./householdProfile";
 import { NodeMap } from "./NodeMap";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
@@ -27,7 +27,7 @@ export function App() {
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const [panelOpen, setPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
-  const [draftHome, setDraftHome] = useState<HouseholdProfile["home"] | null>(null);
+  const [draftHome, setDraftHome] = useState<Home | null>(null);
   const openPanel = () => {
     setDraftHome(profile?.home ?? null);
     setPanelOpen(true);
@@ -76,7 +76,8 @@ export function App() {
           nodes={nodes}
           selectedId={selectedId}
           onSelect={toggleSelected}
-          home={panelOpen ? draftHome : (profile?.home ?? null)}
+          home={profile?.home ?? null}
+          draftHome={panelOpen ? draftHome : null}
           picking={picking}
           onPickHome={setDraftHome}
           onDonePicking={() => setPicking(false)}

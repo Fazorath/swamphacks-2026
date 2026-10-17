@@ -19,6 +19,12 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - A Node discards a pack that fails its checksums, at download and again at startup, and retries every 30 s; it never downloads again once it holds a valid one. To force a refresh, delete `CACHE_PACK_DIR`.
 - `bbox` in the manifest is `[south, west, north, east]`.
 
+## Household Profile (ticket 0008)
+
+- **Leaflet map clicks work in jsdom**: `fireEvent.click(document.querySelector(".node-map")!, { clientX, clientY })` reaches `useMapEvents({ click })`, so pick mode is testable without mocking Leaflet. The tapped lat/lon is meaningless in jsdom (zero-size container); assert on what the app does with it, not its value.
+- **Don't name two files apart only by case** (`householdProfile.test.ts` vs `HouseholdProfile.test.tsx`): they collide on macOS. The flow test is `householdFlow.test.tsx`.
+- The dashboard has no polling yet, so the "no request carries the profile" test waits briefly on the only request there is (`/api/node`). When polling lands (0019), make that test run a real poll cycle.
+
 ## Reviews
 
 - 0007 code-review: a retry loop that catches only some exceptions can die silently and leave a Node with no pack; background loops catch `Exception` and log it with `logger.exception`.

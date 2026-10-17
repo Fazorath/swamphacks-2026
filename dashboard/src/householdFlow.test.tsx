@@ -93,9 +93,46 @@ test("an unreadable stored value shows a message, counts as missing and is not d
   expect(localStorage.getItem(KEY)).toBe("{not json");
 });
 
+test("an unsaved home shows only as a preview, not as the Home marker", () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "My household" }));
+  tapHomeOnMap();
+  expect(document.querySelector(".home-draft-marker")).not.toBeNull();
+  expect(document.querySelector(".home-marker")).toBeNull();
+});
+
+test("pick mode hides the form until Done is pressed", () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "My household" }));
+  fireEvent.click(screen.getByRole("button", { name: "Set home on map" }));
+  expect(screen.getByText(/Tap the map to place your home/)).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Done" }));
+  expect(screen.queryByText(/Tap the map to place your home/)).not.toBeInTheDocument();
+  expect(screen.getByRole("dialog", { name: "My household" })).toBeInTheDocument();
+});
+
+test("a failed delete still clears the profile for the session and says so", () => {
+  render(<App />);
+  fillInProfile();
+  vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+    throw new DOMException("blocked", "SecurityError");
+  });
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  fireEvent.click(screen.getByRole("button", { name: "My household" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete my profile" }));
+  fireEvent.click(screen.getByRole("button", { name: "Yes, delete" }));
+  expect(screen.getByRole("alert")).toHaveTextContent(/will not be remembered/);
+  expect(screen.getByText("Fill in your household profile")).toBeInTheDocument();
+});
+
 test("no request carries the profile", async () => {
   render(<App />);
   fillInProfile();
+  const { home } = JSON.parse(localStorage.getItem(KEY)!).profile;
   await new Promise((resolve) => setTimeout(resolve, 50));
-  expect(JSON.stringify(fetchSpy.mock.calls)).not.toMatch(/mobile-home-rv|lat|lon|housing/);
+  const sent = JSON.stringify(fetchSpy.mock.calls);
+  expect(sent).not.toMatch(/mobile-home-rv|housing|"lat"|"lon"/);
+  expect(sent).not.toContain(String(home.lat));
+  expect(sent).not.toContain(String(home.lon));
 });

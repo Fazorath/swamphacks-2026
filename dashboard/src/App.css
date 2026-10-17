@@ -160,7 +160,8 @@ button:disabled {
   cursor: crosshair;
 }
 
-.home-marker {
+.home-marker,
+.home-draft-marker {
   display: grid;
   place-items: center;
   background: var(--official);
@@ -169,6 +170,11 @@ button:disabled {
   color: var(--official-ink);
   font-size: 1.1rem;
   font-weight: bold;
+}
+
+.home-draft-marker {
+  opacity: 0.6;
+  border-style: dashed;
 }
 
 .areas {
