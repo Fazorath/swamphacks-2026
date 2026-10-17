@@ -4,14 +4,14 @@
 
 **Blocked by:** 0027, 0028, 0029, 0030, 0031 (0009 is done; the format is decided in `docs/specs/wire-formats.md`)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
 **Spec:** `docs/specs/shelter-status.md` (parent: `docs/specs/storm-shield.md`)
 
-- [ ] The Hub can set a Shelter's status through its API and dashboard
-- [ ] Shelter status updates are sent over Mesh, signed by the Hub; Nodes keep the latest per Shelter
-- [ ] The dashboard and Evacuation Plan use the latest statuses on top of the Cache Pack
-- [ ] Seam A tests: a status set on the Hub shows up on every Node; one not signed by the Hub is ignored
-- [ ] All **Commands** pass
+- [x] The Hub can set a Shelter's status through its API and dashboard
+- [x] Shelter status updates are sent over Mesh, signed by the Hub; Nodes keep the latest per Shelter
+- [x] The dashboard and Evacuation Plan use the latest statuses on top of the Cache Pack
+- [x] Seam A tests: a status set on the Hub shows up on every Node; one not signed by the Hub is ignored
+- [x] All **Commands** pass
