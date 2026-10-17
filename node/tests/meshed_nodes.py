@@ -6,7 +6,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack
-from storm_shield.community_reading import CommunityReading
+from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.community_warning import CommunityWarning
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
@@ -230,7 +230,7 @@ class MeshedNodes:
                 seq=seq + 1,
                 t=int(self._now.timestamp()),
                 sim=True,
-                pos=(29.652, -82.324),
+                pos=Position(29.652, -82.324),
                 river_km=river_km,
                 pressure_hpa=pressure_hpa,
                 water_m=water_cm / 100,

@@ -1,4 +1,5 @@
-from typing import Literal, Self
+from datetime import datetime
+from typing import Literal, NamedTuple, Self
 
 from pydantic import BaseModel
 
@@ -8,11 +9,16 @@ from storm_shield.scenario import Reading, ReadingKind
 POSITION_GRID_DEGREES = 0.002
 
 
-def fuzz_position(latitude: float, longitude: float) -> tuple[float, float]:
+class Position(NamedTuple):
+    latitude: float
+    longitude: float
+
+
+def fuzz_position(latitude: float, longitude: float) -> Position:
     def snap(degrees: float) -> float:
         return round(round(degrees / POSITION_GRID_DEGREES) * POSITION_GRID_DEGREES, 3)
 
-    return (snap(latitude), snap(longitude))
+    return Position(snap(latitude), snap(longitude))
 
 
 class CommunityReading(BaseModel):
@@ -24,7 +30,7 @@ class CommunityReading(BaseModel):
     seq: int
     t: int
     sim: bool
-    pos: tuple[float, float]
+    pos: Position
     # Where the operator put this Node along the river; the Hub reads it to place a Community Warning.
     river_km: float | None = None
     pressure_hpa: float
@@ -37,7 +43,7 @@ class CommunityReading(BaseModel):
         cls,
         node: str,
         seq: int,
-        position: tuple[float, float],
+        position: Position,
         readings: list[Reading],
         river_km: float | None = None,
     ) -> Self:
@@ -54,3 +60,17 @@ class CommunityReading(BaseModel):
             rain_mmh=value["rain_rate"],
             soil_pct=value["soil_moisture"],
         )
+
+    def as_readings(self, received_at: datetime) -> list[Reading]:
+        """The displayed form: water in centimetres, units named. The inverse of from_measurements."""
+        # Age is measured on this Node's clock, so the timestamp is when we received it, not `t`.
+        values: list[tuple[ReadingKind, float, str]] = [
+            ("pressure", self.pressure_hpa, "hPa"),
+            ("rain_rate", self.rain_mmh, "mm/h"),
+            ("soil_moisture", self.soil_pct, "%"),
+            ("water_level", round(self.water_m * 100, 1), "cm"),
+        ]
+        return [
+            Reading(kind=kind, value=value, unit=unit, timestamp=received_at, simulated=self.sim)
+            for kind, value, unit in values
+        ]

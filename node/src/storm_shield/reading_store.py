@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel
 
-from storm_shield.community_reading import CommunityReading
-from storm_shield.scenario import Reading, ReadingKind
+from storm_shield.community_reading import CommunityReading, Position
+from storm_shield.scenario import ReadingKind
 from storm_shield.timing import STALE_AFTER_SECONDS
 
 
@@ -19,12 +19,19 @@ class NodeSnapshot(BaseModel):
     """What this Node last heard from one Node, grouped so the flags cannot disagree."""
 
     id: str
-    position: tuple[float, float]
+    position: Position
     river_km: float | None
     simulated: bool
     age_s: float
     stale: bool
     measurements: dict[ReadingKind, Measurement]
+
+
+@dataclass(frozen=True)
+class HeardReading:
+    reading: CommunityReading
+    # On this Node's clock, which is what age is measured against.
+    received_at: datetime
 
 
 @dataclass
@@ -41,16 +48,16 @@ class ReadingStore:
     def __init__(self, history_seconds: float) -> None:
         self._history_window = timedelta(seconds=history_seconds)
         self._lock = threading.Lock()
-        self._history: dict[str, deque[tuple[CommunityReading, datetime]]] = {}
+        self._history: dict[str, deque[HeardReading]] = {}
 
     def record(self, sender: str, reading: CommunityReading, received_at: datetime) -> None:
         with self._lock:
             history = self._history.setdefault(sender, deque())
             # A repeated or relayed-late copy must not overwrite a newer reading.
-            if history and reading.seq <= history[-1][0].seq:
+            if history and reading.seq <= history[-1].reading.seq:
                 return
-            history.append((reading, received_at))
-            while history[0][1] < received_at - self._history_window:
+            history.append(HeardReading(reading, received_at))
+            while history[0].received_at < received_at - self._history_window:
                 history.popleft()
 
     def snapshot(self, now: datetime) -> StoreSnapshot:
@@ -70,16 +77,14 @@ class ReadingStore:
         since = now - self._history_window
         recent: dict[str, list[CommunityReading]] = {}
         for sender, history in self._history.items():
-            in_window = [reading for reading, received_at in history if received_at >= since]
-            recent[sender] = in_window or [history[-1][0]]
+            in_window = [heard.reading for heard in history if heard.received_at >= since]
+            recent[sender] = in_window or [history[-1].reading]
         return recent
 
 
-def _node_snapshot(
-    sender: str, last_heard: tuple[CommunityReading, datetime], now: datetime
-) -> NodeSnapshot:
-    reading, received_at = last_heard
-    age_s = (now - received_at).total_seconds()
+def _node_snapshot(sender: str, last_heard: HeardReading, now: datetime) -> NodeSnapshot:
+    reading = last_heard.reading
+    age_s = (now - last_heard.received_at).total_seconds()
     return NodeSnapshot(
         id=sender,
         position=reading.pos,
@@ -89,20 +94,6 @@ def _node_snapshot(
         stale=age_s > STALE_AFTER_SECONDS,
         measurements={
             m.kind: Measurement(value=m.value, unit=m.unit)
-            for m in _measurements(reading, received_at)
+            for m in reading.as_readings(last_heard.received_at)
         },
     )
-
-
-def _measurements(reading: CommunityReading, received_at: datetime) -> list[Reading]:
-    # Age is measured on this Node's clock, so the timestamp is when we received it, not `t`.
-    values: list[tuple[ReadingKind, float, str]] = [
-        ("pressure", reading.pressure_hpa, "hPa"),
-        ("rain_rate", reading.rain_mmh, "mm/h"),
-        ("soil_moisture", reading.soil_pct, "%"),
-        ("water_level", round(reading.water_m * 100, 1), "cm"),
-    ]
-    return [
-        Reading(kind=kind, value=value, unit=unit, timestamp=received_at, simulated=reading.sim)
-        for kind, value, unit in values
-    ]
