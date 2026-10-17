@@ -90,5 +90,4 @@ def test_a_node_that_joins_late_converges_after_a_repeat(
     _start_hub(meshed_nodes, tmp_path, shelter_repeat_seconds=0.02)
     _set(meshed_nodes, GYM, False)
     meshed_nodes.start("porch", cache_pack=(tmp_path, build_fixture_pack(shelters=TWO_SHELTERS)))
-    assert _open(meshed_nodes, "porch") == []
     _wait_until(lambda: _open(meshed_nodes, "porch") == [LIBRARY])

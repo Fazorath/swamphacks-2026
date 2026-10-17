@@ -1,4 +1,5 @@
 import threading
+from collections.abc import Callable
 from typing import Literal
 
 from pydantic import BaseModel
@@ -42,45 +43,52 @@ class UnknownShelter(ValueError):
 class ShelterRegistry:
     """The Hub's own record of which Shelters are open, and the `ver` it announces them under."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, pack_shelter_ids: Callable[[], list[str]], unix_seconds: Callable[[], int]
+    ) -> None:
+        # Read on every call, because the Cache Pack may arrive after the Hub starts.
+        self._pack_shelter_ids = pack_shelter_ids
+        self._unix_seconds = unix_seconds
         # Request threads change a Shelter while the repeat loop reads the snapshot.
         self._lock = threading.Lock()
         self._ver = 0
         self._open: set[str] = set()
 
-    def snapshot(self, shelter_ids: list[str], t: int) -> ShelterStatus | None:
+    def snapshot(self) -> ShelterStatus | None:
         """The current status; the first call with a pack opens every Shelter at `ver` 1.
 
         None while the Hub has no Shelters yet, because it has nothing to announce.
         """
         with self._lock:
-            return self._current(shelter_ids, t)
+            return self._seeded_status()
 
-    def set_open(
-        self, shelter_id: str, is_open: bool, shelter_ids: list[str], t: int
-    ) -> ShelterStatus:
+    def set_open(self, shelter_id: str, is_open: bool) -> ShelterStatus:
         """Open or close one Shelter under a higher `ver`, so every Node takes the change."""
-        if shelter_id not in shelter_ids:
+        if shelter_id not in self._pack_shelter_ids():
             raise UnknownShelter(shelter_id)
         with self._lock:
-            self._current(shelter_ids, t)
+            self._seeded_status()
             if is_open:
                 self._open.add(shelter_id)
             else:
                 self._open.discard(shelter_id)
             self._ver += 1
-            return self._status(shelter_ids, t)
+            return self._status()
 
-    def _current(self, shelter_ids: list[str], t: int) -> ShelterStatus | None:
+    def _seeded_status(self) -> ShelterStatus | None:
         if self._ver == 0:
+            shelter_ids = self._pack_shelter_ids()
             if not shelter_ids:
                 return None
             self._open = set(shelter_ids)
             self._ver = 1
-        return self._status(shelter_ids, t)
+        return self._status()
 
-    def _status(self, shelter_ids: list[str], t: int) -> ShelterStatus:
+    def _status(self) -> ShelterStatus:
         # Pack order keeps the list stable between announcements.
+        shelter_ids = self._pack_shelter_ids()
         return ShelterStatus(
-            ver=self._ver, t=t, open=[sid for sid in shelter_ids if sid in self._open]
+            ver=self._ver,
+            t=self._unix_seconds(),
+            open=[sid for sid in shelter_ids if sid in self._open],
         )

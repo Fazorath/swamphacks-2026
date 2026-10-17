@@ -115,15 +115,19 @@ def create_app(
         if isinstance(message, ShelterStatus):
             shelter_status.hear(message)
 
-    shelter_registry = ShelterRegistry()
+    shelter_registry = ShelterRegistry(cache_pack.shelter_ids, lambda: int(clock().timestamp()))
 
     def announce_shelters(status: ShelterStatus) -> None:
         # The Hub does not hear its own broadcasts, so it takes the status itself.
         shelter_status.hear(status)
-        mesh.publish(status)
+        try:
+            mesh.publish(status)
+        except Exception:
+            # The change already stands on the Hub, and the next repeat sends it again.
+            logger.exception("could not announce the Shelter status")
 
     def repeat_shelter_status() -> None:
-        status = shelter_registry.snapshot(cache_pack.shelter_ids(), int(clock().timestamp()))
+        status = shelter_registry.snapshot()
         if status:
             announce_shelters(status)
 
@@ -281,17 +285,16 @@ def create_app(
 
         @app.post("/api/shelters/open")
         def set_shelter_open(change: ShelterChange) -> OpenShelters:
-            shelter_ids = cache_pack.shelter_ids()
-            if not shelter_ids:
+            if not cache_pack.shelter_ids():
                 raise HTTPException(
                     status_code=503, detail="the Hub has no valid Cache Pack, so no Shelters yet"
                 )
             try:
-                status = shelter_registry.set_open(
-                    change.id, change.open, shelter_ids, int(clock().timestamp())
-                )
+                status = shelter_registry.set_open(change.id, change.open)
             except UnknownShelter:
-                raise HTTPException(status_code=422, detail=f"unknown Shelter {change.id!r}")
+                raise HTTPException(
+                    status_code=422, detail=f"unknown Shelter {change.id!r}"
+                ) from None
             announce_shelters(status)
             return OpenShelters(open=status.open)
 
