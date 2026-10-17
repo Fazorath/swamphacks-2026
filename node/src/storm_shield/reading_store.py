@@ -43,7 +43,8 @@ class HeardReading:
 class StoreSnapshot:
     """Every listed Node's latest readings and the histories Flood Risk needs, from one instant.
 
-    `nodes` omits Nodes silent for 10 minutes; `recent` holds only Nodes that still count.
+    `nodes` omits Nodes past DROPS_OFF_AFTER_SECONDS of silence; `recent` holds only Nodes that
+    still count (STOPS_COUNTING_AFTER_SECONDS).
     """
 
     nodes: list[NodeSnapshot]
@@ -81,12 +82,12 @@ class ReadingStore:
         """Each Node's readings from the history window, oldest first.
 
         A Node that has said nothing within the window but still counts keeps its last reading;
-        one silent for 60 s no longer counts and is left out.
+        one past STOPS_COUNTING_AFTER_SECONDS of silence is left out.
         """
         since = now - self._history_window
         recent: dict[str, list[CommunityReading]] = {}
         for sender, history in self._history.items():
-            if _age_s(history[-1], now) > STOPS_COUNTING_AFTER_SECONDS:
+            if not _counts(_age_s(history[-1], now)):
                 continue
             in_window = [heard.reading for heard in history if heard.received_at >= since]
             recent[sender] = in_window or [history[-1].reading]
@@ -95,6 +96,10 @@ class ReadingStore:
 
 def _age_s(last_heard: HeardReading, now: datetime) -> float:
     return (now - last_heard.received_at).total_seconds()
+
+
+def _counts(age_s: float) -> bool:
+    return age_s <= STOPS_COUNTING_AFTER_SECONDS
 
 
 def _node_snapshot(sender: str, last_heard: HeardReading, now: datetime) -> NodeSnapshot:
@@ -107,7 +112,7 @@ def _node_snapshot(sender: str, last_heard: HeardReading, now: datetime) -> Node
         simulated=reading.sim,
         age_s=age_s,
         stale=age_s > STALE_AFTER_SECONDS,
-        counts=age_s <= STOPS_COUNTING_AFTER_SECONDS,
+        counts=_counts(age_s),
         measurements={
             m.kind: Measurement(value=m.value, unit=m.unit)
             for m in reading.as_readings(last_heard.received_at)
