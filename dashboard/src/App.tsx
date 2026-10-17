@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
+import { EventClockTag } from "./EventClockTag";
 import { FloodRiskChip } from "./FloodRiskPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
@@ -12,6 +13,7 @@ import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
+import { useEventClock } from "./useEventClock";
 import { useFloodRisk } from "./useFloodRisk";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeIdentity } from "./useNodeIdentity";
@@ -34,6 +36,7 @@ const PLACEHOLDER_AREAS = ["Alerts"];
 export function App() {
   const { identity, failed } = useNodeIdentity();
   const status = useNodeStatus();
+  const eventClock = useEventClock();
   const cameras = useCameras();
   const floodRisk = useFloodRisk();
   const nodes = nodesOnMap(useReadings(), identity, floodRisk?.nodes);
@@ -74,6 +77,7 @@ export function App() {
               : "Connecting…"}
         </p>
         {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
+        <EventClockTag clock={eventClock} />
         <FloodRiskChip floodRisk={floodRisk} />
         <p className="household-status">
           {profile ? "Household profile saved" : "Fill in your household profile"}

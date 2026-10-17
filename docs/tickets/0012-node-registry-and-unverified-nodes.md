@@ -4,9 +4,9 @@
 
 **Blocked by:** 0006, and the registry format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** amitathik7
 
 **Spec:** `docs/specs/storm-shield.md`
 

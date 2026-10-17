@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi.testclient import TestClient
 
@@ -8,6 +8,7 @@ from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork
+from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
 from storm_shield.shelter_status import ShelterStatus
 
@@ -38,11 +39,35 @@ class MeshedNodes:
                 CachePack(directory / name).install(pack)
             self._clients[name] = TestClient(create_app(settings, mesh, clock=lambda: self._now))
 
+    def start_sensor(
+        self, name: str, *, replay_track: str = "", publish_every_seconds: float = 0.02
+    ) -> None:
+        """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
+        settings = self._settings(
+            name,
+            hub_identity=HUB,
+            replay_track=replay_track,
+            publish_every_seconds=publish_every_seconds,
+        )
+        client = TestClient(create_app(settings, self._network.join(name, HUB), clock=self._clock))
+        client.__enter__()
+        self._running.append(client)
+        self._clients[name] = client
+
     def start_hub(
-        self, cache_pack: tuple[Path, bytes] | None = None, *, shelter_repeat_seconds: float = 30
+        self,
+        cache_pack: tuple[Path, bytes] | None = None,
+        *,
+        shelter_repeat_seconds: float = 30,
+        replay_repeat_seconds: float = 10,
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
-        settings = self._settings(HUB, role="hub", shelter_repeat_seconds=shelter_repeat_seconds)
+        settings = self._settings(
+            HUB,
+            role="hub",
+            shelter_repeat_seconds=shelter_repeat_seconds,
+            replay_repeat_seconds=replay_repeat_seconds,
+        )
         if cache_pack:
             directory, pack = cache_pack
             settings = settings.model_copy(
@@ -76,6 +101,14 @@ class MeshedNodes:
         for client in self._running:
             client.__exit__(None, None, None)
 
+    def announce_replay(
+        self, state: Literal["playing", "paused", "stopped"], event_t: int, *, sender: str = HUB
+    ) -> None:
+        """Have a Node that is not running an app publish one Event clock message."""
+        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
+        self._hand_fed[sender] = mesh
+        mesh[0].publish(ReplayClockMessage(state=state, event_t=event_t, rate=30))
+
     def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:
         """Have a Node that is not running an app publish one Shelter status."""
         mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
@@ -90,6 +123,9 @@ class MeshedNodes:
             lambda _, message: heard.append(message) if isinstance(message, ShelterStatus) else None
         )
         return heard
+
+    def _clock(self) -> datetime:
+        return self._now
 
     def advance(self, seconds: float) -> None:
         """Move every Node's clock forward without waiting."""
