@@ -79,3 +79,17 @@ _Avoid_: refuge, safe place
 **Flood-Prone Area**:
 Land approximated from FEMA flood zones and creek floodplains; Alachua County has no lettered evacuation zones.
 _Avoid_: evacuation zone, surge zone
+
+## Dashboard
+
+**Warning Takeover**:
+The full-screen modal that interrupts any view when a new Official Alert or Community Warning arrives, with one large acknowledge button; acknowledging it on one device never clears it on another.
+_Avoid_: popup, alarm, klaxon, notification
+
+**Stale**:
+A Node whose last Community Reading arrived more than 15 seconds ago by the receiving Node's own clock; after 60 seconds its readings stop counting toward Flood Risk.
+_Avoid_: offline node, dead node, timed out
+
+**Hub Panel**:
+The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the live or replay switch for Official Alerts.
+_Avoid_: admin page, settings, control panel

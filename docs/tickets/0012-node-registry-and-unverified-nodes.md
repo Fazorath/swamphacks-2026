@@ -2,7 +2,7 @@
 
 **What to build:** A Node signs up with the Hub, and the Hub operator accepts its identity. The Hub shares a signed registry over the mesh. Every Node then counts only Registered Nodes toward Flood Risk, and shows Unverified Nodes greyed out and marked "not counted". The Hub's dashboard shows the registry.
 
-**Blocked by:** 0006, and the registry update message format in the UI design doc
+**Blocked by:** 0006, and the registry format (decided, `docs/specs/wire-formats.md`)
 
 **Status:** ready-for-agent
 

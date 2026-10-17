@@ -10,10 +10,11 @@
   --community: #4cc9f0;
   --low: #3dd68c;
   --elevated: #f5a524;
-  --high: #ff6b6b;
+  --high: #ff9494;
   --official: #f2f5fa;
   --official-ink: #0b1f4d;
-  --warning: #b79cff;
+  --official-blue: #1e40af;
+  --warning: #c0a8ff;
 }
 
 * {

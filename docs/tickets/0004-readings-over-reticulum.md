@@ -2,7 +2,7 @@
 
 **What to build:** Two laptops on the same Wi-Fi each run a Node and see each other's Community Readings on their dashboards, carried by Reticulum with no internet and no addresses configured. This is the riskiest ticket in the project (ADR 0001); rehearse it on Saturday.
 
-**Blocked by:** 0003, and the Community Reading message format in the UI design doc
+**Blocked by:** 0003, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
 **Status:** ready-for-agent
 
