@@ -23,7 +23,7 @@
 | [0018-on-device-rerouting](0018-on-device-rerouting.md) | done | leonardorofaDV |
 | [0019-dashboard-polls-one-state-snapshot](0019-dashboard-polls-one-state-snapshot.md) | done | leonardorofaDV |
 | [0020-readings-publish-in-order](0020-readings-publish-in-order.md) | done | refloow-0 |
-| [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | ready-for-agent | unclaimed |
+| [0021-silent-nodes-stop-counting-and-drop-off](0021-silent-nodes-stop-counting-and-drop-off.md) | in-progress | leonardorofaDV |
 | [0022-restarted-node-is-heard-again](0022-restarted-node-is-heard-again.md) | in-progress | leonardorofaDV |
 | [0023-mesh-ignores-bad-messages](0023-mesh-ignores-bad-messages.md) | done | Fazorath |
 | [0024-tidy-community-reading-mapping](0024-tidy-community-reading-mapping.md) | done | refloow-0 |
