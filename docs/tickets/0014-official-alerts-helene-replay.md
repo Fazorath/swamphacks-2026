@@ -10,6 +10,8 @@
 
 **Spec:** `docs/specs/storm-shield.md`
 
+**Design:** `docs/design/ui.md` ("Alerts Panel"); canvas artboards `C-Alerts`, `P-Alerts`.
+
 - [ ] Recorded Helene NWS alerts and the Alachua County order are stored as replay data, citing their source URLs
 - [ ] Replay goes through the same normalization path that live feeds will use (0017); each alert is tagged with its source and live or replay
 - [ ] The Hub forwards Official Alerts over Mesh; every Node's API and dashboard show them
