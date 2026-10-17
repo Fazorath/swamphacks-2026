@@ -4,9 +4,9 @@
 
 **Blocked by:** 0003, and the Community Reading format (decided, `docs/specs/wire-formats.md`)
 
-**Status:** ready-for-agent (the code is done and merged; what is left needs the Raspberry Pis and two laptops, see "Handoff" at the bottom)
+**Status:** in-progress (the code is done and merged; what is left needs the Raspberry Pis and two laptops, see "Handoff" at the bottom)
 
-**Owner:** unclaimed
+**Owner:** amitathik7
 
 **Spec:** `docs/specs/storm-shield.md`
 
