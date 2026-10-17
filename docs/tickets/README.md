@@ -63,5 +63,5 @@
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV |
-| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | ready-for-agent | unclaimed |
+| [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | in-progress | leonardorofaDV |
 | [0062-flood-levels-fit-the-river](0062-flood-levels-fit-the-river.md) | done | refloow-0 |
