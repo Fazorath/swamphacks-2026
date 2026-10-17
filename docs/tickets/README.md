@@ -14,7 +14,7 @@
 | [0008-household-profile](0008-household-profile.md) | done | Fazorath |
 | [0009-evacuation-plan-panel](0009-evacuation-plan-panel.md) | in-progress | Fazorath |
 | [0010-route-to-the-shelter](0010-route-to-the-shelter.md) | ready-for-agent | unclaimed |
-| [0011-online-status-and-camera-tiles](0011-online-status-and-camera-tiles.md) | ready-for-agent | unclaimed |
+| [0011-online-status-and-camera-tiles](0011-online-status-and-camera-tiles.md) | in-progress | leonardorofaDV |
 | [0012-node-registry-and-unverified-nodes](0012-node-registry-and-unverified-nodes.md) | ready-for-agent | unclaimed |
 | [0013-community-warnings](0013-community-warnings.md) | ready-for-agent | unclaimed |
 | [0014-official-alerts-helene-replay](0014-official-alerts-helene-replay.md) | ready-for-agent | unclaimed |

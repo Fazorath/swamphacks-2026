@@ -32,12 +32,9 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
-  const plan = evacuationPlan({
-    profile,
-    pack: useCachePack(),
-    openShelterIds: useOpenShelterIds(),
-    floodRisk,
-  });
+  const cachePack = useCachePack();
+  const openShelterIds = useOpenShelterIds();
+  const plan = evacuationPlan({ profile, pack: cachePack, openShelterIds, floodRisk });
   const [panelOpen, setPanelOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
