@@ -13,7 +13,7 @@ export function reasonSentence({ code, nodes, value, seconds }: FloodRiskReason)
   const at = `at ${nodeCount(nodes)}`;
   switch (code) {
     case "water_surge":
-      return `water rose ${value / 100} m ${howLong(seconds ?? 0)}`;
+      return `water rose ${Number((value / 100).toFixed(1))} m ${howLong(seconds ?? 0)}`;
     case "water_high":
       return `water level ${value} cm ${at}`;
     case "water_rising":
