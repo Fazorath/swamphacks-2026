@@ -117,6 +117,7 @@ From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The 
   { "v": 1, "kind": "warning", "id": 7, "t": 1760650928, "nodes": ["b7e1f40a92c5"],
     "reasons": ["water_surge"], "origin": "b7e1f40a92c5", "origin_km": -12.0, "surge_t": 1787716020 }
   ```
+- **Community Warning `measured`** (optional, ticket 0050): once a second Registered Node downstream of the origin has surged, the Hub sends the same warning (same `id`) again with `"measured": { "node": "91c2e0b47a3d", "km": 1.6, "surge_t": 1787716740, "speed_kmh": 78.0 }`. `node` and `km` are the second Node and its River km, `surge_t` its Surge event time. Receivers replace their copy by `id`; it is not a new warning.
 - **Replay clock** (`kind: "replay"`), Hub only, sent on every change and every 10 s:
 
   ```json

@@ -86,6 +86,10 @@ _Avoid_: chainage, mile marker, distance
 How long the Surge in a Community Warning takes to reach a Viewer's home, counted down on the Event clock. Worked out on the Viewer from the home snapped to the river line (never on the Hub, and the home never leaves the device); with several warnings it follows the earliest arrival; a home upstream of the origin, or more than 2 km from the river line, has none.
 _Avoid_: countdown, arrival time, ETA (alone)
 
+**Measured wave speed**:
+The speed of a Surge between the first two Registered Nodes that surged, worked out by the Hub from their River kms and Surge times and carried on the Community Warning; it replaces the reconstructed speed for the reaches below the second Node.
+_Avoid_: actual speed, live speed
+
 **Official Alert**:
 A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
 _Avoid_: warning, notification
