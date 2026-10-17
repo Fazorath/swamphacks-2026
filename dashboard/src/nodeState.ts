@@ -32,6 +32,8 @@ export type NodeSnapshot = {
   simulated: boolean;
   age_s: number;
   stale: boolean;
+  // False once the Node has been silent for 60 s: Flood Risk and Community Warnings ignore it.
+  counts: boolean;
   measurements: Partial<Record<ReadingKind, Measurement>>;
   // Only Registered Nodes count toward Flood Risk; `name` is the Hub's name for it, null if none.
   registered: boolean;

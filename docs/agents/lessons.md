@@ -299,3 +299,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The plan and every warning card show the same line, the earliest arrival over all warnings** (code-review: per-card ETAs let a card disagree with the plan). A second Surge from a node nearer home can beat the first, so a test that expects the later origin to arrive later is wrong (it was, first time).
 - **The Event clock only moves once a second in the dashboard** (`useEventClock` polls `/api/replay`), so at ×30 the minutes drop in steps. Not smoothed between polls.
 - `test_reticulum_nodes.py::test_nodes_find_each_other_and_a_step_crosses_the_mesh[tcp]` failed again in one full `scripts/check.sh` run and passed alone (`scripts/stop-nodes.sh` first); no Node code changed.
+
+## Silent Nodes stop counting and drop off (ticket 0021)
+
+- **The reading store does the dropping, not Flood Risk**: `snapshot().recent` leaves out a Node silent for 60 s and `nodes` leaves out one silent for 10 min, so `_counts` and the Community Warning (which reads `surged`) needed no change. A Node's history stays in the store, so it reappears the moment it speaks. `NodeSnapshot.counts` is the 60 s flag for the dashboard.
+- `InMemoryNetwork.join` now raises on a taken name; `leave` makes that mesh's `publish` a quiet no-op. A Node that `leave`d may rejoin under its name.
+- `test_reticulum_nodes.py` errored (not failed) in a full run while another `pytest` was still going in the background; it passed alone. Run one `pytest` at a time.
