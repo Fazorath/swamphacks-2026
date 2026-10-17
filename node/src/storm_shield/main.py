@@ -28,6 +28,7 @@ from storm_shield.internet_connection import (
     Status,
 )
 from storm_shield.mesh import InMemoryNetwork, Mesh, Message
+from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_store import NodeReading, NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
@@ -66,6 +67,7 @@ class NodeState(BaseModel):
     scenario: ScenarioState
     flood_risk: FloodRisk
     nodes: list[NodeSnapshot]
+    official_alerts: list[OfficialAlert]
 
 
 class OpenShelters(BaseModel):
@@ -191,8 +193,34 @@ def create_app(
             # The clock already runs on the Hub, and the next repeat sends it again.
             logger.exception("could not announce the Event clock")
 
+    official_alerts = HeardOfficialAlerts()
+
+    def hear_official_alert(_: str, message: Message) -> None:
+        if isinstance(message, OfficialAlert):
+            official_alerts.hear(message)
+
+    forwarded_alert_ids: set[str] = set()
+
+    def forward_official_alerts(*, again: bool = False) -> None:
+        """Send each replayed alert once the Event clock reaches it; `again` repeats those due."""
+        event = event_clock.current(clock())
+        if event.state == "stopped":
+            return
+        for alert in timeline.official_alerts_due(event.event_t):
+            if alert.id in forwarded_alert_ids and not again:
+                continue
+            # The Hub does not hear its own broadcasts, so it keeps the alert itself.
+            official_alerts.hear(alert)
+            forwarded_alert_ids.add(alert.id)
+            try:
+                mesh.publish(alert)
+            except Exception:
+                # The Hub already shows it, and the next repeat sends it again.
+                logger.exception("could not forward Official Alert %s", alert.id)
+
     mesh.subscribe(store_reading_from)
     mesh.subscribe(hear_event_clock)
+    mesh.subscribe(hear_official_alert)
     mesh.subscribe(hear_shelter_status)
     share_own_readings()
     if settings.role == "hub":
@@ -254,8 +282,18 @@ def create_app(
                     event = event_clock.current(clock())
                     if event.state != "stopped":
                         announce_event_clock(event)
+                        # A Node that joined late or missed a packet gets the alerts with the clock.
+                        forward_official_alerts(again=True)
                 except Exception:
                     logger.exception("could not repeat the Event clock")
+
+        async def keep_forwarding_official_alerts() -> None:
+            while True:
+                await asyncio.sleep(settings.alert_check_seconds)
+                try:
+                    forward_official_alerts()
+                except Exception:
+                    logger.exception("could not forward the Official Alerts")
 
         tasks = [
             asyncio.create_task(keep_sharing()),
@@ -265,6 +303,7 @@ def create_app(
         if settings.role == "hub":
             tasks.append(asyncio.create_task(keep_repeating_shelter_status()))
             tasks.append(asyncio.create_task(keep_repeating_event_clock()))
+            tasks.append(asyncio.create_task(keep_forwarding_official_alerts()))
         if settings.cache_pack_url:
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         yield
@@ -290,6 +329,7 @@ def create_app(
             scenario=ScenarioState(step=scenario.step_name),
             flood_risk=flood_risk(snapshot.recent),
             nodes=snapshot.nodes,
+            official_alerts=official_alerts.shown_at(event_clock.current(clock())),
         )
 
     @app.get("/api/cameras")

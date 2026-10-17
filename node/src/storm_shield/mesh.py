@@ -3,10 +3,11 @@ from collections.abc import Callable
 from typing import Protocol
 
 from storm_shield.community_reading import CommunityReading
+from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.shelter_status import ShelterStatus
 
-Message = CommunityReading | ShelterStatus | ReplayClockMessage
+Message = CommunityReading | ShelterStatus | ReplayClockMessage | OfficialAlert
 
 # The sender is whatever the Mesh verified, never something the message claims about itself.
 MessageListener = Callable[[str, Message], None]

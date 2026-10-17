@@ -26,6 +26,12 @@
     "source": "kathmandu-post-unfolded",
     "note": "When the Betrawati station stopped transmitting: the cue to cut the internet on stage."
   },
+  "official_alerts_note": "Times and recipients as reported. The report credits 'authorities' and the Flood Forecasting Division, not DHM by name; `issuer` follows the spec's tagging. Headlines paraphrase the report: it gives no alert wording. 10:28 is after the replay window and only shows if the replay runs on.",
+  "official_alerts": [
+    {"id": "dhm-notice", "at": "09:05:00", "issuer": "dhm", "headline": "Authorities learn that a major flood has entered the Bhote Koshi", "applies_to": [], "basis": "reported", "source": "kathmandu-post-unfolded"},
+    {"id": "dhm-sms", "at": "09:15:00", "issuer": "dhm", "headline": "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert", "applies_to": ["flood_prone_area"], "basis": "reported", "source": "kathmandu-post-unfolded"},
+    {"id": "district-galchhi-muglin", "at": "10:28:00", "issuer": "district", "headline": "Flood expected at Galchhi and Muglin within hours: Prithvi Highway and Trishuli riverside warned", "applies_to": ["flood_prone_area"], "basis": "reported", "source": "kathmandu-post-unfolded"}
+  ],
   "tracks": {
     "S0": {
       "place": "Lhende Khola, below the collapse (hypothetical station)",

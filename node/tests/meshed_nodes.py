@@ -8,6 +8,7 @@ from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork
+from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.settings import Settings
 from storm_shield.shelter_status import ShelterStatus
@@ -60,6 +61,7 @@ class MeshedNodes:
         *,
         shelter_repeat_seconds: float = 30,
         replay_repeat_seconds: float = 10,
+        alert_check_seconds: float = 0.02,
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
         settings = self._settings(
@@ -67,6 +69,7 @@ class MeshedNodes:
             role="hub",
             shelter_repeat_seconds=shelter_repeat_seconds,
             replay_repeat_seconds=replay_repeat_seconds,
+            alert_check_seconds=alert_check_seconds,
         )
         if cache_pack:
             directory, pack = cache_pack
@@ -114,6 +117,12 @@ class MeshedNodes:
         mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
         self._hand_fed[sender] = mesh
         mesh[0].publish(ShelterStatus(ver=ver, t=int(self._now.timestamp()), open=open_ids))
+
+    def announce_official_alert(self, alert: OfficialAlert, *, sender: str = HUB) -> None:
+        """Have a Node that is not running an app publish one Official Alert."""
+        mesh = self._hand_fed.get(sender) or (self._network.join(sender), 0)
+        self._hand_fed[sender] = mesh
+        mesh[0].publish(alert)
 
     def record_shelter_status(self) -> list[ShelterStatus]:
         """Join a Node that only listens; every Shelter status it hears is appended to the list."""

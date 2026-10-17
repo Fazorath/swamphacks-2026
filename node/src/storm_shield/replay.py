@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from storm_shield.official_alert import OfficialAlert
 from storm_shield.scenario import Reading, ReadingKind
 
 TIMELINE_FILE = Path(__file__).with_name("replay_timeline.json")
@@ -71,19 +72,50 @@ class InternetCue(BaseModel):
     at: str
 
 
+class ReplayedAlert(BaseModel):
+    """One Official Alert as the replay file records it; `source` names the citation."""
+
+    id: str
+    at: str
+    issuer: Literal["dhm", "ndrrma", "district"]
+    headline: str
+    applies_to: list[Literal["mobile_home", "rv", "flood_prone_area"]]
+    source: str
+
+
 class ReplayTimeline(BaseModel):
     """The one replay file, `replay_timeline.json`; each fact in it names its source."""
 
+    date: str
+    utc_offset: str
     start: str
     start_unix: int
     rate: int
+    sources: dict[str, str]
     phases: list[Phase]
     internet_cue: InternetCue
+    official_alerts: list[ReplayedAlert]
     tracks: dict[str, Track]
 
     def event_t_at(self, clock_time: str) -> int:
         """The Event clock's Unix seconds when the replay reads `clock_time`."""
         return self.start_unix + self._seconds_after_start(clock_time)
+
+    def official_alerts_due(self, event_t: int) -> list[OfficialAlert]:
+        """The Official Alerts the Event clock has reached, in the mesh format."""
+        return [
+            OfficialAlert(
+                id=alert.id,
+                source=alert.issuer,
+                mode="replay",
+                issued=f"{self.date}T{alert.at}{self.utc_offset}",
+                headline=alert.headline,
+                applies_to=alert.applies_to,
+                url=self.sources[alert.source],
+            )
+            for alert in self.official_alerts
+            if self.event_t_at(alert.at) <= event_t
+        ]
 
     def readings_at(
         self, track_name: str, event_t: int, timestamp: datetime
