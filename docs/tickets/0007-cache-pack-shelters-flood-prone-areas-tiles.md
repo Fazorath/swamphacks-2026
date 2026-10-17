@@ -19,7 +19,7 @@
 - "Internet off": serving the pack from disk does not depend on connectivity. 0007 builds no online/offline flag (that is 0011).
 
 - [x] `scripts/build_cache_pack.py` (run with `uv run --project node`, its extra dependencies in a separate group) produces `cache-pack.zip` in the layout of `docs/specs/wire-formats.md`: `manifest.json` with `bbox` and checksums, `shelters.json`, `flood_prone.geojson`, `tiles/{z}/{x}/{y}.png`
-- [x] The curated Shelter source and the creek floodplain layer are in the repo, reviewable by eye; the script fails on a Shelter outside the box
+- [ ] The curated Shelter source and the creek floodplain layer are in the repo, reviewable by eye; the script fails on a Shelter outside the box
 - [x] A Node downloads the pack from `CACHE_PACK_URL`, checks the checksums in `manifest.json`, unpacks it into `CACHE_PACK_DIR` (gitignored) and refuses and discards an incomplete or corrupt pack
 - [x] A Node without a valid pack retries every 30 s in the background; a Node with one never downloads again
 - [x] The API serves the pack: `GET /api/cache-pack` (availability and manifest), `GET /api/cache-pack/files/{path}` (any file or tile), `GET /api/cache-pack.zip` (for other Nodes)

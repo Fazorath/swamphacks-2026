@@ -43,8 +43,9 @@ def _read_manifest(raw: bytes) -> dict[str, Any]:
     return dict(manifest)
 
 
-def _sha256(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
+def _check_checksum(path: str, content: bytes, expected: str) -> None:
+    if hashlib.sha256(content).hexdigest() != expected:
+        raise InvalidCachePack(f"{path} does not match its checksum")
 
 
 class CachePack:
@@ -76,8 +77,7 @@ class CachePack:
         try:
             manifest = _read_manifest((self._unpacked / "manifest.json").read_bytes())
             for path, checksum in manifest["files"].items():
-                if _sha256((self._unpacked / path).read_bytes()) != checksum:
-                    raise InvalidCachePack(f"{path} does not match its checksum")
+                _check_checksum(path, (self._unpacked / path).read_bytes(), checksum)
             if not self.zip_path.is_file():
                 raise InvalidCachePack("the zip for other Nodes is missing")
         except (OSError, InvalidCachePack) as error:
@@ -95,8 +95,7 @@ class CachePack:
         except (zipfile.BadZipFile, KeyError) as error:
             raise InvalidCachePack(f"incomplete pack: {error}") from error
         for path, content in contents.items():
-            if _sha256(content) != manifest["files"][path]:
-                raise InvalidCachePack(f"{path} does not match its checksum")
+            _check_checksum(path, content, manifest["files"][path])
 
         self._discard()
         staging = self._directory / f"{UNPACKED_DIR}.staging"

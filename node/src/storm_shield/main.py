@@ -18,7 +18,6 @@ from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
     CachePack,
-    InvalidCachePack,
 )
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.mesh import InMemoryNetwork, Mesh
@@ -93,8 +92,9 @@ def create_app(
                     await asyncio.to_thread(
                         cache_pack.download, settings.cache_pack_url, pack_source
                     )
-                except (httpx.HTTPError, InvalidCachePack, OSError) as error:
-                    logger.warning("could not get the Cache Pack, retrying: %s", error)
+                except Exception:
+                    # Whatever went wrong, a Node without a pack must keep retrying.
+                    logger.exception("could not get the Cache Pack, retrying")
                     await asyncio.sleep(RETRY_EVERY_SECONDS)
 
         tasks = [asyncio.create_task(keep_sharing())]
