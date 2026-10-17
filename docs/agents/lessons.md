@@ -203,6 +203,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Dashboard**: the Hub Panel now has tabs (Registry is the default, then Replay and Shelters), so a test that needs the Replay controls or Shelters clicks the tab first. The Node button shows only when `window.location.hostname` is localhost, evaluated at render so a test can stub `location`.
 - Rehearsed on loopback Reticulum (Hub slot 40 / port 8710, Sensor slot 41 / port 8711, `HUB_IDENTITY` set): Sign-up arrived as `waiting`, accept made the Sensor `registered` within seconds and the Hub's registry showed `ver` 2. `scripts/run-demo.sh`'s new `register_sensor` step was only syntax-checked (`bash -n`), not run end to end: it needs the pack download and `ifconfig`. Software path only, not a Pi check.
 
+## Map tiles from the Cache Pack (ticket 0026)
+
+- **The map picks its tile URL from the pack's deepest tile zoom (`mapTiles.ts`) and a `tileerror` handler swaps a missing pack tile's `src` to `/api/tiles/...`.** Leaflet draws no tiles in jsdom (zero-size container), so tests mock `TileLayer` and assert its props; the per-tile fallback is tested as a pure function. Not seen in a real browser yet.
+- **The valley pack's tiles stop at z14**, so zooming past it asked the Node for tiles that do not exist and the map went blank (no CARTO key to fall back on). `TileLayer` now gets `maxNativeZoom` from the highest `tiles/{z}` in the manifest and stretches the z14 tiles. Found on a phone.
+
 ## Surge (ticket 0046)
 
 - **On Windows two Node tests fail on a clean `main`**: the identity-file tests assert mode `0o600`, which Windows cannot report (it shows `0o666`). The two `test_reticulum_nodes.py` loopback tests also failed until the Nodes left running from other worktrees were stopped (they held ports 4250 and 4251); they pass once those ports are free. A change that leaves exactly the two identity-file tests failing has not broken anything.
