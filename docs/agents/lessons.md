@@ -410,7 +410,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **jsdom has no WebGL**, so `setup.ts` swaps `maplibre-gl` for `src/fakeMaplibre.ts` in every test; read back what the app gave the map with `sourceData(name)`, `lastMap().layerIds`, `addressesTheMapWouldFetch()` and `tapMap(lat, lon)`. A source `data` URL must be absolute (MapLibre fetches in a worker), so it is built from `window.location.origin`.
 - **No text layers**: MapLibre symbol layers need a glyph server (a request to another host), so place names are `MapMarker` DOM elements chosen by zoom and view (`placeLabels.ts`).
 - **A calm day opens only the Readings Panel**, so a test about another Panel calls `expandPanel("Evacuation Plan")` (`expandPanel.ts`) right after `render`.
-- Not seen in a real browser: the Chrome extension was not connected, so the by-hand checks in the ticket are open.
+- The Chrome extension was not connected for the build, so the owner did the by-hand checks (zoom shrink, first paint, 60 fps, real `cache-pack-v5`); all passed. Overlapping labels over the valley are still there.
 
 
 ## Audience Node (ticket 0069)
