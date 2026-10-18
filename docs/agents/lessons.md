@@ -434,3 +434,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Defaults follow `ui.md` D-50, not the ticket's "calm: Readings and Evacuation Plan"**: calm is Readings alone; Elevated/High adds the Plan; a warning adds the Alerts too. Readings stay open (other side).
 - **The Storm Signal button only hides the top-bar pill**; there is no edge-darkening layer yet. The Alerts button has no badge because nothing acknowledges warnings yet.
 - Panel re-centring (`easeTo` with padding) and the rail look are tested only against the fake map; not seen in a real browser.
+
+## Map labels do not overlap (ticket 0078)
+
+- **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
+- **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
