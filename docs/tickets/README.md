@@ -57,7 +57,7 @@
 | [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | done | leonardorofaDV | - |
 | [0053-weather-grid-lookup](0053-weather-grid-lookup.md) | done | refloow-0 | - |
 | [0054-weather-button-and-picker](0054-weather-button-and-picker.md) | done | Fazorath | Fazorath |
-| [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | ready-for-agent | unclaimed | Fazorath |
+| [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | in-progress | Fazorath | Fazorath |
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 | - |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed | refloow-0 |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV | - |
