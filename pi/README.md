@@ -35,7 +35,7 @@ cd node && NODE_GPIO=on .venv/bin/storm-shield-node
 
 `pi/install.sh` installs the system libraries `lgpio` builds against (`swig`, `python3-dev`, `build-essential`, `liblgpio-dev`) and runs `uv sync --group pi`, which adds `gpiozero` and `lgpio`. Both are in the lockfile, so nothing is installed by hand.
 
-On the Pi, always sync with the group: `uv sync --group pi`. A plain `uv sync` (also run by `scripts/run-live.sh` on every restart, so don't use that script on the Pi) removes `lgpio`, and the Node then stops with `PinFactoryFallback: Falling back from lgpio: No module named 'lgpio'` and, ending in `OSError: [Errno 22]`, `NODE_GPIO=on but the Breadboard could not start`. Run `pi/install.sh` or `uv sync --group pi` again.
+On the Pi, always sync with the group: `uv sync --group pi`. A plain `uv sync` removes `lgpio` (`scripts/run-live.sh` adds the group itself when it sees a Pi), and the Node then stops with `PinFactoryFallback: Falling back from lgpio: No module named 'lgpio'` and, ending in `OSError: [Errno 22]`, `NODE_GPIO=on but the Breadboard could not start`. Run `pi/install.sh` or `uv sync --group pi` again.
 
 `NODE_GPIO` is `auto` by default: on only when the machine says it is a Raspberry Pi, so a laptop never loads GPIO. `on` stops the Node with an error if the pins cannot be read; `off` never loads the library. With `auto`, a Pi that cannot start the Breadboard logs why and keeps running without it. Give every Node its own `NODE_LATITUDE` and `NODE_LONGITUDE`.
 
