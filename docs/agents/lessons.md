@@ -493,3 +493,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
+## Temperature, cloud cover and rain on the terrain (ticket 0055)
+
+- **The weather picture is a MapLibre `image` source made from a canvas data address**, rows spaced in Mercator so places stay where the data puts them. jsdom has no canvas, so `setup.ts` mocks `weatherImageUrl` with a pixel checksum; tests tell pictures apart by that address, and `paintWeatherField` is tested on its raw pixels.
+- **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
+- **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.

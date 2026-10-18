@@ -114,7 +114,9 @@ function cloudAlpha(coverPct: number, noise: number): number {
 }
 
 /** The corners of the painted image, as MapLibre wants them: top-left, top-right, bottom-right, bottom-left (lon, lat). */
-export function fieldCorners(grid: WeatherGrid["grid"]): [number, number][] {
+export type Corners = [[number, number], [number, number], [number, number], [number, number]];
+
+export function fieldCorners(grid: WeatherGrid["grid"]): Corners {
   const south = grid.south;
   const north = grid.south + (grid.rows - 1) * grid.step_deg;
   const west = grid.west;
@@ -140,10 +142,7 @@ export function paintWeatherField(
   layer: FieldLayer,
   timeMs: number,
 ): FieldImage {
-  const [[west, north], [east, south]] = [
-    fieldCorners(weather.grid)[0],
-    fieldCorners(weather.grid)[2],
-  ];
+  const [[west, north], , [east, south]] = fieldCorners(weather.grid);
   const northY = mercatorY(north);
   const southY = mercatorY(south);
   const data = new Uint8ClampedArray(FIELD_WIDTH * FIELD_HEIGHT * 4);
