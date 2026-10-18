@@ -25,6 +25,7 @@ import {
   type Placement,
   type Side,
 } from "./labelPlacement";
+import { markerState } from "./markerState";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -51,15 +52,17 @@ function viewOf(map: MapLibreMap): View {
   };
 }
 
+// Only these tags stay on a Node's map label; the rest show on hover and in the Readings Panel.
 const TAG_WIDTH_PX = 70;
 
-function nodeTagCount(node: NodeOnMap): number {
-  return [node.simulated && !node.fleet, !node.registered, node.level, node.stale].filter(Boolean)
-    .length;
+function mapTagCount(node: NodeOnMap): number {
+  const contactLost = markerState(node).contactArc !== null;
+  return [contactLost, !node.simulated].filter(Boolean).length;
 }
 
-// Every label that competes for room on screen. The chosen Shelter, key places and the real Nodes
-// are never left out; the rest give way to them (0078).
+// Every label that competes for room on screen. None is ever drawn over another: the chosen
+// Shelter, the selected Node, key places and real Nodes win, and a label that loses is hidden until
+// its marker is hovered. Shelters other than the plan's choice are named only on hover (0078).
 function labelsOnScreen(
   map: MapLibreMap,
   view: View,
@@ -76,18 +79,16 @@ function labelsOnScreen(
       id: `place:${place.name}`,
       ...at(place.lat, place.lon),
       ...estimatedLabelSize(place.name, 12),
-      rank: place.key ? 1 : 4,
-      must: place.key,
+      rank: 1,
     });
   }
-  for (const each of shelters) {
-    const chosen = each.id === chosenShelterId;
+  const chosen = shelters.find((each) => each.id === chosenShelterId);
+  if (chosen) {
     labels.push({
-      id: `shelter:${each.id}`,
-      ...at(each.pos[0], each.pos[1]),
-      ...estimatedLabelSize(shelterLabel(each, true), 12),
-      rank: chosen ? 0 : 3,
-      must: chosen,
+      id: `shelter:${chosen.id}`,
+      ...at(chosen.pos[0], chosen.pos[1]),
+      ...estimatedLabelSize(shelterLabel(chosen, true), 12),
+      rank: 0,
     });
   }
   const fleetShowing = zoomBlend(view.zoom) >= 0.5;
@@ -97,9 +98,8 @@ function labelsOnScreen(
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
-      ...estimatedLabelSize(text, 13, nodeTagCount(node) * TAG_WIDTH_PX),
+      ...estimatedLabelSize(text, 13, mapTagCount(node) * TAG_WIDTH_PX),
       rank: node.id === selectedId ? 0 : node.fleet ? 5 : 2,
-      must: !node.fleet,
     });
   }
   return labels;
@@ -376,7 +376,7 @@ export function NodeMap({
               <MapPin size={18} aria-hidden="true" />
               <span
                 className={`map-label shelter-label label-${sideOf(`shelter:${each.id}`)}${
-                  placement.get(`shelter:${each.id}`) === null ? " label-hidden" : ""
+                  placement.get(`shelter:${each.id}`) == null ? " label-hidden" : ""
                 }`}
               >
                 {shelterLabel(each, open)}

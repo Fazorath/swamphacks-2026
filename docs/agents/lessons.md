@@ -451,6 +451,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
 
+## Labels declutter, second pass (after 0078)
+
+- **0078 was "done" but the owner's screenshot (replay, High) still showed overlapping labels**: it kept `must` labels (key places, real Nodes, the chosen Shelter) drawn even with no free side, named every town, and gave each Node label its SIMULATED and STALE tags, so the labels were very wide. Now no label is ever drawn over another (`must` is gone from `labelPlacement.ts`), only key places are named, only the plan's chosen Shelter is named (the others on hover), and a Node's map label is its name and level (tags show on hover or when selected, via `.node-label-extra`).
+- Still unseen in a real browser (no Chrome extension here): the 0.58 width estimate and whether dots still crowd at Betrawati. Look at the valley zoom on the demo laptop.
+
 ## Readings Panel ladder (ticket 0070)
 
 - **The state has no flag for the breadboard Pi**, so `readingsLadder` pins the first real (non-simulated) Node with no River km that is not the Hub. A real Audience Node with no River km would be pinned by mistake; add a flag to the reading if that happens.

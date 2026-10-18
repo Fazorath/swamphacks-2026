@@ -790,6 +790,16 @@ section p {
   white-space: nowrap;
 }
 
+/* The map label is a name and a level; the tags show under the pointer or when selected. */
+.node-label-extra {
+  display: none;
+}
+
+.node-marker:hover .node-label-extra,
+.node-marker.selected .node-label-extra {
+  display: inline;
+}
+
 .node-marker.fleet .node-label {
   opacity: var(--zoom-blend, 0);
 }
