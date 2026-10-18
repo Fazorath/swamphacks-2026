@@ -86,6 +86,10 @@ class FakeMap {
     };
   }
 
+  project([lon, lat]: [number, number]) {
+    return { x: lon * 10, y: -lat * 10 };
+  }
+
   getZoom() {
     return 6;
   }
