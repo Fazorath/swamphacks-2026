@@ -427,6 +427,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The pre-push check warned once on the 0069 merge to `main` ("main is getting code that fails the Commands") and the same commit passed `check.sh` three times** (before the merge, on the merged tree, and after the push). Which Command failed is unknown: the push was piped through `tail -3`, which kept only the last lines of the hook's output. Run `git push` unpiped so the hook's `check.sh` summary stays visible; the known flake is `test_reticulum_nodes.py` (see the entries above).
 - `scripts/run-demo.sh` now downloads `cache-pack-v5` (Nepal vectors and elevation, no raster tiles). A laptop that already ran the demo keeps the old pack in `.demo/pack/`, and a Node never replaces a valid pack: delete `.demo/pack/` (and the Hub's saved `shelter_status.json`) once to pick up v5. Only `bash -n` was run on the script, not the download.
 
+## Layer rail (ticket 0034)
+
+- **Open Panels are remembered in `localStorage` (`storm-shield.open-panels`), so tests leaked state into each other** (a test that expanded Cameras left it open for the next). `setup.ts` now clears storage after every test.
+- **A warning that arrives after a resident opened a third right-side Panel pushes the oldest one out** (two per side). Tests that expand Cameras must wait for the state first; `nodeUnreachableFlow.test.tsx` swaps Cameras for Alerts for that reason.
+- **Defaults follow `ui.md` D-50, not the ticket's "calm: Readings and Evacuation Plan"**: calm is Readings alone; Elevated/High adds the Plan; a warning adds the Alerts too. Readings stay open (other side).
+- **The Storm Signal button only hides the top-bar pill**; there is no edge-darkening layer yet. The Alerts button has no badge because nothing acknowledges warnings yet.
+- Panel re-centring (`easeTo` with padding) and the rail look are tested only against the fake map; not seen in a real browser.
+
 ## Map labels do not overlap (ticket 0078)
 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.

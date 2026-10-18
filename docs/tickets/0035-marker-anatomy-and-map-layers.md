@@ -31,4 +31,4 @@
 - [ ] Performance bar from the spec holds with 40 fleet dots and the valley visible; checked by hand and noted here
 - [ ] All **Commands** pass
 
-**Left open (2026-10-18):** dashboard Commands pass (29 files, 264 Vitest tests); the Node side was not touched or run. Not done: the by-hand zoom and 60 fps checks (no browser session), checking every fleet dot sits on its river (needs the 0063 rivers), the legend's 2D / 3D row (0067), and a fleet dot never shows Elevated or High because the fleet carries no Flood Risk level. The layer buttons here (`MapLayerButtons.tsx`, `mapLayers.ts`) are a stand-in until 0034's rail lands; fold them into it.
+**Left open (2026-10-18):** dashboard Commands pass (29 files, 264 Vitest tests); the Node side was not touched or run. Not done: the by-hand zoom and 60 fps checks (no browser session), checking every fleet dot sits on its river (needs the 0063 rivers), the legend's 2D / 3D row (0067), and a fleet dot never shows Elevated or High because the fleet carries no Flood Risk level. The Fleet toggle is a button on 0034's rail.

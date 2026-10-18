@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   HATCH_IMAGE,
-  LAYER_IDS,
   NATIONAL_ZOOM,
   VALLEY_ZOOM,
   addNepalBasemap,
@@ -26,7 +25,6 @@ import {
   type Placement,
   type Side,
 } from "./labelPlacement";
-import type { MapLayers } from "./mapLayers";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -150,7 +148,6 @@ type Props = {
   nodes: NodeOnMap[];
   // The Simulated Fleet, drawn small beside the Nodes.
   fleet: NodeOnMap[];
-  layers: MapLayers;
   // How often each Node's Flood Risk has risen; a new count plays that Node's ring once.
   rises: Record<string, number>;
   stormSignalOn: boolean;
@@ -168,6 +165,8 @@ type Props = {
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   route: LatLon[] | null;
+  // Pixels at each edge that open Panels cover.
+  panelRoom: { left: number; right: number };
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
   picking: boolean;
@@ -184,7 +183,6 @@ type Props = {
 export function NodeMap({
   nodes,
   fleet,
-  layers,
   rises,
   stormSignalOn,
   selectedId,
@@ -198,6 +196,7 @@ export function NodeMap({
   river,
   shelter,
   route,
+  panelRoom,
   draftHome,
   picking,
   onPickHome,
@@ -266,6 +265,18 @@ export function NodeMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, nepal, nodeIds]);
 
+  // A Panel opening must not cover the selected Node, so the map's centre moves to the clear part.
+  const selected = nodes.find((node) => node.id === selectedId);
+  const selectedLat = selected?.position[0];
+  const selectedLon = selected?.position[1];
+  useEffect(() => {
+    if (!map || !styleReady || selectedLat === undefined || selectedLon === undefined) return;
+    map.easeTo({
+      center: [selectedLon, selectedLat],
+      padding: { top: 0, bottom: 0, left: panelRoom.left, right: panelRoom.right },
+    });
+  }, [map, styleReady, selectedLat, selectedLon, panelRoom.left, panelRoom.right]);
+
   const floodProneData = useMemo(() => floodProneCollection(floodProne), [floodProne]);
   const valleyRiverData = useMemo(
     () => lineCollection(nepal ? [] : (river ?? []).map((reach) => reach.points)),
@@ -280,15 +291,6 @@ export function NodeMap({
     setOverlay(map, "route", routeData);
     setOverlay(map, "blocked-roads", blockedData);
   }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
-
-  useEffect(() => {
-    if (!map || !styleReady) return;
-    for (const layer of ["floodProne", "route"] as const) {
-      for (const id of LAYER_IDS[layer]) {
-        map.setLayoutProperty(id, "visibility", layers[layer] ? "visible" : "none");
-      }
-    }
-  }, [map, styleReady, layers]);
 
   useEffect(() => {
     if (!map) return;
@@ -355,7 +357,6 @@ export function NodeMap({
             </MapMarker>
           ))}
       {map &&
-        layers.shelters &&
         shelters.map((each) => {
           const open = openShelterIds.includes(each.id);
           const chosen = each.id === shelter?.id;
@@ -389,7 +390,6 @@ export function NodeMap({
         </MapMarker>
       )}
       {map &&
-        layers.fleet &&
         fleet.map((node) => (
           <NodeMarker
             key={node.id}
@@ -403,7 +403,6 @@ export function NodeMap({
           />
         ))}
       {map &&
-        layers.nodes &&
         nodes.map((node) => (
           <NodeMarker
             key={node.id}
@@ -416,7 +415,7 @@ export function NodeMap({
             labelHidden={placement.get(`node:${node.id}`) === null}
           />
         ))}
-      {layers.stormSignal && stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
+      {stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
     </section>
   );
 }
