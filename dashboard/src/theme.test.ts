@@ -48,6 +48,10 @@ describe("fonts and icons are bundled", () => {
   it("never asks Google Fonts or another host for a font", () => {
     expect(filesMatching(/fonts\.googleapis|fonts\.gstatic|@import\s+url\(/)).toEqual([]);
   });
+
+  it("names a font only through the theme's two font roles", () => {
+    expect(filesMatching(/font-family:\s*(?!var\(--font-(?:sans|mono)\))\S/)).toEqual([]);
+  });
 });
 
 function declaredValues(): Map<string, string> {
