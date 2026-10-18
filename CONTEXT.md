@@ -82,6 +82,10 @@ _Avoid_: demo script, simulation, playback
 A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
+**Camera**:
+One entry in the Hub's camera list: an id, a label, the Node site it is placed at (name and position) and the Camera Clip it plays. Today every Camera is a Replay camera; a live source is deferred until one qualifies (`docs/research/nepal-cameras.md`). The list is one file. A Camera that names no clip, or a clip the manifest lacks, is logged as a warning at startup and shows `unavailable`; the Hub still starts. A Camera is `live` (working), `offline` (its Node is Mesh-only) or `unavailable` (no usable clip, or the Viewer is on a Sensor Node).
+_Avoid_: feed, webcam
+
 **Camera Clip**:
 A five-minute illustrative video a demo camera plays in place of a live feed, composed from short credited sources and lined up with the Event clock; it never claims to show the Node's own site. A manifest beside the clips credits every source and gives `flood_onset_s`, the second the water visibly jumps. Unlicensed footage lives only in the gitignored `.demo/clips/`.
 _Avoid_: recording, live feed, camera footage

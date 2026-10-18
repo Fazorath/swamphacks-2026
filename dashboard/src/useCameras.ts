@@ -3,7 +3,11 @@ import { usePolledJson } from "./usePolledJson";
 export type CameraTile = {
   id: string;
   label: string;
-  // Every camera is a recording for now; a live source comes with 0075.
+  // The Node this camera is placed at, by name, and where that is.
+  site: string;
+  lat: number;
+  lon: number;
+  // Every camera is a recording; a live source waits for a feed that qualifies.
   kind: "replay";
   // "live" means the camera works, whatever its kind. Offline is a Mesh-only Node; Unavailable is
   // anything else that stops this Viewer getting the clip.
