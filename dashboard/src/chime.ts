@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 // Browsers refuse sound until the page has been tapped once, so a chime before that is skipped
 // rather than queued.
 let tapped = false;
@@ -30,4 +32,11 @@ export function playChime(): void {
     oscillator.stop(start + NOTE_SECONDS);
   });
   window.setTimeout(() => void context.close(), (NOTES_HZ.length * NOTE_SECONDS + 0.2) * 1000);
+}
+
+// Chimes once each time `key` changes to a warning; undefined is no warning.
+export function useChimeForWarning(key: string | undefined): void {
+  useEffect(() => {
+    if (key !== undefined) playChime();
+  }, [key]);
 }

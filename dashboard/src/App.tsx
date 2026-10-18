@@ -46,6 +46,7 @@ import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
 import { waveArrival, waveFrontKm } from "./waveEta";
 import { WarningBanners, WarningTakeover } from "./WarningTakeover";
+import { WarningBand } from "./WarningBand";
 import { bannerWarnings, pendingWarnings, useAcknowledgedWarnings } from "./acknowledgedWarnings";
 import { WaveEtaCard } from "./WaveEtaCard";
 
@@ -120,6 +121,7 @@ export function App() {
       ? { arrivalAt: arrival.at, eventT }
       : null;
   const waveKm = river && eventT !== null ? waveFrontKm(river, communityWarnings, eventT) : null;
+  const [acknowledged, acknowledge] = useAcknowledgedWarnings();
   const plan = evacuationPlan({
     profile: shownProfile,
     pack: cachePack,
@@ -234,6 +236,8 @@ export function App() {
       waveArrival={arrival}
       eventT={eventT}
       online={state?.status === "online"}
+      acknowledged={acknowledged}
+      onAcknowledge={acknowledge}
       panel={panel("alerts")}
     />
   );
@@ -252,10 +256,27 @@ export function App() {
     <CamerasPanel tiles={cameras} clock={eventClock.clock} panel={panel("cameras")} />
   );
   const latestOfficialAlert = latestAlert(officialAlerts);
-  const [acknowledged, acknowledge] = useAcknowledgedWarnings();
   const pending = pendingWarnings(officialAlerts, communityWarnings, acknowledged);
   const allNodes = lastAnswer?.state.nodes ?? [];
   const thisNodeId = lastAnswer?.state.id ?? "";
+  // The desktop's band, camera and ring follow the first Community Warning not yet acknowledged.
+  const newWarning = pending.find((each) => each.kind === "community");
+  const warningFocus =
+    !phone && newWarning?.kind === "community"
+      ? { key: newWarning.key, nodeId: newWarning.warning.origin }
+      : null;
+  const acknowledgedWarnings = bannerWarnings(officialAlerts, communityWarnings, acknowledged);
+  const warningChip =
+    !phone && acknowledgedWarnings.length > 0
+      ? {
+          community: acknowledgedWarnings.some((each) => each.kind === "community"),
+          minutesLeft:
+            arrival && arrival.kind === "expected" && eventT !== null
+              ? Math.max(0, Math.ceil((arrival.at - eventT) / 60))
+              : null,
+          onOpen: () => panels.show("alerts"),
+        }
+      : null;
   const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
     <main className={phone ? "phone" : undefined}>
@@ -264,6 +285,7 @@ export function App() {
         eventClock={eventClock.clock}
         floodRisk={floodRisk}
         showStormSignal={shows("storm-signal")}
+        warningChip={warningChip}
         status={state?.status ?? null}
         householdSaved={profile !== null}
         onOpenHousehold={openPanel}
@@ -276,11 +298,9 @@ export function App() {
           your household profile are still here.
         </p>
       )}
-      <WarningBanners
-        shown={bannerWarnings(officialAlerts, communityWarnings, acknowledged)}
-        nodes={allNodes}
-        thisNodeId={thisNodeId}
-      />
+      {phone && (
+        <WarningBanners shown={acknowledgedWarnings} nodes={allNodes} thisNodeId={thisNodeId} />
+      )}
       {storageProblem && (
         <p role="alert" className="banner">
           {STORAGE_PROBLEM_MESSAGES[storageProblem]}
@@ -315,6 +335,7 @@ export function App() {
       )}
       {pager.alert && <PagerBanner alert={pager.alert} onDismiss={pager.dismiss} />}
       <div className="stage">
+        {!phone && <WarningBand pending={pending} nodes={allNodes} thisNodeId={thisNodeId} />}
         <NodeMap
           nodes={shows("nodes") ? nodes : []}
           fleet={shows("fleet") ? fleet : []}
@@ -332,6 +353,7 @@ export function App() {
           places={places}
           river={river}
           warnings={communityWarnings}
+          warningFocus={warningFocus}
           clock={eventClock.clock}
           ambientFlow={shows("fleet")}
           shelter={plan.shelter}
@@ -458,15 +480,17 @@ export function App() {
         waterDrawn={waterReaches.length > 0}
       />
       {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
-      <WarningTakeover
-        pending={pending}
-        nodes={allNodes}
-        thisNodeId={thisNodeId}
-        waveArrival={arrival}
-        eventT={eventT}
-        online={state?.status === "online"}
-        onAcknowledge={acknowledge}
-      />
+      {phone && (
+        <WarningTakeover
+          pending={pending}
+          nodes={allNodes}
+          thisNodeId={thisNodeId}
+          waveArrival={arrival}
+          eventT={eventT}
+          online={state?.status === "online"}
+          onAcknowledge={acknowledge}
+        />
+      )}
     </main>
   );
 }

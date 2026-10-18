@@ -85,7 +85,10 @@ describe("which warning comes first", () => {
   });
 });
 
+// The Takeover is the phone's; a desktop gets the band (warningBandFlow.test.tsx).
 describe("the takeover on the page", () => {
+  beforeEach(() => setViewport(390));
+
   it("opens for a Community Warning, with the fixed line and a 64 px Acknowledge", async () => {
     answers.warnings = [WARNING];
     stubNode();
@@ -128,9 +131,6 @@ describe("the takeover on the page", () => {
       .getAllByRole("status")
       .find((each) => /OFFICIAL/.test(each.textContent ?? ""));
     expect(banner).toHaveTextContent(NOTICE.headline);
-    expect(
-      within(screen.getByRole("region", { name: "Alerts" })).getByText(NOTICE.headline),
-    ).toBeVisible();
     expect(JSON.parse(localStorage.getItem(ACKNOWLEDGED_KEY) ?? "[]")).toEqual([
       "official:dhm-notice",
     ]);
@@ -138,7 +138,7 @@ describe("the takeover on the page", () => {
     // A reload on the same device: the same warning stays quiet.
     unmount();
     render(<App />);
-    expect(await screen.findByRole("region", { name: "Alerts" })).toBeVisible();
+    expect(await screen.findByRole("tab", { name: /Alerts/ })).toBeVisible();
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
@@ -147,7 +147,7 @@ describe("the takeover on the page", () => {
     localStorage.setItem(ACKNOWLEDGED_KEY, JSON.stringify(["official:dhm-notice"]));
     stubNode();
     render(<App />);
-    expect(await screen.findByRole("region", { name: "Alerts" })).toBeVisible();
+    expect(await screen.findByRole("tab", { name: /Alerts/ })).toBeVisible();
     expect(screen.queryByRole("alertdialog")).toBeNull();
 
     answers.alerts = [NOTICE, SMS];
@@ -156,7 +156,6 @@ describe("the takeover on the page", () => {
   });
 
   it("is a full-screen sheet on a phone", async () => {
-    setViewport(390);
     answers.warnings = [WARNING];
     stubNode();
     render(<App />);
@@ -184,6 +183,8 @@ describe("a Community Warning's takeover", () => {
 });
 
 describe("the chime", () => {
+  beforeEach(() => setViewport(390));
+
   class FakeAudioContext {
     static made = 0;
     static notes = 0;

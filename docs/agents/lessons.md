@@ -587,6 +587,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Open the rehearsal at `http://localhost:<port>`, not the Tailscale address**: `/api/join` and the Hub button both need loopback. A Hub started without `CACHE_PACK_URL` has no pack and the map is blank; serve `.demo/pack/cache-pack.zip` with `python3 -m http.server --directory <dir>` and export `CACHE_PACK_URL` (the pack unpacks within seconds).
 - A loopback group's slot can already be taken by a teammate's Node (4320 held a Node from another session): check `lsof -nP -iTCP -sTCP:LISTEN` and move to a free `NODE_LOOPBACK_SLOT` with a matching `NODE_LOOPBACK_FIRST_SLOT`; the failure is exit 255 with an empty log unless the Node's output is captured.
 
+## Warning choreography (ticket 0066)
+
+- **The desktop shows `WarningBand` (in the stage, over the map) and the phone keeps `WarningTakeover`**; both chime through `useChimeForWarning`. Acknowledge is a button on each card in the Alerts Panel; the chip beside Flood Risk comes from `bannerWarnings`, so it shows for the newest acknowledged warning of each kind.
+- **A `role="alert"` band joins the page's other alerts**, so tests that used `getByRole("alert")` for the "Node unreachable" banner found two; they now find it by text. Desktop tests that read a warning find the band by `role="alert"` name "Warning", phone tests the `alertdialog`.
+- **The fake map's `flyTo` ends in a microtask**, as the real one ends later, so code that listens for `moveend` after calling `flyTo` works in tests. The tilt waits for a `moveend` with no `originalEvent`, so a resident who grabs the map mid-flight is not tilted against.
+- A full parallel `vitest run` timed out 12 tests on this laptop (all pass alone); `--maxWorkers=2` passed all 424.
+- Not seen in a browser: the band's look, the double border pulse, the red origin ring, and the fly-then-tilt on real MapLibre.
+
 ## High-ground points (ticket 0068)
 
 - **Placeholder spots come from `scripts/cache-pack/high_ground.source.json`; the build reads each climb itself** from the Terrarium tiles (point minus the nearest river vertex) and refuses a point in or within 100 m of the corridor, under 50 m of climb, or with no key place within 2 km. Run on the real `cache-pack-v5` tiles the four points climb 90 to 126 m (96, 126, 90, 96). Nothing was visited; every `source` note says PLACEHOLDER.

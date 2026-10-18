@@ -2,6 +2,8 @@
 # Keeps a Node running on whatever this checkout has: when HEAD moves (git pull,
 # merge, branch switch), rebuilds the dashboard and restarts the Node.
 # Uncommitted edits do not trigger a restart.
+# This is for the Pi's Hub (NODE_ROLE defaults to hub). A laptop that joins a Hub as a Sensor,
+# WSL2 and Docker included, uses scripts/join-demo.sh instead: it finds the Hub's id and signs up.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

@@ -23,6 +23,8 @@ type Props = {
   popoverOpen?: boolean;
   // How many times this Node's Flood Risk has risen; a new count plays the ring once.
   rises: number;
+  // The key of the warning this Node started, while it is shown: the Node rings red (D-28).
+  originOf?: string;
   onSelect: (id: string) => void;
   // Where the label sits, and whether it lost its spot to a more important one (0078).
   side: Side;
@@ -38,6 +40,7 @@ export function NodeMarker({
   wavePassed = false,
   popoverOpen = false,
   rises,
+  originOf,
   onSelect,
   side,
   labelHidden,
@@ -63,6 +66,7 @@ export function NodeMarker({
       className={classes}
       onClick={() => onSelect(node.id)}
     >
+      {originOf !== undefined && <span key={originOf} className="origin-ring" />}
       {rises > 0 && <span key={rises} className="rise-ring" />}
       <span className="node-dot" style={{ "--glow": `${glowPx}px` } as CSSProperties}>
         {contactArc !== null && (

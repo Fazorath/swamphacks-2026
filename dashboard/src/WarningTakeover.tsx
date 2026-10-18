@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-
-import { playChime } from "./chime";
+import { useChimeForWarning } from "./chime";
 import {
   measuredSpeedLine,
   OFFICIAL_SOURCE,
@@ -91,10 +89,7 @@ export function WarningTakeover({
   onAcknowledge: (key: string) => void;
 }) {
   const current = pending[0];
-  const currentKey = current?.key;
-  useEffect(() => {
-    if (currentKey !== undefined) playChime();
-  }, [currentKey]);
+  useChimeForWarning(current?.key);
   if (!current) return null;
   return (
     <div className="takeover-scrim">
