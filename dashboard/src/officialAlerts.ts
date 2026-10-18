@@ -26,6 +26,13 @@ export function issuedUnix(alert: OfficialAlert): number {
   return Date.parse(alert.issued) / 1000;
 }
 
+export function latestAlert(alerts: OfficialAlert[]): OfficialAlert | null {
+  return alerts.reduce<OfficialAlert | null>(
+    (latest, alert) => (latest === null || issuedUnix(alert) > issuedUnix(latest) ? alert : latest),
+    null,
+  );
+}
+
 // Tags only, never the headline's prose: an alert with no tags covers everyone in its zone.
 export function appliesToHousehold(
   alert: OfficialAlert,

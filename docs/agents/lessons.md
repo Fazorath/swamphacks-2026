@@ -450,3 +450,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
+
+## Phone layout (ticket 0036)
+
+- **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
+- **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
+- **Not done:** the manual check on a phone over Tailscale (no browser or phone in this session), so 44 px targets, the sheet and the pinned alert are unseen outside jsdom. The bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a tapped home pick has no on-screen cancel on the phone.

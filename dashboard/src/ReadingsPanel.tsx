@@ -6,7 +6,7 @@ import { Panel, type PanelControl } from "./Panel";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { FloodRisk, ReadingKind } from "./nodeState";
 
-const KIND_LABELS: Record<ReadingKind, string> = {
+export const KIND_LABELS: Record<ReadingKind, string> = {
   pressure: "Pressure",
   rain_rate: "Rain rate",
   water_level: "Water level",
