@@ -318,3 +318,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Every Command passes on `main`**: 252 Node tests, 170 dashboard tests. The 4 `test_reticulum_nodes.py` errors seen mid-session were a Node left running from another worktree (pid started 19:48, parent init, no run-live loop); `scripts/stop-nodes.sh` freed 4250 and 8000 and the file passed.
 - **Still true after the audit:** `roads.json` and the real Road graph have never been built from the Nepal extract (0018), so the demo cannot block a road; the camera tiles are still FL511 Florida feeds in the Nepal demo (0011); `run-demo.sh` registration (0012/0049) and the full two-phone replay (0049) were never run end to end; 0016 (breadboard) is open.
 - `weatherGrid.ts` (`valueAt`, `windAt`, `speedBand`) is only used by its tests until the weather layer tickets (0054 to 0057, 0059) land; that is on purpose.
+
+## Measured wave speed (ticket 0050)
+
+- **The second Node's Surge updates the origin's warning instead of getting a warning of its own**, when it is downstream, later, and the speed is under 300 km/h (`MAX_MEASURED_SPEED_KMH`). Otherwise it warns on its own as before, which is why `test_two_nodes_surging_make_one_warning_each` still passes: its Surges are 8 s apart, over 1,000 km/h.
+- **In a replay, a test's `advance(seconds)` moves the Event clock 30 times as far**, so a measured speed there is distance over *event* time. A 32 s advance is 16 event minutes.
+- **A home must be within 2 km of a river vertex to get an ETA**, and the test river has a vertex every 10 km: pick test homes on vertices (`at(0)`, `at(20)`), or the answer is `not-near-river`, not the reach you meant.
+- Rerun of `test_reticulum_nodes.py` needs ports 4250 and 8000 free; another session's Node (a different worktree) held them during the first full run, so those four tests were run later. Check `ss -ltnp` before `scripts/stop-nodes.sh`: it would kill a teammate's or your own other session's Node.
+- Not rehearsed on loopback Reticulum or in a browser; the update path is covered in the in-memory Mesh only.

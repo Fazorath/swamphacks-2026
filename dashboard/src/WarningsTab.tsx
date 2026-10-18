@@ -1,6 +1,11 @@
 import { TriangleAlert } from "lucide-react";
 
-import { reasonsSentence, riverKm, type CommunityWarning } from "./communityWarnings";
+import {
+  measuredSpeedLine,
+  reasonsSentence,
+  riverKm,
+  type CommunityWarning,
+} from "./communityWarnings";
 import { nepalClockTime } from "./EventClockTag";
 import type { RegistrySummary } from "./RegistryTab";
 
@@ -29,13 +34,16 @@ export function WarningsTab({
     <section aria-label="Warning log">
       <ul className="registry-list">
         {log.warnings.map((warning) => {
-          const name = registry?.nodes.find((row) => row.id === warning.origin)?.name;
+          const nameOf = (id: string) => registry?.nodes.find((row) => row.id === id)?.name ?? id;
+          const name = nameOf(warning.origin);
+          const measuredLine = measuredSpeedLine(warning, nameOf);
           return (
             <li key={warning.id}>
               <strong>{nepalClockTime(warning.surge_t)}</strong>
-              <span>{name ?? warning.origin}</span>
+              <span>{name}</span>
               <span>{riverKm(warning.origin_km)}</span>
               <span>{reasonsSentence(warning)}</span>
+              {measuredLine && <span>{measuredLine}</span>}
             </li>
           );
         })}
