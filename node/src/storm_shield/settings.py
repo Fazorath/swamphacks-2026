@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     weather_forecast_url: str = ""
     # Secret: only this Node ever holds it; the dashboard asks the Node for tiles.
     carto_api_key: str = Field(default="", validation_alias="CARTO_API_KEY")
+    # The Hub emails the team on a new Community Warning when all three are set. Unprefixed like
+    # CARTO_API_KEY, which also makes them the same operator-facing .env lines.
+    alert_email_from: str = Field(default="", validation_alias="ALERT_EMAIL_FROM")
+    # Secret: a Gmail app password, never the account password.
+    alert_email_app_password: str = Field(default="", validation_alias="ALERT_EMAIL_APP_PASSWORD")
+    # Comma-separated addresses.
+    alert_email_to: str = Field(default="", validation_alias="ALERT_EMAIL_TO")
     cache_pack_dir: Path = Field(
         default=Path(__file__).resolve().parents[3] / "cache-pack",
         validation_alias="CACHE_PACK_DIR",

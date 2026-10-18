@@ -4,9 +4,9 @@
 
 **Blocked by:** 0033, 0044
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** leonardorofaDV
 
 **Assignee:** Fazorath
 
