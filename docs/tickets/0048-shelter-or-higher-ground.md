@@ -4,7 +4,7 @@
 
 **Blocked by:** 0047
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
@@ -12,10 +12,10 @@
 
 **Design:** `docs/design/ui.md` ("Evacuation Plan Panel")
 
-- [ ] A Shelter is reachable if it is outside the Flood-Prone Area and its walking time (straight line × 1.4 at 4 km/h) is under the ETA minus 5 min; margin, factor and speed are named constants
-- [ ] One line explains the choice ("12 min walk, wave in 43 min" or "nearest Shelter 14 min walk, wave in 9 min")
-- [ ] Higher-ground advice never mentions basements or going towards the river, and the plan still points to official sources
-- [ ] With no warning the plan shows the nearest open Shelter as before
-- [ ] Seam B tests: a reachable Shelter beats a nearer one inside the Flood-Prone Area; higher ground when walking time plus margin exceeds the ETA; closed Shelters skipped; no evacuation order language
-- [ ] Manual check: a phone with a profile at Syabrubesi shows higher ground and one at Betrawati shows a Shelter (rehearsal, not a Pi check)
-- [ ] All **Commands** pass
+- [x] A Shelter is reachable if it is outside the Flood-Prone Area and its walking time (straight line × 1.4 at 4 km/h) is under the ETA minus 5 min; margin, factor and speed are named constants
+- [x] One line explains the choice ("12 min walk, wave in 43 min" or "nearest Shelter 14 min walk, wave in 9 min")
+- [x] Higher-ground advice never mentions basements or going towards the river, and the plan still points to official sources
+- [x] With no warning the plan shows the nearest open Shelter as before
+- [x] Seam B tests: a reachable Shelter beats a nearer one inside the Flood-Prone Area; higher ground when walking time plus margin exceeds the ETA; closed Shelters skipped; no evacuation order language
+- [ ] Manual check (not done; needs the replay running with two phones): a phone with a profile at Syabrubesi shows higher ground and one at Betrawati shows a Shelter (rehearsal, not a Pi check)
+- [x] All **Commands** pass

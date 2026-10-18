@@ -64,7 +64,26 @@ function saveProfile(home: { lat: number; lon: number }) {
 
 let requests: string[];
 
-function stubNode({ eventT, river = RIVER }: { eventT: number; river?: object | null }) {
+function shelterAt(lat: number) {
+  return {
+    id: "gompa",
+    name: "Gompa",
+    pos: [lat, 85],
+    special_needs: false,
+    pet_friendly: false,
+    height_above_river_m: 66,
+  };
+}
+
+function stubNode({
+  eventT,
+  river = RIVER,
+  shelters = [],
+}: {
+  eventT: number;
+  river?: object | null;
+  shelters?: object[];
+}) {
   const answers: Record<string, unknown> = {
     "/api/state": fakeNodeState({
       id: "porch",
@@ -74,7 +93,8 @@ function stubNode({ eventT, river = RIVER }: { eventT: number; river?: object | 
     }),
     "/api/replay": { v: 1, kind: "replay", state: "paused", event_t: eventT, rate: 30 },
     "/api/cache-pack": { available: true, manifest: null },
-    "/api/cache-pack/files/shelters.json": [],
+    "/api/shelters": { open: shelters.map((shelter) => (shelter as { id: string }).id) },
+    "/api/cache-pack/files/shelters.json": shelters,
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
     "/api/cache-pack/files/river.geojson": river,
   };
@@ -153,4 +173,29 @@ test("no request carries the home location", async () => {
     selector: "section[aria-label='Evacuation Plan'] p",
   });
   expect(requests.filter((url) => url.includes("27.82") || url.includes("85"))).toEqual([]);
+});
+
+// From KM_20 the wave is 23 min away at SURGE_T + 60. 0.004 degrees of latitude is a 10 min walk,
+// 0.01 degrees a 24 min one.
+test("a Shelter the resident can walk to before the wave is named with the walk and its height", async () => {
+  saveProfile(KM_20);
+  stubNode({ eventT: SURGE_T + 60, shelters: [shelterAt(27.824)] });
+  render(<App />);
+
+  const plan = await screen.findByRole("region", { name: "Evacuation Plan" });
+  expect(await within(plan).findByText("10 min walk, wave in 23 min.")).toBeVisible();
+  expect(within(plan).getByText(/Gompa.*66 m above the river/)).toBeVisible();
+});
+
+test("a Shelter the resident cannot reach in time becomes higher ground", async () => {
+  saveProfile(KM_20);
+  stubNode({ eventT: SURGE_T + 60, shelters: [shelterAt(27.83)] });
+  render(<App />);
+
+  const plan = await screen.findByRole("region", { name: "Evacuation Plan" });
+  expect(
+    await within(plan).findByText(
+      "No Shelter you can reach in time. Get to higher ground, away from the river, now.",
+    ),
+  ).toBeVisible();
 });

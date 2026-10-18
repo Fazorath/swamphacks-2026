@@ -318,3 +318,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Every Command passes on `main`**: 252 Node tests, 170 dashboard tests. The 4 `test_reticulum_nodes.py` errors seen mid-session were a Node left running from another worktree (pid started 19:48, parent init, no run-live loop); `scripts/stop-nodes.sh` freed 4250 and 8000 and the file passed.
 - **Still true after the audit:** `roads.json` and the real Road graph have never been built from the Nepal extract (0018), so the demo cannot block a road; the camera tiles are still FL511 Florida feeds in the Nepal demo (0011); `run-demo.sh` registration (0012/0049) and the full two-phone replay (0049) were never run end to end; 0016 (breadboard) is open.
 - `weatherGrid.ts` (`valueAt`, `windAt`, `speedBand`) is only used by its tests until the weather layer tickets (0054 to 0057, 0059) land; that is on purpose.
+
+## Shelter or higher ground (ticket 0048)
+
+- **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
+- **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
+- **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.

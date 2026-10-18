@@ -36,6 +36,7 @@ const SHELTER_A: Shelter = {
   pos: [29.66, -82.32],
   special_needs: false,
   pet_friendly: false,
+  height_above_river_m: 80,
 };
 const SHELTER_B: Shelter = {
   ...SHELTER_A,
@@ -98,6 +99,7 @@ function planFor({
     routes: { "shelter-a": PRECOMPUTED, "shelter-b": [NODES[0], NODES[4]] },
     rerouting: { graph, blocked },
     officialAlerts: [],
+    wave: null,
   });
 }
 
@@ -157,6 +159,7 @@ test("a pack with no Road graph keeps the precomputed Route", () => {
     routes: { "shelter-a": PRECOMPUTED },
     rerouting: null,
     officialAlerts: [],
+    wave: null,
   });
   expect(result.route).toBe(PRECOMPUTED);
 });
@@ -175,6 +178,7 @@ test("a home far from any road keeps the precomputed Route", () => {
     routes: { "shelter-a": PRECOMPUTED },
     rerouting: { graph: GRAPH, blocked: [DIRECT] },
     officialAlerts: [],
+    wave: null,
   });
   expect(result.route).toBe(PRECOMPUTED);
 });
