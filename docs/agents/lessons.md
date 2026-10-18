@@ -451,6 +451,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
 
+## Readings Panel ladder (ticket 0070)
+
+- **The state has no flag for the breadboard Pi**, so `readingsLadder` pins the first real (non-simulated) Node with no River km that is not the Hub. A real Audience Node with no River km would be pinned by mistake; add a flag to the reading if that happens.
+- **A fleet marker's popover sits inside the marker element**, so its clicks bubble to the marker's own listener; `MapMarker` ignores clicks inside `[data-marker-ignore]`.
+- `test_reticulum_nodes.py` errored at setup in a full run because Nodes left by an earlier `check.sh` run of mine still held 8103/4312; they were mine (start time matched the run), killed, and the file passed alone.
+- Not seen in a browser: the ladder layout, the wave marker and the popover position are tested against the fake map only.
+
 ## Phone layout (ticket 0036)
 
 - **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
