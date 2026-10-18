@@ -41,7 +41,7 @@ On the Pi, always sync with the group: `uv sync --group pi`. A plain `uv sync` (
 
 ## Hotspot
 
-Needs NetworkManager (Raspberry Pi OS Bookworm). Put `HOTSPOT_SSID` and `HOTSPOT_PASSWORD` (8 or more characters) in the repo's `.env`, which is never committed.
+Needs NetworkManager (Raspberry Pi OS Bookworm or Trixie; the team's Pi is on Trixie). Put `HOTSPOT_SSID` and `HOTSPOT_PASSWORD` (8 or more characters) in the repo's `.env`, which is never committed.
 
 ```
 pi/setup-hotspot.sh up     # creates the connection and brings it up; safe to run again
@@ -58,9 +58,9 @@ pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
 ## Manual check (not done until done on the real Pi)
 
 - [ ] Rail measured at 3.3 V.
-- [ ] `pi/setup-hotspot.sh up`; a laptop joins the hotspot and opens the Pi's dashboard.
+- [x] `pi/setup-hotspot.sh up`; a laptop joins the hotspot and opens the Pi's dashboard (done on the real Pi, 2026-10-18).
 - [ ] With the Pi's Ethernet unplugged, a phone on the hotspot has no internet.
-- [ ] Touching each of the three step wires changes the Scenario step and the readings on the laptop's dashboard.
+- [x] Touching each of the three step wires changes the Scenario step and the readings on the laptop's dashboard (done on the real Pi, 2026-10-18).
 - [ ] The reset wire returns it to normal day.
 - [ ] Unplugging a wire changes nothing, and an unplugged pin never presses by itself.
 - [ ] `pi/setup-hotspot.sh down`; the Node still works on a normal network.

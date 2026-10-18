@@ -12,6 +12,7 @@ from meshed_nodes import MeshedNodes
 from storm_shield import breadboard
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
+from storm_shield.scenario import SCENARIO_STEPS, Scenario
 from storm_shield.settings import Settings
 
 PRESSURE_DROP_PIN = 17
@@ -171,3 +172,13 @@ def test_gpio_on_stops_the_node_when_the_breadboard_cannot_start(
 ) -> None:
     with pytest.raises(RuntimeError, match="NODE_GPIO"):
         _node(Settings(gpio="on"))
+
+
+def test_every_pin_jumps_to_a_step_the_scenario_has() -> None:
+    assert set(breadboard.STEP_PINS.values()) <= set(SCENARIO_STEPS)
+    assert breadboard.RESET_PIN not in breadboard.STEP_PINS
+
+
+def test_jumping_to_a_step_the_scenario_lacks_is_an_error() -> None:
+    with pytest.raises(ValueError):
+        Scenario().go_to("no_such_step")

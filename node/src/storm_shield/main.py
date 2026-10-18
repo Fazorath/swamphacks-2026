@@ -502,11 +502,14 @@ def create_app(
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         if settings.role == "hub" or settings.weather_forecast_url:
             tasks.append(asyncio.create_task(keep_weather_forecast_fresh()))
-        yield
-        for task in tasks:
-            task.cancel()
-        if breadboard:
-            breadboard.close()
+        try:
+            yield
+        finally:
+            for task in tasks:
+                task.cancel()
+            # Released even if the app stops on an error, or the pins stay held.
+            if breadboard:
+                breadboard.close()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
@@ -569,6 +572,8 @@ def create_app(
 
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
+        # The lock is re-entrant: holding it here keeps a Breadboard press from landing between the
+        # reset and the step we report.
         with publisher.lock:
             reset_the_scenario()
             return ScenarioState(step=scenario.step_name)

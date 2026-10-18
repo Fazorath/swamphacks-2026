@@ -3,7 +3,7 @@
 #   pi/setup-hotspot.sh up      # creates the connection if it is missing, then brings it up
 #   pi/setup-hotspot.sh down    # brings it down; the Pi is an ordinary Node again
 # The name and password come from HOTSPOT_SSID and HOTSPOT_PASSWORD in .env. Needs NetworkManager
-# (Raspberry Pi OS Bookworm), and the Pi's Wi-Fi is busy while it is up: SSH in over Ethernet.
+# (Raspberry Pi OS Bookworm or Trixie), and the Pi's Wi-Fi is busy while it is up: SSH in over Ethernet.
 set -euo pipefail
 
 connection="storm-shield-hotspot"
