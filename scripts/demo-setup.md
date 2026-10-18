@@ -36,6 +36,8 @@ loopback, then prints the dashboard addresses. Ctrl-C stops all of it.
 
 `DEMO_BASE_PORT` (Hub, default 8000; S0 to S3 take the next four) and `DEMO_SLOT_BASE` (loopback
 slot of the Hub, default 0) move the demo off ports and slots another Node on the laptop holds.
+`DEMO_TCP_PORT` (default 4242) is the Hub's TCP listener. The Hub also listens on Wi-Fi discovery
+(UDP 29716 and 42671), so an Audience Node on another laptop can join: see `scripts/join-demo.md`.
 State and logs live in `.demo/`; delete it to start from nothing.
 
 ## What this does not prove
