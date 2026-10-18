@@ -112,7 +112,11 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
   - Fit filters (special-needs, pet-friendly) apply first, then reachability. If no open Shelter is reachable, the plan names the nearest open fitting Shelter by straight line, even inside the Flood-Prone Area ("nearest Shelter 14 min walk, wave in 9 min"), draws no Route and shows the higher-ground text. If an open Shelter exists but none fit, today's "No open Shelter matches this household" line stays.
   - The choice is re-judged every second against the Event clock; at or past the arrival time it is always higher ground. Minutes of walk and wave are rounded up, as the ETA line does.
   - The reachable Shelter's card shows its walking time and height above the river (`height_above_river_m` from the pack) beside the distance.
-- **Routes** are not built for the valley in the main path. The plan works without them, as it already does for a pack with no route grid. Road Routes over the Nepal OSM extract are a stretch ticket.
+- **Routes** are not built in the main path: a pack built without `--roads-pbf` has none, and the plan works without them. With the Nepal OSM extract (ticket 0051) the build also writes Routes to the Shelters.
+- **Decided 2026-10-17 (ticket 0051):**
+  - A Route is dropped when it crosses the Flood-Prone Area, meaning it goes back in after having been out (including a bridge between two road nodes that lie outside it). A Route that starts inside and walks out is kept, because every riverside home starts inside. Its Shelter then has no line and the plan uses the straight-line walking time, as for any Shelter without a Route.
+  - Routes honour one-way roads (the Road graph for rerouting still ignores them).
+  - The grid starts at 100 m and coarsens to 250 m and then 500 m until the route files fit the 5 MB budget; the build stops if 500 m is still too big.
 
 ### Official Alerts
 

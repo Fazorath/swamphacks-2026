@@ -10,8 +10,8 @@
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [ ] The build downloads the Geofabrik `asia/nepal` extract and builds Routes for the valley box within the existing budget
-- [ ] A Route that crosses the river corridor is dropped, and the plan falls back to straight-line walking time
-- [ ] The Evacuation Plan draws the Route to the chosen Shelter when one exists
-- [ ] Seam B tests: a Route through the Flood-Prone Area is not drawn
+- [x] The build downloads the Geofabrik `asia/nepal` extract and builds Routes for the valley box within the existing budget
+- [x] A Route that crosses the river corridor is dropped, and the plan falls back to straight-line walking time
+- [x] The Evacuation Plan draws the Route to the chosen Shelter when one exists
+- [x] Seam B tests: a Route through the Flood-Prone Area is not drawn
 - [ ] All **Commands** pass

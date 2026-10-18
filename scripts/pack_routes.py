@@ -18,6 +18,81 @@ MAX_GRID_POINT_TO_ROAD_M = 100
 MAX_SHELTER_TO_ROAD_M = 500
 # A route only has to be drawn, so vertices closer than this to the line they sit on are dropped.
 SIMPLIFY_TOLERANCE_M = 3
+# Finer than half the narrowest stretch of the corridor (300 m across), so no crossing slips between.
+SEGMENT_SAMPLE_M = 40
+
+class FloodProneArea:
+    """The mapped corridor a Route must not cross, as polygons of (lat, lon) rings."""
+
+    def __init__(self, polygons: list[list[list[Point]]]) -> None:
+        self._polygons = [
+            (rings, _bounds_of(rings[0])) for rings in polygons if rings and rings[0]
+        ]
+
+    @classmethod
+    def from_geojson(cls, collection: dict[str, Any]) -> "FloodProneArea":
+        polygons = []
+        for feature in collection["features"]:
+            geometry = feature["geometry"]
+            parts = geometry["coordinates"] if geometry["type"] == "MultiPolygon" else [
+                geometry["coordinates"]
+            ]
+            polygons += [
+                [[(lat, lon) for lon, lat in ring] for ring in rings] for rings in parts
+            ]
+        return cls(polygons)
+
+    def contains(self, point: Point) -> bool:
+        for rings, (south, west, north, east) in self._polygons:
+            if south <= point[0] <= north and west <= point[1] <= east:
+                # Even-odd over the outline and its holes.
+                if sum(_ring_contains(ring, point) for ring in rings) % 2 == 1:
+                    return True
+        return False
+
+    def touches_segment(self, start: Point, end: Point) -> bool:
+        """Whether the straight stretch from `start` to `end` passes through the area.
+
+        Sampled every `SEGMENT_SAMPLE_M`, which is well under the corridor's width, so a bridge
+        between two road nodes that both lie outside it is still caught.
+        """
+        steps = max(1, math.ceil(distance_m(start, end) / SEGMENT_SAMPLE_M))
+        return any(
+            self.contains(
+                (
+                    start[0] + (end[0] - start[0]) * step / steps,
+                    start[1] + (end[1] - start[1]) * step / steps,
+                )
+            )
+            for step in range(steps + 1)
+        )
+
+
+def _bounds_of(ring: list[Point]) -> BBox:
+    lats = [lat for lat, _ in ring]
+    lons = [lon for _, lon in ring]
+    return min(lats), min(lons), max(lats), max(lons)
+
+
+def _ring_contains(ring: list[Point], point: Point) -> bool:
+    lat, lon = point
+    inside = False
+    for (lat_a, lon_a), (lat_b, lon_b) in pairwise(ring):
+        if (lat_a > lat) != (lat_b > lat):
+            crossing_lon = lon_a + (lat - lat_a) / (lat_b - lat_a) * (lon_b - lon_a)
+            if lon < crossing_lon:
+                inside = not inside
+    return inside
+
+
+def crosses(was_inside: list[bool]) -> bool:
+    """Whether a journey, given as inside/outside along its way, goes back in after being out."""
+    seen_outside = False
+    for inside in was_inside:
+        if inside and seen_outside:
+            return True
+        seen_outside = seen_outside or not inside
+    return False
 
 
 @dataclass(frozen=True)
@@ -165,14 +240,38 @@ def _distance_to_segment_m(point: Point, start: Point, end: Point) -> float:
 
 
 def build_routes(
-    roads: Roads, shelters: dict[str, Point], grid: RouteGrid, bbox: BBox
+    roads: Roads,
+    shelters: dict[str, Point],
+    grid: RouteGrid,
+    bbox: BBox,
+    avoid: FloodProneArea | None = None,
 ) -> Routes:
-    """One file per Grid point that has a road within reach and can reach at least one Shelter."""
+    """One file per Grid point that has a road within reach and can reach at least one Shelter.
+
+    A Route that crosses `avoid` is left out: it starts inside the area at worst (a riverside home
+    has to walk out) but never goes back in once it is out, and the plan falls back to the
+    straight line for that Shelter.
+    """
     grid_points: dict[tuple[int, int], int] = {}
     for gx, gy in grid.cells_in(bbox):
         node = roads.nearest_node(grid.point_of(gx, gy), MAX_GRID_POINT_TO_ROAD_M)
         if node is not None:
             grid_points[(gx, gy)] = node
+
+    node_inside: dict[int, bool] = {}
+    stretch_inside: dict[tuple[int, int], bool] = {}
+
+    def inside(node: int) -> bool:
+        if node not in node_inside:
+            node_inside[node] = avoid is not None and avoid.contains(roads.coords[node])
+        return node_inside[node]
+
+    def stretch_touches(before: int, after: int) -> bool:
+        if (before, after) not in stretch_inside:
+            stretch_inside[(before, after)] = avoid is not None and avoid.touches_segment(
+                roads.coords[before], roads.coords[after]
+            )
+        return stretch_inside[(before, after)]
 
     routes: Routes = {}
     for shelter_id, shelter_pos in shelters.items():
@@ -183,14 +282,19 @@ def build_routes(
         for (gx, gy), start in grid_points.items():
             if start != shelter_node and start not in next_hop:
                 continue
-            line = [grid.point_of(gx, gy)]
-            node = start
+            origin = grid.point_of(gx, gy)
+            line = [origin]
+            was_inside = [avoid is not None and avoid.contains(origin)]
+            previous = node = start
             while True:
                 line.append(roads.coords[node])
+                was_inside += [stretch_touches(previous, node), inside(node)]
                 if node == shelter_node:
                     break
-                node = next_hop[node]
+                previous, node = node, next_hop[node]
             line.append(shelter_pos)
+            if avoid is not None and crosses(was_inside):
+                continue
             polyline = [
                 [round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)]
                 for lat, lon in simplify(line)

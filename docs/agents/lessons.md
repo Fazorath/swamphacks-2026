@@ -324,3 +324,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
 - **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
 - **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
+
+## Valley Road Routes (ticket 0051)
+
+- **Real build, 2026-10-18** (`build_cache_pack.py --roads-pbf` with `uv run --with pyrosm`, Windows, Python 3.14 resolved fine): reading the 415 MB Nepal extract takes 40 to 100 s; 2,291 junctions and 2,405 segments in the Road graph. Route files by grid: 100 m is 36.8 MB, 250 m 5.8 MB (just over the 5 MB budget), **500 m 1.4 MB (341 files), so the pack uses 500 m**. A home can be up to about 350 m from its Grid point; the Route line starts there.
+- **The corridor rule drops most Routes in the gorge.** Syabrubesi gompa has 64 Routes without it and 1 with it; Sundaradevi and Karki go from 697 to 144 and 160. The road runs beside the river, so a hillside home's drive goes into the corridor and out again. Those Shelters use the straight-line walk with no line, as the ticket specifies, and the phone's own check (`routeIsAffected`) treats any touch of the corridor as affected too.
+- **A bridge between two road nodes can lie outside the corridor at both ends**, so `touches_segment` samples every 40 m instead of testing nodes only.
+- A one-off script that imports `build_cache_pack` from `scratchpad` needs `sys.path` set to the repo's `scripts` folder; run from `node/` the path is `../scripts`.
+- **A Node left over from an earlier session held loopback port 4250** and made four `test_reticulum_nodes.py` tests error in `scripts/check.sh`. `scripts/stop-nodes.sh` cannot find it on Windows (`pkill` and `lsof` are missing); use `Get-NetTCPConnection` and `Stop-Process`.
+- Rehearsed on loopback: a Hub started on the new pack (served by `python -m http.server`) validated its checksums and served a Route file with the Gompa's Route. Not checked in a browser; software path only, no Pi.

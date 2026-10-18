@@ -247,6 +247,23 @@ test("a Shelter with no Route ranks after every Shelter that has one, and says s
   );
 });
 
+// The builder drops a Route that crosses the Flood-Prone Area, so its Shelter is simply missing
+// from the Grid point's file.
+test("a Shelter whose Route the builder dropped gets no line, even beside one that has a Route", () => {
+  const result = plan({
+    routes: { "far-both": ROUTES["far-both"] },
+    openShelterIds: ["near-plain", "far-both"],
+  });
+  expect(result.shelter).toBe(FAR_BOTH);
+  expect(result.route).toEqual(ROUTES["far-both"]);
+
+  const dropped = plan({
+    routes: { "far-both": ROUTES["far-both"] },
+    openShelterIds: ["near-plain"],
+  });
+  expect(dropped.route).toBeNull();
+});
+
 test("the plan says the route ignores flooding and road closures, only when it draws one", () => {
   const warning = "The route is the shortest by road and ignores flooding and road closures.";
   expect(plan({ routes: ROUTES }).lines).toContain(warning);
@@ -325,6 +342,13 @@ describe("with a Wave ETA", () => {
     const result = plan({ wave: wave(43), openShelterIds: ["near-plain"] });
     expect(result.shelter).toBe(NEAR_PLAIN);
     expect(result.lines.join(" ")).toContain("80 m above the river");
+    expect(result.lines).toContain("24 min walk, wave in 43 min.");
+  });
+
+  test("a reachable Shelter with no Route is still offered, by its straight-line walk, with no line", () => {
+    const result = plan({ wave: wave(43), openShelterIds: ["near-plain"], routes: {} });
+    expect(result.shelter).toBe(NEAR_PLAIN);
+    expect(result.route).toBeNull();
     expect(result.lines).toContain("24 min walk, wave in 43 min.");
   });
 
