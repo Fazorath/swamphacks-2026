@@ -74,6 +74,10 @@ _Avoid_: demo script, simulation, playback
 A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
+**Camera Clip**:
+A five-minute illustrative video a demo camera plays in place of a live feed, composed from short credited sources and lined up with the Event clock; it never claims to show the Node's own site. A manifest beside the clips credits every source and gives `flood_onset_s`, the second the water visibly jumps. Unlicensed footage lives only in the gitignored `.demo/clips/`.
+_Avoid_: recording, live feed, camera footage
+
 **Event clock**:
 The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
 _Avoid_: replay time, sim time
