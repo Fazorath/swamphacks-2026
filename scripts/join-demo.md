@@ -1,6 +1,6 @@
 # Audience Node runbook
 
-`scripts/join-demo.sh <hub address> [<name> [<lat> <lon>]]` makes a laptop a Node on the demo Mesh:
+`scripts/join-demo.sh <hub address> <town>` (or `<name> <lat> <lon>`) makes a laptop a Node on the demo Mesh:
 a dot with the `REAL` ring on the God's Eye View, in a Nepal town, that a volunteer can switch
 off by turning its Wi-Fi off. Its readings are the Scenario's calm step, so say out loud that the
 numbers are simulated; the Node and the Mesh are real.
@@ -52,8 +52,9 @@ Mesh" and "Registered" as they happen. If the Hub is not heard within 60 s it pr
 ## Accept it on the Hub (once, before the show)
 
 Either click **Accept** on the laptop's name in the Hub Panel's Registry tab, or paste the `curl`
-line the script printed on any machine that can reach the Hub. The registry holds about 8 Nodes:
-the Hub, S0 to S3, the Pi and one or two audience laptops. A ninth is refused with a message.
+line the script printed on any machine that can reach the Hub. The registry is one signed packet, so it holds about 8 Nodes
+with short names and 4 to 5 with 32-character ones: the Hub, S0 to S3, the Pi and an audience
+laptop make 7, so keep names short. A ninth is refused with a message.
 
 ## Hand it to a volunteer
 

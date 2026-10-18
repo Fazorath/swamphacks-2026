@@ -87,11 +87,11 @@ echo "$!" >"$demo_dir/pack-server.pid"
 hub_identity=""
 
 start_node() {
-  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url also_outside=false
+  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url reachable_from_other_laptops=false
   if [ "$role" = hub ]; then
     pack_url="http://127.0.0.1:$pack_port/cache-pack.zip"
     # S0 to S3 stay on loopback; only the Hub also reaches an Audience Node (scripts/join-demo.md).
-    also_outside=true
+    reachable_from_other_laptops=true
   else
     pack_url="http://127.0.0.1:$base_port/api/cache-pack.zip"
   fi
@@ -100,7 +100,7 @@ start_node() {
   env NODE_NAME="$name" NODE_ROLE="$role" NODE_PORT=$((base_port + slot)) \
     NODE_MESH_INTERFACE=loopback NODE_LOOPBACK_SLOT=$((slot_base + slot)) \
     NODE_LOOPBACK_FIRST_SLOT="$slot_base" NODE_TCP_PORT="$tcp_port" \
-    NODE_ALSO_WIFI_DISCOVERY="$also_outside" NODE_ALSO_TCP_LISTEN="$also_outside" \
+    NODE_ALSO_WIFI_DISCOVERY="$reachable_from_other_laptops" NODE_ALSO_TCP_LISTEN="$reachable_from_other_laptops" \
     NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \

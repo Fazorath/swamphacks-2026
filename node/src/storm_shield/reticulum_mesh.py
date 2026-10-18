@@ -43,6 +43,9 @@ def reticulum_config(settings: Settings) -> str:
 """
 
 
+_WIFI_DISCOVERY = "  [[Wi-Fi]]\n    type = AutoInterface\n    enabled = yes"
+
+
 def _interface_config(settings: Settings) -> str:
     blocks = [_primary_interface(settings)]
     if settings.also_wifi_discovery and settings.mesh_interface != "auto":
@@ -50,9 +53,6 @@ def _interface_config(settings: Settings) -> str:
     if settings.also_tcp_listen and settings.mesh_interface != "tcp":
         blocks.append(_tcp_listen("0.0.0.0", settings.tcp_port, name="Clients"))
     return "\n".join(blocks)
-
-
-_WIFI_DISCOVERY = "  [[Wi-Fi]]\n    type = AutoInterface\n    enabled = yes"
 
 
 def _tcp_listen(listen_ip: str, listen_port: int, name: str = "Listen") -> str:

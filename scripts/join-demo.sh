@@ -6,9 +6,10 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: scripts/join-demo.sh <hub address> [<name> [<lat> <lon>]]" >&2
+  echo "usage: scripts/join-demo.sh <hub address> <town | name lat lon>" >&2
   echo "  hub address: host[:port] of the Hub's dashboard, e.g. 192.168.1.20 or 192.168.1.20:8000" >&2
-  echo "  name: a town below (name and position), or any name with <lat> <lon>" >&2
+  echo "  town: one below (name and position), or any name (letters, digits, - and _) with <lat> <lon>" >&2
+  echo "  each laptop needs its own name" >&2
   echo "  towns: $(town_names)" >&2
   exit 2
 }
@@ -26,7 +27,7 @@ town_position() {
 }
 town_names() { echo "Dhunche Trishuli Kakani Dhading Kathmandu"; }
 
-[ $# -ge 1 ] && [ $# -le 4 ] && [ $# -ne 3 ] || usage
+[ $# -eq 2 ] || [ $# -eq 4 ] || usage
 hub="${1#http://}"
 hub="${hub%/}"
 case "$hub" in *:*) ;; *) hub="$hub:8000" ;; esac
@@ -35,12 +36,24 @@ hub_host="${hub%:*}"
 if [ $# -eq 4 ]; then
   name="$2" lat="$3" lon="$4"
 else
-  position="$(town_position "${2:-Dhunche}")" || {
+  position="$(town_position "$2")" || {
     echo "unknown town '$2'; give a latitude and longitude too, or pick one of: $(town_names)" >&2
     exit 2
   }
   read -r name lat lon <<<"$position"
 fi
+# The name goes into a pattern that finds the Node's id in its log, and the position into a Node
+# setting, so refuse anything that is not plain.
+[[ "$name" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || {
+  echo "the name must be 1 to 32 letters, digits, - or _: '$name'" >&2
+  exit 2
+}
+for coordinate in "$lat" "$lon"; do
+  [[ "$coordinate" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] || {
+    echo "latitude and longitude must be numbers, like 28.109 85.299: '$coordinate'" >&2
+    exit 2
+  }
+done
 
 cd "$(dirname "$0")/.."
 join_dir="${JOIN_DIR:-$PWD/.join-demo}" # keeps the Node id, so the Hub's accept stays valid
@@ -49,6 +62,7 @@ hub_tcp_port="${JOIN_HUB_TCP_PORT:-4242}"
 port="${NODE_PORT:-8000}"
 wifi_discovery_ports="29716 42671" # UDP, Reticulum's AutoInterface
 
+command -v lsof >/dev/null 2>&1 || { echo "lsof is needed to check the ports (apt install lsof)" >&2; exit 1; }
 # A Node that cannot bind its port still logs its identity first, so refuse to start over anything
 # listening: an old run would otherwise answer for the new one.
 busy=""
@@ -60,7 +74,7 @@ case "$mesh" in
     ;;
   tcp) tcp_ports="${NODE_TCP_PORT:-4242}" ;;
   loopback) tcp_ports="$((4250 + ${NODE_LOOPBACK_SLOT:-0}))" ;;
-  *) echo "JOIN_MESH must be auto or tcp, not '$mesh'" >&2; exit 2 ;;
+  *) echo "JOIN_MESH must be auto or tcp (loopback is for rehearsing on one machine), not '$mesh'" >&2; exit 2 ;;
 esac
 for tcp_port in "$port" ${tcp_ports:-}; do
   if lsof -nP -iTCP:"$tcp_port" -sTCP:LISTEN >/dev/null 2>&1; then busy="$busy $tcp_port"; fi
@@ -84,17 +98,21 @@ case "$hub_state" in
     exit 1
     ;;
 esac
-hub_identity="$(echo "$hub_state" | sed -n 's/^{"id":"\([0-9a-f]*\)".*/\1/p')"
+hub_identity="$(echo "$hub_state" | grep -o '"id": *"[0-9a-f]*"' | head -1 | sed 's/.*"\([0-9a-f]*\)"$/\1/')"
 if [ -z "$hub_identity" ]; then
   echo "http://$hub answered, but not with a Hub identity; is it a Storm Shield Hub?" >&2
   exit 1
 fi
 
+if [ "$mesh" = tcp ] && ! (exec 3<>"/dev/tcp/$hub_host/$hub_tcp_port") 2>/dev/null; then
+  echo "warning: the Hub's TCP port $hub_host:$hub_tcp_port does not accept connections; is the Hub" >&2
+  echo "  started with scripts/run-demo.sh (it listens there), and is that port open on the Hub laptop?" >&2
+fi
 if [ "$mesh" = auto ]; then
   # Warnings only: each is a common reason for Wi-Fi discovery finding nobody, none is certain.
-  if command -v ip >/dev/null 2>&1 && ! ip -6 addr show scope link 2>/dev/null | grep -q inet6; then
+  if command -v ip >/dev/null 2>&1 && ! ip -6 addr show scope link 2>/dev/null | grep inet6 >/dev/null; then
     echo "warning: no IPv6 link-local address on this laptop; Wi-Fi discovery needs one" >&2
-  elif command -v ifconfig >/dev/null 2>&1 && ! ifconfig | grep -q 'inet6 fe80'; then
+  elif command -v ifconfig >/dev/null 2>&1 && ! ifconfig | grep 'inet6 fe80' >/dev/null; then
     echo "warning: no IPv6 link-local address on this laptop; Wi-Fi discovery needs one" >&2
   fi
   if [[ "$hub_host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\. ]]; then
@@ -110,7 +128,7 @@ if [ "$mesh" = auto ]; then
     echo "  sudo firewall-cmd --zone=<zone> --add-port=29716/udp --add-port=42671/udp" >&2
   fi
   if [ -x /usr/libexec/ApplicationFirewall/socketfilterfw ] &&
-    /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate 2>/dev/null | grep -q enabled; then
+    /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate 2>/dev/null | grep enabled >/dev/null; then
     echo "warning: the macOS firewall is on; allow incoming connections for Python, or switch it off for the demo" >&2
   fi
 fi
