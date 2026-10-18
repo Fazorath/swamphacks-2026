@@ -468,3 +468,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
 - **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
 - **Manual check done (2026-10-18):** the owner used a phone over Tailscale against `scripts/run-demo.sh` on `main`; all four tabs worked. The wrapped status strip took over 30% of the screen, so it is one sideways-scrolling line now. Tailscale was stopped on the laptop at first (`tailscale status` says so), and a leftover pack server on 8900 blocked `run-demo.sh` until it was stopped. **Still open:** the bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a home pick has no on-screen cancel on the phone.
+
+## Sending email from Claude Code (ticket 0074)
+
+- **The team address is `stormshieldteam.uf@gmail.com`**, for outreach (the Nepal camera message) and sign-ups. Its password and two-step code are never committed or pasted into chat; share them through a password manager.
+- **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
+- **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
+- **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
