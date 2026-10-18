@@ -54,3 +54,30 @@ def test_a_malformed_tcp_peer_names_the_setting() -> None:
 def test_reticulum_over_wifi_discovery_is_the_default() -> None:
     settings = Settings()
     assert (settings.mesh, settings.mesh_interface) == ("reticulum", "auto")
+
+
+def test_the_hub_can_add_wifi_discovery_and_a_tcp_listener_beside_loopback() -> None:
+    config = reticulum_config(
+        Settings(
+            mesh_interface="loopback",
+            also_wifi_discovery=True,
+            also_tcp_listen=True,
+            tcp_port=4242,
+        )
+    )
+    assert "listen_ip = 127.0.0.1\n    listen_port = 4250" in config
+    assert "AutoInterface" in config
+    assert "listen_ip = 0.0.0.0\n    listen_port = 4242" in config
+
+
+def test_the_extra_interfaces_are_off_unless_asked_for() -> None:
+    config = reticulum_config(Settings(mesh_interface="loopback"))
+    assert "AutoInterface" not in config
+    assert "0.0.0.0" not in config
+
+
+def test_a_primary_interface_is_never_added_twice() -> None:
+    wifi = reticulum_config(Settings(mesh_interface="auto", also_wifi_discovery=True))
+    assert wifi.count("AutoInterface") == 1
+    tcp = reticulum_config(Settings(mesh_interface="tcp", also_tcp_listen=True))
+    assert tcp.count("TCPServerInterface") == 1

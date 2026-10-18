@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     # Every Node must list every other Node, because Reticulum does not relay between clients.
     tcp_port: int = 4242
     tcp_peers: str = ""
+    # The Hub of the one-laptop demo talks to S0 to S3 on loopback, and also to an Audience Node:
+    # over Wi-Fi discovery, or over TCP when that laptop sits behind Docker's NAT. Off elsewhere.
+    also_wifi_discovery: bool = False
+    also_tcp_listen: bool = False
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     # How often this Node checks whether it has internet, and whether a camera picture is due.
