@@ -25,11 +25,14 @@ function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
 
 export function EvacuationPlanPanel({
   plan,
+  exampleHome,
   waveArrival,
   eventT,
   shelterStatusConfirmedAt,
 }: {
   plan: EvacuationPlan;
+  // The plan is for the built-in example home, not the resident's.
+  exampleHome: boolean;
   waveArrival: WaveArrival | null;
   eventT: number | null;
   // Set only while the Node is unreachable: when its last answer arrived.
@@ -38,6 +41,11 @@ export function EvacuationPlanPanel({
   return (
     <section aria-label="Evacuation Plan">
       <h2>Evacuation Plan</h2>
+      {exampleHome && (
+        <p className="example-home">
+          Example home, not yours. Fill in your household profile to see your own plan.
+        </p>
+      )}
       <WaveEtaLine arrival={waveArrival} eventT={eventT} />
       {plan.risk && (
         <div className={`plan-risk ${plan.risk.level}`}>

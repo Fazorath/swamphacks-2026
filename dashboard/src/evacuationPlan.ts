@@ -21,6 +21,8 @@ export type CachePackContents = {
   routeGrid: RouteGrid | null;
   // The deepest zoom the pack holds tiles for; null when it holds none.
   tileMaxZoom: number | null;
+  // [south, west, north, east], the area the pack covers; null when its manifest has none.
+  bbox: [number, number, number, number] | null;
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.

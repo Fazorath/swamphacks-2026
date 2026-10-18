@@ -19,6 +19,7 @@ import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
+import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeState } from "./useNodeState";
 import { useOpenShelterIds } from "./useOpenShelterIds";
@@ -55,7 +56,10 @@ export function App() {
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
-  const routes = useRoutes(profile?.home ?? null, cachePack?.routeGrid ?? null);
+  // Until a resident saves their own profile, an example home keeps the plan and Route on screen.
+  const example = profile === null ? exampleHousehold(cachePack) : null;
+  const shownProfile = profile ?? example;
+  const routes = useRoutes(shownProfile?.home ?? null, cachePack?.routeGrid ?? null);
   const roadGraph = useRoadGraph(cachePack !== null);
   const river = useRiverLine(cachePack !== null);
   const [blockedRoads, toggleBlockedRoad] = useBlockedRoads();
@@ -75,7 +79,8 @@ export function App() {
   // The home never leaves the device: the profile's, or else where the connected Node sits.
   const thisNode = lastAnswer?.state.nodes.find((node) => node.id === lastAnswer.state.id);
   const waveHome: Home | null =
-    profile?.home ?? (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
+    shownProfile?.home ??
+    (thisNode ? { lat: thisNode.position[0], lon: thisNode.position[1] } : null);
   const eventT = eventClock.clock?.event_t ?? null;
   const arrival = river && waveHome && waveArrival(river, waveHome, communityWarnings);
   const planWave =
@@ -83,7 +88,7 @@ export function App() {
       ? { arrivalAt: arrival.at, eventT }
       : null;
   const plan = evacuationPlan({
-    profile,
+    profile: shownProfile,
     pack: cachePack,
     openShelterIds,
     floodRisk,
@@ -204,7 +209,7 @@ export function App() {
           selectedId={selectedId}
           onSelect={toggleSelected}
           stormSignal={floodRisk?.storm_signal ?? null}
-          home={profile?.home ?? null}
+          home={shownProfile?.home ?? null}
           shelters={cachePack?.shelters ?? []}
           openShelterIds={openShelterIds}
           floodProne={cachePack?.floodProne ?? null}
@@ -222,6 +227,7 @@ export function App() {
         />
         <EvacuationPlanPanel
           plan={plan}
+          exampleHome={example !== null}
           waveArrival={arrival}
           eventT={eventT}
           shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}

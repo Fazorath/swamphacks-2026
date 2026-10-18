@@ -58,6 +58,7 @@ function pack(overrides: Partial<CachePackContents> = {}): CachePackContents {
     floodProne: { features: [] },
     routeGrid: null,
     tileMaxZoom: null,
+    bbox: null,
     ...overrides,
   };
 }
