@@ -130,6 +130,8 @@ The top-bar risk chip opens a popover with the level and every reason. Nothing f
 | No Household Profile, phone | Empty state and a 44 px "Set up your household" button |
 | Profile, calm day | Nearest open Shelter with fit badges (special-needs, pets) and drive distance |
 | Profile, storm | Your Flood Risk, then the official orders that apply to you, then Flood-Prone Area yes or no, then the Shelter card, then "Show route" |
+| Warning in effect, a Reachable Shelter | The Shelter card with "N min walk, wave in M min" and its height above the river |
+| Warning in effect, none reachable | "Nearest Shelter X: N min walk, wave in M min." then "No Shelter you can reach in time. Get to higher ground, away from the river, now.", no Shelter pin and no Route |
 | No open Shelter | "No open Shelter announced yet. Follow official sources." and no route |
 | No Route from your Grid point | Shelter labeled "straight-line distance", no line drawn |
 | No Cache Pack | "Shelters and routes arrive once this Node has the Cache Pack" |

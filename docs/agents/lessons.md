@@ -326,3 +326,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A home must be within 2 km of a river vertex to get an ETA**, and the test river has a vertex every 10 km: pick test homes on vertices (`at(0)`, `at(20)`), or the answer is `not-near-river`, not the reach you meant.
 - Rerun of `test_reticulum_nodes.py` needs ports 4250 and 8000 free; another session's Node (a different worktree) held them during the first full run, so those four tests were run later. Check `ss -ltnp` before `scripts/stop-nodes.sh`: it would kill a teammate's or your own other session's Node.
 - Not rehearsed on loopback Reticulum or in a browser; the update path is covered in the in-memory Mesh only.
+
+## Shelter or higher ground (ticket 0048)
+
+- **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
+- **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
+- **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
