@@ -2,20 +2,19 @@ import type { Home } from "./householdProfile";
 import type { NodeOnMap } from "./nodesOnMap";
 import { distanceKm } from "./waveEta";
 
-// The Node nearest home that counts, other than the one this page talks to. When it goes quiet
-// the water has probably reached it, so it is the one the pager watches.
-export function closestNodeToHome(nodes: NodeOnMap[], home: Home): NodeOnMap | null {
-  let closest: NodeOnMap | null = null;
-  let closestKm = Infinity;
-  for (const node of nodes) {
-    if (node.isThisNode || !node.registered) continue;
-    const km = distanceKm(home, node.position);
-    if (km < closestKm) {
-      closest = node;
-      closestKm = km;
-    }
-  }
-  return closest;
+// Wide enough to cover the whole Bhote Koshi valley from any town in it: a Node upstream of home
+// reaching High is the warning, long before the water is near.
+export const PAGER_RADIUS_KM = 60;
+
+export type HighNearHome = { id: string; label: string; km: number };
+
+// Nodes within the radius whose own warning is High, nearest first.
+export function highNodesNearHome(nodes: NodeOnMap[], home: Home): HighNearHome[] {
+  return nodes
+    .filter((node) => node.level === "high")
+    .map((node) => ({ id: node.id, label: node.label, km: distanceKm(home, node.position) }))
+    .filter(({ km }) => km <= PAGER_RADIUS_KM)
+    .sort((a, b) => a.km - b.km);
 }
 
 // Two harsh square-wave tones, alternating fast, in three bursts: a pager, not a chime.

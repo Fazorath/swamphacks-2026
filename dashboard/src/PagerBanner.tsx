@@ -3,8 +3,8 @@ import type { PagerAlert } from "./usePager";
 export function PagerBanner({ alert, onDismiss }: { alert: PagerAlert; onDismiss: () => void }) {
   return (
     <div className="pager-banner" role="alert">
-      <strong>{alert.label} stopped responding.</strong>
-      <span>It is the closest Node to your home, so the water may be close.</span>
+      <strong>{alert.label} reports a High warning.</strong>
+      <span>It is {Math.round(alert.km)} km from your home, so the water may be coming.</span>
       <button type="button" onClick={onDismiss}>
         Dismiss
       </button>

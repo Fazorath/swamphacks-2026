@@ -3,7 +3,7 @@ import { act } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { NodeOnMap } from "./nodesOnMap";
-import { closestNodeToHome, playPager } from "./pager";
+import { PAGER_RADIUS_KM, highNodesNearHome, playPager } from "./pager";
 import { usePager } from "./usePager";
 
 vi.mock("./pager", async (importOriginal) => ({
@@ -32,70 +32,80 @@ function node(id: string, position: [number, number], over: Partial<NodeOnMap> =
 }
 
 const NEAR = node("near", [28.17, 85.34]);
-const FAR = node("far", [27.92, 85.15]);
-const ME = node("me", [28.1655, 85.3399], { isThisNode: true });
+const UPSTREAM = node("upstream", [28.35, 85.45]);
+// About 130 km from the Syabrubesi home, well past the radius.
+const OUT_OF_RADIUS = node("far-south", [27.0, 85.3]);
+
+const high = (each: NodeOnMap) => ({ ...each, level: "high" as const });
 
 beforeEach(() => vi.mocked(playPager).mockClear());
 
-describe("closestNodeToHome", () => {
-  test("is the nearest Registered Node, never this page's own Node", () => {
-    expect(closestNodeToHome([FAR, NEAR, ME], HOME)?.id).toBe("near");
+describe("highNodesNearHome", () => {
+  test("lists Nodes with a High warning inside the radius, nearest first", () => {
+    const found = highNodesNearHome([high(UPSTREAM), high(NEAR), NEAR], HOME);
+    expect(found.map(({ id }) => id)).toEqual(["near", "upstream"]);
+    expect(found[1].km).toBeLessThanOrEqual(PAGER_RADIUS_KM);
   });
 
-  test("skips an Unverified Node", () => {
-    const unverified = node("unverified", [28.1655, 85.3399], { registered: false });
-    expect(closestNodeToHome([FAR, unverified], HOME)?.id).toBe("far");
-  });
-
-  test("is null with no other Node", () => {
-    expect(closestNodeToHome([ME], HOME)).toBeNull();
+  test("leaves out an Elevated Node and a High Node beyond the radius", () => {
+    const elevated = { ...NEAR, level: "elevated" as const };
+    expect(highNodesNearHome([elevated, high(OUT_OF_RADIUS)], HOME)).toEqual([]);
   });
 });
 
 describe("usePager", () => {
-  test("pages when the closest Node goes from responding to quiet", () => {
+  test("pages when a Node in the radius newly reaches High", () => {
     const { result, rerender } = renderHook(({ nodes }) => usePager(nodes, HOME), {
-      initialProps: { nodes: [NEAR, FAR] },
+      initialProps: { nodes: [NEAR, UPSTREAM] },
     });
     expect(result.current.alert).toBeNull();
-    rerender({ nodes: [{ ...NEAR, stale: true }, FAR] });
-    expect(result.current.alert).toEqual({ label: "near" });
+    rerender({ nodes: [NEAR, high(UPSTREAM)] });
+    expect(result.current.alert).toMatchObject({ label: "upstream" });
     expect(playPager).toHaveBeenCalledTimes(1);
   });
 
-  test("a Node that is already quiet when the page opens does not page", () => {
-    const { result } = renderHook(() => usePager([{ ...NEAR, stale: true }, FAR], HOME));
+  test("a Node already High when the page opens does not page", () => {
+    const { result } = renderHook(() => usePager([high(NEAR)], HOME));
     expect(result.current.alert).toBeNull();
     expect(playPager).not.toHaveBeenCalled();
   });
 
-  test("a farther Node going quiet does not page", () => {
+  test("a High Node beyond the radius does not page", () => {
     const { result, rerender } = renderHook(({ nodes }) => usePager(nodes, HOME), {
-      initialProps: { nodes: [NEAR, FAR] },
+      initialProps: { nodes: [OUT_OF_RADIUS] },
     });
-    rerender({ nodes: [NEAR, { ...FAR, stale: true }] });
+    rerender({ nodes: [high(OUT_OF_RADIUS)] });
     expect(result.current.alert).toBeNull();
-    expect(playPager).not.toHaveBeenCalled();
+  });
+
+  test("a Node that stays High pages once, not on every update", () => {
+    const { rerender } = renderHook(({ nodes }) => usePager(nodes, HOME), {
+      initialProps: { nodes: [NEAR] },
+    });
+    rerender({ nodes: [high(NEAR)] });
+    rerender({ nodes: [high(NEAR)] });
+    rerender({ nodes: [{ ...high(NEAR), ageSeconds: 3 }] });
+    expect(playPager).toHaveBeenCalledTimes(1);
   });
 
   test("with no saved home it stays silent", () => {
     const { result, rerender } = renderHook(({ nodes }) => usePager(nodes, null), {
       initialProps: { nodes: [NEAR] },
     });
-    rerender({ nodes: [{ ...NEAR, stale: true }] });
+    rerender({ nodes: [high(NEAR)] });
     expect(result.current.alert).toBeNull();
   });
 
-  test("dismiss clears the alert, and a second silence pages again", () => {
+  test("dismiss clears the alert, and the same Node reaching High again pages again", () => {
     const { result, rerender } = renderHook(({ nodes }) => usePager(nodes, HOME), {
       initialProps: { nodes: [NEAR] },
     });
-    rerender({ nodes: [{ ...NEAR, stale: true }] });
+    rerender({ nodes: [high(NEAR)] });
     act(() => result.current.dismiss());
     expect(result.current.alert).toBeNull();
     rerender({ nodes: [NEAR] });
-    rerender({ nodes: [{ ...NEAR, stale: true }] });
-    expect(result.current.alert).toEqual({ label: "near" });
+    rerender({ nodes: [high(NEAR)] });
+    expect(result.current.alert).toMatchObject({ label: "near" });
     expect(playPager).toHaveBeenCalledTimes(2);
   });
 });

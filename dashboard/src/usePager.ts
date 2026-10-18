@@ -2,19 +2,18 @@ import { useEffect, useState } from "react";
 
 import type { Home } from "./householdProfile";
 import type { NodeOnMap } from "./nodesOnMap";
-import { armPagerSound, closestNodeToHome, playPager } from "./pager";
+import { armPagerSound, highNodesNearHome, playPager } from "./pager";
 
-export type PagerAlert = { label: string };
+export type PagerAlert = { label: string; km: number };
 
-type Watched = { id: string; stale: boolean };
-
-// Sounds the pager and returns an alert when the Node closest to home, seen responding on this
-// page, goes quiet. A Node that is already quiet when the page opens does not page.
+// Sounds the pager and returns an alert when a Node within the radius of home newly reaches a High
+// warning while this page is open. A Node already High when the page opens does not page.
 export function usePager(
   nodes: NodeOnMap[],
   home: Home | null,
 ): { alert: PagerAlert | null; dismiss: () => void } {
-  const [watched, setWatched] = useState<Watched | null>(null);
+  // Null until the first Nodes are listed: what is already High then is the baseline, not news.
+  const [highIds, setHighIds] = useState<string[] | null>(null);
   const [alert, setAlert] = useState<PagerAlert | null>(null);
 
   useEffect(() => armPagerSound(), []);
@@ -22,14 +21,15 @@ export function usePager(
     if (alert) playPager();
   }, [alert]);
 
-  const closest = home ? closestNodeToHome(nodes, home) : null;
-  const now = closest ? { id: closest.id, stale: closest.stale } : null;
-  if (watched?.id !== now?.id || watched?.stale !== now?.stale) {
+  const high = home ? highNodesNearHome(nodes, home) : [];
+  const ids = high.map(({ id }) => id);
+  const listed = home !== null && nodes.length > 0;
+  if (listed && (highIds === null || ids.join() !== highIds.join())) {
     // Setting state while rendering is the supported way to react to a change in props.
-    setWatched(now);
-    if (closest && watched?.id === closest.id && !watched.stale && closest.stale) {
-      setAlert({ label: closest.label });
-    }
+    setHighIds(ids);
+    const known = highIds ?? ids;
+    const [newest] = high.filter(({ id }) => !known.includes(id));
+    if (newest) setAlert({ label: newest.label, km: newest.km });
   }
 
   return { alert, dismiss: () => setAlert(null) };
