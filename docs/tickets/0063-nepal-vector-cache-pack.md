@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately; the map reads it from 0033 on)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Assignee:** refloow-0
 
