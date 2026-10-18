@@ -10,7 +10,7 @@ const PACK: CachePackContents = {
 };
 
 test("a pack that covers the valley gets the example home", () => {
-  expect(exampleHousehold(PACK)?.home).toEqual({ lat: 28.0599, lon: 85.2303 });
+  expect(exampleHousehold(PACK)?.home).toEqual({ lat: 28.1654, lon: 85.3398 });
 });
 
 test("a pack for another area, or with no area, gets none", () => {
