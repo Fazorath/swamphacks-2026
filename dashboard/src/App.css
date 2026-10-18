@@ -1636,14 +1636,27 @@ section p.flood-prone-caption {
   color: var(--accent);
 }
 
-.reading-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
+/* One reading per row: the Panel is about 340 px wide, too narrow for three columns of
+   "Label: value unit" without wrapping each onto several lines. */
+.node-card .reading-row {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.reading-row li {
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.reading-row .reading-slot {
+  display: flex;
+  justify-content: space-between;
+  white-space: nowrap;
 }
 
 .slot-value.tick {
