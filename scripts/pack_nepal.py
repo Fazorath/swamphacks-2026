@@ -13,9 +13,8 @@ from typing import Any
 
 import httpx
 import pack_weather
-from storm_shield.weather_grid import BBox
+from storm_shield.weather_grid import NEPAL_BBOX, BBox
 
-NEPAL_BBOX: BBox = (26.3, 80.0, 30.5, 88.3)
 # The Kathmandu valley, drawn as finely as the demo valley because the capital is a labelled place.
 KATHMANDU_BBOX: BBox = (27.6, 85.2, 27.8, 85.5)
 GEOBOUNDARIES_URL = "https://www.geoboundaries.org/api/current/gbOpen/NPL/{level}/"

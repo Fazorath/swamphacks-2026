@@ -73,4 +73,4 @@
 | [0070-readings-panel-for-a-network](0070-readings-panel-for-a-network.md) | ready-for-agent | unclaimed | Fazorath |
 | [0071-rising-water-sheet](0071-rising-water-sheet.md) | ready-for-agent | unclaimed | Fazorath |
 | [0072-wave-eta-corner-card](0072-wave-eta-corner-card.md) | ready-for-agent | unclaimed | Fazorath |
-| [0073-nepal-wide-weather-grid](0073-nepal-wide-weather-grid.md) | in-progress | Fazorath | Fazorath |
+| [0073-nepal-wide-weather-grid](0073-nepal-wide-weather-grid.md) | done | Fazorath | Fazorath |

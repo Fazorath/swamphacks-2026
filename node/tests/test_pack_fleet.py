@@ -17,7 +17,8 @@ from pack_fleet import (
 )
 
 from storm_shield.replay import load_timeline
-from storm_shield.weather_grid import VALLEY_BBOX
+
+VALLEY_BBOX = (27.86, 85.08, 28.46, 85.47)
 
 TIMELINE = load_timeline()
 SOURCE = Path(__file__).parents[2] / "scripts" / "cache-pack" / "fleet.source.json"

@@ -389,3 +389,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Wind particles over the map fell to about 3 fps with terrain on** (about 2,000 particles × 7 tail points re-projected every frame), so Wind was dropped: 0056 and 0057 are deleted, 0073 removes `windAt`, `speedBand` and the wind variables.
 - **The valley grid (7 × 5 at 0.1°) is a small patch on the national map**; 0073 moves the Weather Grid to Nepal at 0.5° (153 points, one archive request, about 200 KB). The prototype got all 153 points from the archive in one browser `fetch` (Open-Meteo allows CORS).
 - The prototype is `dashboard/prototype-weather-layers.html` on branch `prototype/weather-layers` (MapLibre 4.7.1 from unpkg, AWS Terrarium terrain); serve the folder with `python3 -m http.server` and use `?variant=A` to `D`.
+
+## National Weather Grid (ticket 0073)
+
+- **The grid is the points that fit inside the Nepal box**, not a cover of it: `grid_points` floors, so 26.3 to 30.5 N at 0.5° is 9 rows (last 30.3) and 80.0 to 88.3 E is 17 columns (last 88.0), 153 points. `NEPAL_BBOX` now lives in `weather_grid.py` because the Hub needs it at run time; `pack_nepal.py` imports it. `build_cache_pack.py` keeps its own valley `BBOX` for tiles, routes and the fleet.
+- **Real fetch (2026-10-18):** 153 points, 72 hours, three variables, 134 KB, one request.
+- **A forecast on disk with the valley grid or wind variables is refused by `_check_shape`**, so a Hub upgraded in place fetches again instead of serving a grid the dashboard cannot place.
+- **Not done:** no `cache-pack-v4` carrying the national `weather_replay.json` was built or released (the full build needs Overpass and the repo is private). Until it is, a pack's weather file still has the valley grid and the dashboard layers must tolerate that.
