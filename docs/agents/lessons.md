@@ -377,3 +377,30 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The 15 km rule dropped Chatara** (13.9 km from Dharan). The source coordinates are typed from memory and unchecked on a map; 0035 verifies them.
 - **A track is cut at `silent_at`**, so the Node needs no silent logic: it reads the last point at or before the Event clock and ages from there.
 - The Node reads `fleet.json` through `SimulatedFleet`, which re-parses only when the file's modified time changes; it never touches the Mesh, `ReadingStore` or the registry, so a Surging entry cannot move Flood Risk.
+
+## Nepal vector Cache Pack (ticket 0063)
+
+- **Real build, 2026-10-18** (`scripts/build_cache_pack.py`, no key, no `--roads-pbf`, no raster tiles): 10.0 MB zip, about 7.6 MB more than v3's 2.4 MB, inside the ticket's 6 to 10 MB. Vectors 1.3 MB (border 0.07, districts 0.07, rivers 1.13 with 1,827 lines, places 0.06), elevation 9.63 MB in 138 tiles. The elevation budget is 10 MB, raised from 8.5 when Kathmandu got detail tiles; PNGs do not compress, so it counts raw bytes. Run it again with `--roads-pbf` for the road graph and Routes; that was not done here.
+- **geoBoundaries licences differ per level**: ADM0 is CC BY 4.0, ADM2 (75 districts) Public Domain, ADM1 CC BY 3.0 IGO. The build copies each from the API metadata, so check the README table if the dataset is rebuilt.
+- **Overpass answers 406 without a `User-Agent` and 502 now and then**; the builder sends one and retries through `pack_weather.ATTEMPTS`. The river query is 40 MB of raw geometry (7,315 ways) and takes a minute or two.
+- **The build checks its own elevation**: it decodes the Terrarium PNGs itself (no Pillow in the Node's venv) and compares each key place with a published height. Published heights are loose (Timure's 1,900 m is a climate-table label, Trishuli has no direct figure), so tolerances are 100 to 200 m and each is explained in `key_places.source.json`.
+- **A place's OpenStreetMap node can sit on a hill edge**: Kathmandu's city node read 1,521 m, 240 m above the valley floor, so its position is Durbar Square. Read a point and its neighbours (a 3 by 3 spread 0.004 degrees apart) before trusting one pixel.
+- **Syabrubesi and Timure have no Latin name in OpenStreetMap**, so the key places file supplies them with the replay spec's coordinates.
+- **Test every raw vertex of a river against the border, not the simplified ones**: a straight river crossing Nepal simplifies to its two ends, both outside, and was dropped (caught by a test).
+- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. **Published as Release `cache-pack-v5`** (10.0 MB, 2026-10-18), not v4: the v4 tag already held a 2.5 MB valley pack, and `scripts/run-demo.sh` downloads `cache-pack-v4` by name. Point the demo at v5 only after 0033, because v5 has no raster tiles and the current Leaflet map needs a CARTO key without them.
+- The map credit, "Boundaries are indicative" and "elevation is approximate" are in the manifest's `nepal` entry; printing them on the map is 0033.
+
+
+## Weather layers regrilled on MapLibre (2026-10-18)
+
+- **A canvas laid over a pitched MapLibre map cannot follow the terrain.** Projecting a lat/lon field onto it cell by cell with `map.project` left the cells apart in 3D (white squares with dark gaps) and floating over the mountains. A MapLibre `image` source on the Nepal box drapes on the terrain and held 60 fps; repaint the image, not the map, when the hour changes.
+- **Wind particles over the map fell to about 3 fps with terrain on** (about 2,000 particles × 7 tail points re-projected every frame), so Wind was dropped: 0056 and 0057 are deleted, 0073 removes `windAt`, `speedBand` and the wind variables.
+- **The valley grid (7 × 5 at 0.1°) is a small patch on the national map**; 0073 moves the Weather Grid to Nepal at 0.5° (153 points, one archive request, about 200 KB). The prototype got all 153 points from the archive in one browser `fetch` (Open-Meteo allows CORS).
+- The prototype is `dashboard/prototype-weather-layers.html` on branch `prototype/weather-layers` (MapLibre 4.7.1 from unpkg, AWS Terrarium terrain); serve the folder with `python3 -m http.server` and use `?variant=A` to `D`.
+
+## National Weather Grid (ticket 0073)
+
+- **The grid is the points that fit inside the Nepal box**, not a cover of it: `grid_points` floors, so 26.3 to 30.5 N at 0.5° is 9 rows (last 30.3) and 80.0 to 88.3 E is 17 columns (last 88.0), 153 points. `NEPAL_BBOX` now lives in `weather_grid.py` because the Hub needs it at run time; `pack_nepal.py` imports it. `build_cache_pack.py` keeps its own valley `BBOX` for tiles, routes and the fleet.
+- **Real fetch (2026-10-18):** 153 points, 72 hours, three variables, 134 KB, one request.
+- **A forecast on disk with the valley grid or wind variables is refused by `_check_shape`**, so a Hub upgraded in place fetches again instead of serving a grid the dashboard cannot place.
+- **Not done:** no `cache-pack-v4` carrying the national `weather_replay.json` was built or released (the full build needs Overpass and the repo is private). Until it is, a pack's weather file still has the valley grid and the dashboard layers must tolerate that.

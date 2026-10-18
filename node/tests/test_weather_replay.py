@@ -13,10 +13,10 @@ from test_cache_pack import PackSource
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
-from storm_shield.weather_grid import CREDIT, VARIABLES, grid_points
+from storm_shield.weather_grid import CREDIT, NEPAL_BBOX, VARIABLES, grid_points
 
-# Two rows by two columns, 0.1 degrees apart.
-BBOX = (27.86, 85.08, 27.96, 85.18)
+# Two rows by two columns, 0.5 degrees apart.
+BBOX = (27.86, 85.08, 28.36, 85.58)
 HOURS = ["2026-08-26T00:00", "2026-08-26T01:00", "2026-08-26T02:00"]
 
 
@@ -51,13 +51,18 @@ def _wait_until(condition: Callable[[], bool]) -> None:
         time.sleep(0.02)
 
 
-def test_grid_runs_south_to_north_then_west_to_east_and_covers_the_box() -> None:
-    rows, cols, points = grid_points((27.86, 85.08, 28.46, 85.47))
-    assert (rows, cols) == (7, 5)
-    assert points[0] == (27.86, 85.08)
-    assert points[1] == (27.86, 85.18)
-    assert points[cols] == (27.96, 85.08)
-    assert points[-1] == (28.46, 85.48)
+def test_grid_runs_south_to_north_then_west_to_east_and_stays_in_the_box() -> None:
+    rows, cols, points = grid_points(NEPAL_BBOX)
+    assert (rows, cols) == (9, 17)
+    assert len(points) == 153
+    assert points[0] == (26.3, 80.0)
+    assert points[1] == (26.3, 80.5)
+    assert points[cols] == (26.8, 80.0)
+    assert points[-1] == (30.3, 88.0)
+
+
+def test_the_variables_are_temperature_cloud_and_rain_with_no_wind() -> None:
+    assert VARIABLES == ("temperature_2m", "cloud_cover", "precipitation")
 
 
 def test_the_file_holds_one_flat_array_per_variable_and_hour() -> None:
@@ -68,7 +73,7 @@ def test_the_file_holds_one_flat_array_per_variable_and_hour() -> None:
         "west": 85.08,
         "rows": 2,
         "cols": 2,
-        "step_deg": 0.1,
+        "step_deg": 0.5,
     }
     assert weather["times"] == [f"{hour}Z" for hour in HOURS]
     assert set(weather["variables"]) == set(VARIABLES)
@@ -76,7 +81,7 @@ def test_the_file_holds_one_flat_array_per_variable_and_hour() -> None:
     assert weather["variables"]["temperature_2m"][1] == [1, 101, 201, 301]
     assert weather["credit"] == CREDIT
     assert weather["source"]
-    assert weather["units"]["wind_speed_10m"] == "m/s"
+    assert weather["units"]["precipitation"] == "mm/h"
 
 
 def test_the_grid_keeps_the_coordinates_we_asked_for_not_the_models() -> None:
@@ -106,10 +111,11 @@ def test_one_request_asks_for_every_point() -> None:
 
     assert len(requests) == 1
     query = requests[0].url.params
-    assert query["latitude"] == "27.86,27.86,27.96,27.96"
-    assert query["longitude"] == "85.08,85.18,85.08,85.18"
+    assert query["latitude"] == "27.86,27.86,28.36,28.36"
+    assert query["longitude"] == "85.08,85.58,85.08,85.58"
     assert query["timezone"] == "UTC"
-    assert query["wind_speed_unit"] == "ms"
+    assert query["hourly"] == "temperature_2m,cloud_cover,precipitation"
+    assert "wind_speed_unit" not in query
     assert len(weather["times"]) == 3
 
 

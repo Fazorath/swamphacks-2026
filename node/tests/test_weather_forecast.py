@@ -1,3 +1,4 @@
+import json
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -11,15 +12,15 @@ from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
 from storm_shield.weather_forecast import FILE_NAME
-from storm_shield.weather_grid import VALLEY_BBOX, VARIABLES, grid_points
+from storm_shield.weather_grid import NEPAL_BBOX, VARIABLES, grid_points
 
 HOURS = ["2026-10-17T00:00", "2026-10-17T01:00"]
 FORECAST_URL = "http://hub/api/weather/forecast"
 
 
 def _open_meteo_answer(offset: int = 0) -> list[dict[str, Any]]:
-    """What Open-Meteo answers for the valley: one entry per grid point, values keyed by variable."""
-    _, _, points = grid_points(VALLEY_BBOX)
+    """What Open-Meteo answers for Nepal: one entry per grid point, values keyed by variable."""
+    _, _, points = grid_points(NEPAL_BBOX)
     return [
         {
             "hourly": {
@@ -71,20 +72,24 @@ def _has_forecast(node: TestClient) -> bool:
     return bool(node.get("/api/weather/forecast").status_code == 200)
 
 
-def test_the_hub_fetches_the_valley_grid_and_serves_it_with_its_fetch_time(tmp_path: Path) -> None:
+def test_the_hub_fetches_the_national_grid_and_serves_it_with_its_fetch_time(
+    tmp_path: Path,
+) -> None:
     source = OpenMeteo()
     with _hub(tmp_path, source) as hub:
         _wait_until(lambda: _has_forecast(hub))
         forecast = hub.get("/api/weather/forecast").json()
 
     query = source.requests[0].url.params
-    _, _, points = grid_points(VALLEY_BBOX)
+    _, _, points = grid_points(NEPAL_BBOX)
     assert source.requests[0].url.host == "api.open-meteo.com"
     assert query["latitude"].split(",")[0] == str(points[0][0])
     assert len(query["latitude"].split(",")) == len(points)
     assert query["forecast_days"] == "7"
     assert forecast["times"] == [f"{hour}Z" for hour in HOURS]
-    assert forecast["variables"]["wind_speed_10m"][1][0] == 1
+    assert set(forecast["variables"]) == {"temperature_2m", "cloud_cover", "precipitation"}
+    assert forecast["grid"]["rows"] * forecast["grid"]["cols"] == 153
+    assert "wind_speed_unit" not in query
     assert forecast["fetched_at"]
     assert (tmp_path / FILE_NAME).is_file()
 
@@ -124,6 +129,31 @@ def test_a_corrupt_file_counts_as_absent_and_is_replaced_by_the_next_fetch(tmp_p
         assert hub.get("/api/weather/forecast").status_code == 404
 
         source.answer = httpx.Response(200, json=_open_meteo_answer())
+        _wait_until(lambda: _has_forecast(hub))
+
+
+@pytest.mark.parametrize("old", ["valley_grid", "wind_variables"])
+def test_a_file_from_before_the_national_grid_counts_as_absent_and_is_fetched_again(
+    tmp_path: Path, old: str
+) -> None:
+    source = OpenMeteo()
+    with _hub(tmp_path, source) as hub:
+        _wait_until(lambda: _has_forecast(hub))
+    file = tmp_path / FILE_NAME
+    weather = json.loads(file.read_text())
+    if old == "valley_grid":
+        weather["grid"].update(south=27.86, west=85.08, rows=7, cols=5, step_deg=0.1)
+    else:
+        weather["variables"]["wind_speed_10m"] = weather["variables"]["temperature_2m"]
+    file.write_text(json.dumps(weather))
+
+    stale = OpenMeteo()
+    stale.answer = httpx.ConnectError("no internet")
+    with _hub(tmp_path, stale) as hub:
+        _wait_until(lambda: len(stale.requests) >= 1)
+        assert hub.get("/api/weather/forecast").status_code == 404
+
+        stale.answer = httpx.Response(200, json=_open_meteo_answer())
         _wait_until(lambda: _has_forecast(hub))
 
 

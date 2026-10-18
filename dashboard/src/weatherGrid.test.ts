@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  WEATHER_VARIABLES,
-  speedBand,
-  valueAt,
-  windAt,
-  type WeatherGrid,
-  type WeatherVariable,
-} from "./weatherGrid";
+import { WEATHER_VARIABLES, valueAt, type WeatherGrid, type WeatherVariable } from "./weatherGrid";
 
 const HOUR_0 = Date.parse("2026-08-26T00:00:00Z");
 const HOUR_MS = 3_600_000;
@@ -31,8 +24,6 @@ function handMadeGrid(overrides: Partial<Record<WeatherVariable, number[][]>> = 
       ],
       cloud_cover: everywhere(0),
       precipitation: everywhere(0),
-      wind_speed_10m: everywhere(0),
-      wind_direction_10m: everywhere(0),
       ...overrides,
     },
   };
@@ -64,36 +55,31 @@ describe("valueAt", () => {
   });
 });
 
-describe("windAt", () => {
-  const blowing = (speed: number, direction: number) =>
-    handMadeGrid({
-      wind_speed_10m: everywhere(speed),
-      wind_direction_10m: everywhere(direction),
-    });
+describe("a national grid", () => {
+  // 9 x 17 at 0.5 degrees from 26.3 N, 80.0 E; each cell holds its own index so a wrong lookup shows.
+  const rows = 9;
+  const cols = 17;
+  const national: WeatherGrid = {
+    ...handMadeGrid(),
+    grid: { south: 26.3, west: 80, rows, cols, step_deg: 0.5 },
+    variables: {
+      temperature_2m: [Array.from({ length: rows * cols }, (_, index) => index)],
+      cloud_cover: [Array(rows * cols).fill(0)],
+      precipitation: [Array(rows * cols).fill(0)],
+    },
+    times: ["2026-08-26T00:00:00Z"],
+  };
 
-  it.each([
-    ["north", 0, 0, -5],
-    ["east", 90, -5, 0],
-    ["south", 180, 0, 5],
-    ["west", 270, 5, 0],
-  ])("a wind from the %s blows the other way", (_name, direction, u, v) => {
-    const wind = windAt(blowing(5, direction), 28.05, 85.05, HOUR_0);
-    expect(wind.u).toBeCloseTo(u);
-    expect(wind.v).toBeCloseTo(v);
+  it("finds a point in row-major order, south to north then west to east", () => {
+    expect(valueAt(national, "temperature_2m", 26.3 + 3 * 0.5, 80 + 5 * 0.5, HOUR_0)).toBeCloseTo(
+      3 * cols + 5,
+      9,
+    );
   });
-});
 
-describe("speedBand", () => {
-  it.each([
-    [0, "Calm"],
-    [0.49, "Calm"],
-    [0.5, "Light air"],
-    [3.4, "Gentle breeze"],
-    [10.79, "Fresh breeze"],
-    [32.6, "Violent storm"],
-    [32.7, "Hurricane force"],
-  ])("%s m/s is %s", (ms, band) => {
-    expect(speedBand(ms)).toBe(band);
+  it("blends the four points around the middle of a cell", () => {
+    // Neighbours are 1 apart along a row and 17 apart along a column: (0 + 1 + 17 + 18) / 4.
+    expect(valueAt(national, "temperature_2m", 26.55, 80.25, HOUR_0)).toBeCloseTo(9);
   });
 });
 
@@ -111,7 +97,7 @@ describe("a malformed grid", () => {
         [0, 0, 0],
       ],
     });
-    expect(() => windAt(grid, 28, 85, HOUR_0)).toThrow(
+    expect(() => valueAt(grid, "temperature_2m", 28, 85, HOUR_0)).toThrow(
       /precipitation hour 0 has 3 values, expected 4/,
     );
   });

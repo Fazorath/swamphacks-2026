@@ -28,5 +28,5 @@
 - [ ] Vitest flow tests: the Hub button is absent on a Sensor Node; collapsing a Panel hides its content; the map component runs against a mocked MapLibre map (jsdom has no WebGL)
 - [ ] Performance bar: first map paint under 1 s on the demo laptop from a Node on the local network, 60 fps panning with a Panel open; checked by hand and noted here
 - [ ] Animates only `transform` and `opacity`; a poll that changes nothing re-renders nothing
-- [ ] The weather layer tickets (0054 to 0057) now build on this map, so a note in 0054 says so
+- [ ] The weather layer tickets (0054, 0055, 0059; 0056 and 0057 were dropped) now build on this map, so a note in 0054 says so
 - [ ] All **Commands** pass
