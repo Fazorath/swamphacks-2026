@@ -1,6 +1,6 @@
 import type { NodeSnapshot } from "./nodeState";
 
-export type CommunityWarningReason =
+type CommunityWarningReason =
   "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling";
 
 // A warning the Node has already checked against the Hub's signature; the browser cannot.
@@ -17,7 +17,7 @@ export type CommunityWarning = {
 // Nepal's Department of Hydrology and Meteorology, the authority whose flood warnings count.
 export const OFFICIAL_SOURCE = { name: "DHM Nepal", url: "https://www.hydrology.gov.np/" };
 
-export const REASON_SENTENCES: Record<CommunityWarningReason, string> = {
+const REASON_SENTENCES: Record<CommunityWarningReason, string> = {
   water_surge: "Water is surging",
   water_high: "Water is high",
   water_rising: "Water is rising",

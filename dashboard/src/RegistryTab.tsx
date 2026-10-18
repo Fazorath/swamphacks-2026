@@ -1,7 +1,7 @@
 import { ShieldCheck, ShieldQuestionMark, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-export type RegistryRow = {
+type RegistryRow = {
   id: string;
   name: string | null;
   status: "registered" | "waiting" | "unverified";

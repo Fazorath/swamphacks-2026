@@ -312,3 +312,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The "approximate" caption shows only when the overlay has a feature**, so a pack with an empty corridor shows none.
 - The closed-Shelter wording follows the Evacuation Plan: before the Hub's first announcement every Shelter reads Closed. Final pins and the hatch are 0035.
 - Not seen in a real browser or on a phone yet; jsdom draws markers, tooltips and the path but not tiles.
+
+## Audit of done tickets (2026-10-17, after 0025)
+
+- **Every Command passes on `main`**: 252 Node tests, 170 dashboard tests. The 4 `test_reticulum_nodes.py` errors seen mid-session were a Node left running from another worktree (pid started 19:48, parent init, no run-live loop); `scripts/stop-nodes.sh` freed 4250 and 8000 and the file passed.
+- **Still true after the audit:** `roads.json` and the real Road graph have never been built from the Nepal extract (0018), so the demo cannot block a road; the camera tiles are still FL511 Florida feeds in the Nepal demo (0011); `run-demo.sh` registration (0012/0049) and the full two-phone replay (0049) were never run end to end; 0016 (breadboard) is open.
+- `weatherGrid.ts` (`valueAt`, `windAt`, `speedBand`) is only used by its tests until the weather layer tickets (0054 to 0057, 0059) land; that is on purpose.

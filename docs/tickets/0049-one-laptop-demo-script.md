@@ -16,7 +16,7 @@
 - [x] Setup notes for the laptop hotspot, the projector and the two phones' Household Profiles (Syabrubesi and Betrawati) sit next to the script
 - [x] The README's "Run the demo" section points to it
 - [ ] Manual check: the full replay runs on one laptop with two phones joined; record what was rehearsed and what stays unproven on real devices
-- [ ] All **Commands** pass
+- [x] All **Commands** pass
 
 **Merged untested on phones (2026-10-17).** The team is working remotely, with no second phone and no demo setup, so the manual check was not done. Merged anyway on purpose. What was rehearsed: on one laptop over loopback (ports 8600 to 8604), the script refused a busy port, started all five Nodes, the Sensors took the pack and the Hub's Shelters, and SIGTERM stopped everything. Still untested before the demo:
 - The full replay from Start to the end, with two phones joined (Syabrubesi and Betrawati Household Profiles).

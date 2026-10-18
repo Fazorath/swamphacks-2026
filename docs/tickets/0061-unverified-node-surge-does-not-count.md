@@ -12,4 +12,4 @@
 
 - [x] Seam A test (with `MeshedNodes.hear_from`): a Surge-sized jump (320 cm since 0062; the 100 cm here predates it) from an Unverified Node leaves `surged` empty, adds no `water_surge` reason and does not raise Flood Risk; the same jump from a Registered Node does all three
 - [x] If the test finds Flood Risk still counting the Surge, `_counts` in `flood_risk.py` is fixed in this ticket (it did not: `_counts` already held)
-- [ ] All **Commands** pass
+- [x] All **Commands** pass

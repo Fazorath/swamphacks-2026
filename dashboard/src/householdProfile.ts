@@ -10,7 +10,7 @@ export type HouseholdProfile = {
 const STORAGE_KEY = "storm-shield.household-profile";
 const STORED_VERSION = 1;
 
-export type LoadedProfile = {
+type LoadedProfile = {
   profile: HouseholdProfile | null;
   // A stored value is there but unusable. It is left alone, not deleted.
   unreadable: boolean;

@@ -4,7 +4,7 @@ import { deleteProfile, loadProfile, saveProfile, type HouseholdProfile } from "
 
 export type StorageProblem = "unreadable" | "unsaved";
 
-export type HouseholdProfileState = {
+type HouseholdProfileState = {
   profile: HouseholdProfile | null;
   storageProblem: StorageProblem | null;
   save: (profile: HouseholdProfile) => void;

@@ -16,7 +16,7 @@
 - [x] Each alert appears when the Event clock reaches its time, tagged with its source (`dhm`, `ndrrma`, `district`) and replay
 - [x] The Hub forwards Official Alerts over Mesh; every Node's API and dashboard show them
 - [x] The panel style is clearly distinct from community information and shows "OFFICIAL · REPLAY"
-- [ ] The lead-time line appears once both a Community Warning and an Official Alert exist
+- [x] The lead-time line appears once both a Community Warning and an Official Alert exist
   - Built and tested (`leadTimeLine`, compared with the first Official Alert, 09:05, decided 2026-10-17), but `App` passes no Community Warning time until 0013 exists, so it does not show yet. 0013 wires `firstCommunityWarningAt`.
 - [x] The Evacuation Plan lists alerts that apply to the household (`flood_prone_area` for riverbank residents)
 - [x] Seam A tests: a replayed alert reaches every Node labelled replay, at its event time and not before

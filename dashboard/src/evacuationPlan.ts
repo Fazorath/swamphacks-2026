@@ -23,7 +23,7 @@ export type CachePackContents = {
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.
-export type Rerouting = { graph: RoadGraph; blocked: BlockedRoad[] };
+type Rerouting = { graph: RoadGraph; blocked: BlockedRoad[] };
 
 export type EvacuationPlan = {
   risk: { level: NonNullable<FloodRisk["level"]>; reasons: string[] } | null;

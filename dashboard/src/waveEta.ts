@@ -2,7 +2,7 @@ import type { CommunityWarning } from "./communityWarnings";
 import type { Home } from "./householdProfile";
 
 // One stretch of river with a single reconstructed wave speed; `km[i]` is the River km at `points[i]`.
-export type RiverReach = { speedKmh: number; points: [number, number][]; km: number[] };
+type RiverReach = { speedKmh: number; points: [number, number][]; km: number[] };
 export type RiverLine = RiverReach[];
 
 // A home farther from the river line than this is not on the river, so no wave is "coming to" it.

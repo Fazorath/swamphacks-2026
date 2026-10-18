@@ -13,7 +13,7 @@ export type RoadGraph = {
 // A road segment is named by its two end points, which survive a rebuilt pack better than an index.
 export type BlockedRoad = { a: LatLon; b: LatLon };
 
-export type ReroutedShelter = {
+type ReroutedShelter = {
   shelter: Shelter;
   route: LatLon[];
   km: number;

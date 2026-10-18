@@ -12,7 +12,7 @@ export function nepalClockTime(unixSeconds: number): string {
   return asNepalTime(unixSeconds).toISOString().slice(11, 16);
 }
 
-export function formatEventClock({ event_t, state, rate }: EventClock): string {
+function formatEventClock({ event_t, state, rate }: EventClock): string {
   const date = asNepalTime(event_t).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
