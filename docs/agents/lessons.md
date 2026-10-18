@@ -511,3 +511,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Create the app password once, on the team account:** turn on 2-step verification, then Google Account, Security, App passwords, make one called "Storm Shield Hub", and paste the 16 characters into `.env` (spaces are fine to drop). The normal password is rejected for SMTP. The password never goes in chat, a ticket or the repo.
 - **A send needs internet.** The first Community Warning (08:37 Surge) comes before the 09:20 internet cue, so it normally goes out; a failure is logged as `could not email the flood alert for <node>: <error type>` and nothing else changes. The log never carries the SMTP server's reply text, because it can echo the login.
 - **Not proven without the app password:** the tests replace `smtplib.SMTP_SSL`, so a real Gmail send, the 465 port and the app password itself have not been run.
+
+## Hub replay camera (ticket 0038)
+
+- **jsdom cannot play a `<video>`**: `play`, `pause` and `currentTime` do nothing (and log "not implemented"). `fakeMedia.ts`, installed in `setup.ts`, gives every video a readable clock and paused flag; the sync tests read `currentTime` and `paused` back.
+- **The tile text `NPT` now appears twice** (header and `CAMERA · REPLAY 09:18 NPT`), so tests that waited for the header with `/NPT/` failed on "multiple elements". Use `/NPT · REPLAY/` for the header. A `<video>` has no `img` role: find it by its label.
+- **The clip is positioned from the clock the dashboard polls once a second**, so between polls the browser's own playback (1x, which is the Event clock at ×30) carries it; it is moved only when it drifts 1.5 s or the clock jumps or resets. An autoplay refusal is only logged (`console.warn`); the `TAP TO PLAY` fallback is 0077.
+- **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
+- **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
+- **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.

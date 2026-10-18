@@ -32,7 +32,7 @@ type Props = {
   registeredNodes: number;
   openShelters: number;
   fleetNodes: number;
-  liveCameras: number;
+  playingCameras: number;
   onToggleLayer: (layer: MapLayerName) => void;
   onTogglePanel: (panel: PanelName) => void;
   weatherLayer: WeatherLayer;
@@ -45,7 +45,7 @@ export function LayerRail({
   registeredNodes,
   openShelters,
   fleetNodes,
-  liveCameras,
+  playingCameras,
   onToggleLayer,
   onTogglePanel,
   weatherLayer,
@@ -84,7 +84,7 @@ export function LayerRail({
     layer("Route", Route, "route", null),
     layer("Storm Signal", CloudRain, "storm-signal", null),
     panel("Alerts", TriangleAlert, "alerts", null),
-    panel("Cameras", Camera, "cameras", liveCameras),
+    panel("Cameras", Camera, "cameras", playingCameras),
   ];
   return (
     <nav aria-label="Layers" className="layer-rail">
