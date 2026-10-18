@@ -111,6 +111,11 @@ class ReplayJump(BaseModel):
     phase: str
 
 
+class ReplayRate(BaseModel):
+    # Slower than x5 stretches S0's 3.5 m rise past the 60 s Surge window, so no warning would fire.
+    rate: Literal[5, 10, 30]
+
+
 class ReplayPhase(BaseModel):
     id: str
     label: str
@@ -355,7 +360,7 @@ def create_app(
         event = event_clock.current(clock())
         if event.state == "playing" and event.event_t >= timeline.end_unix:
             announce_event_clock(
-                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=timeline.rate)
+                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=event.rate)
             )
 
     def repeat_due_official_alerts() -> None:
@@ -692,12 +697,20 @@ def create_app(
             return registry_summary()
 
     if settings.role == "hub":
+        chosen_rate = timeline.rate
 
         def set_replay(state: Literal["playing", "paused"], event_t: int) -> ReplayClockMessage:
-            announce_event_clock(
-                ReplayClockMessage(state=state, event_t=event_t, rate=timeline.rate)
-            )
+            announce_event_clock(ReplayClockMessage(state=state, event_t=event_t, rate=chosen_rate))
             return event_clock.current(clock())
+
+        @app.post("/api/replay/rate")
+        def set_replay_rate(change: ReplayRate) -> ReplayClockMessage:
+            nonlocal chosen_rate
+            chosen_rate = change.rate
+            heard = event_clock.current(clock())
+            if heard.state == "stopped":
+                return heard
+            return set_replay(heard.state, heard.event_t)
 
         @app.post("/api/replay/start")
         def start_replay() -> ReplayClockMessage:

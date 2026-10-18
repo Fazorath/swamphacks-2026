@@ -30,6 +30,7 @@ import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
+import { useReadingTrends } from "./readingTrends";
 import { useContactNotes, useLevelRises } from "./useMarkerEvents";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
@@ -68,6 +69,7 @@ export function App() {
   const nodes = nodesOnMap(state);
   const fleet = fleetOnMap(state);
   const rises = useLevelRises(nodes);
+  const trends = useReadingTrends(nodes, lastAnswer?.at ?? 0);
   const contactNotes = useContactNotes([...nodes, ...fleet]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fleetOpenId, setFleetOpenId] = useState<string | null>(null);
@@ -199,6 +201,7 @@ export function App() {
       selectedId={selectedId}
       onSelect={toggleSelected}
       rises={rises}
+      trends={trends}
       onScenarioChanged={refresh}
       panel={panel("readings")}
     />

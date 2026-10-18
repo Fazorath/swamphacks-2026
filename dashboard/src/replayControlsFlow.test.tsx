@@ -76,6 +76,35 @@ test("a paused replay offers Resume, and a phase button jumps to it", async () =
   ]);
 });
 
+test("a speed picked before Start is sent ahead of Start", async () => {
+  const panel = await openHubPanel();
+  expect(within(panel).getByRole("button", { name: "×30" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  fireEvent.click(within(panel).getByRole("button", { name: "×5" }));
+  expect(within(panel).getByRole("button", { name: "×5" })).toHaveAttribute("aria-pressed", "true");
+  expect(posted).toEqual([]);
+  fireEvent.click(within(panel).getByRole("button", { name: "Start" }));
+  await vi.waitFor(() =>
+    expect(posted).toEqual([
+      { path: "/api/replay/rate", body: { rate: 5 } },
+      { path: "/api/replay/start", body: undefined },
+    ]),
+  );
+});
+
+test("a running replay shows its rate and changing it posts to the Hub", async () => {
+  replay = { v: 1, kind: "replay", state: "playing", event_t: REPLAY_START, rate: 10 };
+  const panel = await openHubPanel();
+  expect(await within(panel).findByRole("button", { name: "×10" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  fireEvent.click(within(panel).getByRole("button", { name: "×5" }));
+  expect(posted).toEqual([{ path: "/api/replay/rate", body: { rate: 5 } }]);
+});
+
 test("the Hub Panel says to cut the internet once the Event clock reaches the cue", async () => {
   replay = { v: 1, kind: "replay", state: "playing", event_t: INTERNET_CUE - 60, rate: 30 };
   const panel = await openHubPanel();
