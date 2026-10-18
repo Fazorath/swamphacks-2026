@@ -3,6 +3,7 @@ import { exampleHousehold } from "./exampleHousehold";
 
 const PACK: CachePackContents = {
   shelters: [],
+  highGround: [],
   floodProne: { features: [] },
   routeGrid: null,
   built: null,
