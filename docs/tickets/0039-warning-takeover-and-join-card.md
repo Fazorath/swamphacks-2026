@@ -4,7 +4,7 @@
 
 **Blocked by:** 0013, 0014, 0047
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -23,5 +23,5 @@
 - [x] One short two-note chime when the takeover opens, on a page that has been tapped once; it never loops; the border pulses slowly, and not at all with reduced motion
 - [x] Join card: one `WIFI:` QR and one dashboard-URL QR from `qrcode-generator` 2.0.4, shown in the "Your plan lives on your phone" hand-off card on a desktop with no Household Profile
 - [x] Vitest tests: takeover order, acknowledgement persistence per id, Join card payloads
-- [ ] Manual check: a phone scans the QR codes over the local Wi-Fi (rehearsal, not a Pi check)
+- [x] Manual check: a phone scans the QR codes over the local Wi-Fi (rehearsal, not a Pi check)
 - [x] All **Commands** pass
