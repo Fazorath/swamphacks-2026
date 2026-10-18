@@ -1,0 +1,34 @@
+[
+  {
+    "id": "hub-betrawati",
+    "label": "Betrawati",
+    "site": "hub",
+    "lat": 27.9731,
+    "lon": 85.186,
+    "clip": "clip-1-calm-then-surge"
+  },
+  {
+    "id": "s1-timure",
+    "label": "Timure",
+    "site": "s1",
+    "lat": 28.2528,
+    "lon": 85.3667,
+    "clip": "clip-3-rise-below-flooding"
+  },
+  {
+    "id": "s2-syabrubesi",
+    "label": "Syabrubesi",
+    "site": "s2",
+    "lat": 28.1632,
+    "lon": 85.3391,
+    "clip": "clip-2-extreme-debris-over-road"
+  },
+  {
+    "id": "s3-trishuli",
+    "label": "Trishuli",
+    "site": "s3",
+    "lat": 27.9215,
+    "lon": 85.146,
+    "clip": "clip-1-calm-then-surge"
+  }
+]

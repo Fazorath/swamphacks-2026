@@ -14,7 +14,7 @@
 
 **Design:** `docs/design/ui.md` ("Cameras Panel"); canvas artboards `C-Cameras`, `D-MeshOnly`, `P-MeshOnly`.
 
-- [ ] One tile per camera from `GET /api/cameras`; a live tile reads `LIVE` with the picture's age, a clip tile reads `CAMERA · REPLAY` with the event time, and the two are never styled alike
+- [ ] One tile per camera from `GET /api/cameras`; (a live tile reads `LIVE` with the picture's age, deferred with 0075's live path: every camera is a clip for now) a clip tile reads `CAMERA · REPLAY` with the event time, and the two are never styled alike
 - [ ] A clip tile shows its credit line and the words "illustrative footage"; it never says the footage was filmed at its Node site
 - [ ] A clip's position is `(Event time - Event start) / rate - (wave arrival - flood_onset_s)`, clamped to the clip; it pauses, jumps and resets with the Event clock, and it never loops visibly. Before its onset it shows the calm part, after the clip ends it holds the last frame
 - [ ] Each camera's wave arrival is the one the dashboard already works out for its Node site (0047); a site with no arrival plays its clip from the start

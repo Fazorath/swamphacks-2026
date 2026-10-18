@@ -8,6 +8,9 @@ export function fakeCameraTile(overrides: Partial<CameraTile> = {}): CameraTile 
   return {
     id: "hub-betrawati",
     label: "Betrawati",
+    site: "hub",
+    lat: 27.9731,
+    lon: 85.186,
     kind: "replay",
     state: "live",
     credit: "Wallowa River, BLM; Bright Angel, NPS",

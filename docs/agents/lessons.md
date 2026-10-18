@@ -560,6 +560,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
 - **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.
 
+## Camera list (ticket 0075)
+
+- **The live-source half of the ticket was dropped in grilling**: 0074 found no qualifying feed and 0038 had deleted the FL511 fetcher, so a live path would have been untested speculation. `kind` stays `replay`; a live source gets its own ticket when a feed qualifies.
+- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry is skipped; an unreadable file leaves the Hub with no cameras. Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
+- Tests that expected exactly one tile now pick a tile by id (`_tile(client, id)`). The dashboard still renders whatever tiles come back; the per-site timing shift is 0077.
+- `dashboard: vitest` failed once in a full `check.sh` run and passed in three reruns with no change near it; rerun before chasing it.
+
+
 ## Warning Takeover and Join card (ticket 0039)
 
 - **Case-only file names collided again**: `joinCard.ts` beside `JoinCard.tsx` made tsc fail ("differs only in casing") on macOS. The logic files are `joinHotspot.ts` and `acknowledgedWarnings.ts`.
