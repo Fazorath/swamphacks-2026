@@ -22,6 +22,7 @@ from storm_shield.cache_pack import (
 from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
+from storm_shield.flood_email import FloodEmail
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.internet_connection import (
     CONNECTIVITY_TIMEOUT_SECONDS,
@@ -199,6 +200,7 @@ def create_app(
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
+    flood_email = FloodEmail.from_settings(settings)
 
     def hear_community_warning(_: str, message: Message) -> None:
         if isinstance(message, CommunityWarning):
@@ -223,6 +225,9 @@ def create_app(
         for warning in hub_warnings.issue_for_new_surges(river_km, surge_t, now):
             # The Hub does not hear its own broadcasts, so it keeps the warning itself.
             heard_warnings.hear(warning)
+            # A measured speed updates a warning the team was already emailed about.
+            if flood_email and warning.measured is None:
+                flood_email.send_for(warning)
             try:
                 mesh.publish(warning)
             except Exception:

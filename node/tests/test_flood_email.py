@@ -1,0 +1,170 @@
+import logging
+import smtplib
+import time
+from collections.abc import Callable
+from email.message import EmailMessage
+from typing import Any, ClassVar, Self
+
+import pytest
+from meshed_nodes import MeshedNodes
+
+from storm_shield.flood_email import FloodEmail
+from storm_shield.settings import Settings
+
+LOGIN_TEXT = "app-password-1234"
+EMAIL_SETTINGS: dict[str, Any] = {
+    "alert_email_from": "team@example.org",
+    "alert_email_app_password": LOGIN_TEXT,
+    "alert_email_to": "one@example.org, two@example.org",
+}
+S0_RIVER_KM = -12.2
+
+
+class FakeSmtp:
+    """Stands in for Gmail's SMTP server; `fail_with` makes every connection fail."""
+
+    sent: ClassVar[list[EmailMessage]] = []
+    logins: ClassVar[list[tuple[str, str]]] = []
+    attempts = 0
+    fail_with: Exception | None = None
+
+    def __init__(self, host: str, port: int, timeout: float) -> None:
+        FakeSmtp.attempts += 1
+        if FakeSmtp.fail_with:
+            raise FakeSmtp.fail_with
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        return None
+
+    def login(self, user: str, password: str) -> None:
+        FakeSmtp.logins.append((user, password))
+
+    def send_message(self, message: EmailMessage) -> None:
+        FakeSmtp.sent.append(message)
+
+
+@pytest.fixture(autouse=True)
+def fake_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
+    FakeSmtp.sent, FakeSmtp.logins, FakeSmtp.attempts, FakeSmtp.fail_with = [], [], 0, None
+    monkeypatch.setattr(smtplib, "SMTP_SSL", FakeSmtp)
+
+
+def _wait_until(condition: Callable[[], bool]) -> None:
+    deadline = time.monotonic() + 3
+    while not condition():
+        assert time.monotonic() < deadline, "timed out waiting"
+        time.sleep(0.01)
+
+
+def _register(meshed_nodes: MeshedNodes, node: str) -> None:
+    meshed_nodes.announce_sign_up(node, node)
+    assert meshed_nodes["hub"].post("/api/registry/accept", json={"id": node}).status_code == 200
+
+
+def _surge(meshed_nodes: MeshedNodes, node: str, river_km: float = S0_RIVER_KM) -> None:
+    meshed_nodes.hear_from(node, water_cm=20, river_km=river_km)
+    meshed_nodes.advance(8)
+    meshed_nodes.hear_from(node, water_cm=340, river_km=river_km)
+
+
+def _warning_log(meshed_nodes: MeshedNodes) -> list[dict[str, Any]]:
+    return meshed_nodes["hub"].get("/api/warnings").json()["warnings"]  # type: ignore[no-any-return]
+
+
+def test_a_new_warning_emails_the_team_with_the_node_the_river_km_and_the_time(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub(**EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+
+    _surge(meshed_nodes, "s0")
+
+    _wait_until(lambda: len(FakeSmtp.sent) == 1)
+    message = FakeSmtp.sent[0]
+    assert message["Subject"] == "ALERT OF FLOOD INCOMING!"
+    assert message["To"] == "one@example.org, two@example.org"
+    assert FakeSmtp.logins == [("team@example.org", LOGIN_TEXT)]
+    body = message.get_content()
+    assert "s0" in body
+    assert "km -12.2" in body
+    assert "Nepal time" in body
+    assert "not an official alert" in body
+
+
+def test_the_email_does_not_order_an_evacuation(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub(**EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+    _surge(meshed_nodes, "s0")
+    _wait_until(lambda: len(FakeSmtp.sent) == 1)
+
+    body = FakeSmtp.sent[0].get_content().lower()
+
+    assert "evacuate" not in body
+    assert "you must" not in body
+
+
+def test_the_same_surge_holding_does_not_email_again(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub(**EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+    _surge(meshed_nodes, "s0")
+    _wait_until(lambda: len(FakeSmtp.sent) == 1)
+
+    meshed_nodes.advance(10)
+    meshed_nodes.hear_from("s0", water_cm=350, river_km=S0_RIVER_KM)
+    meshed_nodes.advance(10)
+    meshed_nodes.hear_from("s0", water_cm=360, river_km=S0_RIVER_KM)
+
+    time.sleep(0.2)
+    assert FakeSmtp.attempts == 1
+
+
+def test_a_measured_speed_update_does_not_email_again(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub(**EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+    _register(meshed_nodes, "s1")
+    _surge(meshed_nodes, "s0", river_km=0.0)
+    _wait_until(lambda: len(FakeSmtp.sent) == 1)
+
+    meshed_nodes.advance(12 * 60 - 8)
+    _surge(meshed_nodes, "s1", river_km=15.6)
+
+    assert _warning_log(meshed_nodes)[0]["measured"] is not None
+    time.sleep(0.2)
+    assert FakeSmtp.attempts == 1
+
+
+@pytest.mark.parametrize("blank", list(EMAIL_SETTINGS))
+def test_no_email_unless_all_three_settings_are_set(meshed_nodes: MeshedNodes, blank: str) -> None:
+    meshed_nodes.start_hub(**{**EMAIL_SETTINGS, blank: ""})
+    _register(meshed_nodes, "s0")
+
+    _surge(meshed_nodes, "s0")
+
+    assert len(_warning_log(meshed_nodes)) == 1
+    time.sleep(0.2)
+    assert FakeSmtp.attempts == 0
+
+
+def test_a_sensor_with_the_settings_sends_nothing() -> None:
+    sensor = Settings(role="sensor", **EMAIL_SETTINGS)
+
+    assert FloodEmail.from_settings(sensor) is None
+
+
+def test_a_failing_send_still_issues_the_warning_and_never_logs_the_password(
+    meshed_nodes: MeshedNodes, caplog: pytest.LogCaptureFixture
+) -> None:
+    FakeSmtp.fail_with = smtplib.SMTPAuthenticationError(535, f"bad login {LOGIN_TEXT}".encode())
+    meshed_nodes.start_hub(**EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+
+    with caplog.at_level(logging.WARNING):
+        _surge(meshed_nodes, "s0")
+        _wait_until(lambda: "could not email the flood alert" in caplog.text)
+
+    assert len(_warning_log(meshed_nodes)) == 1
+    assert "SMTPAuthenticationError" in caplog.text
+    assert LOGIN_TEXT not in caplog.text
