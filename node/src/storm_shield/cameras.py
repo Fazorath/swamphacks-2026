@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -50,6 +50,17 @@ class ClipFiles:
     poster: Path
 
 
+class ClipEntry(BaseModel):
+    """What this Node needs of one clip's entry in the manifest beside the clip files."""
+
+    file: str
+    poster: str
+    length_s: float
+    flood_onset_s: float | None = None
+    illustrative: str
+    credit: str
+
+
 class Cameras:
     """The Hub's recorded cameras. Only the Hub holds the clips; a Sensor Node has none to serve."""
 
@@ -59,7 +70,7 @@ class Cameras:
         self._event_start_t = event_start_t
         if role == "hub":
             for camera in CAMERAS:
-                if self.clip_files(camera.id, "online") is None:
+                if self._playable(camera) is None:
                     logger.warning("camera %s has no clip in %s", camera.id, clips_dir)
 
     def tiles(self, status: Status) -> list[CameraTile]:
@@ -71,38 +82,47 @@ class Cameras:
     def clip_files(self, camera_id: str, status: Status) -> ClipFiles | None:
         """None when there is nothing to serve: a Sensor, a Mesh-only Node or a missing clip."""
         camera = next((camera for camera in CAMERAS if camera.id == camera_id), None)
-        if camera is None or self._role != "hub" or status == "mesh_only":
+        if camera is None or status == "mesh_only":
             return None
-        entry = self._manifest_entry(camera)
-        if entry is None:
-            return None
-        files = ClipFiles(self._clips_dir / entry["file"], self._clips_dir / entry["poster"])
-        return files if files.video.is_file() and files.poster.is_file() else None
+        playable = self._playable(camera)
+        return playable[0] if playable else None
 
     def _tile(self, camera: Camera, status: Status) -> CameraTile:
         if status == "mesh_only":
             return CameraTile(id=camera.id, label=camera.label, kind="replay", state="offline")
-        entry = self._manifest_entry(camera)
-        if self.clip_files(camera.id, status) is None or entry is None:
+        playable = self._playable(camera)
+        if playable is None:
             return CameraTile(id=camera.id, label=camera.label, kind="replay", state="unavailable")
-        sources = entry["sources"]
-        credits = sorted({sources[piece["source"]]["credit"] for piece in entry["pieces"]})
+        _, entry = playable
         return CameraTile(
             id=camera.id,
             label=camera.label,
             kind="replay",
             state="live",
-            credit="; ".join(credits),
-            illustrative=entry["illustrative"],
-            flood_onset_s=entry["flood_onset_s"],
-            length_s=entry["length_s"],
+            credit=entry.credit,
+            illustrative=entry.illustrative,
+            flood_onset_s=entry.flood_onset_s,
+            length_s=entry.length_s,
             event_start_t=self._event_start_t,
         )
 
-    def _manifest_entry(self, camera: Camera) -> dict[str, Any] | None:
+    def _playable(self, camera: Camera) -> tuple[ClipFiles, ClipEntry] | None:
+        """The clip's files and manifest entry, or None if this Node cannot play it."""
+        if self._role != "hub":
+            return None
+        entry = self._clip_entry(camera)
+        if entry is None:
+            return None
+        files = ClipFiles(self._clips_dir / entry.file, self._clips_dir / entry.poster)
+        return (files, entry) if files.video.is_file() and files.poster.is_file() else None
+
+    def _clip_entry(self, camera: Camera) -> ClipEntry | None:
         try:
             manifest = json.loads((self._clips_dir / MANIFEST_FILE).read_text())
-            entry: dict[str, Any] = manifest["clips"][camera.clip]
-            return entry
-        except (OSError, KeyError, ValueError):
+            clip = manifest["clips"][camera.clip]
+            credits = sorted(
+                {clip["sources"][piece["source"]]["credit"] for piece in clip["pieces"]}
+            )
+            return ClipEntry(**clip, credit="; ".join(credits))
+        except (OSError, KeyError, TypeError, ValueError):
             return None

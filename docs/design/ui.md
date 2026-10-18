@@ -161,6 +161,7 @@ Every state ends with "Evacuation decisions come from official sources."
 
 A 2×2 grid of 16:9 tiles.
 
+- **Replay** (every camera until a live source exists, tickets 0038 and 0075): the clip in step with the Event clock, tagged `CAMERA · REPLAY 09:18 NPT`, with its "illustrative footage" line and a Footage credit. Never styled like Live.
 - **Live:** the picture, a LIVE dot and "updated 40 s ago"; a new picture cross-fades in over 300 ms.
 - **Offline** (the Node is Mesh-only): dashed muted frame, camera-off icon, `OFFLINE · internet down`, no picture.
 - **Unavailable** (one camera failed while Online): solid frame, alert icon, `UNAVAILABLE`. Never mistaken for Offline.

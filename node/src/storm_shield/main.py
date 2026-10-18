@@ -538,7 +538,7 @@ def create_app(
     def camera_tiles() -> list[CameraTile]:
         return cameras.tiles(internet.status)
 
-    def clip_files(camera_id: str) -> ClipFiles:
+    def files_to_serve(camera_id: str) -> ClipFiles:
         if not cameras.knows(camera_id):
             raise HTTPException(status_code=404, detail="no such camera")
         files = cameras.clip_files(camera_id, internet.status)
@@ -552,11 +552,11 @@ def create_app(
     # FileResponse answers range requests, which is what lets a phone start and seek the clip.
     @app.get("/api/cameras/{camera_id}/clip")
     def camera_clip(camera_id: str) -> FileResponse:
-        return FileResponse(clip_files(camera_id).video, media_type="video/mp4")
+        return FileResponse(files_to_serve(camera_id).video, media_type="video/mp4")
 
     @app.get("/api/cameras/{camera_id}/poster")
     def camera_poster(camera_id: str) -> FileResponse:
-        return FileResponse(clip_files(camera_id).poster, media_type="image/jpeg")
+        return FileResponse(files_to_serve(camera_id).poster, media_type="image/jpeg")
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:

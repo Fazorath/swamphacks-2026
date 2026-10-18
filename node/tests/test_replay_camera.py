@@ -161,3 +161,13 @@ def test_a_viewer_cannot_change_the_cameras(tmp_path: Path) -> None:
         for path in ("/api/cameras", "/api/cameras/hub-betrawati/clip"):
             for send in (client.post, client.put, client.delete):
                 assert send(path).status_code == 405
+
+
+def test_a_manifest_entry_missing_a_field_makes_the_camera_unavailable(tmp_path: Path) -> None:
+    clips = _clips_folder(tmp_path / "clips")
+    broken = json.loads((clips / "manifest.json").read_text())
+    del broken["clips"]["clip-1-calm-then-surge"]["illustrative"]
+    (clips / "manifest.json").write_text(json.dumps(broken))
+    with _node(clips, Internet()) as client:
+        time.sleep(0.1)
+        assert _state_of_the_tile(client) == "unavailable"
