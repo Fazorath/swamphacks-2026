@@ -416,6 +416,79 @@ section .empty-panel p {
   outline-offset: 2px;
 }
 
+.weather-picker {
+  position: relative;
+}
+
+.weather-menu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 0.375rem);
+  display: flex;
+  flex-direction: column;
+  min-width: 8.5rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-solid);
+}
+
+.weather-choice {
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.weather-choice {
+  transition:
+    color var(--dur-press) var(--ease-out),
+    background var(--dur-press) var(--ease-out);
+}
+
+.weather-choice:hover {
+  background: var(--surface-raised);
+}
+
+.weather-choice:active {
+  background: var(--border);
+}
+
+.weather-choice.on {
+  color: var(--accent);
+}
+
+.weather-choice:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.weather-legend {
+  position: absolute;
+  z-index: 2;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.weather-legend-strip {
+  width: 7rem;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(to right, var(--border), var(--accent));
+}
+
 .rail-badge {
   position: absolute;
   top: -0.35rem;

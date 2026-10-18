@@ -11,6 +11,8 @@ import { latestAlert, officialTag } from "./officialAlerts";
 import { MapLegend } from "./MapLegend";
 import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
+import { useWeatherLayer } from "./weatherLayer";
+import { WeatherLegend } from "./WeatherLegend";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { NodeSheet } from "./NodeSheet";
@@ -130,6 +132,7 @@ export function App() {
     phone
       ? { open: true, onToggle: () => {} }
       : { open: panels.open.includes(name), onToggle: () => panels.toggle(name) };
+  const weather = useWeatherLayer();
   const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
   const toggleLayer = (layer: MapLayerName) =>
     setHiddenLayers((hidden) =>
@@ -349,7 +352,10 @@ export function App() {
               liveCameras={cameras.filter((tile) => tile.state === "live").length}
               onToggleLayer={toggleLayer}
               onTogglePanel={panels.toggle}
+              weatherLayer={weather.layer}
+              onChooseWeather={weather.choose}
             />
+            <WeatherLegend layer={weather.layer} />
             <MapLegend
               simulated={fleet.length}
               real={nodes.length}
