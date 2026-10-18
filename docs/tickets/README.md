@@ -38,7 +38,7 @@
 | [0033-full-bleed-map-shell](0033-full-bleed-map-shell.md) | done | Fazorath | Fazorath |
 | [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | done | Fazorath | Fazorath |
 | [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | done | Fazorath | Fazorath |
-| [0036-phone-layout](0036-phone-layout.md) | ready-for-agent | unclaimed | Fazorath |
+| [0036-phone-layout](0036-phone-layout.md) | in-progress | Fazorath | Fazorath |
 | [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | ready-for-agent | unclaimed | Fazorath |
 | [0038-cameras-panel-states](0038-cameras-panel-states.md) | ready-for-agent | unclaimed | Fazorath |
 | [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | in-progress | Fazorath | Fazorath |
@@ -70,7 +70,7 @@
 | [0067-3d-terrain-and-the-2d-3d-switch](0067-3d-terrain-and-the-2d-3d-switch.md) | ready-for-agent | unclaimed | Fazorath |
 | [0068-hand-placed-high-ground-points](0068-hand-placed-high-ground-points.md) | ready-for-agent | unclaimed | refloow-0 |
 | [0069-join-demo-script-for-an-audience-node](0069-join-demo-script-for-an-audience-node.md) | done | leonardorofaDV | leonardorofaDV |
-| [0070-readings-panel-for-a-network](0070-readings-panel-for-a-network.md) | ready-for-agent | unclaimed | Fazorath |
+| [0070-readings-panel-for-a-network](0070-readings-panel-for-a-network.md) | in-progress | Fazorath | Fazorath |
 | [0071-rising-water-sheet](0071-rising-water-sheet.md) | ready-for-agent | unclaimed | Fazorath |
 | [0072-wave-eta-corner-card](0072-wave-eta-corner-card.md) | in-progress | Fazorath | Fazorath |
 | [0073-nepal-wide-weather-grid](0073-nepal-wide-weather-grid.md) | done | Fazorath | Fazorath |
