@@ -510,7 +510,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
 - **An effect that needs a layer added by another effect must be called after it in the same component**: child effects run before the parent's, so a `WaveLayers` child looked for the `river-flow` layer before `addNepalBasemap` had added it and never retried. `useRiverFlow` is a hook called below the basemap effect in `NodeMap`. `react-hooks/set-state-in-effect` rejects the "set a ready flag" alternative.
 - **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
-- **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
+- **Frame rate checked in Chrome (2026-10-18)**: 60 fps (p95 17.6 ms, worst 19.3 ms) with the comet and the dashes at the national view, with the dashes off, and in the 3D valley. A Hub on a private port with the page's `fetch` patched to add a Surge at River km -12.2 and a playing ×30 clock (with 0 to 250 ms of poll jitter) was enough to drive it.
+- **The first comet rubber-banded** (the owner saw it jump forward and snap back): every state poll hands `WaveFrontLayer` a new `warnings` array, which restarted the glide from the last clock answer, up to a second (30 event seconds, 1 to 2 km) old. The glide now reads the clock and the warnings through refs, never restarts, never steps back for an answer under 5 s behind, and redraws every 50 ms (redrawing the sources costs more than a frame). After the fix 0 of 350 draws went back in time and the head stepped back at most 22 m.
 - Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
 
 ## Readings card motion (ticket 0037)
@@ -535,6 +536,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
 - **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
 - **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
+
+## Live forecast in the layers (ticket 0059)
+
+- **"Replay running" is `useEventClock().clock !== null`**: Reset leaves the clock paused at 08:30, so the layers keep the recorded weather until the Hub stops the clock. With no clock they read `/api/weather/forecast`; the weather fetch waits for the first `/api/replay` answer (`heard`) so it does not ask for the wrong file first.
+- **The forecast tag compares exact age, not floored hours**: OFFLINE starts just after 3 h. The slider is now + 0 to 168 h (the Hub fetches 7 days); `now` ticks once a minute, so the picture repaints once a minute with no Replay.
+- Not seen in a browser; tested against the fake map only.
 
 ## Peer Mesh in Docker grilling (2026-10-18)
 
