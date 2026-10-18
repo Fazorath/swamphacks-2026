@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately; the Nepal box is in 0063's `nepal.bbox`, already on `main`)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Assignee:** Fazorath
 
