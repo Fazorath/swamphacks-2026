@@ -15,6 +15,20 @@ export type Shelter = {
   height_above_river_m: number;
 };
 
+// A hand-placed spot above a town (`scripts/pack_high_ground.py`); not a Shelter, never open or closed.
+export type HighGroundPoint = {
+  id: string;
+  name: string;
+  pos: [number, number];
+  town: string;
+  climb_m: number;
+  // From the town's key place; the resident's own walk is worked out from home.
+  walk_minutes: number;
+};
+
+// A High-ground point worth showing to this household, with the walk from their home.
+export type HighGroundPin = { point: HighGroundPoint; walkMinutes: number; nearest: boolean };
+
 // The vector map of Nepal a v4 or later pack carries (`scripts/pack_nepal.py`).
 export type NepalMap = {
   // [south, west, north, east]
@@ -31,6 +45,8 @@ export type NepalMap = {
 
 export type CachePackContents = {
   shelters: Shelter[];
+  // Empty for a pack built before High-ground points.
+  highGround: HighGroundPoint[];
   floodProne: FloodProneAreas;
   routeGrid: RouteGrid | null;
   // [south, west, north, east], the area the pack covers; null when its manifest has none.
@@ -53,6 +69,8 @@ export type EvacuationPlan = {
   // With a wave coming and no Shelter reachable in time, the closest one outside the Flood-Prone
   // Area, so the map still shows which way is uphill; never a place the plan calls safe.
   outOfReachShelter: Shelter | null;
+  // Shown on the map only while the plan says to get to higher ground; nearest first.
+  highGround: HighGroundPin[];
   // From the Grid point nearest home to the Shelter; null when the plan has no Route to draw.
   route: LatLon[] | null;
   officialLine: string;
@@ -70,6 +88,9 @@ const SAFETY_MARGIN_SECONDS = 5 * 60;
 // Roads and paths wind, so the walk is longer than the straight line.
 const DETOUR_FACTOR = 1.4;
 const WALKING_SPEED_KMH = 4;
+
+// A High-ground point further from home than this is not offered: the walk is too far to count on.
+const HIGH_GROUND_RANGE_KM = 2;
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -108,6 +129,21 @@ function walkAndWave(home: Home, shelter: Shelter, secondsLeft: number): string 
   return `${walk} min walk, ${waveWords(secondsLeft)}.`;
 }
 
+export function highGroundLabel(climbM: number, walkMinutes: number): string {
+  return `${climbM} m up · ${walkMinutes} min walk`;
+}
+
+function highGroundNear(home: Home, points: HighGroundPoint[]): HighGroundPin[] {
+  return points
+    .filter((point) => distanceKm(home, point.pos) <= HIGH_GROUND_RANGE_KM)
+    .sort((a, b) => distanceKm(home, a.pos) - distanceKm(home, b.pos))
+    .map((point, index) => ({
+      point,
+      walkMinutes: minutesRoundedUp(walkingSeconds(home, point.pos)),
+      nearest: index === 0,
+    }));
+}
+
 type Candidate = { shelter: Shelter; route: LatLon[] | null; km: number };
 
 function describe({ shelter, route, km }: Candidate, showHeight: boolean): string {
@@ -133,6 +169,7 @@ function byRoadThenStraightLine(a: Candidate, b: Candidate): number {
 type NearestShelter = {
   shelter: Shelter | null;
   outOfReachShelter?: Shelter;
+  highGround?: HighGroundPin[];
   route: LatLon[] | null;
   lines: string[];
 };
@@ -182,13 +219,24 @@ function nearestFittingShelter(
       (shelter) => !inFloodProneArea({ lat: shelter.pos[0], lon: shelter.pos[1] }, pack.floodProne),
     );
     const closest = outOfReachShelter ?? byDistance[0];
+    const highGround = highGroundNear(profile.home, pack.highGround);
+    const [nearestHighGround] = highGround;
     return {
       shelter: null,
       outOfReachShelter,
+      highGround,
       route: null,
       lines: [
         `Nearest Shelter ${closest.name}: ${walkAndWave(profile.home, closest, secondsLeft)}`,
         HIGHER_GROUND_LINE,
+        ...(nearestHighGround
+          ? [
+              `Nearest high ground: ${nearestHighGround.point.name}, ${highGroundLabel(
+                nearestHighGround.point.climb_m,
+                nearestHighGround.walkMinutes,
+              )}.`,
+            ]
+          : []),
       ],
     };
   }
@@ -292,6 +340,7 @@ export function evacuationPlan({
     lines: [] as string[],
     shelter: null,
     outOfReachShelter: null,
+    highGround: [] as HighGroundPin[],
     route: null,
     officialLine: OFFICIAL_LINE,
   };
@@ -317,7 +366,7 @@ export function evacuationPlan({
   const area = homeInFloodProneArea
     ? "Your home is inside a mapped Flood-Prone Area."
     : "Your home is outside the mapped Flood-Prone Areas (the river corridor, approximate).";
-  const { shelter, outOfReachShelter, route, lines } = nearestFittingShelter(
+  const { shelter, outOfReachShelter, highGround, route, lines } = nearestFittingShelter(
     profile,
     pack,
     openShelterIds,
@@ -333,6 +382,7 @@ export function evacuationPlan({
     lines: [area, ...lines],
     shelter,
     outOfReachShelter: outOfReachShelter ?? null,
+    highGround: highGround ?? [],
     route,
   };
 }

@@ -298,6 +298,30 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* Smaller than a Shelter pin so the two are never confused; cyan only on the one the plan names. */
+.high-ground-pin {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+.high-ground-pin.nearest {
+  color: var(--accent);
+  filter: drop-shadow(0 0 2px var(--accent));
+}
+
+.high-ground-label {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--surface-glass);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: normal;
+}
+
 .shelter-marker.out-of-reach {
   background: transparent;
   border: 2px dashed var(--risk-low);

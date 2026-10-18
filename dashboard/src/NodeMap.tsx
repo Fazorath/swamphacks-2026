@@ -43,7 +43,7 @@ import type { WeatherData } from "./useWeatherGrid";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
-import type { NepalMap, Shelter } from "./evacuationPlan";
+import { highGroundLabel, type HighGroundPin, type NepalMap, type Shelter } from "./evacuationPlan";
 import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
@@ -208,6 +208,8 @@ type Props = {
   shelter: Shelter | null;
   // The closest Shelter when none can be reached before the wave; drawn dashed, with a line from home.
   outOfReachShelter: Shelter | null;
+  // Hand-placed hillside spots, given only while the plan says to get to higher ground (D-45).
+  highGround: HighGroundPin[];
   route: LatLon[] | null;
   // Pixels at each edge that open Panels cover.
   panelRoom: { left: number; right: number };
@@ -255,6 +257,7 @@ export function NodeMap({
   ambientFlow,
   shelter,
   outOfReachShelter,
+  highGround,
   route,
   panelRoom,
   draftHome,
@@ -559,6 +562,30 @@ export function NodeMap({
             </MapMarker>
           );
         })}
+      {map &&
+        highGround.map(({ point, walkMinutes, nearest }) => (
+          <MapMarker
+            key={point.id}
+            map={map}
+            lat={point.pos[0]}
+            lon={point.pos[1]}
+            className={nearest ? "high-ground-pin nearest" : "high-ground-pin"}
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <path
+                d="M10 2.5 18 16.5H2Z M10 7v6.5 M7 10l3-3 3 3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="map-label high-ground-label label-below">
+              {highGroundLabel(point.climb_m, walkMinutes)}
+            </span>
+          </MapMarker>
+        ))}
       {map && draftHome && (
         <MapMarker map={map} lat={draftHome.lat} lon={draftHome.lon} className="home-draft-marker">
           <House size={16} aria-hidden="true" />

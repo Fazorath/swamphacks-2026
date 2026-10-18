@@ -14,7 +14,8 @@ from pathlib import Path
 
 import httpx
 from pack_fleet import build_fleet
-from pack_nepal import build_nepal_bundle, load_key_places
+from pack_high_ground import build_high_ground, load_high_ground
+from pack_nepal import build_nepal_bundle, elevation_at, load_key_places
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
@@ -171,10 +172,20 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
         files[FLEET_FILE] = build_fleet(
             client, SOURCE_DIR / "fleet.source.json", load_timeline(), VALLEY_BBOX
         )
-        nepal_files, manifest_extras["nepal"] = build_nepal_bundle(
-            client, VALLEY_BBOX, load_key_places(SOURCE_DIR / "key_places.source.json")
-        )
+        key_places = load_key_places(SOURCE_DIR / "key_places.source.json")
+        nepal_files, manifest_extras["nepal"] = build_nepal_bundle(client, VALLEY_BBOX, key_places)
         files.update(nepal_files)
+        elevation = {path: tile for path, tile in nepal_files.items() if path.startswith("elevation/")}
+        river_lines = json.loads(files["river.geojson"])["features"]
+        high_ground = build_high_ground(
+            load_high_ground(SOURCE_DIR / "high_ground.source.json"),
+            key_places,
+            [(lat, lon) for line in river_lines for lon, lat in line["geometry"]["coordinates"]],
+            FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"])),
+            lambda lat, lon: elevation_at(elevation, lat, lon),
+        )
+        files["high_ground.json"] = json.dumps(high_ground, indent=1).encode()
+        print(f"high ground: {len(high_ground)} points")
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 
