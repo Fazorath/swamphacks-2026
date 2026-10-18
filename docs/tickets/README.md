@@ -59,7 +59,7 @@
 | [0054-weather-button-and-picker](0054-weather-button-and-picker.md) | done | Fazorath | Fazorath |
 | [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | done | Fazorath | Fazorath |
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 | - |
-| [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed | refloow-0 |
+| [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | in-progress | Fazorath | refloow-0 |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV | - |
 | [0061-unverified-node-surge-does-not-count](0061-unverified-node-surge-does-not-count.md) | done | leonardorofaDV | - |
 | [0062-flood-levels-fit-the-river](0062-flood-levels-fit-the-river.md) | done | refloow-0 | - |
