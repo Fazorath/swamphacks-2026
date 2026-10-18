@@ -203,11 +203,11 @@ The column of buttons along the left edge of the dashboard that shows and hides 
 _Avoid_: sidebar, toolbar, nav
 
 **Weather layer**:
-One of Wind, Temperature, Cloud cover or Rain, drawn over the map from a Weather Grid; only one shows at a time, chosen from the Weather button on the Layer rail. It is context for the valley, never a measurement at a village and never offered as a cause of the flood.
+One of Temperature, Cloud cover or Rain, laid over the map's terrain from a Weather Grid; only one shows at a time, chosen from the Weather button on the Layer rail. It is context for the country and the valley, never a measurement at a village and never offered as a cause of the flood.
 _Avoid_: overlay, weather widget, radar
 
 **Weather Grid**:
-Hourly wind, temperature, cloud cover and rain on a coarse grid of points (about 0.1° apart) over the valley. During the Replay it is the recorded weather of 26 August 2026, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
+Hourly temperature, cloud cover and rain on a coarse grid of points (about 0.5° apart) over the whole of Nepal. During the Replay it is the recorded weather of 26 August 2026, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
 _Avoid_: weather data, forecast feed
 
 **Panel**:
