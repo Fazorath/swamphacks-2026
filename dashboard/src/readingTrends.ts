@@ -8,7 +8,8 @@ export type Trend = "rising" | "falling" | "steady";
 // An arrow compares now with 30 s ago (ui.md, "Readings Panel").
 const WINDOW_MS = 30_000;
 
-// The smallest move that counts as a trend, so sensor noise leaves the arrow steady.
+// The smallest move that counts as a trend, so sensor noise leaves the arrow steady. Chosen just
+// above the jitter of the Scenario and replay readings (about 1 cm, 0.2 hPa).
 const SMALLEST_MOVE: Record<ReadingKind, number> = {
   water_level: 2,
   rain_rate: 0.5,
@@ -23,11 +24,13 @@ export type ReadingHistory = Record<string, Sample[]>;
 
 export const historyKey = (nodeId: string, kind: ReadingKind) => `${nodeId}:${kind}`;
 
+const baselineOf = (samples: Sample[], now: number) =>
+  samples.filter((sample) => sample.at <= now - WINDOW_MS).at(-1);
+
 export function trendOf(samples: Sample[], kind: ReadingKind, now: number): Trend {
   if (samples.length < 2) return "steady";
   const newest = samples[samples.length - 1].value;
-  const before = samples.filter((sample) => sample.at <= now - WINDOW_MS).at(-1);
-  const move = newest - (before ?? samples[0]).value;
+  const move = newest - (baselineOf(samples, now) ?? samples[0]).value;
   if (Math.abs(move) < SMALLEST_MOVE[kind]) return "steady";
   return move > 0 ? "rising" : "falling";
 }
@@ -39,7 +42,7 @@ export function remember(history: ReadingHistory, nodes: NodeOnMap[], now: numbe
       const key = historyKey(node.id, kind);
       let samples = history[key] ?? [];
       if (samples.at(-1)?.value !== value) samples = [...samples, { at: now, value }];
-      const baseline = samples.filter((sample) => sample.at <= now - WINDOW_MS).at(-1);
+      const baseline = baselineOf(samples, now);
       next[key] = baseline ? samples.slice(samples.indexOf(baseline)) : samples;
     }
   }

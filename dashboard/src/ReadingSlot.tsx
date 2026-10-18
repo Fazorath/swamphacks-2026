@@ -19,6 +19,8 @@ export function ReadingSlot({
   children: ReactNode;
 }) {
   const reducedMotion = usePrefersReducedMotion();
+  // Counting changes while rendering, not in an effect: the new key must reach the same commit
+  // as the new number, or the flash would start a frame late.
   const [seen, setSeen] = useState({ value, changes: 0 });
   if (seen.value !== value) setSeen({ value, changes: seen.changes + 1 });
   const flashes = seen.changes > 0 && !reducedMotion;

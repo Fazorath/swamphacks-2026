@@ -493,3 +493,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
+## Readings card motion (ticket 0037)
+
+- **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.
+- **A flash is a remount**: `ReadingSlot` bumps a key when its value changes, so the CSS animation restarts. Reduced motion is checked in the components (`usePrefersReducedMotion`, test switch `setReducedMotion`) and in a media query.
+- **Not done / not seen in a browser:** Stale dims by opacity only (desaturating needs `filter`, outside the transform/opacity rule); the chip fades in without fading the old one out; every card fades in on mount, not only new Nodes; the row slots have no fixed width of their own (the three grid columns do).
