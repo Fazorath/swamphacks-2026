@@ -16,6 +16,8 @@ demo_dir="$PWD/.demo"
 base_port="${DEMO_BASE_PORT:-8000}" # the Hub; S0 to S3 take the next four
 slot_base="${DEMO_SLOT_BASE:-0}"    # raise it if another Node on this laptop already holds slot 0
 pack_port=8900
+tcp_port="${DEMO_TCP_PORT:-4242}" # the Hub's TCP listener, for an Audience Node behind Docker
+wifi_discovery_ports="29716 42671" # UDP, Reticulum's AutoInterface; the Hub's Wi-Fi side holds them
 loopback_base_port=4250 # LOOPBACK_BASE_PORT in node/src/storm_shield/reticulum_mesh.py
 
 # A Node that cannot bind its port still logs its identity first, and a stale Node already on
@@ -24,6 +26,10 @@ busy=""
 for port in "$pack_port" $(seq "$base_port" $((base_port + 4))) \
   $(seq $((loopback_base_port + slot_base)) $((loopback_base_port + slot_base + 4))); do
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then busy="$busy $port"; fi
+done
+if lsof -nP -iTCP:"$tcp_port" -sTCP:LISTEN >/dev/null 2>&1; then busy="$busy $tcp_port"; fi
+for port in $wifi_discovery_ports; do
+  if lsof -nP -iUDP:"$port" >/dev/null 2>&1; then busy="$busy $port/udp"; fi
 done
 if [ -n "$busy" ]; then
   echo "ports already in use:$busy; stop what holds them, or set DEMO_BASE_PORT/DEMO_SLOT_BASE" >&2
@@ -81,9 +87,11 @@ echo "$!" >"$demo_dir/pack-server.pid"
 hub_identity=""
 
 start_node() {
-  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url
+  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url also_outside=false
   if [ "$role" = hub ]; then
     pack_url="http://127.0.0.1:$pack_port/cache-pack.zip"
+    # S0 to S3 stay on loopback; only the Hub also reaches an Audience Node (scripts/join-demo.md).
+    also_outside=true
   else
     pack_url="http://127.0.0.1:$base_port/api/cache-pack.zip"
   fi
@@ -91,7 +99,8 @@ start_node() {
   # stopping uv would leave the Node running and holding its ports.
   env NODE_NAME="$name" NODE_ROLE="$role" NODE_PORT=$((base_port + slot)) \
     NODE_MESH_INTERFACE=loopback NODE_LOOPBACK_SLOT=$((slot_base + slot)) \
-    NODE_LOOPBACK_FIRST_SLOT="$slot_base" \
+    NODE_LOOPBACK_FIRST_SLOT="$slot_base" NODE_TCP_PORT="$tcp_port" \
+    NODE_ALSO_WIFI_DISCOVERY="$also_outside" NODE_ALSO_TCP_LISTEN="$also_outside" \
     NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \
