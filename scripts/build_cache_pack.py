@@ -20,10 +20,11 @@ from pack_weather import fetch_weather_replay
 
 from storm_shield.replay import load_timeline
 from storm_shield.simulated_fleet import FLEET_FILE
-from storm_shield.weather_grid import VALLEY_BBOX
+from storm_shield.weather_grid import NEPAL_BBOX
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
-BBOX = VALLEY_BBOX
+# The valley around the flood: the Lhende Khola down to below Trishuli.
+BBOX = (27.86, 85.08, 28.46, 85.47)
 # Few zoom levels on purpose: the box is large and the pack must stay small.
 ZOOMS = range(10, 15)
 # Pis pull the whole pack over the mesh, so routes stay small; the grid coarsens until they fit.
@@ -164,7 +165,7 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
     tile_list = tiles_covering(BBOX) if raster_tiles else []
     print(f"fetching Nepal, the weather, the Simulated Fleet and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
-        weather = fetch_weather_replay(client, BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
+        weather = fetch_weather_replay(client, NEPAL_BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
         files[FLEET_FILE] = build_fleet(
             client, SOURCE_DIR / "fleet.source.json", load_timeline(), BBOX

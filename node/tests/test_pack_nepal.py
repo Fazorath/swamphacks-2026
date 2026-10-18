@@ -13,7 +13,8 @@ from pack_nepal import (
     simplify_line,
 )
 
-from storm_shield.weather_grid import VALLEY_BBOX
+VALLEY_BBOX = (27.86, 85.08, 28.46, 85.47)
+
 
 # A box from (0, 0) to (10, 10) standing in for Nepal.
 SQUARE = [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]

@@ -12,12 +12,13 @@
 
 **Spec:** `docs/specs/weather-layers.md`
 
-- [ ] `weather_grid.py`: the grid step is 0.5° and the box is the pack's Nepal box (about 9 × 17 = 153 points); the valley box and step leave the weather code
-- [ ] `VARIABLES` is `temperature_2m`, `cloud_cover`, `precipitation`; neither the archive nor the forecast request asks for wind
-- [ ] `build_cache_pack.py` writes the national `weather_replay.json` (25 to 27 Aug 2026); the real build is run and its size and point count noted here (expect about 200 KB)
-- [ ] The Hub's forecast (0058) fetches the same grid; a forecast file on disk with the old valley grid or wind variables counts as absent and is fetched again
-- [ ] `weatherGrid.ts` loses `windAt` and `speedBand` and their tests; `valueAt` and the malformed-grid check keep working on the new file
-- [ ] `docs/specs/wire-formats.md` Weather Grid section shows the national grid and the three variables
-- [ ] pytest: the stubbed archive and forecast answers produce 153 points in row-major order with no wind; Vitest: `valueAt` on a national-shaped grid
+- [x] `weather_grid.py`: the grid step is 0.5° and the box is the pack's Nepal box (about 9 × 17 = 153 points); the valley box and step leave the weather code
+- [x] `VARIABLES` is `temperature_2m`, `cloud_cover`, `precipitation`; neither the archive nor the forecast request asks for wind
+- [x] `build_cache_pack.py` writes the national `weather_replay.json` (25 to 27 Aug 2026); the real build is run and its size and point count noted here (expect about 200 KB)
+  - Real fetch 2026-10-18: 153 points (9 × 17), 72 hours, 134 KB of JSON, one request. The full `build_cache_pack.py` was not rerun.
+- [x] The Hub's forecast (0058) fetches the same grid; a forecast file on disk with the old valley grid or wind variables counts as absent and is fetched again
+- [x] `weatherGrid.ts` loses `windAt` and `speedBand` and their tests; `valueAt` and the malformed-grid check keep working on the new file
+- [x] `docs/specs/wire-formats.md` Weather Grid section shows the national grid and the three variables
+- [x] pytest: the stubbed archive and forecast answers produce 153 points in row-major order with no wind; Vitest: `valueAt` on a national-shaped grid
 - [ ] A rebuilt pack (`cache-pack-v4` or later) carries the file; record which release in the lessons log
-- [ ] All **Commands** pass
+- [x] All **Commands** pass

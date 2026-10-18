@@ -7,7 +7,13 @@ from typing import Any
 
 import httpx
 
-from storm_shield.weather_grid import VALLEY_BBOX, VARIABLES, grid_points, weather_grid_from_answers
+from storm_shield.weather_grid import (
+    GRID_STEP_DEGREES,
+    NEPAL_BBOX,
+    VARIABLES,
+    grid_points,
+    weather_grid_from_answers,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +25,24 @@ SOURCE = "Open-Meteo forecast (model output), roughly 10 to 25 km per cell"
 
 
 def _check_shape(weather: Any) -> None:
-    """Raise ValueError unless this is a Weather Grid with a value for every hour and grid point."""
+    """Raise ValueError unless this is the national Weather Grid with a value for every hour and point.
+
+    A file from before the grid went national (the valley box, or wind variables) fails here, so it
+    counts as absent and is fetched again.
+    """
     try:
-        points = weather["grid"]["rows"] * weather["grid"]["cols"]
+        grid = weather["grid"]
+        rows, cols, points_in_box = grid_points(NEPAL_BBOX)
+        if (grid["south"], grid["west"], grid["rows"], grid["cols"], grid["step_deg"]) != (
+            *NEPAL_BBOX[:2],
+            rows,
+            cols,
+            GRID_STEP_DEGREES,
+        ):
+            raise ValueError("not the national grid")
+        if set(weather["variables"]) != set(VARIABLES):
+            raise ValueError("not the current variables")
+        points = len(points_in_box)
         hours = len(weather["times"])
         fetched_at = weather["fetched_at"]
         for name in VARIABLES:
@@ -60,8 +81,8 @@ class WeatherForecast:
         return content
 
     def fetch(self, client: httpx.Client, fetched_at: datetime) -> None:
-        """Ask Open-Meteo for the valley and keep the answer. Raises and keeps the old copy on any failure."""
-        _, _, points = grid_points(VALLEY_BBOX)
+        """Ask Open-Meteo for Nepal and keep the answer. Raises and keeps the old copy on any failure."""
+        _, _, points = grid_points(NEPAL_BBOX)
         response = client.get(
             FORECAST_URL,
             params={
@@ -69,12 +90,11 @@ class WeatherForecast:
                 "longitude": ",".join(str(lon) for _, lon in points),
                 "forecast_days": FORECAST_DAYS,
                 "hourly": ",".join(VARIABLES),
-                "wind_speed_unit": "ms",
                 "timezone": "UTC",
             },
         )
         response.raise_for_status()
-        weather = weather_grid_from_answers(response.json(), VALLEY_BBOX, SOURCE)
+        weather = weather_grid_from_answers(response.json(), NEPAL_BBOX, SOURCE)
         self._keep({**weather, "fetched_at": fetched_at.isoformat()})
 
     def download(self, url: str, client: httpx.Client) -> None:

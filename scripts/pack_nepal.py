@@ -9,9 +9,8 @@ from typing import Any
 
 import httpx
 import pack_weather
-from storm_shield.weather_grid import BBox
+from storm_shield.weather_grid import NEPAL_BBOX, BBox
 
-NEPAL_BBOX: BBox = (26.3, 80.0, 30.5, 88.3)
 GEOBOUNDARIES_URL = "https://www.geoboundaries.org/api/current/gbOpen/NPL/{level}/"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 ELEVATION_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
