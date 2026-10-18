@@ -7,13 +7,14 @@ import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
+import { MapLegend } from "./MapLegend";
 import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
 import { usePlaces } from "./placeLabels";
-import { nodesOnMap } from "./nodesOnMap";
+import { fleetOnMap, nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { StatusStrip } from "./StatusStrip";
 import { TopBar } from "./TopBar";
@@ -22,6 +23,7 @@ import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
+import { useContactNotes, useLevelRises } from "./useMarkerEvents";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeState } from "./useNodeState";
@@ -55,6 +57,9 @@ export function App() {
   const eventClock = useEventClock(!unreachable);
   const cameras = useCameras(!unreachable);
   const nodes = nodesOnMap(state);
+  const fleet = fleetOnMap(state);
+  const rises = useLevelRises(nodes);
+  const contactNotes = useContactNotes([...nodes, ...fleet]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
@@ -207,6 +212,9 @@ export function App() {
       <div className="stage">
         <NodeMap
           nodes={shows("nodes") ? nodes : []}
+          fleet={shows("fleet") ? fleet : []}
+          rises={rises}
+          stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
           selectedId={selectedId}
           onSelect={toggleSelected}
           home={shownProfile?.home ?? null}
@@ -234,16 +242,19 @@ export function App() {
           openPanels={panels.open}
           registeredNodes={nodes.filter((node) => node.registered).length}
           openShelters={openShelterCount}
+          fleetNodes={fleet.length}
           liveCameras={cameras.filter((tile) => tile.state === "live").length}
           onToggleLayer={toggleLayer}
           onTogglePanel={panels.toggle}
         />
+        <MapLegend simulated={fleet.length} real={nodes.length} nepal={cachePack?.nepal ?? null} />
         <div className="panel-column left">
           <ReadingsPanel
             nodes={nodes}
             floodRisk={floodRisk}
             selectedId={selectedId}
             onSelect={toggleSelected}
+            rises={rises}
             onScenarioChanged={refresh}
             panel={panel("readings")}
           />
@@ -274,6 +285,8 @@ export function App() {
       </div>
       <StatusStrip
         nodes={nodes}
+        fleetCount={fleet.length}
+        contactNotes={contactNotes}
         identity={identity}
         connecting={connection === "connecting"}
         status={state?.status ?? null}

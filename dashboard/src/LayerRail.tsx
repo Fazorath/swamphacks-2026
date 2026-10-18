@@ -3,6 +3,7 @@ import {
   CloudRain,
   Gauge,
   Home,
+  Network,
   Radio,
   Route,
   TriangleAlert,
@@ -12,7 +13,8 @@ import {
 
 import type { PanelName } from "./openPanels";
 
-export type MapLayerName = "nodes" | "flood-prone" | "shelters" | "route" | "storm-signal";
+export type MapLayerName =
+  "nodes" | "fleet" | "flood-prone" | "shelters" | "route" | "storm-signal";
 
 type Button = {
   label: string;
@@ -27,6 +29,7 @@ type Props = {
   openPanels: PanelName[];
   registeredNodes: number;
   openShelters: number;
+  fleetNodes: number;
   liveCameras: number;
   onToggleLayer: (layer: MapLayerName) => void;
   onTogglePanel: (panel: PanelName) => void;
@@ -37,6 +40,7 @@ export function LayerRail({
   openPanels,
   registeredNodes,
   openShelters,
+  fleetNodes,
   liveCameras,
   onToggleLayer,
   onTogglePanel,
@@ -67,6 +71,7 @@ export function LayerRail({
   });
   const buttons = [
     layer("Nodes", Radio, "nodes", registeredNodes),
+    layer("Fleet", Network, "fleet", fleetNodes),
     panel("Readings", Gauge, "readings", null),
     layer("Flood-Prone Areas", Waves, "flood-prone", null),
     layer("Shelters", Home, "shelters", openShelters),

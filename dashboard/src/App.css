@@ -213,11 +213,10 @@ button:disabled {
 .home-draft-marker {
   width: 28px;
   height: 28px;
-  background: var(--official-bg);
-  border: 2px solid var(--official-tag);
+  background: var(--surface-solid);
+  border: 2px solid var(--accent);
   border-radius: 50%;
-  color: var(--official-ink);
-  font-size: 1.1rem;
+  color: var(--accent);
 }
 
 .home-draft-marker {
@@ -225,14 +224,18 @@ button:disabled {
   border-style: dashed;
 }
 
+/* The Shelter the plan chose: its pin wears a cyan ring and its name always shows. */
 .shelter-marker {
-  width: 28px;
-  height: 28px;
-  background: var(--risk-low);
-  border: 2px solid var(--surface-panel);
-  border-radius: 0.25rem;
-  color: var(--surface-panel);
-  font-size: 1.3rem;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--surface-solid);
+  color: var(--risk-low);
+}
+
+.shelter-marker svg {
+  fill: currentcolor;
 }
 
 .shelter-label {
@@ -558,7 +561,8 @@ section p {
 }
 
 .shelter-pin:hover .map-label.label-hidden,
-.shelter-marker:hover .map-label.label-hidden {
+.shelter-marker:hover .map-label.label-hidden,
+.node-marker:hover .map-label.label-hidden {
   display: block;
   z-index: 1;
 }
@@ -576,25 +580,131 @@ section p {
 }
 
 /* A Node is a dot with its label beside it. The fleet's dots and labels grow with the zoom
-   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. */
+   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. Only
+   transform and opacity move; the glow is a static shadow set by the Node's level. */
 .node-marker {
   cursor: pointer;
 }
 
+.node-marker.fleet {
+  cursor: default;
+}
+
 .node-dot {
+  position: relative;
   display: block;
   width: 10px;
   height: 10px;
-  border: 1.5px solid var(--text-primary);
+  border: 1.5px solid var(--map-shadow);
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--risk-low);
+  box-shadow: 0 0 var(--glow, 0px) calc(var(--glow, 0px) / 3) currentcolor;
+  color: transparent;
+  transition:
+    opacity 300ms,
+    background-color 300ms;
 }
 
-.node-marker.simulated .node-dot {
+.node-marker.elevated .node-dot {
+  background: var(--risk-elevated);
+  color: var(--risk-elevated);
+}
+
+.node-marker.high .node-dot {
+  background: var(--risk-high);
+  color: var(--risk-high);
+}
+
+/* REAL Nodes: the state's dot plus a 1.5 px white ring (D-10). */
+.node-marker.real .node-dot {
+  outline: 1.5px solid var(--text-primary);
+  outline-offset: 1.5px;
+}
+
+.node-marker.fleet .node-dot {
   width: calc(5px + 5px * var(--zoom-blend, 0));
   height: calc(5px + 5px * var(--zoom-blend, 0));
-  border-width: 0;
-  background: var(--risk-low);
+  border-width: calc(1.5px * var(--zoom-blend, 0));
+}
+
+.node-marker.stale .node-dot {
+  background: var(--stale);
+  border-color: var(--stale);
+  box-shadow: none;
+}
+
+.node-marker.unverified .node-dot {
+  background: none;
+  border: 1.5px dashed var(--text-dim);
+  box-shadow: none;
+}
+
+/* A pseudo-element, so Selected's cyan ring sits outside a REAL Node's white one. */
+.node-marker.selected .node-dot::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.node-marker.contact-lost .node-dot {
+  opacity: 0.6;
+  box-shadow: none;
+  animation: contact-pulse 1.2s ease-in-out infinite;
+}
+
+/* The grey arc drains from full to empty over the ten seconds before Stale (D-14). */
+.contact-arc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  fill: none;
+  stroke: var(--contact-lost);
+  stroke-width: 1.5;
+}
+
+@keyframes contact-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+/* Once, when the Node's Flood Risk rises (D-13). */
+.rise-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  animation: rise-ring 900ms ease-out 1 forwards;
+  pointer-events: none;
+}
+
+.node-marker.elevated .rise-ring {
+  color: var(--risk-elevated);
+}
+
+.node-marker.high .rise-ring {
+  color: var(--risk-high);
+}
+
+@keyframes rise-ring {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(4);
+  }
 }
 
 .node-label {
@@ -607,43 +717,120 @@ section p {
   white-space: nowrap;
 }
 
-.node-marker.simulated .node-label {
+.node-marker.fleet .node-label {
   opacity: var(--zoom-blend, 0);
 }
 
-.node-marker.stale .node-dot {
-  background: var(--stale);
-  border-color: var(--stale);
+.node-marker.fleet:hover .node-label {
+  display: block;
+  opacity: 1;
 }
 
 .node-marker.stale .node-label {
   color: var(--text-secondary);
 }
 
-.node-marker.selected .node-dot {
-  border-width: 4px;
-}
-
 .node-marker.selected .node-label {
   border-color: var(--accent);
-}
-
-.node-marker.elevated .node-dot {
-  background: var(--risk-elevated);
-}
-
-.node-marker.high .node-dot {
-  background: var(--risk-high);
-}
-
-.node-marker.unverified .node-dot {
-  background: none;
-  border: 1.5px dashed var(--text-dim);
 }
 
 .node-marker.unverified .node-label {
   color: var(--text-dim);
   border-style: dashed;
+}
+
+.water-level.struck {
+  text-decoration: line-through;
+}
+
+.tag.real {
+  color: var(--text-primary);
+}
+
+.tag.contact-lost {
+  color: var(--contact-lost);
+}
+
+.contact-note {
+  color: var(--contact-lost);
+}
+
+.node-card {
+  position: relative;
+}
+
+.card-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--risk-high);
+  opacity: 0;
+  animation: card-flash 600ms ease-out 1;
+  pointer-events: none;
+}
+
+@keyframes card-flash {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The Storm Signal darkens the map's edges, still: no animated weather. */
+.storm-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 55%, var(--scrim) 100%);
+  pointer-events: none;
+}
+
+.map-legend {
+  position: absolute;
+  z-index: 2;
+  bottom: 0.75rem;
+  left: calc(3.75rem + 288px + 0.75rem);
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.map-legend ul {
+  margin: 0 0 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.2rem 0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--risk-low);
+}
+
+.legend-dot.real {
+  outline: 1.5px solid var(--text-primary);
+  outline-offset: 1.5px;
+}
+
+.legend-dot.stale {
+  background: var(--stale);
+}
+
+.legend-dot.wave {
+  background: var(--wave);
 }
 
 .node-map.picking ~ .maplibregl-marker,
@@ -1006,18 +1193,21 @@ section p.flood-prone-caption {
   font-size: 0.8rem;
 }
 
+/* An open Shelter is a solid pin; a closed one is hollow and grey (its label says Closed). */
 .shelter-pin {
-  display: grid;
-  place-items: center;
-  background: var(--risk-low);
-  border: 2px solid var(--surface-panel);
-  border-radius: 50%;
-  color: var(--surface-panel);
-  font-weight: bold;
+  width: 22px;
+  height: 22px;
+  color: var(--risk-low);
+}
+
+.shelter-pin svg {
+  fill: currentcolor;
 }
 
 .shelter-pin.closed {
-  background: var(--surface-raised);
-  border-color: var(--text-secondary);
   color: var(--text-secondary);
+}
+
+.shelter-pin.closed svg {
+  fill: none;
 }
