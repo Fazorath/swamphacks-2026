@@ -552,6 +552,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 ## Rising-water sheet (ticket 0071)
 
 - **The height lines read each real Node's last water level** (`waterReaches`, from the state snapshot), not the timeline file, so no number is new. A Node that went silent keeps its peak (S0 7.5 m, S2 9.6 m); lines appear once the wave has reached the Node (or at the origin Node).
-- **The sideways distance is a drawn scale (120 m per metre of water), not terrain**: it does not follow the valley walls, because no DEM is sampled. Check by eye in 3D whether the lines read as a level; if not, the fix is sampling the pack's elevation.
-- **Not seen in a browser**: the 60 fps check, label position over the head, and look on a phone are open.
+- **The sideways distance is a drawn scale (300 m per metre of water), not terrain**: it does not follow the valley walls, because no DEM is sampled. Check by eye in 3D whether the lines read as a level; if not, the fix is sampling the pack's elevation.
+- **`packUrl` used `new URL(...)`, which percent-encodes `{z}/{x}/{y}`**, so MapLibre asked for `elevation/%7Bz%7D/...` (3,000+ 404s in the Hub log) and the demo had no terrain, height bands or hillshade at all; the tests only checked the address's prefix. Found from the Hub's access log when the owner said the map had no elevation. `packUrl` now joins the origin as text, and a test checks the template stays literal.
+- Opened in Chrome (2026-10-18): the 3D valley shows relief and the gauge lines at Syabrubesi. The 60 fps check and a phone look are still open.
+- A full `vitest run` with the demo and Chrome open failed 17 unrelated tests once and passed the next run; `weatherLayersFlow` "no forecast" read the picture before it was drawn and now waits.
 
