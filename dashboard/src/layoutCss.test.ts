@@ -12,9 +12,9 @@ function rule(selector: string): string {
 }
 
 describe("the Panel columns stay on screen", () => {
-  it("sits each column 0.75rem inside its own edge of the stage", () => {
+  it("sits each column inside its own edge of the stage, the left one clear of the rail", () => {
     expect(rule(".panel-column")).toMatch(/position:\s*absolute/);
-    expect(rule(".panel-column.left")).toMatch(/left:\s*0\.75rem/);
+    expect(rule(".panel-column.left")).toMatch(/left:\s*3\.75rem/);
     expect(rule(".panel-column.right")).toMatch(/right:\s*0\.75rem/);
   });
 
