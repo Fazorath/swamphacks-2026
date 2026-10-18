@@ -75,7 +75,7 @@
 | [0072-wave-eta-corner-card](0072-wave-eta-corner-card.md) | done | Fazorath | Fazorath |
 | [0073-nepal-wide-weather-grid](0073-nepal-wide-weather-grid.md) | done | Fazorath | Fazorath |
 | [0074-find-live-cameras-in-nepal](0074-find-live-cameras-in-nepal.md) | done | leonardorofaDV | leonardorofaDV |
-| [0075-camera-list-with-live-or-clip-sources](0075-camera-list-with-live-or-clip-sources.md) | ready-for-agent | unclaimed | refloow-0 |
+| [0075-camera-list-with-live-or-clip-sources](0075-camera-list-with-live-or-clip-sources.md) | in-progress | Amit Athi Kesavan | refloow-0 |
 | [0076-demo-camera-clips-with-real-flood-footage](0076-demo-camera-clips-with-real-flood-footage.md) | done | leonardorofaDV | leonardorofaDV |
 | [0077-cameras-panel-shows-every-camera](0077-cameras-panel-shows-every-camera.md) | ready-for-agent | unclaimed | Fazorath |
 | [0078-map-labels-do-not-overlap](0078-map-labels-do-not-overlap.md) | done | Fazorath | Fazorath |
