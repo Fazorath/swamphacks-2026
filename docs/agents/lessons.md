@@ -452,7 +452,6 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
 
-<<<<<<< HEAD
 ## High-warning pager and the out-of-reach Shelter (ticket 0080)
 
 - **A pager that waits for the closest Node to go quiet never fired in the Replay**: the Syabrubesi Sensor is silent only from 08:50, one minute after the "Surge reaches Syabrubesi" phase (08:49), and a jump keeps a paused clock paused. The pager now watches each Node's own High warning within 60 km of home (S0 is High about 3 s after a Collapse jump and S1 about 12 s later).
@@ -460,10 +459,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Node already High when the page first lists Nodes is the baseline, not news**: the hook keeps `null` until the first non-empty list, or "Connecting…" and the first answer would page.
 - **On a Windows checkout every file has CRLF, and `layoutCss.test.ts` fails** ("no rule for .panel-column in App.css") because its regex needs `\n\n` between rules. Stripping the `\r` from `App.css` makes it pass; git stores LF, so it is a local quirk, not a repo bug. A Python script that rewrites a file in text mode also writes CRLF here; open with `newline=""` to keep the endings.
 - **A Shelter with no Route is not "unreachable"**: the valley pack has no Route to the Syabrubesi gompa (the corridor rule dropped them), so the out-of-reach Shelter gets a dashed straight line from home, labelled as a direction only. Real high-ground targets are ticket 0068.
-=======
+
 ## Phone layout (ticket 0036)
 
 - **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
 - **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
 - **Not done:** the manual check on a phone over Tailscale (no browser or phone in this session), so 44 px targets, the sheet and the pinned alert are unseen outside jsdom. The bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a tapped home pick has no on-screen cancel on the phone.
->>>>>>> origin/main
