@@ -22,7 +22,9 @@ import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
+import { PagerBanner } from "./PagerBanner";
 import { useNodeState } from "./useNodeState";
+import { usePager } from "./usePager";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
 import { useRiverLine } from "./useRiverLine";
@@ -63,6 +65,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
+  const pager = usePager(nodes, profile?.home ?? null);
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   // Until a resident saves their own profile, an example home keeps the plan and Route on screen.
@@ -194,6 +197,7 @@ export function App() {
           onClose={() => setNodePanelOpen(false)}
         />
       )}
+      {pager.alert && <PagerBanner alert={pager.alert} onDismiss={pager.dismiss} />}
       <div className="stage">
         <NodeMap
           nodes={nodes}

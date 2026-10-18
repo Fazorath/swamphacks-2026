@@ -919,3 +919,24 @@ section p.flood-prone-caption {
   border-color: var(--text-secondary);
   color: var(--text-secondary);
 }
+
+.pager-banner {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.6rem 1rem;
+  transform: translateX(-50%);
+  background: var(--surface-solid);
+  border: 2px solid var(--risk-high);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+}
+
+.pager-banner strong {
+  color: var(--risk-high);
+}
