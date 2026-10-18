@@ -88,6 +88,22 @@ h1 {
   font-weight: 600;
 }
 
+/* Water level is always a reconstruction (D-47): it sits beside the Simulated badge in its colour. */
+.water-reconstruction-note {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.water-reconstruction {
+  color: var(--map-river);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 6px var(--map-shadow);
+  pointer-events: none;
+}
+
 .mesh-only {
   color: var(--accent);
   font-weight: 600;

@@ -548,3 +548,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
 - **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
 - **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.
+
+## Rising-water sheet (ticket 0071)
+
+- **The height lines read each real Node's last water level** (`waterReaches`, from the state snapshot), not the timeline file, so no number is new. A Node that went silent keeps its peak (S0 7.5 m, S2 9.6 m); lines appear once the wave has reached the Node (or at the origin Node).
+- **The sideways distance is a drawn scale (120 m per metre of water), not terrain**: it does not follow the valley walls, because no DEM is sampled. Check by eye in 3D whether the lines read as a level; if not, the fix is sampling the pack's elevation.
+- **Not seen in a browser**: the 60 fps check, label position over the head, and look on a phone are open.
+

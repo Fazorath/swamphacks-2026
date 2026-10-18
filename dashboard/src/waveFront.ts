@@ -9,7 +9,7 @@ export const WAVE_TRAIL_KM = 15;
 export const WAVE_FLASH_SECONDS = 120;
 
 // The spot on the river at this River km; null outside the river line.
-function pointAtKm(river: RiverLine, riverKm: number): LatLon | null {
+export function pointAtKm(river: RiverLine, riverKm: number): LatLon | null {
   for (const { km, points } of river) {
     if (riverKm < km[0] || riverKm > km[km.length - 1]) continue;
     for (let i = 1; i < km.length; i++) {
