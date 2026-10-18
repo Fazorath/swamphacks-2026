@@ -244,3 +244,46 @@ def test_an_unreadable_camera_list_leaves_the_hub_with_no_cameras(
     monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
     with _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
         assert client.get("/api/cameras").json() == []
+
+
+def test_a_malformed_camera_entry_is_skipped_and_the_others_still_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cameras = tmp_path / "cameras.json"
+    good = {"id": "good", "label": "Good", "site": "hub", "lat": 1, "lon": 2, "clip": CLIP_KEYS[0]}
+    cameras.write_text(json.dumps([{"id": "no-position"}, good]))
+    monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
+    with _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
+        _wait_until(lambda: _state_of_the_tile(client, "good") == "live", "the good camera")
+        assert [tile["id"] for tile in client.get("/api/cameras").json()] == ["good"]
+
+
+def test_a_clip_file_missing_beside_a_manifest_makes_only_that_camera_unavailable(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    clips = _clips_folder(tmp_path / "clips")
+    manifest = json.loads((clips / "manifest.json").read_text())
+    manifest["clips"][CLIP_KEYS[2]] = {**CLIP_ENTRY, "file": "gone.mp4"}
+    (clips / "manifest.json").write_text(json.dumps(manifest))
+    with caplog.at_level("WARNING"), _node(clips, Internet()) as client:
+        _wait_until(lambda: _state_of_the_tile(client) == "live", "the camera to be live")
+        assert _state_of_the_tile(client, "s1-timure") == "unavailable"
+        assert _state_of_the_tile(client, "s2-syabrubesi") == "live"
+    assert "s1-timure" in caplog.text
+
+
+def test_every_camera_goes_offline_on_a_mesh_only_hub_and_a_sensor_serves_none(
+    tmp_path: Path,
+) -> None:
+    internet = Internet()
+    clips = _clips_folder(tmp_path / "clips")
+    with _node(clips, internet) as hub:
+        _wait_until(lambda: _state_of_the_tile(hub) == "live", "the camera to be live")
+        internet.up = False
+        _wait_until(lambda: _state_of_the_tile(hub) == "offline", "the camera to be offline")
+        assert {tile["state"] for tile in hub.get("/api/cameras").json()} == {"offline"}
+    with _node(_clips_folder(tmp_path / "sensor-clips"), Internet(), role="sensor") as sensor:
+        time.sleep(0.1)
+        for tile in sensor.get("/api/cameras").json():
+            assert tile["state"] == "unavailable"
+            assert sensor.get(f"/api/cameras/{tile['id']}/clip").status_code == 404

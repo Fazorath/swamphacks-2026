@@ -33,10 +33,17 @@ def load_cameras() -> tuple[Camera, ...]:
     """The camera list. No live Nepal camera qualified (docs/research/nepal-cameras.md), so every
     camera plays a clip."""
     try:
-        return tuple(Camera(**entry) for entry in json.loads(CAMERAS_FILE.read_text()))
-    except (OSError, TypeError, ValueError):
+        entries = json.loads(CAMERAS_FILE.read_text())
+    except (OSError, ValueError):
         logger.exception("could not read the camera list %s; the Hub has no cameras", CAMERAS_FILE)
         return ()
+    cameras = []
+    for entry in entries:
+        try:
+            cameras.append(Camera(**entry))
+        except (TypeError, ValueError):
+            logger.exception("skipping a malformed camera entry in %s: %r", CAMERAS_FILE, entry)
+    return tuple(cameras)
 
 
 class CameraTile(BaseModel):
@@ -107,10 +114,10 @@ class Cameras:
 
     def _tile(self, camera: Camera, status: Status) -> CameraTile:
         if status == "mesh_only":
-            return self._tile_of(camera, "offline")
+            return self._tile_without_clip(camera, "offline")
         playable = self._playable(camera)
         if playable is None:
-            return self._tile_of(camera, "unavailable")
+            return self._tile_without_clip(camera, "unavailable")
         _, entry = playable
         return CameraTile(
             id=camera.id,
@@ -128,7 +135,7 @@ class Cameras:
         )
 
     @staticmethod
-    def _tile_of(camera: Camera, state: Literal["offline", "unavailable"]) -> CameraTile:
+    def _tile_without_clip(camera: Camera, state: Literal["offline", "unavailable"]) -> CameraTile:
         return CameraTile(
             id=camera.id,
             label=camera.label,
@@ -150,10 +157,10 @@ class Cameras:
         return (files, entry) if files.video.is_file() and files.poster.is_file() else None
 
     def _clip_entry(self, camera: Camera) -> ClipEntry | None:
+        if camera.clip is None:
+            return None
         try:
             manifest = json.loads((self._clips_dir / MANIFEST_FILE).read_text())
-            if camera.clip is None:
-                return None
             clip = manifest["clips"][camera.clip]
             credits = sorted(
                 {clip["sources"][piece["source"]]["credit"] for piece in clip["pieces"]}
