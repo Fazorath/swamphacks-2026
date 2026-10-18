@@ -13,6 +13,8 @@ if [ -f .env ]; then
 fi
 export NODE_ROLE="${NODE_ROLE:-hub}"
 export NODE_NAME="${NODE_NAME:-hub-1}"
+# A Hub also listens for TCP, so a laptop that cannot do Wi-Fi discovery (WSL2, Docker) can dial it.
+[ "$NODE_ROLE" = hub ] && export NODE_ALSO_TCP_LISTEN="${NODE_ALSO_TCP_LISTEN:-1}"
 interval="${INTERVAL:-10}"
 
 node_pid=""
