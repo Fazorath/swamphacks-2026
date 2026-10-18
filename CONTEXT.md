@@ -67,7 +67,7 @@ A Node's location snapped to a grid of about 200 m before anything is published;
 _Avoid_: exact location, coordinates
 
 **Scenario**:
-A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by breadboard buttons. No longer the demo's driver (the Replay is); kept for tests and the breadboard.
+A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by the laptop keyboard or HTTP, or jumped to a named step by a wire touched to a breadboard input. No longer the demo's driver (the Replay is); kept for tests and the breadboard. A press changes only the Pi's own Node and does nothing visible while the Sensor is playing a Replay.
 _Avoid_: demo script, simulation, playback
 
 **Replay**:
@@ -225,6 +225,10 @@ _Avoid_: tile, row, sensor card
 **Hub Panel**:
 The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the Replay controls.
 _Avoid_: admin page, settings, control panel
+
+**Breadboard**:
+The Pi's board of wires and pins that stands in for sensors on stage: plugging a wire from the 3.3 V rail into an input pin is a press that sets the Scenario to that input's step (pressure drop, rain, water rising), and a fourth input resets it. It moves one Node only, so one bad Node cannot raise a Community Warning alone.
+_Avoid_: GPIO panel, controller
 
 **Node Panel**:
 The slide-over shown only on a Node's own screen, holding the Scenario controls and that Node's registration status; never shown to Viewers on other devices.
