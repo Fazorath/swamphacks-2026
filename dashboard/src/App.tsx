@@ -323,7 +323,6 @@ export function App() {
           valleyFlights={valleyFlights}
           weatherLayer={weather.layer}
           weather={weatherReplay}
-          eventT={eventT}
         />
         {phone ? (
           <>

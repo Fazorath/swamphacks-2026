@@ -228,7 +228,6 @@ type Props = {
   // The Weather layer on the terrain, and the Event clock it follows (null: the file's first hour).
   weatherLayer: WeatherLayer;
   weather: WeatherReplay;
-  eventT: number | null;
 };
 
 export function NodeMap({
@@ -267,7 +266,6 @@ export function NodeMap({
   valleyFlights,
   weatherLayer,
   weather,
-  eventT,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -401,6 +399,7 @@ export function NodeMap({
     setOverlay(map, "blocked-roads", blockedData);
   }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
 
+  const eventT = clock?.event_t ?? null;
   // The painted field changes at most once a second, as the polled Event clock does.
   useEffect(() => {
     if (!map || !styleReady) return;
@@ -430,7 +429,6 @@ export function NodeMap({
     };
   }, [map, picking, blocking, onPickHome, onTapRoad]);
 
-  const eventT = clock?.event_t ?? null;
   const waving = river !== null && eventT !== null && warnings.length > 0;
   const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
   const waveStamps = waving
