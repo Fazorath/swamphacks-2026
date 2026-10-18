@@ -81,7 +81,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Shelters | map layer | open Shelters |
   | Route | map layer | none |
   | Storm Signal | map layer | none |
-  | Weather | map layer, one of Wind / Temperature / Cloud cover / Rain / Off (`docs/specs/weather-layers.md`) | none |
+  | Weather | map layer, one of Temperature / Cloud cover / Rain / Off, draped on the terrain (`docs/specs/weather-layers.md`) | none |
   | Cameras | Panel | live cameras |
   | Alerts | Panel | unacknowledged warnings |
 
@@ -123,7 +123,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Nearest open Shelter for you | Open pin with a cyan ring, name always shown |
   | Home | Cyan house icon |
   | Route | 5 px cyan line with a dark casing |
-  | Storm Signal | Slow, static darkening at the map's edges, plus the top-bar pill; the Storm Signal itself shows no animated weather (the Weather layers' wind particles are a separate, chosen layer) |
+  | Storm Signal | Slow, static darkening at the map's edges, plus the top-bar pill; no animated weather anywhere: the Weather layers change only when the Event clock's hour moves |
 
 ## Readings Panel
 

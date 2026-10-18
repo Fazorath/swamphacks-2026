@@ -381,3 +381,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Test every raw vertex of a river against the border, not the simplified ones**: a straight river crossing Nepal simplifies to its two ends, both outside, and was dropped (caught by a test).
 - **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. `Release cache-pack-v4` is not published yet.
 - The map credit, "Boundaries are indicative" and "elevation is approximate" are in the manifest's `nepal` entry; printing them on the map is 0033.
+
+
+## Weather layers regrilled on MapLibre (2026-10-18)
+
+- **A canvas laid over a pitched MapLibre map cannot follow the terrain.** Projecting a lat/lon field onto it cell by cell with `map.project` left the cells apart in 3D (white squares with dark gaps) and floating over the mountains. A MapLibre `image` source on the Nepal box drapes on the terrain and held 60 fps; repaint the image, not the map, when the hour changes.
+- **Wind particles over the map fell to about 3 fps with terrain on** (about 2,000 particles × 7 tail points re-projected every frame), so Wind was dropped: 0056 and 0057 are deleted, 0073 removes `windAt`, `speedBand` and the wind variables.
+- **The valley grid (7 × 5 at 0.1°) is a small patch on the national map**; 0073 moves the Weather Grid to Nepal at 0.5° (153 points, one archive request, about 200 KB). The prototype got all 153 points from the archive in one browser `fetch` (Open-Meteo allows CORS).
+- The prototype is `dashboard/prototype-weather-layers.html` on branch `prototype/weather-layers` (MapLibre 4.7.1 from unpkg, AWS Terrarium terrain); serve the folder with `python3 -m http.server` and use `?variant=A` to `D`.
