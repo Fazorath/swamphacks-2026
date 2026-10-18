@@ -4,7 +4,7 @@
 
 **Blocked by:** 0033, 0063
 
-**Status:** in-progress
+**Status:** done (owner tried it on the demo laptop on 2026-10-18 and accepted the switch and terrain; the fps and p95 numbers below were not recorded)
 
 **Owner:** Fazorath
 
