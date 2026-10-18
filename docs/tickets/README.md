@@ -67,7 +67,7 @@
 | [0064-simulated-fleet-file-and-hub-state](0064-simulated-fleet-file-and-hub-state.md) | done | Fazorath | refloow-0 |
 | [0065-wave-front-and-river-flow](0065-wave-front-and-river-flow.md) | ready-for-agent | unclaimed | leonardorofaDV |
 | [0066-warning-choreography-on-the-map](0066-warning-choreography-on-the-map.md) | ready-for-agent | unclaimed | Fazorath |
-| [0067-3d-terrain-and-the-2d-3d-switch](0067-3d-terrain-and-the-2d-3d-switch.md) | ready-for-agent | unclaimed | Fazorath |
+| [0067-3d-terrain-and-the-2d-3d-switch](0067-3d-terrain-and-the-2d-3d-switch.md) | in-progress | Fazorath | Fazorath |
 | [0068-hand-placed-high-ground-points](0068-hand-placed-high-ground-points.md) | ready-for-agent | unclaimed | refloow-0 |
 | [0069-join-demo-script-for-an-audience-node](0069-join-demo-script-for-an-audience-node.md) | done | leonardorofaDV | leonardorofaDV |
 | [0070-readings-panel-for-a-network](0070-readings-panel-for-a-network.md) | done | Fazorath | Fazorath |
