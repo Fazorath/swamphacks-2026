@@ -7,13 +7,17 @@ import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
+import { latestAlert, officialTag } from "./officialAlerts";
+import { MapLegend } from "./MapLegend";
 import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
+import { NodeSheet } from "./NodeSheet";
+import { PhoneTabs, type PhoneTab } from "./PhoneTabs";
 import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
 import { usePlaces } from "./placeLabels";
-import { nodesOnMap } from "./nodesOnMap";
+import { fleetOnMap, nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { StatusStrip } from "./StatusStrip";
 import { TopBar } from "./TopBar";
@@ -22,6 +26,7 @@ import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
 import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
+import { useContactNotes, useLevelRises } from "./useMarkerEvents";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { useNodeState } from "./useNodeState";
@@ -29,7 +34,9 @@ import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
 import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
+import { useIsPhone, useIsTablet } from "./useViewport";
 import { waveArrival } from "./waveEta";
+import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
 function onThisNodesOwnMachine(): boolean {
@@ -55,6 +62,9 @@ export function App() {
   const eventClock = useEventClock(!unreachable);
   const cameras = useCameras(!unreachable);
   const nodes = nodesOnMap(state);
+  const fleet = fleetOnMap(state);
+  const rises = useLevelRises(nodes);
+  const contactNotes = useContactNotes([...nodes, ...fleet]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
@@ -103,17 +113,20 @@ export function App() {
   });
   const places = usePlaces(cachePack?.nepal != null);
   const warning = officialAlerts.length > 0 || communityWarnings.length > 0;
-  const panels = useOpenPanels(defaultPanels(floodRisk?.level ?? null, warning));
+  const phone = useIsPhone();
+  const [phoneTab, setPhoneTab] = useState<PhoneTab>("map");
+  const panels = useOpenPanels(defaultPanels(floodRisk?.level ?? null, warning), useIsTablet());
   const [warned, setWarned] = useState(false);
   // Opened once, when the first warning arrives; after that the resident's own choices stand.
   if (warning && !warned) {
     setWarned(true);
     panels.show("alerts", "plan");
   }
-  const panel = (name: PanelName) => ({
-    open: panels.open.includes(name),
-    onToggle: () => panels.toggle(name),
-  });
+  // On a phone each tab shows its Panels in full, so there is nothing to collapse.
+  const panel = (name: PanelName) =>
+    phone
+      ? { open: true, onToggle: () => {} }
+      : { open: panels.open.includes(name), onToggle: () => panels.toggle(name) };
   const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
   const toggleLayer = (layer: MapLayerName) =>
     setHiddenLayers((hidden) =>
@@ -150,13 +163,56 @@ export function App() {
     setHubPanelOpen(false);
     setNodePanelOpen(true);
   };
+  const pickHomeOnMap = () => {
+    setPhoneTab("map");
+    setPicking(true);
+  };
   const closePanel = () => {
     setPanelOpen(false);
     setPicking(false);
   };
+  const readingsPanel = (
+    <ReadingsPanel
+      nodes={nodes}
+      floodRisk={floodRisk}
+      selectedId={selectedId}
+      onSelect={toggleSelected}
+      rises={rises}
+      onScenarioChanged={refresh}
+      panel={panel("readings")}
+    />
+  );
+  const alertsPanel = (
+    <AlertsPanel
+      alerts={officialAlerts}
+      warnings={communityWarnings}
+      nodes={lastAnswer?.state.nodes ?? []}
+      thisNodeId={lastAnswer?.state.id ?? ""}
+      appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
+      firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
+      waveArrival={arrival}
+      eventT={eventT}
+      online={state?.status === "online"}
+      panel={panel("alerts")}
+    />
+  );
+  const planPanel = (
+    <EvacuationPlanPanel
+      plan={plan}
+      exampleHome={example !== null}
+      waveArrival={arrival}
+      eventT={eventT}
+      shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
+      panel={panel("plan")}
+    />
+  );
+  const camerasPanel = <CamerasPanel tiles={cameras} panel={panel("cameras")} />;
+  const latestOfficialAlert = latestAlert(officialAlerts);
+  const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
-    <main>
+    <main className={phone ? "phone" : undefined}>
       <TopBar
+        phone={phone}
         eventClock={eventClock.clock}
         floodRisk={floodRisk}
         showStormSignal={shows("storm-signal")}
@@ -182,7 +238,7 @@ export function App() {
           profile={profile}
           home={draftHome}
           hidden={picking}
-          onPickHome={() => setPicking(true)}
+          onPickHome={pickHomeOnMap}
           onSave={save}
           onDelete={remove}
           onClose={closePanel}
@@ -207,6 +263,9 @@ export function App() {
       <div className="stage">
         <NodeMap
           nodes={shows("nodes") ? nodes : []}
+          fleet={shows("fleet") ? fleet : []}
+          rises={rises}
+          stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
           selectedId={selectedId}
           onSelect={toggleSelected}
           home={shownProfile?.home ?? null}
@@ -229,51 +288,80 @@ export function App() {
           onToggleBlocking={() => setBlocking((on) => !on)}
           onTapRoad={tapRoad}
         />
-        <LayerRail
-          hiddenLayers={hiddenLayers}
-          openPanels={panels.open}
-          registeredNodes={nodes.filter((node) => node.registered).length}
-          openShelters={openShelterCount}
-          liveCameras={cameras.filter((tile) => tile.state === "live").length}
-          onToggleLayer={toggleLayer}
-          onTogglePanel={panels.toggle}
-        />
-        <div className="panel-column left">
-          <ReadingsPanel
-            nodes={nodes}
-            floodRisk={floodRisk}
-            selectedId={selectedId}
-            onSelect={toggleSelected}
-            onScenarioChanged={refresh}
-            panel={panel("readings")}
-          />
-        </div>
-        <div className="panel-column right">
-          <AlertsPanel
-            alerts={officialAlerts}
-            warnings={communityWarnings}
-            nodes={lastAnswer?.state.nodes ?? []}
-            thisNodeId={lastAnswer?.state.id ?? ""}
-            appliesToYouIds={plan.officialAlerts.map((alert) => alert.id)}
-            firstCommunityWarningAt={firstSurgeAt(communityWarnings)}
-            waveArrival={arrival}
-            eventT={eventT}
-            online={state?.status === "online"}
-            panel={panel("alerts")}
-          />
-          <EvacuationPlanPanel
-            plan={plan}
-            exampleHome={example !== null}
-            waveArrival={arrival}
-            eventT={eventT}
-            shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
-            panel={panel("plan")}
-          />
-          <CamerasPanel tiles={cameras} panel={panel("cameras")} />
-        </div>
+        {phone ? (
+          <>
+            {phoneTab === "map" && (
+              <div className="phone-map-overlay">
+                {selectedNode && (
+                  <NodeSheet node={selectedNode} onClose={() => setSelectedId(null)} />
+                )}
+                {latestOfficialAlert && (
+                  <p role="status" className="pinned-alert">
+                    <strong>{officialTag(latestOfficialAlert)}</strong>{" "}
+                    {latestOfficialAlert.headline}
+                  </p>
+                )}
+              </div>
+            )}
+            {phoneTab !== "map" && (
+              <div className="phone-pane">
+                {phoneTab === "readings" && (
+                  <>
+                    {readingsPanel}
+                    {camerasPanel}
+                  </>
+                )}
+                {phoneTab === "alerts" && alertsPanel}
+                {phoneTab === "plan" && (
+                  <>
+                    <section aria-label="Household Profile" className="panel">
+                      <div className="panel-head">
+                        <h2>Household Profile</h2>
+                      </div>
+                      <div className="panel-body">
+                        <p>{profile ? "Household profile saved" : "No household profile yet"}</p>
+                        <button type="button" onClick={openPanel}>
+                          {profile ? "My household" : "Set up your household"}
+                        </button>
+                      </div>
+                    </section>
+                    {planPanel}
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <LayerRail
+              hiddenLayers={hiddenLayers}
+              openPanels={panels.open}
+              registeredNodes={nodes.filter((node) => node.registered).length}
+              openShelters={openShelterCount}
+              fleetNodes={fleet.length}
+              liveCameras={cameras.filter((tile) => tile.state === "live").length}
+              onToggleLayer={toggleLayer}
+              onTogglePanel={panels.toggle}
+            />
+            <MapLegend
+              simulated={fleet.length}
+              real={nodes.length}
+              nepal={cachePack?.nepal ?? null}
+            />
+            <div className="panel-column left">{readingsPanel}</div>
+            <div className="panel-column right">
+              {alertsPanel}
+              {planPanel}
+              {camerasPanel}
+            </div>
+            <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
+          </>
+        )}
       </div>
       <StatusStrip
         nodes={nodes}
+        fleetCount={fleet.length}
+        contactNotes={contactNotes}
         identity={identity}
         connecting={connection === "connecting"}
         status={state?.status ?? null}
@@ -282,6 +370,7 @@ export function App() {
         cachePackLoaded={cachePack !== null}
         nepal={cachePack?.nepal ?? null}
       />
+      {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
     </main>
   );
 }

@@ -213,11 +213,10 @@ button:disabled {
 .home-draft-marker {
   width: 28px;
   height: 28px;
-  background: var(--official-bg);
-  border: 2px solid var(--official-tag);
+  background: var(--surface-solid);
+  border: 2px solid var(--accent);
   border-radius: 50%;
-  color: var(--official-ink);
-  font-size: 1.1rem;
+  color: var(--accent);
 }
 
 .home-draft-marker {
@@ -225,14 +224,18 @@ button:disabled {
   border-style: dashed;
 }
 
+/* The Shelter the plan chose: its pin wears a cyan ring and its name always shows. */
 .shelter-marker {
-  width: 28px;
-  height: 28px;
-  background: var(--risk-low);
-  border: 2px solid var(--surface-panel);
-  border-radius: 0.25rem;
-  color: var(--surface-panel);
-  font-size: 1.3rem;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--surface-solid);
+  color: var(--risk-low);
+}
+
+.shelter-marker svg {
+  fill: currentcolor;
 }
 
 .shelter-label {
@@ -446,7 +449,7 @@ section .empty-panel p {
   pointer-events: auto;
 }
 
-@media (hover: hover) and (width > 48rem) {
+@media (hover: hover) and (width >= 56.25rem) {
   .panel {
     background: var(--surface-glass);
     backdrop-filter: blur(12px);
@@ -558,7 +561,8 @@ section p {
 }
 
 .shelter-pin:hover .map-label.label-hidden,
-.shelter-marker:hover .map-label.label-hidden {
+.shelter-marker:hover .map-label.label-hidden,
+.node-marker:hover .map-label.label-hidden {
   display: block;
   z-index: 1;
 }
@@ -576,25 +580,131 @@ section p {
 }
 
 /* A Node is a dot with its label beside it. The fleet's dots and labels grow with the zoom
-   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. */
+   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. Only
+   transform and opacity move; the glow is a static shadow set by the Node's level. */
 .node-marker {
   cursor: pointer;
 }
 
+.node-marker.fleet {
+  cursor: default;
+}
+
 .node-dot {
+  position: relative;
   display: block;
   width: 10px;
   height: 10px;
-  border: 1.5px solid var(--text-primary);
+  border: 1.5px solid var(--map-shadow);
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--risk-low);
+  box-shadow: 0 0 var(--glow, 0px) calc(var(--glow, 0px) / 3) currentcolor;
+  color: transparent;
+  transition:
+    opacity 300ms,
+    background-color 300ms;
 }
 
-.node-marker.simulated .node-dot {
+.node-marker.elevated .node-dot {
+  background: var(--risk-elevated);
+  color: var(--risk-elevated);
+}
+
+.node-marker.high .node-dot {
+  background: var(--risk-high);
+  color: var(--risk-high);
+}
+
+/* REAL Nodes: the state's dot plus a 1.5 px white ring (D-10). */
+.node-marker.real .node-dot {
+  outline: 1.5px solid var(--text-primary);
+  outline-offset: 1.5px;
+}
+
+.node-marker.fleet .node-dot {
   width: calc(5px + 5px * var(--zoom-blend, 0));
   height: calc(5px + 5px * var(--zoom-blend, 0));
-  border-width: 0;
-  background: var(--risk-low);
+  border-width: calc(1.5px * var(--zoom-blend, 0));
+}
+
+.node-marker.stale .node-dot {
+  background: var(--stale);
+  border-color: var(--stale);
+  box-shadow: none;
+}
+
+.node-marker.unverified .node-dot {
+  background: none;
+  border: 1.5px dashed var(--text-dim);
+  box-shadow: none;
+}
+
+/* A pseudo-element, so Selected's cyan ring sits outside a REAL Node's white one. */
+.node-marker.selected .node-dot::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.node-marker.contact-lost .node-dot {
+  opacity: 0.6;
+  box-shadow: none;
+  animation: contact-pulse 1.2s ease-in-out infinite;
+}
+
+/* The grey arc drains from full to empty over the ten seconds before Stale (D-14). */
+.contact-arc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  fill: none;
+  stroke: var(--contact-lost);
+  stroke-width: 1.5;
+}
+
+@keyframes contact-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+/* Once, when the Node's Flood Risk rises (D-13). */
+.rise-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  animation: rise-ring 900ms ease-out 1 forwards;
+  pointer-events: none;
+}
+
+.node-marker.elevated .rise-ring {
+  color: var(--risk-elevated);
+}
+
+.node-marker.high .rise-ring {
+  color: var(--risk-high);
+}
+
+@keyframes rise-ring {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(4);
+  }
 }
 
 .node-label {
@@ -607,43 +717,120 @@ section p {
   white-space: nowrap;
 }
 
-.node-marker.simulated .node-label {
+.node-marker.fleet .node-label {
   opacity: var(--zoom-blend, 0);
 }
 
-.node-marker.stale .node-dot {
-  background: var(--stale);
-  border-color: var(--stale);
+.node-marker.fleet:hover .node-label {
+  display: block;
+  opacity: 1;
 }
 
 .node-marker.stale .node-label {
   color: var(--text-secondary);
 }
 
-.node-marker.selected .node-dot {
-  border-width: 4px;
-}
-
 .node-marker.selected .node-label {
   border-color: var(--accent);
-}
-
-.node-marker.elevated .node-dot {
-  background: var(--risk-elevated);
-}
-
-.node-marker.high .node-dot {
-  background: var(--risk-high);
-}
-
-.node-marker.unverified .node-dot {
-  background: none;
-  border: 1.5px dashed var(--text-dim);
 }
 
 .node-marker.unverified .node-label {
   color: var(--text-dim);
   border-style: dashed;
+}
+
+.water-level.struck {
+  text-decoration: line-through;
+}
+
+.tag.real {
+  color: var(--text-primary);
+}
+
+.tag.contact-lost {
+  color: var(--contact-lost);
+}
+
+.contact-note {
+  color: var(--contact-lost);
+}
+
+.node-card {
+  position: relative;
+}
+
+.card-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--risk-high);
+  opacity: 0;
+  animation: card-flash 600ms ease-out 1;
+  pointer-events: none;
+}
+
+@keyframes card-flash {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The Storm Signal darkens the map's edges, still: no animated weather. */
+.storm-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 55%, var(--scrim) 100%);
+  pointer-events: none;
+}
+
+.map-legend {
+  position: absolute;
+  z-index: 2;
+  bottom: 0.75rem;
+  left: calc(3.75rem + 288px + 0.75rem);
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.map-legend ul {
+  margin: 0 0 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.2rem 0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--risk-low);
+}
+
+.legend-dot.real {
+  outline: 1.5px solid var(--text-primary);
+  outline-offset: 1.5px;
+}
+
+.legend-dot.stale {
+  background: var(--stale);
+}
+
+.legend-dot.wave {
+  background: var(--wave);
 }
 
 .node-map.picking ~ .maplibregl-marker,
@@ -696,60 +883,226 @@ section p {
   padding-left: 1.1rem;
 }
 
-/* Both columns plus a usable map no longer fit: the right column keeps only its headings. */
-@media (48rem < width < 56.25rem) {
-  .panel-column.right {
-    width: 14rem;
-  }
+/* Wave ETA corner card (D-24, treatment A "Beacon"): bottom-right of the map, left of the right
+   Panel column. Only transform and opacity move; the red edge pulse is a pseudo-element's opacity. */
+.wave-eta-card {
+  position: absolute;
+  right: calc(336px + 1.5rem);
+  bottom: 0.75rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 300px;
+  min-height: 190px;
+  padding: 14px 18px 16px;
+  background: var(--surface-glass);
+  border: 2px dashed var(--community-warning);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
 
-  .panel-column.right .panel-body {
-    display: none;
+.wave-eta-head {
+  display: flex;
+  justify-content: space-between;
+  color: var(--community-warning);
+  font: 600 11px/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.wave-eta-number {
+  color: var(--countdown-far);
+  font: 600 120px/1 var(--font-mono);
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 24px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.wave-eta-now {
+  color: var(--countdown-now);
+  font: 700 34px/1.1 var(--font-sans);
+}
+
+.wave-eta-town {
+  color: var(--text-primary);
+  font: 600 14px/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wave-eta-card.soon .wave-eta-number {
+  color: var(--countdown-soon);
+  animation: wave-eta-breathe 2s ease-in-out infinite;
+}
+
+.wave-eta-card.now .wave-eta-number {
+  color: var(--countdown-now);
+}
+
+.wave-eta-card.now::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--countdown-now);
+  border-radius: 10px;
+  animation: wave-eta-edge 2s ease-in-out infinite;
+}
+
+@keyframes wave-eta-breathe {
+  50% {
+    opacity: 0.72;
   }
 }
 
-@media (width <= 48rem) {
-  main {
-    height: auto;
-    min-height: 100vh;
+@keyframes wave-eta-edge {
+  0%,
+  100% {
+    opacity: 0;
   }
 
-  .stage {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-eta-card.soon .wave-eta-number,
+  .wave-eta-card.now::after {
+    animation: none;
   }
 
-  .map-area {
-    position: relative;
-    height: 60vh;
+  .wave-eta-card.now::after {
+    opacity: 1;
   }
+}
 
-  .layer-rail {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0 0.75rem;
-  }
+/* Phone (ui.md): the map fills the screen, the other three tabs cover it, and the tab bar stays
+   under the thumb. Every control is at least 44 px. */
+main.phone {
+  height: 100dvh;
+}
 
-  .panel-column {
-    position: static;
-    width: auto;
-    padding: 0 0.75rem;
-  }
+.phone button,
+.phone input,
+.phone select {
+  min-height: 2.75rem;
+}
 
-  .panel-column.left,
-  .panel-column.right {
-    width: auto;
-  }
+.phone input[type="radio"],
+.phone input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
 
-  .status-strip {
-    flex-wrap: wrap;
-    white-space: normal;
-  }
+.phone label {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-  .map-credit {
-    margin-left: 0;
-  }
+.phone .top-bar {
+  gap: 0.75rem;
+}
+
+.phone .panel {
+  background: var(--surface-solid);
+}
+
+.phone-pane {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+  background: var(--bg-page);
+}
+
+.phone .panel-chevron {
+  display: none;
+}
+
+.phone-tabs {
+  z-index: 3;
+  display: flex;
+  flex: none;
+  background: var(--surface-solid);
+  border-top: 1px solid var(--border);
+}
+
+.phone-tabs button {
+  display: flex;
+  flex: 1;
+  min-height: 3.25rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.phone-tabs button[aria-selected="true"] {
+  color: var(--accent);
+}
+
+.phone-map-overlay {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pinned-alert {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--risk-elevated);
+  border-radius: 0.5rem;
+}
+
+.node-sheet {
+  padding: 0.75rem 1rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.node-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.node-sheet-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.node-sheet-head button {
+  margin-left: auto;
+}
+
+.node-sheet ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.phone .status-strip {
+  flex-wrap: wrap;
+  white-space: normal;
 }
 
 .connection-badge.online {
@@ -1006,18 +1359,21 @@ section p.flood-prone-caption {
   font-size: 0.8rem;
 }
 
+/* An open Shelter is a solid pin; a closed one is hollow and grey (its label says Closed). */
 .shelter-pin {
-  display: grid;
-  place-items: center;
-  background: var(--risk-low);
-  border: 2px solid var(--surface-panel);
-  border-radius: 50%;
-  color: var(--surface-panel);
-  font-weight: bold;
+  width: 22px;
+  height: 22px;
+  color: var(--risk-low);
+}
+
+.shelter-pin svg {
+  fill: currentcolor;
 }
 
 .shelter-pin.closed {
-  background: var(--surface-raised);
-  border-color: var(--text-secondary);
   color: var(--text-secondary);
+}
+
+.shelter-pin.closed svg {
+  fill: none;
 }

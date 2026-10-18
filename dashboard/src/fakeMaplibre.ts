@@ -61,6 +61,16 @@ class FakeMap {
     else this.layerIds.splice(at, 0, layer.id);
   }
 
+  readonly images = new Set<string>();
+
+  addImage(id: string) {
+    this.images.add(id);
+  }
+
+  hasImage(id: string) {
+    return this.images.has(id);
+  }
+
   getSource(id: string) {
     const spec = this.sources.get(id);
     if (!spec) return undefined;

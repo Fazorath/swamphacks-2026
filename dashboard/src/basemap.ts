@@ -25,6 +25,7 @@ export type MapColors = Record<
   | "shadow"
   | "floodProne"
   | "route"
+  | "routeCasing"
   | "blocked",
   string
 >;
@@ -36,8 +37,9 @@ const ROLES: Record<keyof MapColors, string> = {
   border: "--map-border",
   district: "--map-district",
   shadow: "--map-shadow",
-  floodProne: "--accent",
-  route: "--risk-low",
+  floodProne: "--flood-prone",
+  route: "--accent",
+  routeCasing: "--map-shadow",
   blocked: "--risk-high",
 };
 
@@ -48,6 +50,27 @@ export function readMapColors(): MapColors {
     colors[name] = style.getPropertyValue(role).trim();
   }
   return colors;
+}
+
+// The Flood-Prone Area is hatched with diagonal lines, so it reads as approximate ground, not as
+// a solid zone. MapLibre asks for the pattern by name; `hatchImage` draws it without a canvas.
+export const HATCH_IMAGE = "flood-hatch";
+const HATCH_SIZE = 8;
+const HATCH_THICKNESS = 2;
+const FALLBACK_HATCH_RGB = [107, 134, 168];
+
+export function hatchImage(colour: string): { width: number; height: number; data: Uint8Array } {
+  const [red, green, blue] = /^#[0-9a-f]{6}$/i.test(colour)
+    ? [1, 3, 5].map((at) => parseInt(colour.slice(at, at + 2), 16))
+    : FALLBACK_HATCH_RGB;
+  const data = new Uint8Array(HATCH_SIZE * HATCH_SIZE * 4);
+  for (let y = 0; y < HATCH_SIZE; y++) {
+    for (let x = 0; x < HATCH_SIZE; x++) {
+      if ((x + y) % HATCH_SIZE >= HATCH_THICKNESS) continue;
+      data.set([red, green, blue, 255], (y * HATCH_SIZE + x) * 4);
+    }
+  }
+  return { width: HATCH_SIZE, height: HATCH_SIZE, data };
 }
 
 // The data drawn over the map; each is a GeoJSON source the app fills as its props change.
@@ -77,7 +100,7 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         id: "flood-prone-fill",
         type: "fill",
         source: "flood-prone",
-        paint: { "fill-color": colors.floodProne, "fill-opacity": 0.12 },
+        paint: { "fill-pattern": HATCH_IMAGE, "fill-opacity": 0.7 },
       },
       {
         id: "flood-prone-line",
@@ -86,11 +109,18 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         paint: { "line-color": colors.floodProne, "line-width": 2, "line-dasharray": [3, 2] },
       },
       {
+        id: "route-casing",
+        type: "line",
+        source: "route",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": colors.routeCasing, "line-width": 9 },
+      },
+      {
         id: "route",
         type: "line",
         source: "route",
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": colors.route, "line-width": 5, "line-opacity": 0.85 },
+        paint: { "line-color": colors.route, "line-width": 5 },
       },
       {
         id: "blocked-roads",
