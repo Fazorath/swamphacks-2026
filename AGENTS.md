@@ -34,7 +34,7 @@ Run these before calling any ticket done. An agent must not claim "done" without
 
 ## No Pis or sensors
 
-Agents and their drivers currently have **no Raspberry Pis or sensors**; phones are available. Any check that says "unplug the internet" or "over the mesh" is rehearsed on one laptop: two or more Node processes with `NODE_MESH_INTERFACE=loopback`, each with its own `NODE_PORT`, `NODE_LOOPBACK_SLOT` and `NODE_DATA_DIR`, and "no internet" simulated by stopping whatever serves the Cache Pack. A phone on the same Tailscale network can open the dashboard from the laptop's Tailscale address, which covers "renders on a phone". Never report a Pi or sensor check as passed; say it was rehearsed locally and what is still unproven on real devices. The recipe is in `docs/agents/lessons.md`.
+Agents and their drivers currently have **no Raspberry Pis or sensors**; phones are available. Any check that says "unplug the internet" or "over the mesh" is rehearsed on one laptop: two or more Node processes with `NODE_MESH_INTERFACE=loopback`, each with its own `NODE_PORT`, `NODE_LOOPBACK_SLOT` and `NODE_DATA_DIR` (a group that does not start at slot 0 also sets `NODE_LOOPBACK_FIRST_SLOT` to its lowest slot, or it joins every Node below it), and "no internet" simulated by stopping whatever serves the Cache Pack. A phone on the same Tailscale network can open the dashboard from the laptop's Tailscale address, which covers "renders on a phone". Never report a Pi or sensor check as passed; say it was rehearsed locally and what is still unproven on real devices. The recipe is in `docs/agents/lessons.md`.
 
 ## Workflow
 

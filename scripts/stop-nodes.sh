@@ -25,9 +25,9 @@ else
   echo "no running Nodes found."
 fi
 
-# HTTP 8000/8001 (default Nodes), 8101-8103 and TCP 4350-4352 (test_reticulum_nodes.py),
-# 4250-4255 (loopback Reticulum slots 0 to 5).
-ports=(8000 8001 8101 8102 8103 4250 4251 4252 4253 4254 4255 4350 4351 4352)
+# HTTP 8000/8001 (default Nodes), 8101-8103, TCP 4350-4352 and loopback 4310-4312
+# (test_reticulum_nodes.py), 4250-4255 (loopback Reticulum slots 0 to 5).
+ports=(8000 8001 8101 8102 8103 4250 4251 4252 4253 4254 4255 4310 4311 4312 4350 4351 4352)
 
 if ! command -v lsof >/dev/null 2>&1; then
   echo "lsof not found; on Windows check with: Get-NetTCPConnection -State Listen -LocalPort $(IFS=,; echo "${ports[*]}")"
