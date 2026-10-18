@@ -116,7 +116,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 - **Decided 2026-10-17 (ticket 0051):**
   - A Route is dropped when it crosses the Flood-Prone Area, meaning it goes back in after having been out (including a bridge between two road nodes that lie outside it). A Route that starts inside and walks out is kept, because every riverside home starts inside. Its Shelter then has no line and the plan uses the straight-line walking time, as for any Shelter without a Route.
   - Routes honour one-way roads (the Road graph for rerouting still ignores them).
-  - With no saved Household Profile, a pack whose `bbox` covers the valley shows an example home (28.1654, 85.3398, in Syabrubesi, 0.7 km by road from its gompa) so the plan and Route line are on screen at once. It is labelled "Example home, not yours", never stored, and replaced the moment a resident saves a profile. A pack for another area keeps the "fill in your profile" prompt.
+  - With no saved Household Profile, a pack whose `bbox` covers the valley shows an example home (28.1654, 85.3398, in Syabrubesi, with a 3.0 km Route to Komin school) so the plan and Route line are on screen at once. It is labelled "Example home, not yours", never stored, and replaced the moment a resident saves a profile. A pack for another area keeps the "fill in your profile" prompt.
   - The grid starts at 100 m and coarsens to 250 m and then 500 m until the route files fit the 5 MB budget; the build stops if 500 m is still too big.
 
 ### Official Alerts

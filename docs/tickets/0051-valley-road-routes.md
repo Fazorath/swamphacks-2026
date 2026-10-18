@@ -4,7 +4,7 @@
 
 **Blocked by:** 0043, 0048
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** refloow-0
 
@@ -14,4 +14,4 @@
 - [x] A Route that crosses the river corridor is dropped, and the plan falls back to straight-line walking time
 - [x] The Evacuation Plan draws the Route to the chosen Shelter when one exists
 - [x] Seam B tests: a Route through the Flood-Prone Area is not drawn
-- [ ] All **Commands** pass
+- [x] All **Commands** pass (on Windows the two identity-file tests that assert mode `0o600` fail, as on a clean `main`)

@@ -1,7 +1,7 @@
 import type { CachePackContents } from "./evacuationPlan";
 import type { HouseholdProfile } from "./householdProfile";
 
-// A home in Syabrubesi, under a kilometre by road from its gompa, shown until a resident saves their own
+// A home in Syabrubesi, with a Route to Komin school in the pack, shown until a resident saves their own
 // so the Evacuation Plan and its Route line are on screen from the first load. Never stored.
 const EXAMPLE_HOUSEHOLD: HouseholdProfile = {
   home: { lat: 28.1654, lon: 85.3398 },
