@@ -40,6 +40,7 @@ import { useNodeState } from "./useNodeState";
 import { usePager } from "./usePager";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
+import { waterReaches as waterReachesAt } from "./risingWater";
 import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
@@ -104,6 +105,9 @@ export function App() {
   // Wi-Fi drop is worse than showing one a few seconds old.
   const officialAlerts = lastAnswer?.state.official_alerts ?? [];
   const communityWarnings = lastAnswer?.state.community_warnings ?? [];
+  const eventNow = eventClock.clock?.event_t ?? null;
+  const waterReaches =
+    river && eventNow !== null ? waterReachesAt(river, communityWarnings, nodes, eventNow) : [];
   // The home never leaves the device: the profile's, or else where the connected Node sits.
   const thisNode = lastAnswer?.state.nodes.find((node) => node.id === lastAnswer.state.id);
   const waveHome: Home | null =
@@ -350,6 +354,7 @@ export function App() {
           weatherLayer={weather.layer}
           weather={weatherData}
           weatherAtMs={weatherAtMs}
+          waterReaches={waterReaches}
         />
         {phone ? (
           <>
@@ -450,6 +455,7 @@ export function App() {
         cachePackLoaded={cachePack !== null}
         nepal={cachePack?.nepal ?? null}
         terrainDropped={terrainDropped}
+        waterDrawn={waterReaches.length > 0}
       />
       {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
       <WarningTakeover
