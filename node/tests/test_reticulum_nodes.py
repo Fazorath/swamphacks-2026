@@ -15,6 +15,7 @@ from storm_shield.reticulum_mesh import LOOPBACK_BASE_PORT
 FIRST_HTTP_PORT = 8101
 FIRST_TCP_PORT = 4350
 # Its own loopback group, clear of the slots people run Nodes in by hand, so none of those dial in.
+# scripts/stop-nodes.sh lists the ports this group listens on.
 FIRST_LOOPBACK_SLOT = 60
 NODE_COUNT = 3
 

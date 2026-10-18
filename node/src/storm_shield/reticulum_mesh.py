@@ -50,6 +50,11 @@ def _interface_config(settings: Settings) -> str:
         listen_ip, listen_port = "0.0.0.0", settings.tcp_port
         dials = [_peer_address(entry, settings.tcp_port) for entry in _entries(settings.tcp_peers)]
     else:
+        if not 0 <= settings.loopback_first_slot <= settings.loopback_slot:
+            raise ValueError(
+                f"NODE_LOOPBACK_FIRST_SLOT {settings.loopback_first_slot} must be between 0 and "
+                f"NODE_LOOPBACK_SLOT {settings.loopback_slot}"
+            )
         listen_ip, listen_port = "127.0.0.1", LOOPBACK_BASE_PORT + settings.loopback_slot
         dials = [
             ("127.0.0.1", LOOPBACK_BASE_PORT + slot)
