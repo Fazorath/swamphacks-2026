@@ -4,13 +4,12 @@ import logging
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Literal
+
+from storm_shield.settings import GpioMode
 
 logger = logging.getLogger(__name__)
 
-GpioMode = Literal["auto", "on", "off"]
-
-# BCM pin numbers; pi/README.md lists the same table with the physical pin numbers.
+# BCM pin numbers; change pi/README.md's pin table with them.
 STEP_PINS: dict[int, str] = {17: "pressure_drop", 27: "rain", 22: "water_rising"}
 RESET_PIN = 23
 
@@ -27,6 +26,17 @@ def runs_on_a_raspberry_pi() -> bool:
         return False
 
 
+def _logging_failures(action: Callable[[], None]) -> Callable[[], None]:
+    def run() -> None:
+        try:
+            action()
+        except Exception:
+            # gpiozero calls this on its own thread; one bad press must not end the board.
+            logger.exception("could not act on a Breadboard press")
+
+    return run
+
+
 class Breadboard:
     """Releasing a wire does nothing, so taking a hand off the board never undoes the storm."""
 
@@ -34,30 +44,28 @@ class Breadboard:
         # Imported here so a laptop without the library never needs it.
         from gpiozero import Button
 
-        def pressed(do: Callable[[], None]) -> Callable[[], None]:
-            def on_press() -> None:
-                try:
-                    do()
-                except Exception:
-                    # gpiozero calls this on its own thread; one bad press must not end the board.
-                    logger.exception("could not act on a Breadboard press")
-
-            return on_press
-
         actions: dict[int, Callable[[], None]] = {
             pin: partial(jump_to, step) for pin, step in STEP_PINS.items()
         }
         actions[RESET_PIN] = reset
         self._buttons = []
-        for pin, action in actions.items():
-            # pull_up=False uses the Pi's pull-down, so an empty pin reads "not pressed".
-            button = Button(pin, pull_up=False, bounce_time=DEBOUNCE_SECONDS)
-            button.when_pressed = pressed(action)
-            self._buttons.append(button)
+        try:
+            for pin, action in actions.items():
+                # pull_up=False uses the Pi's pull-down, so an empty pin reads "not pressed".
+                button = Button(pin, pull_up=False, bounce_time=DEBOUNCE_SECONDS)
+                self._buttons.append(button)
+                button.when_pressed = _logging_failures(action)
+        except Exception:
+            # A pin that cannot be read must not leave the earlier ones held.
+            self.close()
+            raise
 
     def close(self) -> None:
         for button in self._buttons:
-            button.close()
+            try:
+                button.close()
+            except Exception:
+                logger.exception("could not release a Breadboard pin")
 
 
 def open_breadboard(

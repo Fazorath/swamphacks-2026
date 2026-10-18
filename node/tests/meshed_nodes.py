@@ -5,7 +5,6 @@ from typing import Any, Literal
 import httpx
 from fastapi.testclient import TestClient
 
-from storm_shield.breadboard import GpioMode
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.community_warning import CommunityWarning
@@ -14,7 +13,7 @@ from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
 from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
-from storm_shield.settings import Settings
+from storm_shield.settings import GpioMode, Settings
 from storm_shield.shelter_status import ShelterStatus
 
 HUB = "hub"

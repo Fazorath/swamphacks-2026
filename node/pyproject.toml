@@ -12,7 +12,8 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest", "ruff", "mypy", "gpiozero"]
-# Only the Pi reads the Breadboard; pi/README.md covers the lgpio backend it also needs.
+# What the Pi installs to read the Breadboard (dev has it too, for the tests' mock pins);
+# pi/README.md covers the lgpio backend it also needs.
 pi = ["gpiozero"]
 
 [project.scripts]

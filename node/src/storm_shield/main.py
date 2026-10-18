@@ -187,12 +187,12 @@ def create_app(
             scenario.go_to(step_name)
             publisher.share()
 
-    def press_reset() -> None:
+    def reset_the_scenario() -> None:
         with publisher.lock:
             scenario.reset()
             publisher.share()
 
-    breadboard = open_breadboard(settings.gpio, press_a_step, press_reset)
+    breadboard = open_breadboard(settings.gpio, press_a_step, reset_the_scenario)
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
@@ -566,8 +566,7 @@ def create_app(
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
         with publisher.lock:
-            scenario.reset()
-            publisher.share()
+            reset_the_scenario()
             return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")

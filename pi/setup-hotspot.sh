@@ -26,18 +26,24 @@ case "$action" in
     fi
     # Recreate rather than edit, so running this twice leaves one hotspot.
     nmcli connection delete "$connection" >/dev/null 2>&1 || true
-    # "shared" hands out addresses to the people who join but, with no upstream, routes nowhere.
-    # IPv6 link-local is what Reticulum's AutoInterface uses to find the other Nodes.
-    # autoconnect is off on purpose: the hotspot never starts by itself at boot.
+    # "shared" hands out addresses to the people who join (phones need DHCP), but it also shares
+    # whatever uplink the Pi has: with Ethernet plugged in, the hotspot has internet. The demo
+    # needs the Pi's cable out. IPv6 link-local is what Reticulum's AutoInterface uses to find
+    # the other Nodes. autoconnect is off on purpose: the hotspot never starts by itself at boot.
     nmcli connection add type wifi ifname wlan0 con-name "$connection" autoconnect no \
       ssid "$HOTSPOT_SSID" 802-11-wireless.mode ap 802-11-wireless.band bg \
-      wifi-sec.key-mgmt wpa-psk wifi-sec.psk "$HOTSPOT_PASSWORD" \
-      ipv4.method shared ipv6.method link-local >/dev/null
+      wifi-sec.key-mgmt wpa-psk wifi-sec.proto rsn wifi-sec.pairwise ccmp wifi-sec.group ccmp \
+      wifi-sec.psk "$HOTSPOT_PASSWORD" ipv4.method shared ipv6.method link-local >/dev/null
+    if nmcli -t -f TYPE,STATE device | grep -q '^ethernet:connected'; then
+      echo "hotspot: warning: Ethernet is connected, so the hotspot shares its internet." >&2
+      echo "hotspot: unplug it before the demo." >&2
+    fi
     nmcli connection up "$connection"
     echo "hotspot: '$HOTSPOT_SSID' is up; the Pi is at 10.42.0.1"
     ;;
   down)
-    nmcli connection down "$connection"
+    # Already down is the state asked for, not an error.
+    nmcli connection down "$connection" >/dev/null 2>&1 || true
     echo "hotspot: down"
     ;;
   *)

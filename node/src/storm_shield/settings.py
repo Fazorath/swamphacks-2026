@@ -4,11 +4,10 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from storm_shield.breadboard import GpioMode
-
 Role = Literal["sensor", "hub"]
 MeshKind = Literal["reticulum", "memory"]
 ReticulumInterface = Literal["auto", "loopback", "tcp"]
+GpioMode = Literal["auto", "on", "off"]
 
 
 class Settings(BaseSettings):

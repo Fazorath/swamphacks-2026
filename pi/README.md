@@ -46,8 +46,9 @@ pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
 ```
 
 - It never starts at boot. Run `up` yourself.
-- The Pi's Wi-Fi is the access point while it is up, so it cannot also join another Wi-Fi. Use Ethernet to SSH in.
-- There is no internet through it, which is the point: unplugging the Hub laptop's tether is "internet off".
+- The Pi's Wi-Fi is the access point while it is up, so it cannot also join another Wi-Fi. While setting up, SSH in over Ethernet; once the hotspot is on you can also SSH to `10.42.0.1` from a laptop that joined it.
+- The hotspot hands out addresses (phones need that) and shares whatever uplink the Pi has. **With Ethernet plugged into the Pi, hotspot clients have internet.** Unplug the Pi's cable before the demo so "internet off" is real; the script warns if Ethernet is connected. The Pi has no other uplink, so unplugging the Hub laptop's tether then cuts the internet.
+- The password is passed to `nmcli` as an argument, so another user on the Pi could see it in `ps` for a moment. Quote values in `.env` that contain spaces or `$` (the script reads the file as shell, like `scripts/run-live.sh`).
 - The Pi is at `10.42.0.1`. Phones open `http://10.42.0.1:8000` or the Hub's address.
 - If it misbehaves, a phone's hotspot is the fallback: AutoInterface already worked over an iPhone hotspot (`docs/agents/lessons.md`, ticket 0004).
 
@@ -55,6 +56,7 @@ pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
 
 - [ ] Rail measured at 3.3 V.
 - [ ] `pi/setup-hotspot.sh up`; a laptop joins the hotspot and opens the Pi's dashboard.
+- [ ] With the Pi's Ethernet unplugged, a phone on the hotspot has no internet.
 - [ ] Touching each of the three step wires changes the Scenario step and the readings on the laptop's dashboard.
 - [ ] The reset wire returns it to normal day.
 - [ ] Unplugging a wire changes nothing, and an unplugged pin never presses by itself.
