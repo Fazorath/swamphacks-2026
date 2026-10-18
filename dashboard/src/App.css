@@ -78,6 +78,9 @@ h1 {
   color: var(--text-secondary);
   font-size: 0.75rem;
   white-space: nowrap;
+  /* Its nowrap items add up to about 960 px; without this they widen the page sideways on a
+     narrower window and the Panel columns sit out of view. */
+  overflow: hidden;
 }
 
 .simulated-badge {
@@ -691,6 +694,17 @@ section p {
 .node-card ul {
   margin: 0;
   padding-left: 1.1rem;
+}
+
+/* Both columns plus a usable map no longer fit: the right column keeps only its headings. */
+@media (48rem < width < 56.25rem) {
+  .panel-column.right {
+    width: 14rem;
+  }
+
+  .panel-column.right .panel-body {
+    display: none;
+  }
 }
 
 @media (width <= 48rem) {
