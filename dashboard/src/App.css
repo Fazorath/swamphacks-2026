@@ -307,9 +307,11 @@ button:disabled {
   color: var(--text-primary);
 }
 
+/* The pin keeps its ink outline; the nearest point gains a cyan ring around it (D-43). */
 .high-ground-pin.nearest {
-  color: var(--accent);
-  filter: drop-shadow(0 0 2px var(--accent));
+  box-sizing: content-box;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
 }
 
 .high-ground-label {

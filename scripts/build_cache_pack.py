@@ -175,7 +175,9 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
         key_places = load_key_places(SOURCE_DIR / "key_places.source.json")
         nepal_files, manifest_extras["nepal"] = build_nepal_bundle(client, VALLEY_BBOX, key_places)
         files.update(nepal_files)
-        elevation = {path: tile for path, tile in nepal_files.items() if path.startswith("elevation/")}
+        elevation = {
+            path: tile for path, tile in nepal_files.items() if path.startswith("elevation/")
+        }
         river_lines = json.loads(files["river.geojson"])["features"]
         high_ground = build_high_ground(
             load_high_ground(SOURCE_DIR / "high_ground.source.json"),

@@ -81,7 +81,7 @@ def test_a_point_that_climbs_too_little_is_refused() -> None:
 
 
 def test_a_point_with_no_town_near_it_is_refused() -> None:
-    with pytest.raises(ValueError, match="over 2 km from Syabrubesi"):
+    with pytest.raises(ValueError, match="over 2000 m from Syabrubesi"):
         build(point(pos=[28.03, 85.0]))
     with pytest.raises(ValueError, match="no key place called Nowhere"):
         build(point(town="Nowhere"))

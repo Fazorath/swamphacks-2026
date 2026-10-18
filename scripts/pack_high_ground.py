@@ -69,13 +69,21 @@ def build_high_ground(
             raise ValueError(f"high-ground point {name}: no key place called {each['town']}")
         town = anchors[each["town"]]
         if distance_m(town, position) > MAX_TOWN_DISTANCE_M:
-            raise ValueError(f"high-ground point {name} is over 2 km from {each['town']}")
+            raise ValueError(
+                f"high-ground point {name} is over {MAX_TOWN_DISTANCE_M} m from {each['town']}"
+            )
         if _near_corridor(position, corridor):
-            raise ValueError(f"high-ground point {name} is in or within 100 m of the Flood-Prone Area")
+            raise ValueError(
+                f"high-ground point {name} is in or within {CORRIDOR_MARGIN_M} m of the "
+                "Flood-Prone Area"
+            )
         nearest_river = min(river, key=lambda vertex: distance_m(vertex, position))
         climb = round(elevation_at(*position) - elevation_at(*nearest_river))
         if climb < MIN_CLIMB_M:
-            raise ValueError(f"high-ground point {name} is only {climb} m above the river")
+            raise ValueError(
+                f"high-ground point {name} is only {climb} m above the river "
+                f"(least allowed: {MIN_CLIMB_M} m)"
+            )
         built.append(
             {
                 "id": name,
