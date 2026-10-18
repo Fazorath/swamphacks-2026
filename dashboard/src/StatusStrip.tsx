@@ -2,6 +2,7 @@ import { agoWords } from "./agoWords";
 import type { NepalMap } from "./evacuationPlan";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { NodeState } from "./nodeState";
+import { SimulatedBadge } from "./SimulatedBadge";
 import type { CameraTile } from "./useCameras";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
@@ -15,6 +16,10 @@ function mapCredit(nepal: NepalMap | null): string {
 
 type Props = {
   nodes: NodeOnMap[];
+  // The Simulated Fleet's size; zero when this Node's pack has no fleet file.
+  fleetCount: number;
+  // Nodes that went quiet or came back, already worded.
+  contactNotes: string[];
   identity: Pick<NodeState, "name" | "role"> | null;
   connecting: boolean;
   status: NodeState["status"] | null;
@@ -26,6 +31,8 @@ type Props = {
 
 export function StatusStrip({
   nodes,
+  fleetCount,
+  contactNotes,
   identity,
   connecting,
   status,
@@ -39,11 +46,19 @@ export function StatusStrip({
   const camerasLive = cameras.some((camera) => camera.state === "live");
   return (
     <footer className="status-strip" aria-label="Status">
-      {nodes.length > 0 && (
-        <span className="simulated-badge">
-          {simulated} simulated · {nodes.length - simulated} real
+      {nodes.length > 0 &&
+        (fleetCount > 0 ? (
+          <SimulatedBadge simulated={fleetCount} real={nodes.length} nepal={nepal} />
+        ) : (
+          <span className="simulated-badge">
+            {simulated} simulated · {nodes.length - simulated} real
+          </span>
+        ))}
+      {contactNotes.map((note) => (
+        <span key={note} className="contact-note">
+          {note}
         </span>
-      )}
+      ))}
       <span>Readings {youngest === null ? "none yet" : agoWords(youngest)}</span>
       <span>
         Cache Pack{" "}
