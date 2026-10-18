@@ -499,19 +499,17 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
 
-<<<<<<< HEAD
 ## Temperature, cloud cover and rain on the terrain (ticket 0055)
 
 - **The weather picture is a MapLibre `image` source made from a canvas data address**, rows spaced in Mercator so places stay where the data puts them. jsdom has no canvas, so `setup.ts` mocks `weatherImageUrl` with a pixel checksum; tests tell pictures apart by that address, and `paintWeatherField` is tested on its raw pixels.
 - **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
 - **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.
-=======
+
 ## Readings card motion (ticket 0037)
 
 - **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.
 - **A flash is a remount**: `ReadingSlot` bumps a key when its value changes, so the CSS animation restarts. Reduced motion is checked in the components (`usePrefersReducedMotion`, test switch `setReducedMotion`) and in a media query.
 - **Not done / not seen in a browser:** Stale dims by opacity only (desaturating needs `filter`, outside the transform/opacity rule); the chip fades in without fading the old one out; every card fades in on mount, not only new Nodes; the row slots have no fixed width of their own (the three grid columns do).
->>>>>>> origin/main
 
 ## Flood alert email (ticket 0081)
 
