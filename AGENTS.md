@@ -20,6 +20,7 @@ Run these before calling any ticket done. An agent must not claim "done" without
 | Task | Command |
 |---|---|
 | Install | `cd node && uv sync` and `cd dashboard && pnpm install` |
+| Install on a Raspberry Pi | `pi/install.sh` (system libraries for the pin backend, then `uv sync --group pi`; always sync with `--group pi` on the Pi) |
 | Build dashboard | `cd dashboard && pnpm build` |
 | Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
 | Keep a Node on your checkout | `scripts/run-live.sh` (rebuilds and restarts whenever `HEAD` moves, e.g. after `git pull`) |
