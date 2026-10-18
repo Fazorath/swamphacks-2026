@@ -369,3 +369,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The 15 km rule dropped Chatara** (13.9 km from Dharan). The source coordinates are typed from memory and unchecked on a map; 0035 verifies them.
 - **A track is cut at `silent_at`**, so the Node needs no silent logic: it reads the last point at or before the Event clock and ages from there.
 - The Node reads `fleet.json` through `SimulatedFleet`, which re-parses only when the file's modified time changes; it never touches the Mesh, `ReadingStore` or the registry, so a Surging entry cannot move Flood Risk.
+
+## Nepal vector Cache Pack (ticket 0063)
+
+- **Real build, 2026-10-18** (`scripts/build_cache_pack.py`, no key, no `--roads-pbf`, no raster tiles): 8.4 MB zip. Vectors 0.8 MB (border 0.07, districts 0.07, rivers 0.60 with 1,807 lines, places 0.06 with 442), elevation 8.16 MB in 113 tiles (zoom 5 to 8 over Nepal, 9 to 12 over the valley). That is about 6 MB more than v3's 2.4 MB, inside the ticket's 6 to 10 MB. Elevation PNGs do not compress, so the budget counts raw bytes. Run it again with `--roads-pbf` for the road graph and Routes; that was not done here.
+- **geoBoundaries licences differ per level**: ADM0 is CC BY 4.0, ADM2 (75 districts) Public Domain, ADM1 CC BY 3.0 IGO. The build copies each from the API metadata, so check the README table if the dataset is rebuilt.
+- **Overpass answers 406 without a `User-Agent` and 502 now and then**; the builder sends one and retries through `pack_weather.ATTEMPTS`. The river query is 40 MB of raw geometry (7,315 ways) and takes a minute or two.
+- **Syabrubesi and Timure are not in the places layer**: OpenStreetMap has no Latin `name:en` for them. Only Betrawati and Trishuli of the valley towns appear.
+- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. `Release cache-pack-v4` is not published: the repo is private, so nobody outside the team can download it either way.
+- The map credit and "Boundaries are indicative" are in the manifest's `nepal` entry; printing them on the map is 0033.
+
