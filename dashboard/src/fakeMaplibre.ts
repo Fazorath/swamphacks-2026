@@ -13,6 +13,7 @@ class FakeMap {
   readonly glyphs: string | undefined;
   readonly sprite: string | undefined;
   readonly fitted: unknown[] = [];
+  readonly eased: unknown[] = [];
   private readonly handlers = new Map<string, Handler[]>();
 
   constructor(options: {
@@ -80,6 +81,10 @@ class FakeMap {
 
   fitBounds(bounds: unknown) {
     this.fitted.push(bounds);
+  }
+
+  easeTo(options: unknown) {
+    this.eased.push(options);
   }
 
   remove() {

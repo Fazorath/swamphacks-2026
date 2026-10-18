@@ -8,8 +8,10 @@ import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
 import type { Home } from "./householdProfile";
+import { LayerRail, type MapLayerName } from "./LayerRail";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
+import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
 import { usePlaces } from "./placeLabels";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
@@ -34,21 +36,14 @@ function onThisNodesOwnMachine(): boolean {
   return ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 }
 
+// Pixels from the map's edge that an open Panel covers: the rail and the left Panel, and the right
+// Panels (see .panel-column in App.css).
+const PANEL_ROOM = { left: 368, right: 360 };
+
 const STORAGE_PROBLEM_MESSAGES: Record<StorageProblem, string> = {
   unreadable:
     "Your saved household profile could not be read, so it is treated as missing. It was not deleted.",
   unsaved: "Your household profile will not be remembered after you close this page.",
-};
-
-type PanelName = "readings" | "alerts" | "plan" | "cameras";
-
-// A calm day shows the Readings and nothing else (D-50); a warning or an Alert opens the Alerts
-// and the Evacuation Plan.
-const CALM_PANELS: Record<PanelName, boolean> = {
-  readings: true,
-  alerts: false,
-  plan: false,
-  cameras: false,
 };
 
 export function App() {
@@ -107,18 +102,32 @@ export function App() {
     wave: planWave,
   });
   const places = usePlaces(cachePack?.nepal != null);
-  const [openPanels, setOpenPanels] = useState(CALM_PANELS);
-  const [warned, setWarned] = useState(false);
   const warning = officialAlerts.length > 0 || communityWarnings.length > 0;
+  const panels = useOpenPanels(defaultPanels(floodRisk?.level ?? null, warning));
+  const [warned, setWarned] = useState(false);
   // Opened once, when the first warning arrives; after that the resident's own choices stand.
   if (warning && !warned) {
     setWarned(true);
-    setOpenPanels((open) => ({ ...open, alerts: true, plan: true }));
+    panels.show("alerts", "plan");
   }
   const panel = (name: PanelName) => ({
-    open: openPanels[name],
-    onToggle: () => setOpenPanels((open) => ({ ...open, [name]: !open[name] })),
+    open: panels.open.includes(name),
+    onToggle: () => panels.toggle(name),
   });
+  const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
+  const toggleLayer = (layer: MapLayerName) =>
+    setHiddenLayers((hidden) =>
+      hidden.includes(layer) ? hidden.filter((each) => each !== layer) : [...hidden, layer],
+    );
+  const shows = (layer: MapLayerName) => !hiddenLayers.includes(layer);
+  const openShelterCount = (cachePack?.shelters ?? []).filter((each) =>
+    openShelterIds.includes(each.id),
+  ).length;
+  // Room the open Panels take, so the map can keep the selected Node clear of them.
+  const panelRoom = {
+    left: panels.open.includes("readings") ? PANEL_ROOM.left : 0,
+    right: panels.open.some((name) => name !== "readings") ? PANEL_ROOM.right : 0,
+  };
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [nodePanelOpen, setNodePanelOpen] = useState(false);
@@ -150,6 +159,7 @@ export function App() {
       <TopBar
         eventClock={eventClock.clock}
         floodRisk={floodRisk}
+        showStormSignal={shows("storm-signal")}
         status={state?.status ?? null}
         householdSaved={profile !== null}
         onOpenHousehold={openPanel}
@@ -196,18 +206,19 @@ export function App() {
       )}
       <div className="stage">
         <NodeMap
-          nodes={nodes}
+          nodes={shows("nodes") ? nodes : []}
           selectedId={selectedId}
           onSelect={toggleSelected}
           home={shownProfile?.home ?? null}
-          shelters={cachePack?.shelters ?? []}
+          shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
           openShelterIds={openShelterIds}
-          floodProne={cachePack?.floodProne ?? null}
+          floodProne={shows("flood-prone") ? (cachePack?.floodProne ?? null) : null}
           nepal={cachePack?.nepal ?? null}
           places={places}
           river={river}
           shelter={plan.shelter}
-          route={plan.route}
+          route={shows("route") ? plan.route : null}
+          panelRoom={panelRoom}
           draftHome={panelOpen ? draftHome : null}
           picking={picking}
           onPickHome={setDraftHome}
@@ -217,6 +228,15 @@ export function App() {
           blocking={blocking}
           onToggleBlocking={() => setBlocking((on) => !on)}
           onTapRoad={tapRoad}
+        />
+        <LayerRail
+          hiddenLayers={hiddenLayers}
+          openPanels={panels.open}
+          registeredNodes={nodes.filter((node) => node.registered).length}
+          openShelters={openShelterCount}
+          liveCameras={cameras.filter((tile) => tile.state === "live").length}
+          onToggleLayer={toggleLayer}
+          onTogglePanel={panels.toggle}
         />
         <div className="panel-column left">
           <ReadingsPanel
