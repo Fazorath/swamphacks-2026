@@ -72,7 +72,7 @@
 | [0069-join-demo-script-for-an-audience-node](0069-join-demo-script-for-an-audience-node.md) | done | leonardorofaDV | leonardorofaDV |
 | [0070-readings-panel-for-a-network](0070-readings-panel-for-a-network.md) | ready-for-agent | unclaimed | Fazorath |
 | [0071-rising-water-sheet](0071-rising-water-sheet.md) | ready-for-agent | unclaimed | Fazorath |
-| [0072-wave-eta-corner-card](0072-wave-eta-corner-card.md) | ready-for-agent | unclaimed | Fazorath |
+| [0072-wave-eta-corner-card](0072-wave-eta-corner-card.md) | in-progress | Fazorath | Fazorath |
 | [0073-nepal-wide-weather-grid](0073-nepal-wide-weather-grid.md) | done | Fazorath | Fazorath |
 | [0074-find-live-cameras-in-nepal](0074-find-live-cameras-in-nepal.md) | in-progress | leonardorofaDV | leonardorofaDV |
 | [0075-camera-list-with-live-or-clip-sources](0075-camera-list-with-live-or-clip-sources.md) | ready-for-agent | unclaimed | refloow-0 |
