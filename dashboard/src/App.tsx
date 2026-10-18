@@ -13,7 +13,8 @@ import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
 import { useWeatherLayer } from "./weatherLayer";
 import { WeatherLegend } from "./WeatherLegend";
-import { useWeatherReplay } from "./useWeatherReplay";
+import { useForecastTime } from "./useForecastTime";
+import { useWeatherGrid } from "./useWeatherGrid";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { NodeSheet } from "./NodeSheet";
@@ -137,7 +138,14 @@ export function App() {
       ? { open: true, onToggle: () => {} }
       : { open: panels.open.includes(name), onToggle: () => panels.toggle(name) };
   const weather = useWeatherLayer();
-  const weatherReplay = useWeatherReplay(weather.layer !== "off");
+  // A Replay shows the recorded weather on the Event clock; with none running, the Hub's forecast.
+  const replaying = eventClock.clock !== null;
+  const forecastTime = useForecastTime();
+  const weatherData = useWeatherGrid(
+    weather.layer !== "off" && eventClock.heard,
+    replaying ? "replay" : "forecast",
+  );
+  const weatherAtMs = eventClock.clock ? eventClock.clock.event_t * 1000 : forecastTime.atMs;
   const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
   const toggleLayer = (layer: MapLayerName) =>
     setHiddenLayers((hidden) =>
@@ -322,7 +330,8 @@ export function App() {
           onTerrainSlow={() => setTerrainDropped(true)}
           valleyFlights={valleyFlights}
           weatherLayer={weather.layer}
-          weather={weatherReplay}
+          weather={weatherData}
+          weatherAtMs={weatherAtMs}
         />
         {phone ? (
           <>
@@ -385,7 +394,14 @@ export function App() {
               weatherLayer={weather.layer}
               onChooseWeather={weather.choose}
             />
-            <WeatherLegend layer={weather.layer} weather={weatherReplay} />
+            <WeatherLegend
+              layer={weather.layer}
+              weather={weatherData}
+              replaying={replaying}
+              nowMs={forecastTime.nowMs}
+              forecastHours={forecastTime.hours}
+              onForecastHours={forecastTime.setHours}
+            />
             <MapLegend
               simulated={fleet.length}
               real={nodes.length}
