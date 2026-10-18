@@ -205,6 +205,13 @@ button:disabled {
   font-weight: bold;
 }
 
+.out-of-reach-line {
+  stroke: var(--risk-low);
+  stroke-width: 3;
+  stroke-opacity: 0.7;
+  stroke-dasharray: 4 8;
+}
+
 .shelter-marker.out-of-reach {
   background: transparent;
   border: 2px dashed var(--risk-low);

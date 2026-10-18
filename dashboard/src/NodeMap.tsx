@@ -176,6 +176,13 @@ export function NodeMap({
         )}
         {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
         {route && <Polyline positions={route} className="evacuation-route" />}
+        {home && outOfReachShelter && (
+          <Polyline
+            positions={[[home.lat, home.lon], outOfReachShelter.pos]}
+            className="out-of-reach-line"
+            interactive={false}
+          />
+        )}
         <PackLayers
           shelters={shelters}
           openShelterIds={openShelterIds}

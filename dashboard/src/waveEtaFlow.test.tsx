@@ -216,4 +216,5 @@ test("a Shelter the resident cannot reach in time becomes higher ground", async 
     expect(document.querySelectorAll(".shelter-marker.out-of-reach")).toHaveLength(1),
   );
   expect(document.querySelector(".evacuation-route")).toBeNull();
+  expect(document.querySelectorAll(".out-of-reach-line")).toHaveLength(1);
 });
