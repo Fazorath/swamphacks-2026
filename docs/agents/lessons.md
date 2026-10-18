@@ -521,3 +521,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
 - **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
 - **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
+
+## Peer Mesh in Docker grilling (2026-10-18)
+
+- **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
+- **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
+- **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.
