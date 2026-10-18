@@ -510,6 +510,20 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Check vitest's exit code and its "Errors" line, not only the test counts**: a click handler that throws in jsdom (`AudioContext is not defined`, hit by another file's click once `main` brought new tests) shows as "Uncaught Exception" and "Errors 2 errors" while every test still passes, and `scripts/check.sh` fails the run. `armPagerSound` now warns instead of throwing when the browser has no Web Audio.
 
 
+## Temperature, cloud cover and rain on the terrain (ticket 0055)
+
+- **The weather picture is a MapLibre `image` source made from a canvas data address**, rows spaced in Mercator so places stay where the data puts them. jsdom has no canvas, so `setup.ts` mocks `weatherImageUrl` with a pixel checksum; tests tell pictures apart by that address, and `paintWeatherField` is tested on its raw pixels.
+- **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
+- **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.
+
+## Wave front and river flow (ticket 0065)
+
+- **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
+- **An effect that needs a layer added by another effect must be called after it in the same component**: child effects run before the parent's, so a `WaveLayers` child looked for the `river-flow` layer before `addNepalBasemap` had added it and never retried. `useRiverFlow` is a hook called below the basemap effect in `NodeMap`. `react-hooks/set-state-in-effect` rejects the "set a ready flag" alternative.
+- **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
+- **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
+- Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
+
 ## Readings card motion (ticket 0037)
 
 - **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.
@@ -521,7 +535,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Hub's email is separate from the Gmail connector in Claude Code.** The Hub sends over SMTP (`smtp.gmail.com:465`) with `ALERT_EMAIL_FROM`, `ALERT_EMAIL_APP_PASSWORD` and `ALERT_EMAIL_TO` from `.env` (all three, or nothing is sent). `scripts/run-demo.sh` loads `.env`, so a start from the demo script picks them up; a Node started any other way must export them.
 - **Create the app password once, on the team account:** turn on 2-step verification, then Google Account, Security, App passwords, make one called "Storm Shield Hub", and paste the 16 characters into `.env` (spaces are fine to drop). The normal password is rejected for SMTP. The password never goes in chat, a ticket or the repo.
 - **A send needs internet.** The first Community Warning (08:37 Surge) comes before the 09:20 internet cue, so it normally goes out; a failure is logged as `could not email the flood alert for <node>: <error type>` and nothing else changes. The log never carries the SMTP server's reply text, because it can echo the login.
-- **Not proven without the app password:** the tests replace `smtplib.SMTP_SSL`, so a real Gmail send, the 465 port and the app password itself have not been run.
+- **Proven on 2026-10-18:** a demo run from `scripts/run-demo.sh` on the owner's laptop emailed "ALERT OF FLOOD INCOMING!" to the team when the Replay was started (a real Gmail send over port 465 with the team account's app password). The tests still replace `smtplib.SMTP_SSL`.
+- **`.env` is sourced by bash, so a value with spaces must be quoted.** Google shows an app password as `abcd efgh ijkl mnop`; pasted unquoted, `run-demo.sh` stopped with `<word>: command not found` and that error printed the first word of the password into the log. Drop the spaces or quote the value, and revoke the password if its first group reached a log you share.
 
 ## Hub replay camera (ticket 0038)
 
@@ -531,3 +546,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
 - **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
 - **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
+
+## Peer Mesh in Docker grilling (2026-10-18)
+
+- **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
+- **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
+- **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.

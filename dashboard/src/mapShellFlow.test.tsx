@@ -96,6 +96,7 @@ describe("the map", () => {
       "hillshade",
       "districts",
       "rivers",
+      "river-flow",
       "border",
       "valley-river",
       "flood-prone-fill",
@@ -104,6 +105,9 @@ describe("the map", () => {
       "route",
       "out-of-reach-line",
       "blocked-roads",
+      "wave-trail",
+      "wave-glow",
+      "wave-head",
     ]);
     const addresses = addressesTheMapWouldFetch();
     expect(addresses.length).toBeGreaterThan(0);
@@ -146,6 +150,9 @@ describe("the map", () => {
       "route",
       "out-of-reach-line",
       "blocked-roads",
+      "wave-trail",
+      "wave-glow",
+      "wave-head",
     ]);
   });
 
