@@ -14,6 +14,7 @@ from pathlib import Path
 
 import httpx
 from pack_fleet import build_fleet
+from pack_nepal import build_nepal_bundle
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
@@ -143,7 +144,7 @@ def build_route_files(
     )
 
 
-def build(output: Path, osm_extract: Path | None) -> None:
+def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
     files: dict[str, bytes] = {
         "shelters.json": json.dumps(load_shelters(), indent=1).encode(),
         "flood_prone.geojson": (SOURCE_DIR / "flood_corridor.source.geojson").read_bytes(),
@@ -160,14 +161,16 @@ def build(output: Path, osm_extract: Path | None) -> None:
         route_grid, route_files = build_route_files(roads, shelters, flood_prone)
         files.update(route_files)
         manifest_extras["route_grid"] = route_grid.as_manifest_entry()
-    tile_list = tiles_covering(BBOX)
-    print(f"fetching the weather, the Simulated Fleet and {len(tile_list)} tiles", flush=True)
+    tile_list = tiles_covering(BBOX) if raster_tiles else []
+    print(f"fetching Nepal, the weather, the Simulated Fleet and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
         weather = fetch_weather_replay(client, BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
         files[FLEET_FILE] = build_fleet(
             client, SOURCE_DIR / "fleet.source.json", load_timeline(), BBOX
         )
+        nepal_files, manifest_extras["nepal"] = build_nepal_bundle(client, BBOX)
+        files.update(nepal_files)
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 
@@ -199,5 +202,10 @@ if __name__ == "__main__":
             " and the Routes to the Shelters"
         ),
     )
+    parser.add_argument(
+        "--raster-tiles",
+        action="store_true",
+        help="also fetch the CARTO raster tiles of the valley (needs CARTO_API_KEY); v4 leaves them out",
+    )
     arguments = parser.parse_args()
-    build(arguments.output, arguments.roads_pbf)
+    build(arguments.output, arguments.roads_pbf, arguments.raster_tiles)

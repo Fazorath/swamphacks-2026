@@ -157,12 +157,18 @@ cache-pack.zip
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
 ├── weather_replay.json   the recorded weather of 25 to 27 Aug 2026 as a Weather Grid (below); packs built before the Weather layers lack it
 ├── fleet.json            the Simulated Fleet (below); packs before v4 lack it
-├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
+├── nepal/border.geojson     the country border (geoBoundaries ADM0); v4 packs onward
+├── nepal/districts.geojson  the 75 districts, `{ "name" }` (geoBoundaries ADM2)
+├── nepal/rivers.geojson     OpenStreetMap rivers in Nepal, `{ "name": str|null, "main": "Koshi"|"Gandaki"|"Karnali"|"Mahakali"|"Bhote Koshi–Trishuli"|null }`
+├── nepal/places.geojson     cities and towns of Nepal, plus villages and hamlets in the valley box, `{ "name", "kind" }`
+├── elevation/{z}/{x}/{y}.png  Terrarium elevation tiles: zoom 5 to 8 over Nepal, zoom 9 to 12 over the valley box
+├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map); v4 leaves them out
 ├── roads.json            the Road graph, only when built: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
 └── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
 ```
 
 - `bbox` is `[south, west, north, east]`, the demo box the pack covers.
+- A v4 pack adds a `nepal` entry to the manifest: `{ "bbox": [...] (Nepal), "elevation": { "encoding": "terrarium", "national_zooms": [5, 8], "valley_zooms": [9, 12], "valley_bbox": [...] }, "boundaries_note": "Boundaries are indicative", "sources": [ { "layer", "name", "licence", "url", "checked" } ] }`. The files above are listed with their checksums like any other, and the Node serves them at `/api/cache-pack/files/<path>`. A pack without them (v3 and earlier) has no `nepal` entry and the map falls back to the river line and corridor it has. Terrarium encodes metres as `(r * 256 + g + b / 256) - 32768`.
 - A valley pack built without `--roads-pbf` has no `route_grid` and no `routes/` (the plan works without them). When Routes are built (ticket 0051), a Route that crosses the Flood-Prone Area is left out of its file, and the grid spacing is 100, 250 or 500 m, the finest that fits the 5 MB budget (before that, about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
 - `roads.json` lists junctions and bends as `nodes`; an `edge` joins node indexes `a` and `b` in both directions (a one-way road is treated as two-way: a resident on foot or in a hurry ignores it), with `length_m` along the road and an optional list of in-between vertices to draw. Service roads are left out; the file stays under about 2 MB.
 - Polylines use 5 decimal places.

@@ -175,7 +175,7 @@ The desktop dashboard's map of the whole of Nepal, drawn from vector data in the
 _Avoid_: globe, surveillance map, overview
 
 **Simulated Fleet**:
-About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by every Node that holds it, with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible "Simulated network" badge.
+About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by every Node that holds it, with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible badge that counts them against the real Nodes ("40 simulated Nodes · 6 real").
 _Avoid_: fake nodes, mock nodes, virtual nodes
 
 **Headwater Node**:
