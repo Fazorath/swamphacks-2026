@@ -331,6 +331,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
 - **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
+- **With a warning up and no Shelter reachable in time, the map used to show nothing** (found 2026-10-18 by placing a home at Syabrubesi: the gompa is a 12 min walk and the wave is 17 min away, so it fails the 5 min margin from the first second). The plan now also returns `outOfReachShelter`, the closest fitting Shelter outside the Flood-Prone Area, drawn as a dashed marker labelled "Can't reach in time: head uphill toward it", with no route and never as the chosen Shelter. A home far from every Shelter (Trishuli, 143 min) still gets a marker that is useless; real high-ground points are ticket 0068.
 - **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
 
 ## Theme, bundled fonts and icons (ticket 0032)

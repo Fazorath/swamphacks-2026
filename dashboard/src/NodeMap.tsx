@@ -81,6 +81,7 @@ type Props = {
   floodProne: FloodProneAreas | null;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
+  outOfReachShelter: Shelter | null;
   route: LatLon[] | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
@@ -106,6 +107,7 @@ export function NodeMap({
   openShelterIds,
   floodProne,
   shelter,
+  outOfReachShelter,
   route,
   draftHome,
   picking,
@@ -178,6 +180,7 @@ export function NodeMap({
           shelters={shelters}
           openShelterIds={openShelterIds}
           chosenShelterId={shelter?.id ?? null}
+          outOfReachShelterId={outOfReachShelter?.id ?? null}
           floodProne={floodProne}
         />
         {nodes.map((node) => {

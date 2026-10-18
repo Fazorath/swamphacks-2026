@@ -212,4 +212,8 @@ test("a Shelter the resident cannot reach in time becomes higher ground", async 
       "No Shelter you can reach in time. Get to higher ground, away from the river, now.",
     ),
   ).toBeVisible();
+  await waitFor(() =>
+    expect(document.querySelectorAll(".shelter-marker.out-of-reach")).toHaveLength(1),
+  );
+  expect(document.querySelector(".evacuation-route")).toBeNull();
 });

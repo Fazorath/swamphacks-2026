@@ -214,6 +214,7 @@ export function App() {
           openShelterIds={openShelterIds}
           floodProne={cachePack?.floodProne ?? null}
           shelter={plan.shelter}
+          outOfReachShelter={plan.outOfReachShelter}
           route={plan.route}
           draftHome={panelOpen ? draftHome : null}
           picking={picking}

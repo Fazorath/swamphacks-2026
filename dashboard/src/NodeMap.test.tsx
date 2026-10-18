@@ -26,6 +26,7 @@ function renderMap(packTileMaxZoom: number | null) {
       openShelterIds={[]}
       floodProne={null}
       shelter={null}
+      outOfReachShelter={null}
       route={null}
       draftHome={null}
       picking={false}
