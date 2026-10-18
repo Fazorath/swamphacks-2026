@@ -1,0 +1,34 @@
+[
+  {
+    "id": "syabrubesi-west-slope",
+    "name": "Slope west of Syabrubesi",
+    "pos": [28.16428, 85.33622],
+    "town": "Syabrubesi",
+    "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 300 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground; nobody has confirmed the slope is open or safe to stand on. Check against the terrain before the event.",
+    "checked": "2026-10-18"
+  },
+  {
+    "id": "syabrubesi-east-slope",
+    "name": "Slope east of Syabrubesi",
+    "pos": [28.16248, 85.34216],
+    "town": "Syabrubesi",
+    "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 310 m from the town centre, outside the corridor and its 100 m margin, 126 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+    "checked": "2026-10-18"
+  },
+  {
+    "id": "betrawati-north-slope",
+    "name": "Slope north of Betrawati",
+    "pos": [27.97688, 85.18582],
+    "town": "Betrawati",
+    "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 420 m from the town centre, outside the corridor and its 100 m margin, 90 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+    "checked": "2026-10-18"
+  },
+  {
+    "id": "trishuli-south-slope",
+    "name": "Slope south of Trishuli",
+    "pos": [27.91898, 85.1487],
+    "town": "Trishuli",
+    "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 390 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+    "checked": "2026-10-18"
+  }
+]
