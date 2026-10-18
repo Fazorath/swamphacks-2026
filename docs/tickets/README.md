@@ -39,8 +39,8 @@
 | [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | done | Fazorath | Fazorath |
 | [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | done | Fazorath | Fazorath |
 | [0036-phone-layout](0036-phone-layout.md) | done | Fazorath | Fazorath |
-| [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | ready-for-agent | unclaimed | Fazorath |
-| [0038-cameras-panel-states](0038-cameras-panel-states.md) | ready-for-agent | unclaimed | Fazorath |
+| [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | in-progress | Fazorath | Fazorath |
+| [0038-cameras-panel-states](0038-cameras-panel-states.md) | in-progress | leonardorofaDV | Fazorath |
 | [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | in-progress | Fazorath | Fazorath |
 | [0040-node-serves-state-snapshot](0040-node-serves-state-snapshot.md) | done | leonardorofaDV | - |
 | [0041-dashboard-reads-the-state-snapshot](0041-dashboard-reads-the-state-snapshot.md) | done | leonardorofaDV | - |
@@ -57,7 +57,7 @@
 | [0052-replay-weather-in-the-cache-pack](0052-replay-weather-in-the-cache-pack.md) | done | leonardorofaDV | - |
 | [0053-weather-grid-lookup](0053-weather-grid-lookup.md) | done | refloow-0 | - |
 | [0054-weather-button-and-picker](0054-weather-button-and-picker.md) | done | Fazorath | Fazorath |
-| [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | ready-for-agent | unclaimed | Fazorath |
+| [0055-temperature-cloud-and-rain-fields](0055-temperature-cloud-and-rain-fields.md) | in-progress | Fazorath | Fazorath |
 | [0058-hub-fetches-and-keeps-the-forecast](0058-hub-fetches-and-keeps-the-forecast.md) | done | refloow-0 | - |
 | [0059-live-forecast-in-the-layers](0059-live-forecast-in-the-layers.md) | ready-for-agent | unclaimed | refloow-0 |
 | [0060-replay-sensors-publish-through-their-surge](0060-replay-sensors-publish-through-their-surge.md) | done | leonardorofaDV | - |
