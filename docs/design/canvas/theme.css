@@ -22,6 +22,7 @@
   --violet-300: #C0A8FF;
   --slate-400: #6B86A8;
   --river-500: #3B82C4;
+  --river-300: #7FB3E6;
   --road-700: #223250;
 
   --bg-page: var(--navy-950);
@@ -50,6 +51,25 @@
   --map-block: var(--navy-900);
   --map-road: var(--road-700);
   --map-water: var(--river-500);
+  /* God's Eye View (D-01, D-07): lifted land, rivers one step lighter, border and labels in ink */
+  --map-outside: var(--navy-925);
+  --map-land: var(--navy-900);
+  --map-river: var(--river-300);
+  --map-border: var(--ink-400);
+  --map-district: var(--navy-600);
+  --map-label: var(--ink-300);
+  /* 3D height bands (D-32) and the faint step shade that stands in for hillshade (D-05) */
+  --terrain-low: var(--navy-900);
+  --terrain-mid: var(--navy-800);
+  --terrain-high: var(--navy-700);
+  --terrain-shade: color-mix(in srgb, var(--ink-black) 35%, transparent);
+  /* the wave front (D-19), the countdown's three colours (D-25), contact lost and Stale (D-14, D-15) */
+  --wave: var(--ink-50);
+  --countdown-far: var(--ink-50);
+  --countdown-soon: var(--amber-400);
+  --countdown-now: var(--red-300);
+  --contact-lost: var(--ink-300);
+  --stale: var(--ink-400);
   --scrim: color-mix(in srgb, var(--ink-black) 60%, transparent);
   --focus-ring: var(--accent);
 

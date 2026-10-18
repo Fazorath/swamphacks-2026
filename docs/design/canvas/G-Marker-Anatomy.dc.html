@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>God's Eye View · Marker anatomy</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}
+.g-river-name { font: 600 11px var(--font-mono); letter-spacing: 0.16em; fill: var(--map-river); }
+.g-town { font: 600 10px var(--font-mono); letter-spacing: 0.1em; fill: var(--map-label); paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; stroke-linejoin: round; }
+.g-town.is-lit { fill: var(--wave); }
+.g-stamp { font: 600 10px var(--font-mono); fill: var(--wave); letter-spacing: 0.04em; paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; }
+.g-leader { stroke: var(--text-dim); stroke-width: 1; fill: none; }
+.g-fleet { fill: var(--risk-low); stroke: var(--map-land); stroke-width: 1; }
+.g-real { fill: none; stroke: var(--text-primary); stroke-width: 1.5; }
+.g-arc { fill: none; stroke: var(--contact-lost); stroke-width: 2; stroke-linecap: butt; transform-box: fill-box; transform-origin: center; transform: rotate(-90deg); }
+.g-struck { text-decoration: line-through; }
+.g-wave-head { fill: var(--wave); }
+.g-wave-glow { fill: var(--wave); opacity: 0.35; filter: blur(5px); }
+.g-wave-trail { fill: none; stroke: var(--wave); stroke-linecap: round; }
+.g-flow { fill: none; stroke: var(--wave); stroke-width: 1; stroke-dasharray: 2 14; opacity: 0.35; animation: g-flow 6s linear infinite; }
+@keyframes g-flow { to { stroke-dashoffset: -16; } }
+.g-pulse-once { fill: none; stroke: currentColor; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ss-marker-pulse 1.6s var(--ease-out) infinite; }
+.g-band { position: relative; z-index: 2; display: flex; align-items: center; gap: 24px; height: 120px; padding: 0 28px; background: color-mix(in srgb, var(--community-warning) 12%, var(--surface-panel)); border-bottom: 2px dashed var(--community-warning); animation: g-band-pulse 3s ease-in-out 2; }
+@keyframes g-band-pulse { 25%, 75% { box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--community-warning) 60%, transparent); } }
+.g-band strong { font-size: 24px; font-weight: 700; line-height: 1.25; }
+.g-band p { font-size: 14px; color: var(--text-secondary); }
+.g-eta { position: absolute; z-index: 1; width: 300px; padding: 14px 18px 16px; border: 2px dashed var(--community-warning); border-radius: 10px; background: var(--surface-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 2px; }
+.g-eta .g-eta-n { font: 600 120px/1 var(--font-mono); letter-spacing: -0.04em; color: var(--countdown-far); }
+.g-eta.is-soon .g-eta-n { color: var(--countdown-soon); }
+.g-eta.is-now .g-eta-n, .g-eta.is-now .g-eta-now { color: var(--countdown-now); }
+.g-eta .g-eta-now { font: 700 34px/1.1 var(--font-sans); color: var(--countdown-now); }
+.g-chip-warning { --chip: var(--community-warning); border-style: dashed; }
+.g-legend { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; font: 500 11px/1 var(--font-mono); color: var(--text-secondary); letter-spacing: 0.04em; }
+.g-legend > span { display: inline-flex; align-items: center; gap: 8px; height: 14px; }
+.g-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; position: relative; }
+.g-badge-sim { display: inline-flex; align-items: center; gap: 6px; color: var(--text-primary); }
+.g-rung { position: relative; padding-left: 26px; }
+.g-rung::before { content: ""; position: absolute; left: 7px; top: -12px; bottom: -12px; border-left: 2px solid var(--map-river); }
+.g-rung.is-first::before { top: 14px; }
+.g-rung.is-last::before { bottom: auto; height: 26px; }
+.g-rung::after { content: ""; position: absolute; left: 3px; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--rung, var(--risk-low)); box-shadow: 0 0 0 2px var(--surface-panel); }
+.g-rung .ss-card { padding: 8px 10px 10px 12px; gap: 6px; }
+.g-rung .ss-hero b { font-size: 24px; }
+.g-wave-mark { position: relative; height: 18px; padding-left: 26px; display: flex; align-items: center; gap: 8px; font: 600 11px/1 var(--font-mono); color: var(--wave); letter-spacing: 0.04em; }
+.g-wave-mark::before { content: ""; position: absolute; left: 7px; top: -8px; bottom: -8px; border-left: 2px solid var(--map-river); }
+.g-wave-mark::after { content: ""; position: absolute; left: 2px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--wave); box-shadow: 0 0 10px 3px color-mix(in srgb, var(--wave) 45%, transparent); }
+.g-hg { fill: var(--map-land); stroke: var(--text-primary); stroke-width: 1.5; stroke-linejoin: round; }
+.g-hg.is-plan { stroke: var(--accent); }
+.g-height-line { fill: none; stroke: var(--map-river); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.g-tick { stroke: var(--map-river); stroke-width: 1; }
+.g-recon { font: 600 10px var(--font-mono); letter-spacing: 0.12em; fill: var(--map-river); paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; }
+</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">God's Eye View · Marker anatomy</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Every Node state on the God's Eye View, at the valley zoom and the national zoom. Glow, outlined dot, label; green means healthy and lies flat; only Elevated and High glow. Decisions D-06, D-08 to D-15, D-52, D-53.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Valley zoom · 10 px dot</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">The six Nodes that matter keep this size and their labels at every zoom.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-low)"><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S2 · 150 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--risk-low); stroke: var(--map-land)">LOW</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">calm / Low · flat green, no glow (D-06, D-53)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-elevated)"><circle class="m-glow" cx="60" cy="56" r="16" style="filter: blur(5px)"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S2 · 340 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--risk-elevated); stroke: var(--map-land)">ELEVATED</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Elevated · amber, glow 16 (D-12)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-high)"><circle class="m-glow" cx="60" cy="56" r="22" style="filter: blur(7px)"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S2 · 960 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--risk-high); stroke: var(--map-land)">HIGH</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">High · red, glow 22 (D-12)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-low)"><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle><circle class="g-real" cx="60" cy="56" r="9.5"></circle></g><text class="m-label" x="78" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">hub · 200 cm</text><text class="m-sub" x="78" y="66" text-anchor="start" style="fill: var(--text-primary); stroke: var(--map-land)">REAL</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Real · 1.5 px ink-50 ring + REAL tag (D-10)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--text-dim)"><circle class="m-hollow" cx="60" cy="56" r="5.5"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">dock · 120 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--text-dim); stroke: var(--map-land)">NOT COUNTED</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Unverified · hollow dashed, NOT COUNTED</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--stale)"><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)"><tspan class="g-struck">S0 · 750 cm</tspan></text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--stale); stroke: var(--map-land)">STALE · 42 s</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Stale · grey, last reading struck through (D-15)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-high)"><circle class="m-glow" cx="60" cy="56" r="22" style="filter: blur(7px)"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle><circle class="m-ring" cx="60" cy="56" r="13.5"></circle></g><text class="m-label" x="80" y="52" text-anchor="start" style="font-size: 14px; stroke: var(--map-land)">S2 · 960 cm</text><text class="m-sub" x="80" y="66" text-anchor="start" style="fill: var(--risk-high); stroke: var(--map-land)">HIGH</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Selected · 2 px cyan ring, larger label</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-high)"><circle class="m-glow" cx="60" cy="56" r="22" style="filter: blur(7px)"></circle><circle class="g-pulse-once" cx="60" cy="56" r="14"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S2 · 960 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--risk-high); stroke: var(--map-land)">HIGH</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Flood Risk rises · ring expands once, card flashes on the same frame (D-13)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--wave)"><circle class="m-glow" cx="60" cy="56" r="16" style="filter: blur(5px)"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S1 · 800 cm</text><text class="m-sub" x="76" y="66" text-anchor="start" style="fill: var(--wave); stroke: var(--map-land)">WAVE PASSED</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Wave passes · white for about 2 event minutes, then its real state (D-18)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--stale)"><circle class="g-pulse-once" cx="60" cy="56" r="11" style="color: var(--contact-lost); animation-duration: 2.4s"></circle><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle><circle class="g-arc" cx="60" cy="56" r="12" stroke-dasharray="45.2 75.4"></circle></g><text class="m-label" x="78" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S0 · 750 cm</text><text class="m-sub" x="78" y="66" text-anchor="start" style="fill: var(--contact-lost); stroke: var(--map-land)">CONTACT LOST · 9 s</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">Contact lost · arc drains 5 to 15 s, small pulse (D-14, D-52)</figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">National zoom · the fleet shrinks</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">The fleet drops to 5 px points with no labels; the valley group and the real Nodes do not.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g aria-label="Simulated fleet"><circle class="g-fleet" cx="40" cy="60" r="2.5"><title>Surkhet · Bheri</title></circle><circle class="g-fleet" cx="95" cy="30" r="2.5"><title>Jumla · Tila</title></circle><circle class="g-fleet" cx="150" cy="70" r="2.5"><title>Dunai · Thuli Bheri</title></circle><circle class="g-fleet" cx="210" cy="95" r="2.5"><title>Chisapani · Karnali</title></circle></g></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">fleet at the national zoom · 5 px, no label, no glow (D-11)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-low)"><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="76" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">S2 · 150 cm</text><text class="g-town" x="76" y="66" text-anchor="start">SYABRUBESI</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">valley Node at the national zoom · keeps 10 px and its label (D-11)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-low)"><circle class="m-dot" cx="60" cy="56" r="5" style="stroke: var(--map-land)"></circle><circle class="g-real" cx="60" cy="56" r="9.5"></circle></g><text class="m-label" x="78" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">laptop-pokhara · 35 cm</text><text class="m-sub" x="78" y="66" text-anchor="start" style="fill: var(--text-primary); stroke: var(--map-land)">REAL</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">real Node at the national zoom · ring and REAL always on (D-09)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 260 120" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="260" height="120" style="fill: var(--map-land)"></rect><path d="M0 94C60 80 120 110 180 96S240 80 260 90" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-elevated)"><circle class="m-glow" cx="60" cy="56" r="8" style="filter: blur(3px)"></circle><circle class="m-dot" cx="60" cy="56" r="2.5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="72" y="52" text-anchor="start" style="font-size: 12px; stroke: var(--map-land)">Nepalgunj · 48 cm</text><text class="m-sub" x="72" y="66" text-anchor="start" style="fill: var(--risk-elevated); stroke: var(--map-land)">ELEVATED</text><text class="m-sub" x="12" y="108" style="fill: var(--text-dim)">label on hover only at this zoom</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">fleet riser at the national zoom · glow scales with the dot, label on hover (D-09)</figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Shrink is interpolated with the zoom</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">Radius and label opacity are functions of the zoom level, never a step.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><svg viewBox="0 0 300 110" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border)" role="img" aria-label="Map sample"><rect width="300" height="110" style="fill: var(--map-land)"></rect><path d="M0 84C60 70 120 100 180 86S240 70 300 80" style="fill: none; stroke: var(--map-river); stroke-width: 2"></path><g style="color: var(--risk-low)"><circle class="m-dot" cx="30" cy="46" r="5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="30" y="68" text-anchor="middle" style="font-size: 10px; opacity: 1.00; stroke: var(--map-land)">Surkhet</text><text class="m-place" x="30" y="86" text-anchor="middle" style="fill: var(--text-dim)">z11 · 10 px</text><g style="color: var(--risk-low)"><circle class="m-dot" cx="82" cy="46" r="4.4" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="82" y="68" text-anchor="middle" style="font-size: 10px; opacity: 0.76; stroke: var(--map-land)">Surkhet</text><text class="m-place" x="82" y="86" text-anchor="middle" style="fill: var(--text-dim)">z10 · 8.8 px</text><g style="color: var(--risk-low)"><circle class="m-dot" cx="134" cy="46" r="3.75" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="134" y="68" text-anchor="middle" style="font-size: 10px; opacity: 0.50; stroke: var(--map-land)">Surkhet</text><text class="m-place" x="134" y="86" text-anchor="middle" style="fill: var(--text-dim)">z9 · 7.5 px</text><g style="color: var(--risk-low)"><circle class="m-dot" cx="186" cy="46" r="3.1" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="186" y="68" text-anchor="middle" style="font-size: 10px; opacity: 0.24; stroke: var(--map-land)">Surkhet</text><text class="m-place" x="186" y="86" text-anchor="middle" style="fill: var(--text-dim)">z8 · 6.2 px</text><g style="color: var(--risk-low)"><circle class="m-dot" cx="238" cy="46" r="2.5" style="stroke: var(--map-land)"></circle></g><text class="m-label" x="238" y="68" text-anchor="middle" style="font-size: 10px; opacity: 0.00; stroke: var(--map-land)">Surkhet</text><text class="m-place" x="238" y="86" text-anchor="middle" style="fill: var(--text-dim)">z7 · 5 px</text></svg></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">zoom-interpolated shrink · 10 px at the valley zoom to 5 px at the national zoom; label opacity follows; nothing pops (D-08 owner note, D-11)</figcaption>
+</figure></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1650}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
