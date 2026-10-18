@@ -8,7 +8,7 @@
 
 **Owner:** unclaimed
 
-**Assignee:** refloow-0
+**Assignee:** Fazorath
 
 **Spec:** `docs/specs/weather-layers.md`
 
