@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/weather-layers.md`
 
 - [ ] One canvas over the map; particles ride the interpolated wind from 0053, each dragging a short tail drawn as a one-pixel line; 600 to 5,000 particles by map size

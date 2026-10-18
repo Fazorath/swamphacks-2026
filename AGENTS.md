@@ -47,7 +47,7 @@ Idea → spec → tickets → build → review → merge.
 5. **Review** before merge: `code-review` against `main`.
 6. **Merge** into `main` yourself and push. No waiting on a teammate.
 
-Tracker rules: `docs/agents/issue-tracker.md`. Claim a ticket before starting it, and say so in the group chat.
+Tracker rules: `docs/agents/issue-tracker.md`. Claim a ticket before starting it, and say so in the group chat. Every new ticket gets an `Assignee` from the routing table there (UI → Fazorath; routes, evacuation algorithms and data builds → refloow-0; breadboard, hardware and Mesh transport → amitathik7; tests, workflow and miscellaneous fixes → leonardorofaDV); whoever writes a ticket, person or agent, sets it.
 
 Other playbooks: `prototype` (throwaway UI/logic experiments), `diagnosing-bugs` (anything broken or slow), `domain-modeling` (keeps `CONTEXT.md`, the shared glossary), `resolving-merge-conflicts`, `handoff` (context running low), `wait-what` (agent lost you).
 

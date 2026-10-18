@@ -78,6 +78,8 @@ Do NOT close or modify any parent issue.
 
 **Owner:** unclaimed
 
+**Assignee:** the person this ticket suits, from the routing table in `docs/agents/issue-tracker.md` ("Assigning"). A suggestion only; `Owner` stays `unclaimed` until `scripts/claim.sh`.
+
 **Spec:** `docs/specs/<feature-slug>.md`
 
 - [ ] Acceptance criterion 1

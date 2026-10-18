@@ -17,7 +17,19 @@ What we take from it:
 - **Stock Lucide icons** whose brightness shows on or off, and a pulse ring for fresh information.
 - **Freshness badges** and an **OFFLINE** state when a source is down.
 
-What we leave out: the 40 layers, globe, AI analyst, finance, cyber, and its gold controls (they collide with Elevated amber). Storm Shield has one neighborhood and one storm.
+What we leave out: the 40 layers, globe, AI analyst, finance, cyber, and its gold controls (they collide with Elevated amber). Storm Shield has one country and one storm.
+
+We take its structure as inspiration, not its code: only its small terrain helpers are ported, under its MIT notice (ADR 0005).
+
+## God's Eye View (desktop)
+
+On desktop, the projector and judges' laptops, the map is a Nepal-only God's Eye View: a dark, instant MapLibre vector map with slight 3D terrain, about 40 Simulated Fleet Nodes glowing green along the rivers, the valley Nodes and the real Nodes standing out, and the flood wave running down the river. Spec: `docs/specs/gods-eye-view.md`; decision: ADR 0005. Where this section and the sections below differ on the desktop map, markers, Readings Panel or Warning Takeover, this section wins; the phone layout is unchanged until 0036.
+
+- **Basemap:** drawn from vector data in the Cache Pack in theme roles; no raster tiles, no run-time requests. Credits and "Boundaries are indicative" always shown. A bottom-left 2D / 3D switch; terrain turns itself off if frame rate drops.
+- **Fleet:** one quiet badge, "Simulated network · weather from Open-Meteo", in the status strip and legend, and a Fleet toggle with a count on the Layer rail. Real Nodes carry a `REAL` ring. A card opened for a fleet Node carries `SIMULATED`.
+- **Marker colours:** green means healthy (calm or Low; the word stays on chip and card), amber Elevated, red High. Contact lost (silent about 5 s): the glow dies and a ring counts down to 15 s, then Stale in muted grey.
+- **Readings Panel:** lists the valley and real Nodes only; clicking any dot opens its card. Layout chosen from drawn variants (0070).
+- **Warning on the God's Eye View:** a full-width band, the chime, the camera flies to the Surging Node, the wave runs, and the Wave ETA shows large over the home town. The map is never dimmed.
 
 ## Which views get built
 
@@ -82,7 +94,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
 
 ## Map
 
-- Dark tiles from the Cache Pack through the Node, with the data credit always shown.
+- Dark vector basemap from the Cache Pack (see "God's Eye View"), with the data credit always shown.
 - **Node markers** (Osiris anatomy: glow, outlined dot, label `garage · 0.42 m`). Markers update in place and are never rebuilt on a poll.
 
   | State | Marker |
