@@ -125,9 +125,9 @@ function banner() {
 
 async function showLiveData() {
   render(<App />);
-  expandPanel("Cameras");
-  expandPanel("Evacuation Plan");
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
+  // The Official Alert has opened the Alerts and the Plan; a third Panel pushes the Alerts out.
+  expandPanel("Cameras");
   await screen.findByRole("img", { name: TILE.label });
   await screen.findByText(/NPT/);
   await screen.findByText(/Nearest open Shelter: Test Gym/);
@@ -192,6 +192,9 @@ test("failures broken by a good answer never add up to the warning", async () =>
 
 test("while unreachable, everything live goes and what helps the resident plan stays", async () => {
   await showLiveData();
+  // Two Panels fit on the right: trade the Cameras for the Alerts, whose Official Alert must stay.
+  fireEvent.click(screen.getByRole("button", { name: "Collapse Cameras" }));
+  expandPanel("Alerts");
   nodeAnswer = "down";
   await seconds(5);
 

@@ -11,6 +11,7 @@ const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
 type Props = {
   eventClock: EventClock | null;
   floodRisk: FloodRisk | null;
+  showStormSignal: boolean;
   status: NodeState["status"] | null;
   householdSaved: boolean;
   onOpenHousehold: () => void;
@@ -23,6 +24,7 @@ type Props = {
 export function TopBar({
   eventClock,
   floodRisk,
+  showStormSignal,
   status,
   householdSaved,
   onOpenHousehold,
@@ -37,7 +39,7 @@ export function TopBar({
       </h1>
       <EventClockTag clock={eventClock} />
       <FloodRiskChip floodRisk={floodRisk} />
-      {floodRisk?.storm_signal.on && (
+      {showStormSignal && floodRisk?.storm_signal.on && (
         <span className="storm-signal">{stormSignalSentence(floodRisk.storm_signal)}</span>
       )}
       {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}

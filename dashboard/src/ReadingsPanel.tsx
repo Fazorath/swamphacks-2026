@@ -26,6 +26,8 @@ type Props = {
   nodes: NodeOnMap[];
   floodRisk: FloodRisk | null;
   selectedId: string | null;
+  // How often each Node's Flood Risk has risen; a new count flashes that Node's card once.
+  rises: Record<string, number>;
   onSelect: (id: string) => void;
   onScenarioChanged: () => void;
   panel: PanelControl;
@@ -35,6 +37,7 @@ export function ReadingsPanel({
   nodes,
   floodRisk,
   selectedId,
+  rises,
   onSelect,
   onScenarioChanged,
   panel,
@@ -64,6 +67,7 @@ export function ReadingsPanel({
               .join(" ")}
             onClick={() => onSelect(node.id)}
           >
+            {(rises[node.id] ?? 0) > 0 && <span key={rises[node.id]} className="card-flash" />}
             <h3>
               {/* Clicks reach the card; the button only makes the card reachable by keyboard. */}
               <button>{node.label}</button>
