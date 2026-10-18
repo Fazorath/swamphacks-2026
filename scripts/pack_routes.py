@@ -85,7 +85,7 @@ def _ring_contains(ring: list[Point], point: Point) -> bool:
     return inside
 
 
-def crosses(was_inside: list[bool]) -> bool:
+def reenters_after_leaving(was_inside: list[bool]) -> bool:
     """Whether a journey, given as inside/outside along its way, goes back in after being out."""
     seen_outside = False
     for inside in was_inside:
@@ -284,7 +284,12 @@ def build_routes(
                 continue
             origin = grid.point_of(gx, gy)
             line = [origin]
-            was_inside = [avoid is not None and avoid.contains(origin)]
+            # The legs from the Grid point to the road and from the road to the Shelter can clip the
+            # corridor too, so they are sampled like the stretches between road nodes.
+            was_inside = [
+                avoid is not None and avoid.contains(origin),
+                avoid is not None and avoid.touches_segment(origin, roads.coords[start]),
+            ]
             previous = node = start
             while True:
                 line.append(roads.coords[node])
@@ -293,8 +298,10 @@ def build_routes(
                     break
                 previous, node = node, next_hop[node]
             line.append(shelter_pos)
-            if avoid is not None and crosses(was_inside):
-                continue
+            if avoid is not None:
+                was_inside.append(avoid.touches_segment(roads.coords[shelter_node], shelter_pos))
+                if reenters_after_leaving(was_inside):
+                    continue
             polyline = [
                 [round(lat, COORDINATE_DECIMALS), round(lon, COORDINATE_DECIMALS)]
                 for lat, lon in simplify(line)

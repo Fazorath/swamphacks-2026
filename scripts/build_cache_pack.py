@@ -135,7 +135,9 @@ def build_route_files(
         print(f"{len(files)} route files at {spacing_m} m: {compressed / 1e6:.1f} MB", flush=True)
         if compressed <= ROUTES_BUDGET_BYTES:
             return grid, files
-    sys.exit(f"routes stay over {ROUTES_BUDGET_BYTES / 1e6:.0f} MB even at {spacing_m} m")
+    sys.exit(
+        f"routes stay over {ROUTES_BUDGET_BYTES / 1e6:.0f} MB even at {ROUTE_SPACINGS_M[-1]} m"
+    )
 
 
 def build(output: Path, osm_extract: Path | None) -> None:
@@ -186,7 +188,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--roads-pbf",
         type=Path,
-        help=f"OSM extract of Nepal ({OSM_EXTRACT_URL}); adds roads.json for rerouting on the phone and the Routes to the Shelters",
+        help=(
+            f"OSM extract of Nepal ({OSM_EXTRACT_URL}); adds roads.json for rerouting on the phone"
+            " and the Routes to the Shelters"
+        ),
     )
     arguments = parser.parse_args()
     build(arguments.output, arguments.roads_pbf)

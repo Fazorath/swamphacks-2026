@@ -31,7 +31,6 @@ export function EvacuationPlanPanel({
   shelterStatusConfirmedAt,
 }: {
   plan: EvacuationPlan;
-  // The plan is for the built-in example home, not the resident's.
   exampleHome: boolean;
   waveArrival: WaveArrival | null;
   eventT: number | null;

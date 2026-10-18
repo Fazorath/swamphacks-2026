@@ -7,7 +7,7 @@ from pack_routes import (
     RouteGrid,
     build_road_graph,
     build_routes,
-    crosses,
+    reenters_after_leaving,
     simplify,
 )
 
@@ -174,8 +174,20 @@ def test_a_bridge_between_two_nodes_outside_the_area_still_crosses_it() -> None:
     assert file_of((29.6490, -82.320)) not in bridged
 
 
-def test_crosses_means_going_back_in_after_being_out() -> None:
-    assert not crosses([True, True, False, False])
-    assert not crosses([False, False])
-    assert crosses([False, True, False])
-    assert crosses([True, False, True])
+def test_a_journey_reenters_when_it_goes_back_in_after_being_out() -> None:
+    assert not reenters_after_leaving([True, True, False, False])
+    assert not reenters_after_leaving([False, False])
+    assert reenters_after_leaving([False, True, False])
+    assert reenters_after_leaving([True, False, True])
+
+
+def test_the_last_leg_from_the_road_to_the_shelter_is_checked_too() -> None:
+    # The only road node lies south of the band and the Shelter north of it.
+    south_of_the_band: dict[int, Point] = {1: (29.6490, -82.320)}
+    found = build_routes(
+        Roads(south_of_the_band, []), {"gym": (29.6530, -82.320)}, GRID, BBOX, avoid=BAND
+    )
+    assert file_of((29.6490, -82.320)) not in found
+    assert file_of((29.6490, -82.320)) in build_routes(
+        Roads(south_of_the_band, []), {"gym": (29.6530, -82.320)}, GRID, BBOX
+    )
