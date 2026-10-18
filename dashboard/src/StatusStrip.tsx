@@ -19,7 +19,7 @@ type Props = {
   // The Simulated Fleet's size; zero when this Node's pack has no fleet file.
   fleetCount: number;
   // Nodes that went quiet or came back, already worded.
-  contactNotes: string[];
+  contactNotes: { key: string; text: string }[];
   identity: Pick<NodeState, "name" | "role"> | null;
   connecting: boolean;
   status: NodeState["status"] | null;
@@ -55,8 +55,8 @@ export function StatusStrip({
           </span>
         ))}
       {contactNotes.map((note) => (
-        <span key={note} className="contact-note">
-          {note}
+        <span key={note.key} className="contact-note">
+          {note.text}
         </span>
       ))}
       <span>Readings {youngest === null ? "none yet" : agoWords(youngest)}</span>

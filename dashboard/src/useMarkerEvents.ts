@@ -26,7 +26,7 @@ export function useLevelRises(nodes: NodeOnMap[]): Record<string, number> {
 }
 
 // The status strip's notes about Nodes that went quiet or came back (D-52).
-export function useContactNotes(nodes: NodeOnMap[]): string[] {
+export function useContactNotes(nodes: NodeOnMap[]): { key: string; text: string }[] {
   const lost = nodes.filter((node) => contactArc(node) !== null);
   const lostIds = lost.map((node) => node.id);
   const [previouslyLost, setPreviouslyLost] = useState<string[]>([]);
@@ -48,7 +48,10 @@ export function useContactNotes(nodes: NodeOnMap[]): string[] {
   }, [heardAgain]);
 
   return [
-    ...lost.map((node) => `${node.label}: contact lost ${Math.floor(node.ageSeconds)} s`),
-    ...heardAgain.map((label) => `${label}: heard again`),
+    ...lost.map((node) => ({
+      key: node.id,
+      text: `${node.label}: contact lost ${Math.floor(node.ageSeconds)} s`,
+    })),
+    ...heardAgain.map((label) => ({ key: `again-${label}`, text: `${label}: heard again` })),
   ];
 }

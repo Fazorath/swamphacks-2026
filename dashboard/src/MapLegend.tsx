@@ -3,8 +3,7 @@ import { SimulatedBadge } from "./SimulatedBadge";
 
 type Props = { simulated: number; real: number; nepal: NepalMap | null };
 
-// A key to the markers, small enough to stay out of the way. The 2D / 3D switch joins it as its
-// last row with the terrain (0067).
+// A key to the markers, small enough to stay out of the way.
 export function MapLegend({ simulated, real, nepal }: Props) {
   return (
     <aside className="map-legend" aria-label="Legend">

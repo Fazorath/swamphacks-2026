@@ -12,14 +12,7 @@ export const MAP_LAYERS = [
 export type MapLayerName = (typeof MAP_LAYERS)[number]["name"];
 export type MapLayers = Record<MapLayerName, boolean>;
 
-const ALL_ON: MapLayers = {
-  nodes: true,
-  fleet: true,
-  floodProne: true,
-  shelters: true,
-  route: true,
-  stormSignal: true,
-};
+const ALL_ON = Object.fromEntries(MAP_LAYERS.map(({ name }) => [name, true])) as MapLayers;
 
 export function useMapLayers(): [MapLayers, (name: MapLayerName) => void] {
   const [layers, setLayers] = useState(ALL_ON);

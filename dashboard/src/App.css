@@ -536,9 +536,13 @@ section p {
   box-shadow: none;
 }
 
-.node-marker.selected .node-dot {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* A pseudo-element, so Selected's cyan ring sits outside a REAL Node's white one. */
+.node-marker.selected .node-dot::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
 }
 
 .node-marker.contact-lost .node-dot {
