@@ -81,7 +81,7 @@ class FakeMap {
     };
   }
 
-  // The river-flow layer's last visibility and dash pattern, as the app set them.
+  // The last layout and paint values the app set, keyed "layer:property".
   readonly layerProperties = new Map<string, unknown>();
 
   getLayer(id: string) {

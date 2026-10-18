@@ -190,7 +190,7 @@ export const RIVER_FLOW_LAYER = "river-flow";
 // cycle of arrays, each one the pattern moved a little further along the line.
 const FLOW_DASH = 2;
 const FLOW_GAP = 5;
-export const FLOW_STEPS = 14;
+const FLOW_STEPS = 14;
 
 export function flowDashes(step: number): number[] {
   const shift = ((step % FLOW_STEPS) / FLOW_STEPS) * (FLOW_DASH + FLOW_GAP);
@@ -268,7 +268,7 @@ export function addNepalBasemap(map: MapLibreMap, nepal: NepalMap, colors: MapCo
     },
     FIRST_OVERLAY,
   );
-  // Slow dim dashes drifting down every river (D-20); `RiverFlow` moves them.
+  // Slow dim dashes drifting down every river (D-20); `useRiverFlow` moves them.
   map.addLayer(
     {
       id: RIVER_FLOW_LAYER,

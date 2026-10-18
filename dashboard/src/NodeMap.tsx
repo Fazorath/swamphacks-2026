@@ -476,13 +476,13 @@ export function NodeMap({
               map={map}
               lat={place.lat}
               lon={place.lon}
-              className={
-                waveStamps.has(place.name)
-                  ? "place-label key wave-reached"
-                  : place.key
-                    ? "place-label key"
-                    : "place-label"
-              }
+              className={[
+                "place-label",
+                place.key && "key",
+                waveStamps.has(place.name) && "wave-reached",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
               <span className={`map-label label-${sideOf(`place:${place.name}`)}`}>
                 {placeLabelText(place.name, waveStamps)}

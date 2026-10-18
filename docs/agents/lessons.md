@@ -493,3 +493,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
+## Wave front and river flow (ticket 0065)
+
+- **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
+- **An effect that needs a layer added by another effect must be called after it in the same component**: child effects run before the parent's, so a `WaveLayers` child looked for the `river-flow` layer before `addNepalBasemap` had added it and never retried. `useRiverFlow` is a hook called below the basemap effect in `NodeMap`. `react-hooks/set-state-in-effect` rejects the "set a ready flag" alternative.
+- **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
+- **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
+- Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
