@@ -372,10 +372,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 ## Nepal vector Cache Pack (ticket 0063)
 
-- **Real build, 2026-10-18** (`scripts/build_cache_pack.py`, no key, no `--roads-pbf`, no raster tiles): 8.4 MB zip. Vectors 0.8 MB (border 0.07, districts 0.07, rivers 0.60 with 1,807 lines, places 0.06 with 442), elevation 8.16 MB in 113 tiles (zoom 5 to 8 over Nepal, 9 to 12 over the valley). That is about 6 MB more than v3's 2.4 MB, inside the ticket's 6 to 10 MB. Elevation PNGs do not compress, so the budget counts raw bytes. Run it again with `--roads-pbf` for the road graph and Routes; that was not done here.
+- **Real build, 2026-10-18** (`scripts/build_cache_pack.py`, no key, no `--roads-pbf`, no raster tiles): 10.0 MB zip, about 7.6 MB more than v3's 2.4 MB, inside the ticket's 6 to 10 MB. Vectors 1.3 MB (border 0.07, districts 0.07, rivers 1.13 with 1,827 lines, places 0.06), elevation 9.63 MB in 138 tiles. The elevation budget is 10 MB, raised from 8.5 when Kathmandu got detail tiles; PNGs do not compress, so it counts raw bytes. Run it again with `--roads-pbf` for the road graph and Routes; that was not done here.
 - **geoBoundaries licences differ per level**: ADM0 is CC BY 4.0, ADM2 (75 districts) Public Domain, ADM1 CC BY 3.0 IGO. The build copies each from the API metadata, so check the README table if the dataset is rebuilt.
 - **Overpass answers 406 without a `User-Agent` and 502 now and then**; the builder sends one and retries through `pack_weather.ATTEMPTS`. The river query is 40 MB of raw geometry (7,315 ways) and takes a minute or two.
-- **Syabrubesi and Timure are not in the places layer**: OpenStreetMap has no Latin `name:en` for them. Only Betrawati and Trishuli of the valley towns appear.
-- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. `Release cache-pack-v4` is not published: the repo is private, so nobody outside the team can download it either way.
-- The map credit and "Boundaries are indicative" are in the manifest's `nepal` entry; printing them on the map is 0033.
-
+- **The build checks its own elevation**: it decodes the Terrarium PNGs itself (no Pillow in the Node's venv) and compares each key place with a published height. Published heights are loose (Timure's 1,900 m is a climate-table label, Trishuli has no direct figure), so tolerances are 100 to 200 m and each is explained in `key_places.source.json`.
+- **A place's OpenStreetMap node can sit on a hill edge**: Kathmandu's city node read 1,521 m, 240 m above the valley floor, so its position is Durbar Square. Read a point and its neighbours (a 3 by 3 spread 0.004 degrees apart) before trusting one pixel.
+- **Syabrubesi and Timure have no Latin name in OpenStreetMap**, so the key places file supplies them with the replay spec's coordinates.
+- **Test every raw vertex of a river against the border, not the simplified ones**: a straight river crossing Nepal simplifies to its two ends, both outside, and was dropped (caught by a test).
+- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. `Release cache-pack-v4` is not published yet.
+- The map credit, "Boundaries are indicative" and "elevation is approximate" are in the manifest's `nepal` entry; printing them on the map is 0033.

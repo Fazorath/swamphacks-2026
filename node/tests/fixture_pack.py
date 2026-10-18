@@ -36,7 +36,13 @@ ELEVATION_PATH = "elevation/5/24/13.png"
 ELEVATION_TILE = b"\x89PNG fixture elevation"
 NEPAL_ENTRY = {
     "bbox": [26.3, 80.0, 30.5, 88.3],
-    "elevation": {"encoding": "terrarium", "national_zooms": [5, 5], "valley_zooms": [9, 9]},
+    "elevation": {
+        "encoding": "terrarium",
+        "approximate": True,
+        "national_zooms": [5, 5],
+        "detail_zooms": [9, 9],
+        "detail_areas": [[27.86, 85.08, 28.46, 85.47]],
+    },
     "sources": [
         {"layer": "border", "name": "fixture", "licence": "CC BY 4.0", "checked": "2026-10-18"}
     ],
