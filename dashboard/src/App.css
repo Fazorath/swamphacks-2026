@@ -521,7 +521,7 @@ section[aria-label="Evacuation Plan"] {
   padding: 0 0.5rem;
   border: 1px solid currentcolor;
   border-radius: 0.25rem;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .event-clock {
@@ -529,7 +529,7 @@ section[aria-label="Evacuation Plan"] {
   border: 1px solid currentcolor;
   border-radius: 0.25rem;
   color: var(--risk-elevated);
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .flood-risk-chip.low,
@@ -638,22 +638,22 @@ section p.storm-signal {
 /* Unverified Nodes: shown, but visibly not part of Flood Risk. */
 .node-dot.unverified {
   fill: none;
-  stroke: var(--text-secondary);
+  stroke: var(--text-dim);
   stroke-dasharray: 4 3;
 }
 
 .leaflet-tooltip.node-label.unverified {
-  color: var(--text-secondary);
+  color: var(--text-dim);
   border-style: dashed;
 }
 
 .tag.not-counted {
-  color: var(--text-secondary);
+  color: var(--text-dim);
 }
 
 .node-card.unverified {
   border-style: dashed;
-  color: var(--text-secondary);
+  color: var(--text-dim);
 }
 
 .not-counted-divider {
@@ -731,7 +731,7 @@ section p.storm-signal {
 .community-warning-tag {
   color: var(--community-warning);
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 section p.flood-prone-caption {

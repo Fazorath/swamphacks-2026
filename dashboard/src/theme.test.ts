@@ -5,22 +5,22 @@ import { join } from "node:path";
 const dashboardDir = join(import.meta.dirname, "..");
 const srcDir = join(dashboardDir, "src");
 
-function readSource(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
-const themeCss = readSource(join(srcDir, "theme.css"));
+const themeCss = readFileSync(join(srcDir, "theme.css"), "utf8");
 
 const stylesAndComponents = [
-  ...readdirSync(srcDir)
+  ...readdirSync(srcDir, { recursive: true, encoding: "utf8" })
     .filter((name) => /\.(css|tsx?)$/.test(name))
     .filter((name) => name !== "theme.css" && !/\.test\.tsx?$/.test(name))
-    .map((name) => ({ name, text: readSource(join(srcDir, name)) })),
-  { name: "index.html", text: readSource(join(dashboardDir, "index.html")) },
+    .map((name) => ({ name, text: readFileSync(join(srcDir, name), "utf8") })),
+  { name: "index.html", text: readFileSync(join(dashboardDir, "index.html"), "utf8") },
 ];
 
 const RAW_COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|lab)\(/;
-const PRIMITIVE = /var\(--(?:navy|ink|cyan|green|amber|red|paper|blue|violet|slate|river|road)-/;
+// A primitive is any custom property the theme file sets straight to a hex value.
+const primitiveNames = [...themeCss.matchAll(/(--[\w-]+):\s*#[0-9a-fA-F]{6};/g)].map(
+  ([, name]) => name,
+);
+const PRIMITIVE = new RegExp(`var\\((?:${primitiveNames.join("|")})\\)`);
 
 function filesMatching(pattern: RegExp): string[] {
   return stylesAndComponents.filter(({ text }) => pattern.test(text)).map(({ name }) => name);
@@ -40,6 +40,7 @@ describe("the theme file owns every colour", () => {
     expect(names).toContain("App.css");
     expect(names).toContain("App.tsx");
     expect(RAW_COLOUR.test(themeCss)).toBe(true);
+    expect(primitiveNames).toContain("--navy-950");
   });
 });
 
