@@ -11,7 +11,15 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest", "ruff", "mypy"]
+dev = ["pytest", "ruff", "mypy", "gpiozero"]
+# What the Pi installs to read the Breadboard (dev has gpiozero too, for the tests' mock pins).
+# lgpio is the pin backend; it builds from source, so pi/install.sh installs its system libraries.
+pi = ["gpiozero", "lgpio; sys_platform == 'linux'"]
+
+# lgpio ships only as source, and reading its metadata would build it (needs swig). Declaring it
+# here lets `uv lock` run on a laptop; the build still happens on the Pi.
+[tool.uv]
+dependency-metadata = [{ name = "lgpio", version = "0.2.2.0", requires-dist = [] }]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"
@@ -35,5 +43,5 @@ strict = true
 mypy_path = "../scripts"
 
 [[tool.mypy.overrides]]
-module = ["RNS", "RNS.*"]
+module = ["RNS", "RNS.*", "gpiozero", "gpiozero.*", "imageio_ffmpeg"]
 ignore_missing_imports = true

@@ -2,16 +2,11 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
 import { expandPanel } from "./expandPanel";
+import { fakeCameraTile } from "./fakeCameraTile";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
 
-const TILE = {
-  id: 1655,
-  label: "Betrawati bridge",
-  state: "live",
-  taken_at: "2026-08-26T08:41:00+05:45",
-  age_s: 12,
-};
+const TILE = fakeCameraTile({ label: "Betrawati bridge" });
 
 const NOTICE: OfficialAlert = {
   id: "dhm-notice",
@@ -125,11 +120,11 @@ function banner() {
 
 async function showLiveData() {
   render(<App />);
-  expandPanel("Cameras");
-  expandPanel("Evacuation Plan");
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
-  await screen.findByRole("img", { name: TILE.label });
-  await screen.findByText(/NPT/);
+  // The Official Alert has opened the Alerts and the Plan; a third Panel pushes the Alerts out.
+  expandPanel("Cameras");
+  await screen.findByLabelText(TILE.label);
+  await screen.findByText(/NPT · REPLAY/);
   await screen.findByText(/Nearest open Shelter: Test Gym/);
 }
 
@@ -192,14 +187,17 @@ test("failures broken by a good answer never add up to the warning", async () =>
 
 test("while unreachable, everything live goes and what helps the resident plan stays", async () => {
   await showLiveData();
+  // Two Panels fit on the right: trade the Cameras for the Alerts, whose Official Alert must stay.
+  fireEvent.click(screen.getByRole("button", { name: "Collapse Cameras" }));
+  expandPanel("Alerts");
   nodeAnswer = "down";
   await seconds(5);
 
   expect(screen.queryByText(/Pressure: 1015 hPa/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Elevated/)).not.toBeInTheDocument();
   expect(screen.queryByText("Online")).not.toBeInTheDocument();
-  expect(screen.queryByRole("img", { name: TILE.label })).not.toBeInTheDocument();
-  expect(screen.queryByText(/NPT/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(TILE.label)).not.toBeInTheDocument();
+  expect(screen.queryByText(/NPT · REPLAY/)).not.toBeInTheDocument();
 
   expect(document.querySelector(".node-map")).toBeInTheDocument();
   expect(screen.getByText("Household profile saved")).toBeInTheDocument();
@@ -221,8 +219,8 @@ test("camera and Event clock polling stop while unreachable and resume after", a
 
   nodeAnswer = "ok";
   await seconds(1);
-  expect(await screen.findByRole("img", { name: TILE.label })).toBeInTheDocument();
-  expect(await screen.findByText(/NPT/)).toBeInTheDocument();
+  expect(await screen.findByLabelText(TILE.label)).toBeInTheDocument();
+  expect(await screen.findByText(/NPT · REPLAY/)).toBeInTheDocument();
 });
 
 test("the plan says how long ago Shelter status was last confirmed, and the age grows", async () => {

@@ -1,12 +1,18 @@
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { FloodRisk } from "./nodeState";
+import { usePrefersReducedMotion } from "./useViewport";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
 
 export function FloodRiskChip({ floodRisk }: { floodRisk: FloodRisk | null }) {
+  const reducedMotion = usePrefersReducedMotion();
   if (!floodRisk?.level) return null;
+  // A new level draws the chip again (a new key), so it fades in where the old one was.
   return (
-    <span className={`flood-risk-chip ${floodRisk.level}`}>
+    <span
+      key={floodRisk.level}
+      className={`flood-risk-chip ${floodRisk.level}${reducedMotion ? "" : " fades-in"}`}
+    >
       Flood Risk · {LEVEL_WORDS[floodRisk.level]}
     </span>
   );

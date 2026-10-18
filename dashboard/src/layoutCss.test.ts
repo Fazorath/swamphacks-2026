@@ -12,9 +12,9 @@ function rule(selector: string): string {
 }
 
 describe("the Panel columns stay on screen", () => {
-  it("sits each column 0.75rem inside its own edge of the stage", () => {
+  it("sits each column inside its own edge of the stage, the left one clear of the rail", () => {
     expect(rule(".panel-column")).toMatch(/position:\s*absolute/);
-    expect(rule(".panel-column.left")).toMatch(/left:\s*0\.75rem/);
+    expect(rule(".panel-column.left")).toMatch(/left:\s*3\.75rem/);
     expect(rule(".panel-column.right")).toMatch(/right:\s*0\.75rem/);
   });
 
@@ -22,9 +22,15 @@ describe("the Panel columns stay on screen", () => {
     expect(rule(".status-strip")).toMatch(/overflow:\s*hidden/);
   });
 
-  it("collapses the right column to its headings before the map gets too narrow", () => {
+  it("keeps the blur off the phone's Panels", () => {
     expect(css).toMatch(
-      /@media \(48rem < width < 56\.25rem\)\s*\{[^@]*\.panel-column\.right \.panel-body\s*\{\s*display:\s*none/,
+      /@media \(hover: hover\) and \(width >= 56\.25rem\)\s*\{\s*\.panel\s*\{[^}]*backdrop-filter/,
+    );
+  });
+
+  it("keeps the phone's status strip to one line that scrolls sideways", () => {
+    expect(css).toMatch(
+      /\.phone \.status-strip\s*\{[^}]*overflow-x:\s*auto[^}]*white-space:\s*nowrap/,
     );
   });
 });

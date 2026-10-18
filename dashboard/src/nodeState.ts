@@ -40,6 +40,19 @@ export type NodeSnapshot = {
   name: string | null;
 };
 
+// One Node of the Simulated Fleet, served from this Node's Cache Pack. It never travels the Mesh and
+// never counts toward Flood Risk; it exists for the map.
+export type FleetEntry = {
+  id: string;
+  name: string;
+  river: string;
+  site: "town" | "headwater";
+  position: [number, number];
+  age_s: number;
+  stale: boolean;
+  measurements: Partial<Record<ReadingKind, Measurement>>;
+};
+
 type NodeStatus = "online" | "mesh_only";
 
 // Where this Node stands with the Hub; the Hub itself is always registered.
@@ -55,6 +68,7 @@ export type NodeState = {
   scenario: { step: string };
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
+  fleet: FleetEntry[];
   official_alerts: OfficialAlert[];
   // Only warnings whose Hub signature this Node verified.
   community_warnings: CommunityWarning[];

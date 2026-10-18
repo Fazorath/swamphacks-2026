@@ -44,6 +44,14 @@ _Avoid_: allowlist, roster, trust list
 The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend
 
+**Dial address**:
+The `host:port` another Node can dial to reach this Node over TCP; Nodes share the ones they know in their announces, so one known address is enough to find the rest.
+_Avoid_: peer address, endpoint, IP
+
+**Hub takeover**:
+Starting a standby Node as the Hub with a copy of the Hub's key, after the Hub has stopped; it carries on from the last Node registry and Shelter status the Mesh heard.
+_Avoid_: failover, election, backup hub
+
 **Mesh-only**:
 A Node that currently has no internet and still takes part in the Mesh. Each Node reports only its own state: Online or Mesh-only. Online-only features (camera tiles, live feeds) stop while a Node is Mesh-only; everything carried over the Mesh keeps working.
 _Avoid_: offline node
@@ -67,12 +75,16 @@ A Node's location snapped to a grid of about 200 m before anything is published;
 _Avoid_: exact location, coordinates
 
 **Scenario**:
-A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by breadboard buttons. No longer the demo's driver (the Replay is); kept for tests and the breadboard.
+A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by the laptop keyboard or HTTP, or jumped to a named step by a wire touched to a breadboard input. No longer the demo's driver (the Replay is); kept for tests and the breadboard. A press changes only the Pi's own Node and does nothing visible while the Sensor is playing a Replay.
 _Avoid_: demo script, simulation, playback
 
 **Replay**:
 A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
+
+**Camera Clip**:
+A five-minute illustrative video a demo camera plays in place of a live feed, composed from short credited sources and lined up with the Event clock; it never claims to show the Node's own site. A manifest beside the clips credits every source and gives `flood_onset_s`, the second the water visibly jumps. Unlicensed footage lives only in the gitignored `.demo/clips/`.
+_Avoid_: recording, live feed, camera footage
 
 **Event clock**:
 The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
@@ -221,6 +233,10 @@ _Avoid_: tile, row, sensor card
 **Hub Panel**:
 The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the Replay controls.
 _Avoid_: admin page, settings, control panel
+
+**Breadboard**:
+The Pi's board of wires and pins that stands in for sensors on stage: plugging a wire from the 3.3 V rail into an input pin is a press that sets the Scenario to that input's step (pressure drop, rain, water rising), and a fourth input resets it. It moves one Node only, so one bad Node cannot raise a Community Warning alone.
+_Avoid_: GPIO panel, controller
 
 **Node Panel**:
 The slide-over shown only on a Node's own screen, holding the Scenario controls and that Node's registration status; never shown to Viewers on other devices.

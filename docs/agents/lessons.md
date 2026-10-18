@@ -9,6 +9,7 @@ A running log for agents and humans starting a new ticket. Read it before you bu
 - **Don't edit `node/uv.lock` by hand unless `uv` is missing.** For 0007 it was edited by hand to move `httpx` from the dev group to runtime dependencies; run `uv lock` once on a machine with `uv` and commit any difference.
 - **On Windows with no `uv`, install it from PowerShell**: `irm https://astral.sh/uv/install.ps1 | iex`, then `uv sync` in `node/`. A plain `python -m venv` fails if the system Python is 3.14, because `cryptography` (needed by `rns`) has no wheel for it; `uv` fetches Python 3.12 itself. After the 0004 merge, `node/.venv` from an older checkout lacks `rns`, so `pytest` stops at `import RNS`.
 - **The pre-commit secret scan matches `sk-` plus 20 characters anywhere**, so a ticket slug with "risk-" and a long tail after it (0062's first name, "flood-risk-levels-…") is blocked as an API key, here and wherever the slug is quoted (the README index, this log). Rename the slug (0062 became `flood-levels-fit-the-river`); never `--no-verify`.
+- A `git pull` in the main checkout aborted with "local changes would be overwritten" while another process moved `HEAD`; `git status` was clean a moment later. Check `git status` before reaching for `reset`.
 - **Check who owns a ticket right before you claim it.** A claim pushed to your own branch is not visible on `main`; two people claimed 0009 minutes apart and the conflict showed up on `git pull`. Pull `main`, check the Owner line, then claim and push the claim to `main` at once.
 - **A Node left running blocks the Node tests and your next run.** `tests/test_reticulum_nodes.py` binds fixed ports (HTTP 8101 to 8103, TCP 4250 to 4252 and 4350 to 4352), and a stray Node on 8000 keeps serving old code beside a fresh one. A Node on a new port shows what is on disk; check `Get-NetTCPConnection -State Listen -LocalPort 8000` before trusting a browser tab.
 - A branch named after its ticket (`NNNN-<slug>`) may already exist from the claim commit. A worktree starts on `worktree-<name>`; push it with `git push origin HEAD:NNNN-<slug>` rather than renaming.
@@ -241,6 +242,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
 - **A Hub with no `registry.json` starts `ver` at the Unix time** (like `seq`), so deleting the file no longer leaves running Nodes ignoring it. In a `MeshedNodes` test the first Hub start also uses the clock, so `advance(...)` before a start-over or the new `ver` can equal the old one.
 
+## Replay speed toggle (2026-10-18)
+
+- **The Hub offers x5, x10 and x30 (`POST /api/replay/rate`); x1 is refused on purpose.** Replay readings carry the real clock as their timestamp, so a Surge (300 cm in under 60 s) is judged in real seconds: S0's 3.5 m rise takes 89 s at x1 and never counts, 18 s at x5 does. `test_the_collapse_surge_still_reaches_the_hub_at_a_slower_rate` covers x5 and x10.
+- **The chosen rate lives on the Hub and is used by Start, Resume, Reset and Jump**; changing it mid-replay re-announces the clock at the same `event_t`. Software path only, not seen in a browser.
+
 ## Replay weather in the Cache Pack (ticket 0052)
 
 - **Open-Meteo answers with its own model-cell coordinates** (asked 27.86, 85.08; got 27.873, 85.034), so `weather_replay.json` stores the grid we asked for, not the answer's `latitude`/`longitude`. A multi-point request returns a list, a single point a dict.
@@ -263,6 +269,17 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Adding a field to a reading or `/api/state` node entry breaks the two exact-field-list tests (`test_community_reading.py`, `test_state_snapshot.py`); update them.
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
 - **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.
+
+## Breadboard (ticket 0016)
+
+- **A press is a wire from the Pi's 3.3 V pin to an input pin**, not a button. The Pi's internal pull-down (`pull_up=False`) keeps an empty pin low, and a press jumps the Scenario to that pin's step (`Scenario.go_to`); only reset goes back. Pin table: `pi/README.md`.
+- **`gpiozero`'s `MockFactory` stores `bounce_time` but does not simulate bounce**, so the 50 ms debounce is untested; it is the library's, set on each `Button`. Drive a mock pin with `factory.pin(17).drive_high()`; set `Device.pin_factory = MockFactory()` in a fixture and restore `None` after.
+- **`lgpio`, the backend `gpiozero` needs on a Pi, is source-only on PyPI and needs `swig`**, so `uv lock` failed on a laptop when it was a dependency (uv builds the sdist to read its metadata). `[tool.uv] dependency-metadata` in `node/pyproject.toml` declares it, so the lock works anywhere and only `uv sync --group pi` builds it. On the team's Pi (Python 3.13, so Debian 13 Trixie rather than Bookworm) the build first failed with `cannot find -llgpio` until `sudo apt install liblgpio-dev`; `swig` and `python3-dev` alone are not enough. `pi/install.sh` installs all of them.
+- **`claim.sh` compares the ticket's Owner with `git config user.name`**, so an Owner written as a handle (`amitathik7`) against the name "Amit Athi Kesavan" makes it refuse. The ticket was already claimed, so 0016 skipped the script.
+- **A plain `uv sync` on the Pi uninstalls `lgpio`** (it is in the `pi` group, which a plain sync leaves out; it was first installed by hand), and the Node then stops with `Falling back from lgpio: No module named 'lgpio'` followed by `OSError: [Errno 22]` from gpiozero's sysfs `NativeFactory` fallback, which modern Pi kernels no longer support. Run `pi/install.sh` or `uv sync --group pi`. `scripts/run-live.sh` used to run a plain `uv sync` and broke the Pi on every start; it now adds `--group pi` when `/proc/device-tree/model` says Raspberry Pi (confirmed on the team's Pi, 2026-10-18).
+- **Real Pi (2026-10-18):** the hotspot came up, a laptop joined it, and each Breadboard wire changed the Pi's readings on the laptop's dashboard. With the laptop's `firewalld` stopped, the laptop Hub and the Pi's Node found each other over AutoInterface on the Pi's own hotspot. With `firewalld` on, opening UDP 29716 and 42671 on the zone did not fix it ("No multicast echoes received on wlan0"); the missing rule was not found. Trusting the hotspot connection's zone was suggested but not confirmed. A peer shows under its id, not its name, until the Hub's registry reaches it. Unexplained: the laptop terminal froze and both Nodes stopped once, with no Pi log kept.
+- **`ssh appu@10.42.0.1` said "connection refused" while ping worked, because 10.42.0.1 was the laptop.** NetworkManager's shared mode defaults to `10.42.0.1/24` on both the laptop's Ethernet cable to the Pi and the Pi's hotspot, so the laptop answered itself. The Pi's `sshd` was fine (`Accepted publickey ... from 10.42.0.1` in its log is the laptop). The hotspot now uses `10.88.0.1`. The tell: "refused" with a working ping means a machine answered that has no listener; check `ip -4 addr | grep <address>` on the machine you are typing on.
+- `MeshedNodes` Nodes start with `gpio="off"` so a test run on a real Pi never reads its pins. `pi/setup-hotspot.sh up` was only exercised for its missing-setting and bad-argument paths here; the `nmcli` part never ran.
 
 ## Pi hardware check (ticket 0004)
 
@@ -427,7 +444,100 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The pre-push check warned once on the 0069 merge to `main` ("main is getting code that fails the Commands") and the same commit passed `check.sh` three times** (before the merge, on the merged tree, and after the push). Which Command failed is unknown: the push was piped through `tail -3`, which kept only the last lines of the hook's output. Run `git push` unpiped so the hook's `check.sh` summary stays visible; the known flake is `test_reticulum_nodes.py` (see the entries above).
 - `scripts/run-demo.sh` now downloads `cache-pack-v5` (Nepal vectors and elevation, no raster tiles). A laptop that already ran the demo keeps the old pack in `.demo/pack/`, and a Node never replaces a valid pack: delete `.demo/pack/` (and the Hub's saved `shelter_status.json`) once to pick up v5. Only `bash -n` was run on the script, not the download.
 
+## Layer rail (ticket 0034)
+
+- **Open Panels are remembered in `localStorage` (`storm-shield.open-panels`), so tests leaked state into each other** (a test that expanded Cameras left it open for the next). `setup.ts` now clears storage after every test.
+- **A warning that arrives after a resident opened a third right-side Panel pushes the oldest one out** (two per side). Tests that expand Cameras must wait for the state first; `nodeUnreachableFlow.test.tsx` swaps Cameras for Alerts for that reason.
+- **Defaults follow `ui.md` D-50, not the ticket's "calm: Readings and Evacuation Plan"**: calm is Readings alone; Elevated/High adds the Plan; a warning adds the Alerts too. Readings stay open (other side).
+- **The Storm Signal button only hides the top-bar pill**; there is no edge-darkening layer yet. The Alerts button has no badge because nothing acknowledges warnings yet.
+- Panel re-centring (`easeTo` with padding) and the rail look are tested only against the fake map; not seen in a real browser.
+
 ## Map labels do not overlap (ticket 0078)
 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
+
+## Labels declutter, second pass (after 0078)
+
+- **0078 was "done" but the owner's screenshot (replay, High) still showed overlapping labels**: it kept `must` labels (key places, real Nodes, the chosen Shelter) drawn even with no free side, named every town, and gave each Node label its SIMULATED and STALE tags, so the labels were very wide. Now no label is ever drawn over another (`must` is gone from `labelPlacement.ts`), only key places are named, only the plan's chosen Shelter is named (the others on hover), and a Node's map label is its name and level (tags show on hover or when selected, via `.node-label-extra`).
+- Still unseen in a real browser (no Chrome extension here): the 0.58 width estimate and whether dots still crowd at Betrawati. Look at the valley zoom on the demo laptop.
+
+## Camera Clips (ticket 0076)
+
+- **Real run, 2026-10-18** (`scripts/make_camera_clips.py`, static ffmpeg 7.0.2 from `uv run --with imageio-ffmpeg`, WSL2): the three committed clips are 300.0 s, 6.0 MB each (17.9 MB total, budget 20), 46 to 65 s each to encode and 166 s for the run with the sources already downloaded; `--local` adds the Gyirong clip, 24.0 MB and 238 s. Sources are 7 to 73 MB each and download once into `.demo/clip-sources/`.
+- **Wikimedia answers HTTP 429 to a burst** (six parallel downloads, then even a single `curl` for a few minutes). Download one file at a time; the script sleeps 3 s between sources and honours `Retry-After`. Send a `User-Agent`.
+- **The sources are short, so the calm stretch is one 9 s Wallowa clip at half speed, played forward then backward, five times.** Every public-domain "calm river" clip found was 9 to 22 s, and only Wallowa was a fixed camera (Grande Ronde is raft-mounted, Klamath is whitewater, Molalla is a rock pool). A real fixed-camera calm clip of a minute or more would remove the visible repeat; look for one before the pitch.
+- **No Nepal footage is public domain.** The only footage of the 26 August 2026 flood we found is CCTV from Gyirong Port on Commons, tagged `Pd-automated` with an unknown author and a news organisation's X post as its source; it is built into `.demo/clips/` only. Bondo (CC0, a real debris flow with boulders over a road) and the NPS Bright Angel videos (public domain, 2026) cover "extreme" in the committed set. Not used: usgs.gov (HTTP 403 to a scripted request, so Verde-Tangle and Kennebec were never fetched), Oak Creek (CC BY 2.0, usable but not needed), Parapara and other CC BY-SA files (share-alike would bind the joined clip). **Riera de Cabrils was built in, then dropped after the code-review:** its Commons page says `PD-self` in the permission field and `cc-by-sa-4.0` in the licence header; the API's short licence name alone said "Public domain". Read a file's wikitext (`index.php?title=File:...&action=raw`), not only the API's licence name, before committing footage; the four files kept have `PD-USGov-BLM` / `PD-USGov-NPS` plus Flickr's CC BY, or CC0, and their credit lines say so.
+- **ffmpeg `xfade` needs one timebase on both inputs**, and a `concat` after `reverse` leaves 1/1000000 on its output: `fps=24` on every input of the join fixes it. Reversing five long clips inside one graph also holds them all in memory, so each piece is rendered once to a near-lossless intermediate and the join only cross-fades.
+- **The licence check first accepted `CC BY-NC` and `CC BY-SA`** because it used `startswith("CC BY")`; a test that tried them caught it. The pattern is now exact (`Public domain`, `CC0`, `CC BY n.n`).
+- **mypy strict follows `scripts/` imports from the Node's tests**, so a script a test imports must be fully typed; `imageio_ffmpeg` is in the mypy `ignore_missing_imports` override because it is only installed by `--with`.
+- The webm sources log "File ended prematurely" while being trimmed; the clips decode and play to 300.0 s, so it is only a truncated final packet.
+- **Not proven:** playback in Safari and iOS Safari (the clips are H.264 Main, yuv420p, `+faststart`, no audio, which is what they accept, but no Apple device was used) and in a browser at all; the Hub does not read `CAMERA_CLIPS_DIR` until 0075.
+
+## Readings Panel ladder (ticket 0070)
+
+- **The state has no flag for the breadboard Pi**, so `readingsLadder` pins the first real (non-simulated) Node with no River km that is not the Hub. A real Audience Node with no River km would be pinned by mistake; add a flag to the reading if that happens.
+- **A fleet marker's popover sits inside the marker element**, so its clicks bubble to the marker's own listener; `MapMarker` ignores clicks inside `[data-marker-ignore]`.
+- `test_reticulum_nodes.py` errored at setup in a full run because Nodes left by an earlier `check.sh` run of mine still held 8103/4312; they were mine (start time matched the run), killed, and the file passed alone.
+- Not seen in a browser: the ladder layout, the wave marker and the popover position are tested against the fake map only.
+
+## Phone layout (ticket 0036)
+
+- **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
+- **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
+- **Manual check done (2026-10-18):** the owner used a phone over Tailscale against `scripts/run-demo.sh` on `main`; all four tabs worked. The wrapped status strip took over 30% of the screen, so it is one sideways-scrolling line now. Tailscale was stopped on the laptop at first (`tailscale status` says so), and a leftover pack server on 8900 blocked `run-demo.sh` until it was stopped. **Still open:** the bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a home pick has no on-screen cancel on the phone.
+
+## 3D terrain (ticket 0067)
+
+- **MapLibre 4.7.1 has no tint-by-height layer** (`color-relief` is 5.x), so the height bands are a custom protocol that repaints the pack's Terrarium tile; `hillshade` alone only shades slopes. The fake map records `terrain`, `pitch` and `flights`; `addressesTheMapWouldFetch` strips a custom protocol's prefix so the "own Node only" test still sees the real address.
+- The owner tried the switch and terrain on the demo laptop (2026-10-18) and they work; fps and p95 frame time were not recorded, and no second laptop was tried.
+
+## Sending email from Claude Code (ticket 0074)
+
+- **The team address is `stormshieldteam.uf@gmail.com`**, for outreach (the Nepal camera message) and sign-ups. Its password and two-step code are never committed or pasted into chat; share them through a password manager.
+- **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
+- **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
+- **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
+## Temperature, cloud cover and rain on the terrain (ticket 0055)
+
+- **The weather picture is a MapLibre `image` source made from a canvas data address**, rows spaced in Mercator so places stay where the data puts them. jsdom has no canvas, so `setup.ts` mocks `weatherImageUrl` with a pixel checksum; tests tell pictures apart by that address, and `paintWeatherField` is tested on its raw pixels.
+- **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
+- **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.
+
+## Wave front and river flow (ticket 0065)
+
+- **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
+- **An effect that needs a layer added by another effect must be called after it in the same component**: child effects run before the parent's, so a `WaveLayers` child looked for the `river-flow` layer before `addNepalBasemap` had added it and never retried. `useRiverFlow` is a hook called below the basemap effect in `NodeMap`. `react-hooks/set-state-in-effect` rejects the "set a ready flag" alternative.
+- **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
+- **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
+- Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
+
+## Readings card motion (ticket 0037)
+
+- **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.
+- **A flash is a remount**: `ReadingSlot` bumps a key when its value changes, so the CSS animation restarts. Reduced motion is checked in the components (`usePrefersReducedMotion`, test switch `setReducedMotion`) and in a media query.
+- **Not done / not seen in a browser:** Stale dims by opacity only (desaturating needs `filter`, outside the transform/opacity rule); the chip fades in without fading the old one out; every card fades in on mount, not only new Nodes; the row slots have no fixed width of their own (the three grid columns do).
+
+## Flood alert email (ticket 0081)
+
+- **The Hub's email is separate from the Gmail connector in Claude Code.** The Hub sends over SMTP (`smtp.gmail.com:465`) with `ALERT_EMAIL_FROM`, `ALERT_EMAIL_APP_PASSWORD` and `ALERT_EMAIL_TO` from `.env` (all three, or nothing is sent). `scripts/run-demo.sh` loads `.env`, so a start from the demo script picks them up; a Node started any other way must export them.
+- **Create the app password once, on the team account:** turn on 2-step verification, then Google Account, Security, App passwords, make one called "Storm Shield Hub", and paste the 16 characters into `.env` (spaces are fine to drop). The normal password is rejected for SMTP. The password never goes in chat, a ticket or the repo.
+- **A send needs internet.** The first Community Warning (08:37 Surge) comes before the 09:20 internet cue, so it normally goes out; a failure is logged as `could not email the flood alert for <node>: <error type>` and nothing else changes. The log never carries the SMTP server's reply text, because it can echo the login.
+- **Proven on 2026-10-18:** a demo run from `scripts/run-demo.sh` on the owner's laptop emailed "ALERT OF FLOOD INCOMING!" to the team when the Replay was started (a real Gmail send over port 465 with the team account's app password). The tests still replace `smtplib.SMTP_SSL`.
+- **`.env` is sourced by bash, so a value with spaces must be quoted.** Google shows an app password as `abcd efgh ijkl mnop`; pasted unquoted, `run-demo.sh` stopped with `<word>: command not found` and that error printed the first word of the password into the log. Drop the spaces or quote the value, and revoke the password if its first group reached a log you share.
+
+## Hub replay camera (ticket 0038)
+
+- **jsdom cannot play a `<video>`**: `play`, `pause` and `currentTime` do nothing (and log "not implemented"). `fakeMedia.ts`, installed in `setup.ts`, gives every video a readable clock and paused flag; the sync tests read `currentTime` and `paused` back.
+- **The tile text `NPT` now appears twice** (header and `CAMERA · REPLAY 09:18 NPT`), so tests that waited for the header with `/NPT/` failed on "multiple elements". Use `/NPT · REPLAY/` for the header. A `<video>` has no `img` role: find it by its label.
+- **The clip is positioned from the clock the dashboard polls once a second**, so between polls the browser's own playback (1x, which is the Event clock at ×30) carries it; it is moved only when it drifts 1.5 s or the clock jumps or resets. An autoplay refusal is only logged (`console.warn`); the `TAP TO PLAY` fallback is 0077.
+- **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
+- **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
+- **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
+
+## Peer Mesh in Docker grilling (2026-10-18)
+
+- **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
+- **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
+- **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.

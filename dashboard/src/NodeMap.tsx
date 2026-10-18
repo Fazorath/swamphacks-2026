@@ -1,18 +1,22 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { House, MapPin } from "lucide-react";
 import { LngLatBounds, Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  HATCH_IMAGE,
   NATIONAL_ZOOM,
   VALLEY_ZOOM,
   addNepalBasemap,
   baseStyle,
+  hatchImage,
   lineCollection,
   readMapColors,
   setOverlay,
   type MapColors,
 } from "./basemap";
+import { nepalClockTime } from "./EventClockTag";
 import { MapMarker } from "./MapMarker";
 import {
   estimatedLabelSize,
@@ -22,7 +26,21 @@ import {
   type Placement,
   type Side,
 } from "./labelPlacement";
-import { NodeTags } from "./NodeTags";
+import {
+  TERRAIN_EXAGGERATION,
+  TERRAIN_FROM_ZOOM,
+  TERRAIN_PITCH,
+  VALLEY_VIEW,
+  createFrameWatch,
+  type TerrainChoice,
+} from "./terrain";
+import { markerState } from "./markerState";
+import { fieldCorners, paintWeatherField } from "./weatherField";
+import type { WeatherLayer } from "./weatherLayer";
+import { weatherImageUrl } from "./weatherImageUrl";
+import { showWeatherField } from "./weatherOnMap";
+import type { WeatherReplay } from "./useWeatherReplay";
+import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
 import type { NepalMap, Shelter } from "./evacuationPlan";
@@ -30,7 +48,13 @@ import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
+import type { CommunityWarning } from "./communityWarnings";
+import type { EventClock } from "./useEventClock";
+import { usePrefersReducedMotion } from "./useViewport";
 import type { RiverLine } from "./waveEta";
+import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
+import { useRiverFlow } from "./useRiverFlow";
+import { WaveFrontLayer } from "./WaveFrontLayer";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
 const NEPAL_SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
@@ -48,14 +72,23 @@ function viewOf(map: MapLibreMap): View {
   };
 }
 
+// Only these tags stay on a Node's map label; the rest show on hover and in the Readings Panel.
 const TAG_WIDTH_PX = 70;
 
-function nodeTagCount(node: NodeOnMap): number {
-  return [node.simulated, !node.registered, node.level, node.stale].filter(Boolean).length;
+function mapTagCount(node: NodeOnMap): number {
+  const contactLost = markerState(node).contactArc !== null;
+  return [contactLost, !node.simulated].filter(Boolean).length;
 }
 
-// Every label that competes for room on screen. The chosen Shelter, key places and the real Nodes
-// are never left out; the rest give way to them (0078).
+// A town the wave reached keeps the time it arrived beside its name (D-21).
+function placeLabelText(name: string, waveStamps: Map<string, number>): string {
+  const arrivedAt = waveStamps.get(name);
+  return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
+}
+
+// Every label that competes for room on screen. None is ever drawn over another: the chosen
+// Shelter, the selected Node, key places and real Nodes win, and a label that loses is hidden until
+// its marker is hovered. Shelters other than the plan's choice are named only on hover (0078).
 function labelsOnScreen(
   map: MapLibreMap,
   view: View,
@@ -64,6 +97,7 @@ function labelsOnScreen(
   chosenShelterId: string | undefined,
   nodes: NodeOnMap[],
   selectedId: string | null,
+  waveStamps: Map<string, number>,
 ): MapLabel[] {
   const at = (lat: number, lon: number) => map.project([lon, lat]);
   const labels: MapLabel[] = [];
@@ -71,34 +105,38 @@ function labelsOnScreen(
     labels.push({
       id: `place:${place.name}`,
       ...at(place.lat, place.lon),
-      ...estimatedLabelSize(place.name, 12),
-      rank: place.key ? 1 : 4,
-      must: place.key,
+      ...estimatedLabelSize(placeLabelText(place.name, waveStamps), 12),
+      rank: 1,
     });
   }
-  for (const each of shelters) {
-    const chosen = each.id === chosenShelterId;
+  const chosen = shelters.find((each) => each.id === chosenShelterId);
+  if (chosen) {
     labels.push({
-      id: `shelter:${each.id}`,
-      ...at(each.pos[0], each.pos[1]),
-      ...estimatedLabelSize(shelterLabel(each, true), 12),
-      rank: chosen ? 0 : 3,
-      must: chosen,
+      id: `shelter:${chosen.id}`,
+      ...at(chosen.pos[0], chosen.pos[1]),
+      ...estimatedLabelSize(shelterLabel(chosen, true), 12),
+      rank: 0,
     });
   }
   const fleetShowing = zoomBlend(view.zoom) >= 0.5;
   for (const node of nodes) {
-    if (node.simulated && !fleetShowing) continue;
+    if (node.fleet && !fleetShowing) continue;
     const text = node.label + (node.waterLevelCm !== null ? ` · ${node.waterLevelCm} cm` : "");
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
-      ...estimatedLabelSize(text, 13, nodeTagCount(node) * TAG_WIDTH_PX),
-      rank: node.id === selectedId ? 0 : node.simulated ? 5 : 2,
-      must: !node.simulated,
+      ...estimatedLabelSize(text, 13, mapTagCount(node) * TAG_WIDTH_PX),
+      rank: node.id === selectedId ? 0 : node.fleet ? 5 : 2,
     });
   }
   return labels;
+}
+
+function setTerrainDrawn(map: MapLibreMap, drawn: boolean) {
+  if (!map.getSource("elevation")) return;
+  if (drawn === (map.getTerrain() !== null)) return;
+  map.setTerrain(drawn ? { source: "elevation", exaggeration: TERRAIN_EXAGGERATION } : null);
+  if (!drawn && map.getPitch() > 0) map.easeTo({ pitch: 0 });
 }
 
 function floodProneCollection(areas: FloodProneAreas | null): GeoJSON.FeatureCollection {
@@ -142,8 +180,16 @@ function frameUntilMoved(
 
 type Props = {
   nodes: NodeOnMap[];
+  // The Simulated Fleet, drawn small beside the Nodes.
+  fleet: NodeOnMap[];
+  // How often each Node's Flood Risk has risen; a new count plays that Node's ring once.
+  rises: Record<string, number>;
+  stormSignalOn: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  // The fleet Node whose popover is open (D-38); opening it never touches the Readings Panel.
+  fleetOpenId: string | null;
+  onToggleFleet: (id: string) => void;
   home: Home | null;
   // From the Cache Pack; empty until a Node holds one.
   shelters: Shelter[];
@@ -153,9 +199,16 @@ type Props = {
   places: Place[];
   // The valley's own river line, drawn only when the pack has no Nepal rivers.
   river: RiverLine | null;
+  // What the wave front needs: the Surges that started it and the Event clock it runs on.
+  warnings: CommunityWarning[];
+  clock: EventClock | null;
+  // False with the Fleet toggle off: the slow dashes on the rivers stop with the fleet.
+  ambientFlow: boolean;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   route: LatLon[] | null;
+  // Pixels at each edge that open Panels cover.
+  panelRoom: { left: number; right: number };
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
   picking: boolean;
@@ -167,12 +220,25 @@ type Props = {
   blocking: boolean;
   onToggleBlocking: () => void;
   onTapRoad: (point: Home) => void;
+  // What the resident (and the frame-rate watch) left terrain at; `onTerrainSlow` is that watch.
+  terrain: TerrainChoice;
+  onTerrainSlow: () => void;
+  // Counts presses of the Valley button; each one flies the camera to the valley.
+  valleyFlights: number;
+  // The Weather layer on the terrain, and the Event clock it follows (null: the file's first hour).
+  weatherLayer: WeatherLayer;
+  weather: WeatherReplay;
 };
 
 export function NodeMap({
   nodes,
+  fleet,
+  rises,
+  stormSignalOn,
   selectedId,
   onSelect,
+  fleetOpenId,
+  onToggleFleet,
   home,
   shelters,
   openShelterIds,
@@ -180,8 +246,12 @@ export function NodeMap({
   nepal,
   places,
   river,
+  warnings,
+  clock,
+  ambientFlow,
   shelter,
   route,
+  panelRoom,
   draftHome,
   picking,
   onPickHome,
@@ -191,12 +261,24 @@ export function NodeMap({
   blocking,
   onToggleBlocking,
   onTapRoad,
+  terrain,
+  onTerrainSlow,
+  valleyFlights,
+  weatherLayer,
+  weather,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
   const [view, setView] = useState<View | null>(null);
   const colors = useRef<MapColors | null>(null);
   const moved = useRef(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const terrainChoice = useRef(terrain);
+  const onTerrainSlowRef = useRef(onTerrainSlow);
+  useEffect(() => {
+    terrainChoice.current = terrain;
+    onTerrainSlowRef.current = onTerrainSlow;
+  });
   const [placement, setPlacement] = useState<Placement>(new Map());
   const nodeIds = nodes.map((node) => node.id).join();
 
@@ -211,6 +293,8 @@ export function NodeMap({
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
+      // The demo laptop has 8 GB: keep few decoded tiles, elevation ones included.
+      maxTileCacheSize: 40,
     });
     const markMoved = () => (moved.current = true);
     container.addEventListener("pointerdown", markMoved);
@@ -218,7 +302,31 @@ export function NodeMap({
     const blendWithZoom = () =>
       container.style.setProperty("--zoom-blend", String(zoomBlend(created.getZoom())));
     created.on("zoom", blendWithZoom);
-    created.on("moveend", () => setView(viewOf(created)));
+    created.on("styleimagemissing", ({ id }: { id: string }) => {
+      if (id === HATCH_IMAGE && !created.hasImage(id)) {
+        created.addImage(id, hatchImage(colors.current!.floodProne));
+      }
+    });
+    // The frame-rate watch listens only while the camera moves and terrain is drawn.
+    const frameWatch = createFrameWatch(() => onTerrainSlowRef.current());
+    let moving = false;
+    created.on("movestart", () => {
+      moving = true;
+      frameWatch.restart();
+    });
+    created.on("render", () => {
+      if (moving && created.getTerrain()) frameWatch.frame();
+    });
+    created.on("moveend", () => {
+      moving = false;
+      setView(viewOf(created));
+    });
+    // Terrain exists only over the valley; zooming out to the country releases it and flattens
+    // the map. Zooming in never tilts it (D-33): only a fly or the Valley button does.
+    created.on("zoomend", () => {
+      const wanted = terrainChoice.current === "3d" && created.getZoom() >= TERRAIN_FROM_ZOOM;
+      setTerrainDrawn(created, wanted);
+    });
     created.on("load", () => {
       blendWithZoom();
       setView(viewOf(created));
@@ -239,11 +347,42 @@ export function NodeMap({
     addNepalBasemap(map, nepal, colors.current!);
   }, [map, styleReady, nepal]);
 
+  // After the basemap effect above, so the river-flow layer exists when it first looks.
+  useRiverFlow(map, styleReady && nepal !== null, ambientFlow && !reducedMotion);
+
+  // The resident's 2D | 3D choice (and a frame-rate drop) applies at once, tilting or flattening.
+  useEffect(() => {
+    if (!map || !styleReady || !nepal) return;
+    const over = map.getZoom() >= TERRAIN_FROM_ZOOM;
+    setTerrainDrawn(map, terrain === "3d" && over);
+    if (over) map.easeTo({ pitch: terrain === "3d" ? TERRAIN_PITCH : 0 });
+  }, [map, styleReady, nepal, terrain]);
+
+  useEffect(() => {
+    if (!map || !styleReady || valleyFlights === 0) return;
+    moved.current = true;
+    map.flyTo({ ...VALLEY_VIEW, pitch: terrain === "3d" && nepal ? TERRAIN_PITCH : 0 });
+    // A flight answers a press of the button; changing 2D | 3D later must not fly again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, styleReady, valleyFlights]);
+
   useEffect(() => {
     if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
     // Re-frame when the set of Nodes or the Nepal map changes, not on every reading.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, nepal, nodeIds]);
+
+  // A Panel opening must not cover the selected Node, so the map's centre moves to the clear part.
+  const selected = nodes.find((node) => node.id === selectedId);
+  const selectedLat = selected?.position[0];
+  const selectedLon = selected?.position[1];
+  useEffect(() => {
+    if (!map || !styleReady || selectedLat === undefined || selectedLon === undefined) return;
+    map.easeTo({
+      center: [selectedLon, selectedLat],
+      padding: { top: 0, bottom: 0, left: panelRoom.left, right: panelRoom.right },
+    });
+  }, [map, styleReady, selectedLat, selectedLon, panelRoom.left, panelRoom.right]);
 
   const floodProneData = useMemo(() => floodProneCollection(floodProne), [floodProne]);
   const valleyRiverData = useMemo(
@@ -259,6 +398,20 @@ export function NodeMap({
     setOverlay(map, "route", routeData);
     setOverlay(map, "blocked-roads", blockedData);
   }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
+
+  const eventT = clock?.event_t ?? null;
+  // The painted field changes at most once a second, as the polled Event clock does.
+  useEffect(() => {
+    if (!map || !styleReady) return;
+    if (weatherLayer === "off" || weather.status !== "ready") {
+      showWeatherField(map, null);
+      return;
+    }
+    const { grid, times } = weather.grid;
+    const timeMs = eventT === null ? Date.parse(times[0]) : eventT * 1000;
+    const image = paintWeatherField(weather.grid, weatherLayer, timeMs);
+    showWeatherField(map, { url: weatherImageUrl(image), corners: fieldCorners(grid) });
+  }, [map, styleReady, weatherLayer, weather, eventT]);
 
   useEffect(() => {
     if (!map) return;
@@ -276,9 +429,31 @@ export function NodeMap({
     };
   }, [map, picking, blocking, onPickHome, onTapRoad]);
 
+  const waving = river !== null && eventT !== null && warnings.length > 0;
+  const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
+  const waveStamps = waving
+    ? townsTheWaveReached(
+        river,
+        warnings,
+        places.filter((place) => place.key),
+        eventT,
+      )
+    : new Map<string, number>();
+
   // Derived during render, from the last placement so a label keeps its side until it must move.
   const labels =
-    map && view ? labelsOnScreen(map, view, places, shelters, shelter?.id, nodes, selectedId) : [];
+    map && view
+      ? labelsOnScreen(
+          map,
+          view,
+          places,
+          shelters,
+          shelter?.id,
+          [...nodes, ...fleet],
+          selectedId,
+          waveStamps,
+        )
+      : [];
   const nextPlacement = placeLabels(labels, placement);
   if (!samePlacement(nextPlacement, placement)) setPlacement(nextPlacement);
   const sideOf = (id: string): Side => placement.get(id) ?? "right";
@@ -305,6 +480,15 @@ export function NodeMap({
         </div>
       )}
       <div ref={attach} className={picking || blocking ? "node-map picking" : "node-map"} />
+      {map && styleReady && (
+        <WaveFrontLayer
+          map={map}
+          river={river}
+          warnings={warnings}
+          clock={clock}
+          reducedMotion={reducedMotion}
+        />
+      )}
       {map &&
         view &&
         visiblePlaces(places, view)
@@ -315,10 +499,16 @@ export function NodeMap({
               map={map}
               lat={place.lat}
               lon={place.lon}
-              className={place.key ? "place-label key" : "place-label"}
+              className={[
+                "place-label",
+                place.key && "key",
+                waveStamps.has(place.name) && "wave-reached",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
               <span className={`map-label label-${sideOf(`place:${place.name}`)}`}>
-                {place.name}
+                {placeLabelText(place.name, waveStamps)}
               </span>
             </MapMarker>
           ))}
@@ -334,10 +524,10 @@ export function NodeMap({
               lon={each.pos[1]}
               className={chosen ? "shelter-marker" : open ? "shelter-pin" : "shelter-pin closed"}
             >
-              +
+              <MapPin size={18} aria-hidden="true" />
               <span
                 className={`map-label shelter-label label-${sideOf(`shelter:${each.id}`)}${
-                  placement.get(`shelter:${each.id}`) === null ? " label-hidden" : ""
+                  placement.get(`shelter:${each.id}`) == null ? " label-hidden" : ""
                 }`}
               >
                 {shelterLabel(each, open)}
@@ -347,47 +537,43 @@ export function NodeMap({
         })}
       {map && draftHome && (
         <MapMarker map={map} lat={draftHome.lat} lon={draftHome.lon} className="home-draft-marker">
-          ⌂
+          <House size={16} aria-hidden="true" />
         </MapMarker>
       )}
       {map && home && (
         <MapMarker map={map} lat={home.lat} lon={home.lon} className="home-marker">
-          ⌂
+          <House size={16} aria-hidden="true" />
         </MapMarker>
       )}
       {map &&
-        nodes.map((node) => {
-          const state = [
-            node.simulated ? "simulated" : "real",
-            node.stale ? "stale" : "fresh",
-            !node.registered && "unverified",
-            node.level,
-            node.id === selectedId && "selected",
-          ]
-            .filter(Boolean)
-            .join(" ");
-          return (
-            <MapMarker
-              key={node.id}
-              map={map}
-              lat={node.position[0]}
-              lon={node.position[1]}
-              className={`node-marker ${state}`}
-              onClick={() => onSelect(node.id)}
-            >
-              <span className="node-dot" />
-              <span
-                className={`map-label node-label label-${sideOf(`node:${node.id}`)}${
-                  placement.get(`node:${node.id}`) === null ? " label-hidden" : ""
-                }`}
-              >
-                <strong>{node.label}</strong>
-                {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
-                <NodeTags node={node} />
-              </span>
-            </MapMarker>
-          );
-        })}
+        fleet.map((node) => (
+          <NodeMarker
+            key={node.id}
+            map={map}
+            node={node}
+            selected={false}
+            popoverOpen={node.id === fleetOpenId}
+            rises={rises[node.id] ?? 0}
+            onSelect={onToggleFleet}
+            side={sideOf(`node:${node.id}`)}
+            labelHidden={placement.get(`node:${node.id}`) === null}
+          />
+        ))}
+      {map &&
+        nodes.map((node) => (
+          <NodeMarker
+            key={node.id}
+            map={map}
+            node={node}
+            selected={node.id === selectedId}
+            wavePassed={wavePassedIds.has(node.id)}
+            rises={rises[node.id] ?? 0}
+            onSelect={onSelect}
+            side={sideOf(`node:${node.id}`)}
+            labelHidden={placement.get(`node:${node.id}`) === null}
+          />
+        ))}
+      {stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
     </section>
   );
 }

@@ -34,7 +34,12 @@ trap 'stop_node; exit 0' INT TERM
 start_node() {
   stop_node
   (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build >/dev/null)
-  (cd node && uv sync --quiet)
+  # A plain sync removes lgpio, which only the pi group installs, so the Pi needs the group.
+  if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
+    (cd node && uv sync --quiet --group pi)
+  else
+    (cd node && uv sync --quiet)
+  fi
   # Run the venv binary directly: under `uv run` the Node is a child of uv, and
   # stopping uv would leave the Node running and holding its ports.
   (cd node && exec .venv/bin/storm-shield-node) &

@@ -13,14 +13,16 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from storm_shield.breadboard import open_breadboard
 from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
     CachePack,
 )
-from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
+from storm_shield.cameras import Cameras, CameraTile, ClipFiles
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
+from storm_shield.flood_email import FloodEmail
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
 from storm_shield.internet_connection import (
     CONNECTIVITY_TIMEOUT_SECONDS,
@@ -109,6 +111,11 @@ class ReplayJump(BaseModel):
     phase: str
 
 
+class ReplayRate(BaseModel):
+    # Slower than x5 stretches S0's 3.5 m rise past the 60 s Surge window, so no warning would fire.
+    rate: Literal[5, 10, 30]
+
+
 class ReplayPhase(BaseModel):
     id: str
     label: str
@@ -132,7 +139,6 @@ def create_app(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     tile_source: httpx.Client | None = None,
     internet_source: httpx.Client | None = None,
-    camera_source: httpx.Client | None = None,
     weather_source: httpx.Client | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
@@ -147,7 +153,6 @@ def create_app(
     internet = InternetConnection(
         internet_source or httpx.Client(timeout=CONNECTIVITY_TIMEOUT_SECONDS)
     )
-    cameras = Cameras(camera_source or httpx.Client(timeout=FETCH_TIMEOUT_SECONDS))
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
@@ -158,6 +163,7 @@ def create_app(
             f"NODE_REPLAY_TRACK {settings.replay_track!r} is not in the replay timeline "
             f"({', '.join(timeline.tracks)})"
         )
+    cameras = Cameras(settings.camera_clips_dir, settings.role, timeline.start_unix)
     event_clock = EventClock()
     simulated_fleet = SimulatedFleet()
 
@@ -184,8 +190,21 @@ def create_app(
         keep_reading,
     )
 
+    def press_a_step(step_name: str) -> None:
+        with publisher.lock:
+            scenario.go_to(step_name)
+            publisher.share()
+
+    def reset_the_scenario() -> None:
+        with publisher.lock:
+            scenario.reset()
+            publisher.share()
+
+    breadboard = open_breadboard(settings.gpio, press_a_step, reset_the_scenario)
+
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
+    flood_email = FloodEmail.from_settings(settings)
 
     def hear_community_warning(_: str, message: Message) -> None:
         if isinstance(message, CommunityWarning):
@@ -210,6 +229,9 @@ def create_app(
         for warning in hub_warnings.issue_for_new_surges(river_km, surge_t, now):
             # The Hub does not hear its own broadcasts, so it keeps the warning itself.
             heard_warnings.hear(warning)
+            # A measured speed updates a warning the team was already emailed about.
+            if flood_email and warning.measured is None:
+                flood_email.send_for(warning)
             try:
                 mesh.publish(warning)
             except Exception:
@@ -337,7 +359,7 @@ def create_app(
         event = event_clock.current(clock())
         if event.state == "playing" and event.event_t >= timeline.end_unix:
             announce_event_clock(
-                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=timeline.rate)
+                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=event.rate)
             )
 
     def repeat_due_official_alerts() -> None:
@@ -408,16 +430,6 @@ def create_app(
                     logger.exception("could not check whether this Node has internet")
                 await asyncio.sleep(settings.internet_check_seconds)
 
-        # Apart from the internet check, so slow cameras never delay noticing the cable is out.
-        async def keep_cameras_fresh() -> None:
-            while True:
-                try:
-                    if internet.status == "online":
-                        await asyncio.to_thread(cameras.refresh_due, clock())
-                except Exception:
-                    logger.exception("could not refresh the camera pictures")
-                await asyncio.sleep(settings.internet_check_seconds)
-
         # Also how a Hub whose pack arrives late starts announcing; it waits at most one period.
         async def keep_repeating_shelter_status() -> None:
             while True:
@@ -476,7 +488,6 @@ def create_app(
         tasks = [
             asyncio.create_task(keep_sharing()),
             asyncio.create_task(keep_checking_internet()),
-            asyncio.create_task(keep_cameras_fresh()),
             asyncio.create_task(keep_signing_up()),
         ]
         if settings.role == "hub":
@@ -489,9 +500,14 @@ def create_app(
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         if settings.role == "hub" or settings.weather_forecast_url:
             tasks.append(asyncio.create_task(keep_weather_forecast_fresh()))
-        yield
-        for task in tasks:
-            task.cancel()
+        try:
+            yield
+        finally:
+            for task in tasks:
+                task.cancel()
+            # Released even if the app stops on an error, or the pins stay held.
+            if breadboard:
+                breadboard.close()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
@@ -530,20 +546,27 @@ def create_app(
 
     @app.get("/api/cameras")
     def camera_tiles() -> list[CameraTile]:
-        return cameras.tiles(internet.status, clock())
+        return cameras.tiles(internet.status)
 
-    @app.get("/api/cameras/{camera_id}.jpg")
-    def camera_picture(camera_id: int) -> Response:
+    def files_to_serve(camera_id: str) -> ClipFiles:
         if not cameras.knows(camera_id):
             raise HTTPException(status_code=404, detail="no such camera")
-        picture = cameras.picture(camera_id, internet.status, clock())
-        if picture is None:
+        files = cameras.clip_files(camera_id, internet.status)
+        if files is None:
             raise HTTPException(
-                status_code=503,
-                detail="no live picture: this Node is Mesh-only or the camera failed",
+                status_code=404,
+                detail="no clip: this Node is a Sensor or Mesh-only, or the clip is missing",
             )
-        # A cached copy shown later would look live, which is exactly what this must never do.
-        return Response(picture, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+        return files
+
+    # FileResponse answers range requests, which is what lets a phone start and seek the clip.
+    @app.get("/api/cameras/{camera_id}/clip")
+    def camera_clip(camera_id: str) -> FileResponse:
+        return FileResponse(files_to_serve(camera_id).video, media_type="video/mp4")
+
+    @app.get("/api/cameras/{camera_id}/poster")
+    def camera_poster(camera_id: str) -> FileResponse:
+        return FileResponse(files_to_serve(camera_id).poster, media_type="image/jpeg")
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:
@@ -554,9 +577,10 @@ def create_app(
 
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
+        # The lock is re-entrant: holding it here keeps a Breadboard press from landing between the
+        # reset and the step we report.
         with publisher.lock:
-            scenario.reset()
-            publisher.share()
+            reset_the_scenario()
             return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")
@@ -668,12 +692,20 @@ def create_app(
             return registry_summary()
 
     if settings.role == "hub":
+        chosen_rate = timeline.rate
 
         def set_replay(state: Literal["playing", "paused"], event_t: int) -> ReplayClockMessage:
-            announce_event_clock(
-                ReplayClockMessage(state=state, event_t=event_t, rate=timeline.rate)
-            )
+            announce_event_clock(ReplayClockMessage(state=state, event_t=event_t, rate=chosen_rate))
             return event_clock.current(clock())
+
+        @app.post("/api/replay/rate")
+        def set_replay_rate(change: ReplayRate) -> ReplayClockMessage:
+            nonlocal chosen_rate
+            chosen_rate = change.rate
+            heard = event_clock.current(clock())
+            if heard.state == "stopped":
+                return heard
+            return set_replay(heard.state, heard.event_t)
 
         @app.post("/api/replay/start")
         def start_replay() -> ReplayClockMessage:

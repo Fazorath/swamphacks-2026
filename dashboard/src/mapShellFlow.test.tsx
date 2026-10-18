@@ -92,15 +92,21 @@ describe("the map", () => {
     expect(lastMap().layerIds).toEqual([
       "outside",
       "land",
+      "height-bands",
       "hillshade",
       "districts",
       "rivers",
+      "river-flow",
       "border",
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
+      "route-casing",
       "route",
       "blocked-roads",
+      "wave-trail",
+      "wave-glow",
+      "wave-head",
     ]);
     const addresses = addressesTheMapWouldFetch();
     expect(addresses.length).toBeGreaterThan(0);
@@ -139,8 +145,12 @@ describe("the map", () => {
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
+      "route-casing",
       "route",
       "blocked-roads",
+      "wave-trail",
+      "wave-glow",
+      "wave-head",
     ]);
   });
 

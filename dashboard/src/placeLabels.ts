@@ -1,27 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { NATIONAL_ZOOM } from "./basemap";
-
 export type Place = { name: string; kind: string; key: boolean; lat: number; lon: number };
 
 // [west, south, east, north], the corners of what the map shows.
 export type View = { zoom: number; bounds: [number, number, number, number] };
 
-// Cities come in a little past the national zoom (D-04); villages only over the valley.
-const TOWNS_FROM_ZOOM = NATIONAL_ZOOM + 1.5;
-const VILLAGES_FROM_ZOOM = 10;
-
-// The labels worth drawing: the key places always, the rest by zoom, and only those in view.
-// Each label is a DOM element, so the count has to stay small.
-export function visiblePlaces(places: Place[], { zoom, bounds }: View): Place[] {
+// Only the key places are named: every other town and village was clutter over the valley.
+export function visiblePlaces(places: Place[], { bounds }: View): Place[] {
   const [west, south, east, north] = bounds;
-  return places.filter((place) => {
-    if (place.lon < west || place.lon > east || place.lat < south || place.lat > north)
-      return false;
-    if (place.key) return true;
-    if (place.kind === "village" || place.kind === "hamlet") return zoom >= VILLAGES_FROM_ZOOM;
-    return zoom >= TOWNS_FROM_ZOOM;
-  });
+  return places.filter(
+    (place) =>
+      place.key &&
+      place.lon >= west &&
+      place.lon <= east &&
+      place.lat >= south &&
+      place.lat <= north,
+  );
 }
 
 type PlaceFeature = {

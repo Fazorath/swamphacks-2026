@@ -6,6 +6,10 @@ import { usePolledJson } from "./usePolledJson";
 type Phase = { id: string; label: string; event_t: number };
 type ReplayPhases = { phases: Phase[]; internet_cue_event_t: number };
 
+// Matches the Hub's ReplayRate: slower than x5 and S0's rise no longer counts as a Surge.
+const REPLAY_RATES = [5, 10, 30];
+const DEFAULT_REPLAY_RATE = 30;
+
 async function sendToReplay(action: string, body?: object): Promise<void> {
   const response = await fetch(`/api/replay/${action}`, {
     method: "POST",
@@ -24,6 +28,8 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   const { clock, heard } = eventClock;
   const replayPhases = usePolledJson<ReplayPhases>("/api/replay/phases");
   const [problem, setProblem] = useState<string | null>(null);
+  // Picked before Start; a running replay shows the rate the Event clock carries.
+  const [pickedRate, setPickedRate] = useState<number | null>(null);
 
   // Until the clock is heard, a Start button would suggest no replay is running when one may be.
   if (!heard) {
@@ -38,6 +44,8 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   const send = async (action: string, body?: object) => {
     setProblem(null);
     try {
+      if (action === "start" && pickedRate !== null)
+        await sendToReplay("rate", { rate: pickedRate });
       await sendToReplay(action, body);
     } catch (error) {
       console.error(error);
@@ -51,9 +59,26 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   const internetCueReached =
     clock !== null && replayPhases !== null && clock.event_t >= replayPhases.internet_cue_event_t;
 
+  const shownRate = clock?.rate ?? pickedRate ?? DEFAULT_REPLAY_RATE;
+
   return (
     <section aria-label="Replay controls">
       <h3>Replay</h3>
+      <div className="actions" role="group" aria-label="Replay speed">
+        {REPLAY_RATES.map((rate) => (
+          <button
+            key={rate}
+            type="button"
+            aria-pressed={rate === shownRate}
+            onClick={() => {
+              if (clock === null) setPickedRate(rate);
+              else send("rate", { rate });
+            }}
+          >
+            ×{rate}
+          </button>
+        ))}
+      </div>
       {internetCueReached && (
         <p role="status" className="internet-cue">
           Cut the internet now

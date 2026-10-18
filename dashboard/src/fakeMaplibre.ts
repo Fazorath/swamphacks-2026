@@ -4,7 +4,7 @@
 type Handler = (event: unknown) => void;
 type GeoJsonData = GeoJSON.GeoJSON | string;
 
-type SourceSpec = { type: string; data?: GeoJsonData; tiles?: string[] };
+type SourceSpec = { type: string; data?: GeoJsonData; tiles?: string[]; url?: string };
 
 class FakeMap {
   readonly container: HTMLElement;
@@ -13,6 +13,7 @@ class FakeMap {
   readonly glyphs: string | undefined;
   readonly sprite: string | undefined;
   readonly fitted: unknown[] = [];
+  readonly eased: unknown[] = [];
   private readonly handlers = new Map<string, Handler[]>();
 
   constructor(options: {
@@ -60,6 +61,16 @@ class FakeMap {
     else this.layerIds.splice(at, 0, layer.id);
   }
 
+  readonly images = new Set<string>();
+
+  addImage(id: string) {
+    this.images.add(id);
+  }
+
+  hasImage(id: string) {
+    return this.images.has(id);
+  }
+
   getSource(id: string) {
     const spec = this.sources.get(id);
     if (!spec) return undefined;
@@ -67,15 +78,65 @@ class FakeMap {
       setData: (data: GeoJsonData) => {
         spec.data = data;
       },
+      updateImage: ({ url }: { url: string }) => {
+        spec.url = url;
+      },
     };
+  }
+
+  // The last layout and paint values the app set, keyed "layer:property".
+  readonly layerProperties = new Map<string, unknown>();
+
+  getLayer(id: string) {
+    return this.layerIds.includes(id) ? { id } : undefined;
+  }
+
+  removeLayer(id: string) {
+    this.layerIds.splice(this.layerIds.indexOf(id), 1);
+  }
+
+  removeSource(id: string) {
+    this.sources.delete(id);
+  }
+
+  setLayoutProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
+  }
+
+  setPaintProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
   }
 
   project([lon, lat]: [number, number]) {
     return { x: lon * 10, y: -lat * 10 };
   }
 
+  zoom = 6;
+  pitch = 0;
+  terrain: { source: string; exaggeration: number } | null = null;
+  readonly flights: { zoom?: number; pitch?: number }[] = [];
+
   getZoom() {
-    return 6;
+    return this.zoom;
+  }
+
+  getPitch() {
+    return this.pitch;
+  }
+
+  getTerrain() {
+    return this.terrain;
+  }
+
+  setTerrain(terrain: { source: string; exaggeration: number } | null) {
+    this.terrain = terrain;
+  }
+
+  flyTo(options: { zoom?: number; pitch?: number }) {
+    this.flights.push(options);
+    this.zoom = options.zoom ?? this.zoom;
+    this.pitch = options.pitch ?? this.pitch;
+    this.emit("zoomend", {});
   }
 
   getBounds() {
@@ -84,6 +145,11 @@ class FakeMap {
 
   fitBounds(bounds: unknown) {
     this.fitted.push(bounds);
+  }
+
+  easeTo(options: { pitch?: number }) {
+    this.eased.push(options);
+    this.pitch = options.pitch ?? this.pitch;
   }
 
   remove() {
@@ -123,6 +189,12 @@ class FakeMarker {
 
 const maps: FakeMap[] = [];
 
+export const protocols: string[] = [];
+
+export function addProtocol(name: string) {
+  protocols.push(name);
+}
+
 export { FakeLngLatBounds as LngLatBounds, FakeMap as Map, FakeMarker as Marker };
 
 export function lastMap(): FakeMap {
@@ -147,7 +219,8 @@ export function addressesTheMapWouldFetch(): string[] {
   const map = lastMap();
   const addresses = [...map.sources.values()].flatMap((spec) => [
     ...(typeof spec.data === "string" ? [spec.data] : []),
-    ...(spec.tiles ?? []),
+    // A custom protocol's address wraps the real one; the real one is where the request goes.
+    ...(spec.tiles ?? []).map((tile) => tile.replace(/^[a-z-]+:\/\/(?=https?:)/, "")),
   ]);
   return [map.glyphs, map.sprite, ...addresses].filter(
     (address): address is string => address !== undefined,

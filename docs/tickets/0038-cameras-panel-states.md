@@ -4,9 +4,9 @@
 
 **Blocked by:** 0033, 0044
 
-**Status:** ready-for-agent
+**Status:** done
 
-**Owner:** unclaimed
+**Owner:** leonardorofaDV
 
 **Assignee:** Fazorath
 
@@ -14,12 +14,12 @@
 
 **Design:** `docs/design/ui.md` ("Cameras Panel"); canvas artboards `C-Cameras`, `D-MeshOnly`, `P-MeshOnly`.
 
-- [ ] The FL511 camera list and picture fetching are removed
-- [ ] The Hub serves the clip from a gitignored folder on the demo laptop if present, otherwise from a committed Creative Commons clip; the README credits the fallback and says where the stage clip goes
-- [ ] The clip's position follows the Event clock (pauses, jumps and resets with it); the tile shows `CAMERA · REPLAY` and the event time
-- [ ] Offline tile (Node is Mesh-only): dashed muted frame, camera-off icon, `OFFLINE · internet down`, no picture
-- [ ] Unavailable tile (no clip found): solid frame, alert icon, `UNAVAILABLE`; never mistaken for Offline
-- [ ] Going Online to Mesh-only dims and relabels the tile in place, without rebuilding it
-- [ ] The Cameras rail button from 0034 counts cameras playing
-- [ ] Vitest tests: each state renders its label; the clip time follows the Event clock; a Mesh-only Node requests no clip
-- [ ] All **Commands** pass
+- [x] The FL511 camera list and picture fetching are removed
+- [x] The Hub serves the clip from a gitignored folder on the demo laptop if present, otherwise from a committed Creative Commons clip; the README credits the fallback and says where the stage clip goes
+- [x] The clip's position follows the Event clock (pauses, jumps and resets with it); the tile shows `CAMERA · REPLAY` and the event time
+- [x] Offline tile (Node is Mesh-only): dashed muted frame, camera-off icon, `OFFLINE · internet down`, no picture
+- [x] Unavailable tile (no clip found): solid frame, alert icon, `UNAVAILABLE`; never mistaken for Offline
+- [x] Going Online to Mesh-only dims and relabels the tile in place, without rebuilding it
+- [x] The Cameras rail button from 0034 counts cameras playing
+- [x] Vitest tests: each state renders its label; the clip time follows the Event clock; a Mesh-only Node requests no clip
+- [x] All **Commands** pass

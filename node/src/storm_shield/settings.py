@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 Role = Literal["sensor", "hub"]
 MeshKind = Literal["reticulum", "memory"]
 ReticulumInterface = Literal["auto", "loopback", "tcp"]
+GpioMode = Literal["auto", "on", "off"]
 
 
 class Settings(BaseSettings):
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     also_tcp_listen: bool = False
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
-    # How often this Node checks whether it has internet, and whether a camera picture is due.
+    # How often this Node checks whether it has internet.
     internet_check_seconds: float = 5
     # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
     # converges.
@@ -65,6 +66,9 @@ class Settings(BaseSettings):
     alert_check_seconds: float = 1
     # How often a Node shares its readings.
     publish_every_seconds: float = 3
+    # Whether this Node reads the Pi's Breadboard. "auto" turns it on only on a Raspberry Pi; "on"
+    # stops the Node if the Breadboard cannot start; "off" never loads the GPIO library.
+    gpio: GpioMode = "auto"
     # Which Sensor track of the replay timeline this Node plays (S0 to S3). Blank keeps the Scenario.
     replay_track: str = ""
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
@@ -78,9 +82,22 @@ class Settings(BaseSettings):
     weather_forecast_url: str = ""
     # Secret: only this Node ever holds it; the dashboard asks the Node for tiles.
     carto_api_key: str = Field(default="", validation_alias="CARTO_API_KEY")
+    # The Hub emails the team on a new Community Warning when all three are set. Unprefixed like
+    # CARTO_API_KEY, which also makes them the same operator-facing .env lines.
+    alert_email_from: str = Field(default="", validation_alias="ALERT_EMAIL_FROM")
+    # Secret: a Gmail app password, never the account password.
+    alert_email_app_password: str = Field(default="", validation_alias="ALERT_EMAIL_APP_PASSWORD")
+    # Comma-separated addresses.
+    alert_email_to: str = Field(default="", validation_alias="ALERT_EMAIL_TO")
     cache_pack_dir: Path = Field(
         default=Path(__file__).resolve().parents[3] / "cache-pack",
         validation_alias="CACHE_PACK_DIR",
+    )
+    # Where the Hub finds its Camera Clips and their manifest.json. scripts/run-demo.sh points it
+    # at the gitignored stage set when there is one, otherwise at the committed fallback.
+    camera_clips_dir: Path = Field(
+        default=Path(__file__).resolve().parents[3] / "camera-clips",
+        validation_alias="CAMERA_CLIPS_DIR",
     )
     # Whose Shelter status this Node believes (the Hub prints its identity at startup). Blank or
     # wrong means no Shelter status is accepted, so the Node shows nothing open.
