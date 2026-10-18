@@ -115,6 +115,8 @@ describe("the map", () => {
     for (const address of addresses) {
       expect(address.startsWith(window.location.origin + "/api/cache-pack/files/")).toBe(true);
     }
+    // MapLibre fills `{z}/{x}/{y}` per tile; an encoded template (%7Bz%7D) is asked for as is.
+    expect(addresses.some((address) => address.endsWith("elevation/{z}/{x}/{y}.png"))).toBe(true);
   });
 
   it("makes no request to any host but its own Node, from the page or the map", async () => {

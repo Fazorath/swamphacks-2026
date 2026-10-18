@@ -97,10 +97,16 @@ h1 {
 .water-reconstruction {
   color: var(--map-river);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-shadow: 0 0 6px var(--map-shadow);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 0.2rem 0.55rem;
+  background: var(--surface-raised);
+  border: 1px dashed var(--map-river);
+  border-radius: 4px;
+  /* Above the head, so the pill never covers the line it names. */
+  transform: translateY(-1.6rem);
   pointer-events: none;
 }
 

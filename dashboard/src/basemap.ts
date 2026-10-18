@@ -11,9 +11,10 @@ const DISTRICT_LINES_FROM_ZOOM = NATIONAL_ZOOM + 1;
 
 const PACK_FILES = "/api/cache-pack/files/";
 
-// MapLibre fetches in a worker, which cannot resolve a relative URL against the page.
+// MapLibre fetches in a worker, which cannot resolve a relative URL against the page. The origin
+// is joined as text: `new URL` would percent-encode the `{z}/{x}/{y}` MapLibre fills in per tile.
 function packUrl(path: string): string {
-  return new URL(PACK_FILES + path, window.location.origin).href;
+  return window.location.origin + PACK_FILES + path;
 }
 
 // The colours of the map, read from the theme's roles at run time (theme.css owns every value).
@@ -157,13 +158,18 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         id: "water-level",
         type: "line",
         source: "water-level",
-        paint: { "line-color": colors.river, "line-width": 2, "line-dasharray": [2, 2] },
+        paint: {
+          "line-color": colors.river,
+          "line-width": 3,
+          "line-opacity": 0.9,
+          "line-dasharray": [3, 2],
+        },
       },
       {
         id: "water-ticks",
         type: "line",
         source: "water-ticks",
-        paint: { "line-color": colors.river, "line-width": 1.5 },
+        paint: { "line-color": colors.river, "line-width": 2, "line-opacity": 0.7 },
       },
       // The wave front (D-16, D-17, D-19): white only, fading from the head back to the tail.
       {

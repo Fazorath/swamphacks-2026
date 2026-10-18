@@ -6,10 +6,10 @@ import { arrivalAtKm, type RiverLine } from "./waveEta";
 
 // The height line is a drawn gauge, not a flood map (D-46): each metre of water is drawn this far
 // to the side of the river, so a rising level reads as a widening. The metres are the reading's.
-const DRAWN_M_PER_WATER_M = 120;
+const DRAWN_M_PER_WATER_M = 300;
 // A reach is the stretch of river a Node's reading stands for, this far up and down from it.
 const REACH_HALF_KM = 1.5;
-const TICK_HALF_KM = 0.15;
+const TICK_HALF_KM = 0.4;
 const SAMPLE_EVERY_KM = 0.5;
 const M_PER_DEGREE = 111_320;
 
