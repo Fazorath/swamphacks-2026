@@ -6,9 +6,9 @@
 
 Positions are typed, not snapped to the river line of the ticket before it in the spec; 0035 checks them on the map.
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** Fazorath
 
 **Assignee:** refloow-0
 
