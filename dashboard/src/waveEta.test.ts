@@ -5,6 +5,7 @@ import {
   riverKmOfHome,
   waveArrival,
   waveEtaLine,
+  waveFrontKm,
   type RiverLine,
 } from "./waveEta";
 
@@ -192,5 +193,27 @@ describe("the measured speed line", () => {
 
   it("is absent until a second Node has surged", () => {
     expect(measuredSpeedLine(warningAt(-5.6), nameOf)).toBeNull();
+  });
+});
+
+describe("waveFrontKm", () => {
+  it("is null until a warning's Surge has started", () => {
+    expect(waveFrontKm(RIVER, [], SURGE_T + 60)).toBeNull();
+    expect(waveFrontKm(RIVER, [warningAt(-10)], SURGE_T - 1)).toBeNull();
+  });
+
+  it("follows the reach speeds down the river", () => {
+    // 190 km/h from km -10 reaches km 0 after 189.5 s; then 60 km/h reaches km 10 after 600 s more.
+    expect(waveFrontKm(RIVER, [warningAt(-10)], SURGE_T + 94.7)).toBeCloseTo(-5, 1);
+    expect(waveFrontKm(RIVER, [warningAt(-10)], SURGE_T + 789.5)).toBeCloseTo(10, 1);
+  });
+
+  it("stops at the end of the river", () => {
+    expect(waveFrontKm(RIVER, [warningAt(-10)], SURGE_T + 100_000)).toBeCloseTo(30, 1);
+  });
+
+  it("reports the furthest front when two warnings are running", () => {
+    const fronts = waveFrontKm(RIVER, [warningAt(-10), warningAt(10)], SURGE_T + 789.5);
+    expect(fronts).toBeGreaterThan(10.5);
   });
 });

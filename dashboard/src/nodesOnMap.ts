@@ -6,6 +6,8 @@ export type NodeOnMap = {
   isThisNode: boolean;
   label: string;
   position: [number, number];
+  // Where the Node sits along the river; null off the river (and for every fleet entry).
+  riverKm: number | null;
   waterLevelCm: number | null;
   simulated: boolean;
   // A Simulated Fleet entry: drawn small, with no card, no registry entry and no Flood Risk level.
@@ -28,6 +30,7 @@ export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
     isThisNode: node.id === state.id,
     label: node.id === state.id ? state.name : (node.name ?? node.id),
     position: node.position,
+    riverKm: node.river_km,
     waterLevelCm: node.measurements.water_level?.value ?? null,
     simulated: node.simulated,
     fleet: false,
@@ -50,6 +53,7 @@ export function fleetOnMap(state: NodeState | null): NodeOnMap[] {
     isThisNode: false,
     label: entry.name,
     position: entry.position,
+    riverKm: null,
     waterLevelCm: entry.measurements.water_level?.value ?? null,
     simulated: true,
     fleet: true,
