@@ -1,4 +1,4 @@
-"""The Simulated Fleet file (`fleet.json`): ~40 sites along Nepal's rivers with modelled readings."""
+"""The Simulated Fleet file (`fleet.json`): about 40 river sites with modelled readings."""
 
 import json
 import math
@@ -26,9 +26,9 @@ MAX_RISE_CM = 200
 RISING_TOWNS = 3
 MIN_PEAK_RISE_CM = 30
 WATER_MODEL = (
-    f"water level modelled from Open-Meteo rainfall: {CALM_BASE_CM} cm + {GAIN_CM_PER_MM} cm per mm "
-    f"of rain in the previous 24 h (at most {MAX_RISE_CM} cm), for the {RISING_TOWNS} towns with the "
-    "most rain; every other site stays at its calm base"
+    f"water level modelled from Open-Meteo rainfall: {CALM_BASE_CM} cm + {GAIN_CM_PER_MM} cm "
+    f"per mm of rain in the previous 24 h (at most {MAX_RISE_CM} cm), for the {RISING_TOWNS} "
+    "towns with the most rain; every other site stays at its calm base"
 )
 UNITS = {"water_level": "cm", "rain_rate": "mm/h", "soil_moisture": "%", "pressure": "hPa"}
 
@@ -47,7 +47,7 @@ def check_sites(sites: list[dict[str, Any]], valley: BBox) -> None:
     """Fail the build on a site in the flood valley, a repeated id, or two sites too close."""
     south, west, north, east = valley
     ids = [site["id"] for site in sites]
-    if len(set(ids)) != len(ids) or not all(id.startswith("fleet-") for id in ids):
+    if len(set(ids)) != len(ids) or not all(site_id.startswith("fleet-") for site_id in ids):
         raise ValueError("fleet ids must be unique and start with 'fleet-'")
     inside = [
         site["id"]
@@ -76,7 +76,9 @@ def fetch_fleet_weather(client: httpx.Client, sites: list[dict[str, Any]]) -> li
     for attempt in range(1, pack_weather.ATTEMPTS + 1):
         try:
             response = client.get(
-                pack_weather.ARCHIVE_URL, params=params, timeout=pack_weather.REQUEST_TIMEOUT_SECONDS
+                pack_weather.ARCHIVE_URL,
+                params=params,
+                timeout=pack_weather.REQUEST_TIMEOUT_SECONDS,
             )
             response.raise_for_status()
             break
@@ -129,16 +131,19 @@ def fleet_from_archive(
             raise ValueError(f"{site['id']}: the archive does not cover the replay window")
         weather[site["id"]] = (stamps, hourly, _rain_of_previous_day(hourly["precipitation"]))
 
-    def peak_rain(site: dict[str, Any]) -> float:
-        stamps, _, previous_day = weather[site["id"]]
-        return max(_between(stamps, previous_day, moment) for moment in moments)
-
-    towns = sorted((site for site in sites if site["site"] == "town"), key=peak_rain, reverse=True)
-    rising = {site["id"] for site in towns[:RISING_TOWNS]}
-    if GAIN_CM_PER_MM * peak_rain(towns[0]) < MIN_PEAK_RISE_CM:
-        raise ValueError(
-            f"no town had rain enough to rise: the most is {peak_rain(towns[0]):.1f} mm in 24 h"
+    peak_rain = {
+        site["id"]: max(
+            _between(weather[site["id"]][0], weather[site["id"]][2], moment) for moment in moments
         )
+        for site in sites
+        if site["site"] == "town"
+    }
+    wettest = sorted(peak_rain, key=lambda site_id: peak_rain[site_id], reverse=True)
+    if GAIN_CM_PER_MM * peak_rain[wettest[0]] < MIN_PEAK_RISE_CM:
+        raise ValueError(
+            f"no town had rain enough to rise: the most is {peak_rain[wettest[0]]:.1f} mm in 24 h"
+        )
+    rising = set(wettest[:RISING_TOWNS])
 
     entries = []
     for site in sites:
@@ -190,7 +195,9 @@ def fleet_from_archive(
     }
 
 
-def build_fleet(client: httpx.Client, source: Path, timeline: ReplayTimeline, valley: BBox) -> bytes:
+def build_fleet(
+    client: httpx.Client, source: Path, timeline: ReplayTimeline, valley: BBox
+) -> bytes:
     """`fleet.json` for the Cache Pack, built from the hand-written source list."""
     sites = json.loads(source.read_text())
     check_sites(sites, valley)
