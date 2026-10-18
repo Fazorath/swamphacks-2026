@@ -78,5 +78,5 @@
 | [0075-camera-list-with-live-or-clip-sources](0075-camera-list-with-live-or-clip-sources.md) | ready-for-agent | unclaimed | refloow-0 |
 | [0076-demo-camera-clips-with-real-flood-footage](0076-demo-camera-clips-with-real-flood-footage.md) | ready-for-agent | unclaimed | leonardorofaDV |
 | [0077-cameras-panel-shows-every-camera](0077-cameras-panel-shows-every-camera.md) | ready-for-agent | unclaimed | Fazorath |
-| [0078-map-labels-do-not-overlap](0078-map-labels-do-not-overlap.md) | ready-for-agent | unclaimed | Fazorath |
+| [0078-map-labels-do-not-overlap](0078-map-labels-do-not-overlap.md) | in-progress | Fazorath | Fazorath |
 | [0079-right-panels-stay-on-screen](0079-right-panels-stay-on-screen.md) | ready-for-agent | unclaimed | Fazorath |
