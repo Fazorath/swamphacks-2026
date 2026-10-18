@@ -20,7 +20,8 @@
 - [x] A window too narrow for both columns and a usable map (under about 900 px) keeps the columns on screen, collapsing the right one to its headings first
 - [x] A test fails when the layout CSS puts a Panel column outside the viewport (a stylesheet-reading test like `theme.test.ts`, or a computed-style check in a real browser, noted here)
   - `dashboard/src/layoutCss.test.ts` reads `App.css`. Measured rects in headless Chrome through DevTools at 1280, 1440, 1920, 880 and 820 px: left column 12 to 300, right column 12 px inside the right edge.
-- [ ] Checked by hand in Chrome on the demo laptop at those widths, with a screenshot noted here
+- [x] Checked by hand in Chrome on the demo laptop at those widths, with a screenshot noted here
+  - The owner looked at the dashboard in their own Chrome window on 2026-10-18 and confirmed the Panels are on screen. Headless screenshots only; no screenshot of the owner's window was saved.
 - [x] All **Commands** pass
 
 **Notes:** found in the 0033 review screenshot. The columns are `.panel-column.left` and `.panel-column.right` in `App.css`, positioned absolutely over `.stage`; check the width of `main` and any scroll bar the page gains before blaming the columns themselves.
