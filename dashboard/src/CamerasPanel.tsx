@@ -1,4 +1,5 @@
 import { agoWords } from "./agoWords";
+import { Panel, type PanelControl } from "./Panel";
 import type { CameraTile } from "./useCameras";
 
 function Tile({ tile }: { tile: CameraTile }) {
@@ -22,13 +23,12 @@ function Tile({ tile }: { tile: CameraTile }) {
   );
 }
 
-export function CamerasPanel({ tiles }: { tiles: CameraTile[] }) {
+export function CamerasPanel({ tiles, panel }: { tiles: CameraTile[]; panel: PanelControl }) {
   return (
-    <section aria-label="Cameras">
-      <h2>Cameras</h2>
+    <Panel label="Cameras" {...panel}>
       {tiles.map((tile) => (
         <Tile key={tile.id} tile={tile} />
       ))}
-    </section>
+    </Panel>
   );
 }

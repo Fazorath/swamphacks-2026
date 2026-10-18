@@ -19,53 +19,86 @@ code,
 .flood-risk-chip,
 .connection-badge,
 .event-clock,
-section h2 {
+.panel h2,
+.status-strip {
   font-family: var(--font-mono);
 }
 
 main {
-  display: grid;
+  display: flex;
   height: 100vh;
-  grid-template-columns: 16rem 1fr 22rem;
-  grid-template-rows: auto 1fr 1fr;
-  grid-template-areas:
-    "top top top"
-    "readings map alerts"
-    "cameras map plan";
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: radial-gradient(
-    circle at 40% 40%,
-    color-mix(in srgb, var(--map-ground) 60%, var(--surface-raised)) 0%,
-    var(--bg-page) 70%
-  );
+  flex-direction: column;
+  background: var(--map-outside);
 }
 
-header {
-  grid-area: top;
+.top-bar {
+  z-index: 3;
   display: flex;
-  align-items: baseline;
+  flex: none;
+  align-items: center;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--surface-glass);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  backdrop-filter: blur(8px);
+  background: var(--surface-solid);
+  border-bottom: 1px solid var(--border);
 }
 
 h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0;
   font-size: 1.1rem;
   color: var(--accent);
 }
 
-header p {
+.top-bar p {
   margin: 0;
   color: var(--text-secondary);
 }
 
 .household-status {
   margin-left: auto;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.status-strip {
+  z-index: 3;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.3rem 1rem;
+  background: var(--surface-solid);
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.simulated-badge {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mesh-only {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.map-credit {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.boundaries-note {
+  flex: none;
 }
 
 button {
@@ -84,11 +117,10 @@ button:disabled {
 }
 
 .banner {
-  grid-column: 1 / -1;
+  z-index: 3;
   margin: 0;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--risk-elevated);
-  border-radius: 0.5rem;
+  border-bottom: 1px solid var(--risk-elevated);
   background: var(--surface-panel);
   color: var(--risk-elevated);
 }
@@ -166,15 +198,23 @@ button:disabled {
 }
 
 .home-marker,
-.home-draft-marker {
+.home-draft-marker,
+.shelter-marker,
+.shelter-pin {
   display: grid;
   place-items: center;
+  font-weight: bold;
+}
+
+.home-marker,
+.home-draft-marker {
+  width: 28px;
+  height: 28px;
   background: var(--official-bg);
   border: 2px solid var(--official-tag);
   border-radius: 50%;
   color: var(--official-ink);
   font-size: 1.1rem;
-  font-weight: bold;
 }
 
 .home-draft-marker {
@@ -182,27 +222,28 @@ button:disabled {
   border-style: dashed;
 }
 
-.evacuation-route {
-  stroke: var(--risk-low);
-  stroke-width: 5;
-  stroke-opacity: 0.85;
-}
-
-.blocked-road {
-  stroke: var(--risk-high);
-  stroke-width: 6;
-  stroke-dasharray: 8 6;
-}
-
 .shelter-marker {
-  display: grid;
-  place-items: center;
+  width: 28px;
+  height: 28px;
   background: var(--risk-low);
   border: 2px solid var(--surface-panel);
   border-radius: 0.25rem;
   color: var(--surface-panel);
   font-size: 1.3rem;
-  font-weight: bold;
+}
+
+.shelter-label {
+  position: absolute;
+  left: 100%;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--surface-glass);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: normal;
+  white-space: nowrap;
 }
 
 .out-of-reach-line {
@@ -329,25 +370,87 @@ section .empty-panel p {
   font-weight: bold;
 }
 
-.areas {
-  display: contents;
+.panel-column {
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  /* The column only holds the Panels; the map stays draggable between and around them. */
+  pointer-events: none;
 }
 
-section {
-  background: var(--surface-glass);
+.panel-column.left {
+  left: 0.75rem;
+  width: 288px;
+}
+
+.panel-column.right {
+  right: 0.75rem;
+  width: 336px;
+}
+
+.panel {
+  flex: none;
+  padding: 0.75rem 1rem;
+  background: var(--surface-solid);
   border: 1px solid var(--border);
   border-radius: 0.5rem;
-  padding: 1rem;
-  backdrop-filter: blur(8px);
-  overflow: auto;
+  pointer-events: auto;
 }
 
-section h2 {
-  margin: 0 0 0.5rem;
+@media (hover: hover) and (width > 48rem) {
+  .panel {
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+  }
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel h2 {
+  margin: 0;
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+
+.panel-chevron {
+  display: grid;
+  place-items: center;
+  padding: 0.15rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+}
+
+.panel-chevron svg {
+  transition: transform var(--dur-panel) var(--ease-out);
+}
+
+.panel.collapsed .panel-chevron svg {
+  transform: rotate(-90deg);
+}
+
+.panel-body {
+  margin-top: 0.5rem;
+  animation: panel-in var(--dur-panel) var(--ease-out);
+}
+
+/* Slides in from its own edge; only transform and opacity move. */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
 }
 
 section p {
@@ -355,47 +458,113 @@ section p {
   color: var(--text-secondary);
 }
 
-section[aria-label="Map"] {
-  position: relative;
-  grid-area: map;
-  padding: 0;
-  overflow: hidden;
+.map-area {
+  position: absolute;
+  inset: 0;
 }
 
 .node-map {
-  height: 100%;
-  min-height: 20rem;
-  background: var(--bg-page);
+  position: absolute;
+  inset: 0;
+  background: var(--map-outside);
+}
+
+/* Over the map but under the Panels. */
+.maplibregl-marker {
+  z-index: 1;
+}
+
+.place-label {
+  color: var(--map-label);
+  font-size: 0.75rem;
+  pointer-events: none;
+  text-shadow: 0 0 3px var(--map-shadow);
+}
+
+.place-label.key {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* A Node is a dot with its label beside it. The fleet's dots and labels grow with the zoom
+   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. */
+.node-marker {
+  cursor: pointer;
 }
 
 .node-dot {
-  fill: var(--accent);
-  fill-opacity: 0.85;
-  stroke: var(--text-primary);
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 50%;
+  background: var(--accent);
 }
 
-.node-dot.stale {
-  fill: var(--text-secondary);
-  stroke: var(--text-secondary);
+.node-marker.simulated .node-dot {
+  width: calc(5px + 5px * var(--zoom-blend, 0));
+  height: calc(5px + 5px * var(--zoom-blend, 0));
+  border-width: 0;
+  background: var(--risk-low);
 }
 
-.node-dot.selected {
-  stroke-width: 4;
-}
-
-.leaflet-tooltip.node-label {
-  cursor: pointer;
-  background: var(--surface-panel);
+.node-label {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  transform: translateY(-50%);
   border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--surface-solid);
   color: var(--text-primary);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
-.leaflet-tooltip.node-label.stale {
+.node-marker.simulated .node-label {
+  opacity: var(--zoom-blend, 0);
+}
+
+.node-marker.stale .node-dot {
+  background: var(--stale);
+  border-color: var(--stale);
+}
+
+.node-marker.stale .node-label {
   color: var(--text-secondary);
 }
 
-.leaflet-tooltip.node-label.selected {
+.node-marker.selected .node-dot {
+  border-width: 4px;
+}
+
+.node-marker.selected .node-label {
   border-color: var(--accent);
+}
+
+.node-marker.elevated .node-dot {
+  background: var(--risk-elevated);
+}
+
+.node-marker.high .node-dot {
+  background: var(--risk-high);
+}
+
+.node-marker.unverified .node-dot {
+  background: none;
+  border: 1.5px dashed var(--text-dim);
+}
+
+.node-marker.unverified .node-label {
+  color: var(--text-dim);
+  border-style: dashed;
+}
+
+.node-map.picking ~ .maplibregl-marker,
+.picking .maplibregl-marker {
+  pointer-events: none;
 }
 
 .tag {
@@ -443,38 +612,41 @@ section[aria-label="Map"] {
   padding-left: 1.1rem;
 }
 
-section[aria-label="Readings"] {
-  grid-area: readings;
-}
-
-section[aria-label="Cameras"] {
-  grid-area: cameras;
-}
-
-section[aria-label="Alerts"] {
-  grid-area: alerts;
-}
-
-section[aria-label="Evacuation Plan"] {
-  grid-area: plan;
-}
-
 @media (width <= 48rem) {
   main {
     height: auto;
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    grid-template-areas:
-      "top"
-      "map"
-      "alerts"
-      "plan"
-      "readings"
-      "cameras";
+    min-height: 100vh;
   }
 
-  section[aria-label="Map"] {
-    height: 40vh;
+  .stage {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .map-area {
+    position: relative;
+    height: 60vh;
+  }
+
+  .panel-column {
+    position: static;
+    width: auto;
+    padding: 0 0.75rem;
+  }
+
+  .panel-column.left,
+  .panel-column.right {
+    width: auto;
+  }
+
+  .status-strip {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .map-credit {
+    margin-left: 0;
   }
 }
 
@@ -579,29 +751,13 @@ section[aria-label="Evacuation Plan"] {
   padding-left: 1.1rem;
 }
 
-section[aria-label="Map"] {
-  position: relative;
-}
-
-section p.storm-signal {
-  position: absolute;
-  z-index: 1000;
-  top: 0.75rem;
-  left: 3.5rem;
-  padding: 0.25rem 0.6rem;
+/* A pill beside the Flood Risk chip in the top bar. */
+.storm-signal {
+  padding: 0.1rem 0.6rem;
   border: 1px solid var(--risk-elevated);
   border-radius: 0.25rem;
-  background: var(--surface-panel);
   color: var(--risk-elevated);
   font-weight: bold;
-}
-
-.node-dot.elevated {
-  fill: var(--risk-elevated);
-}
-
-.node-dot.high {
-  fill: var(--risk-high);
 }
 
 .shelter-list {
@@ -645,18 +801,6 @@ section p.storm-signal {
 .internet-cue {
   font-weight: 700;
   color: var(--risk-high);
-}
-
-/* Unverified Nodes: shown, but visibly not part of Flood Risk. */
-.node-dot.unverified {
-  fill: none;
-  stroke: var(--text-dim);
-  stroke-dasharray: 4 3;
-}
-
-.leaflet-tooltip.node-label.unverified {
-  color: var(--text-dim);
-  border-style: dashed;
 }
 
 .tag.not-counted {
@@ -748,22 +892,16 @@ section p.storm-signal {
 
 section p.flood-prone-caption {
   position: absolute;
-  z-index: 1000;
-  bottom: 1.6rem;
-  left: 0.75rem;
+  z-index: 2;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
   padding: 0.2rem 0.5rem;
   border-radius: 0.25rem;
   background: var(--surface-glass);
   color: var(--text-secondary);
   font-size: 0.8rem;
-}
-
-.flood-prone-area {
-  stroke: var(--accent);
-  stroke-width: 2;
-  fill: var(--accent);
-  fill-opacity: 0.12;
 }
 
 .shelter-pin {
@@ -780,10 +918,4 @@ section p.flood-prone-caption {
   background: var(--surface-raised);
   border-color: var(--text-secondary);
   color: var(--text-secondary);
-}
-
-.leaflet-tooltip.shelter-label {
-  background: var(--surface-glass);
-  border-color: var(--border);
-  color: var(--text-primary);
 }

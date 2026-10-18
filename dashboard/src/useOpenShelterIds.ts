@@ -13,7 +13,14 @@ export function useOpenShelterIds(): [string[], (openIds: string[]) => void] {
     const poll = () => {
       const changesBeforePoll = changesShown.current;
       const showIfCurrent = (ids: string[]) => {
-        if (changesShown.current === changesBeforePoll) setOpenIds(ids);
+        // The same list again is not stored, so a quiet poll re-renders nothing.
+        if (changesShown.current === changesBeforePoll) {
+          setOpenIds((current) =>
+            current.length === ids.length && current.every((id, i) => id === ids[i])
+              ? current
+              : ids,
+          );
+        }
       };
       return fetch("/api/shelters")
         .then((response) => {

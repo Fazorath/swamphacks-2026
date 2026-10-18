@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { sourceData } from "./fakeMaplibre";
 
 const PROFILE_KEY = "storm-shield.household-profile";
 const SURGE_T = 1_787_716_020;
@@ -215,6 +216,6 @@ test("a Shelter the resident cannot reach in time becomes higher ground", async 
   await waitFor(() =>
     expect(document.querySelectorAll(".shelter-marker.out-of-reach")).toHaveLength(1),
   );
-  expect(document.querySelector(".evacuation-route")).toBeNull();
-  expect(document.querySelectorAll(".out-of-reach-line")).toHaveLength(1);
+  expect(sourceData("route").features).toHaveLength(0);
+  await waitFor(() => expect(sourceData("out-of-reach-line").features).toHaveLength(1));
 });

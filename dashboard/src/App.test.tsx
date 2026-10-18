@@ -167,11 +167,11 @@ test("a Surge seen within one reading interval says the water rose at once", asy
   expect(within(card).getByText("water rose 1.5 m at once")).toBeInTheDocument();
 });
 
-test("the Storm Signal sits on the map and the card leaves it out when other reasons exist", async () => {
+test("the Storm Signal sits in the top bar and the card leaves it out when other reasons exist", async () => {
   stubFloodRisk(HIGH);
   render(<App />);
-  const map = await screen.findByRole("region", { name: "Map" });
-  expect(await within(map).findByText("Low pressure: 995 hPa at 2 Nodes")).toBeInTheDocument();
+  const topBar = await screen.findByRole("banner");
+  expect(await within(topBar).findByText("Low pressure: 995 hPa at 2 Nodes")).toBeInTheDocument();
   const card = screen.getByRole("region", { name: "Flood Risk" });
   expect(within(card).queryByText(/low pressure/)).not.toBeInTheDocument();
 });

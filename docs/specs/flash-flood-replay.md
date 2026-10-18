@@ -128,6 +128,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 ### Cameras
 
 - **The FL511 cameras are removed.** The Hub's camera plays a recorded clip of the flood synced to the event clock, labelled "CAMERA · REPLAY 09:18 NPT". The stage clip lives in a gitignored folder on the demo laptop, because we do not hold its rights. A credited Creative Commons clip is committed as the fallback, so a fresh clone still works. The Offline and Unavailable states stay.
+- **Several cameras, live where they exist (decided 2026-10-18, tickets 0074 to 0077).** Each demo Node site may have a camera. A site uses a live Nepal camera if one is public, allowed by its terms and stays up (0074 decides; none had a public feed on 2026-10-18), and otherwise a five-minute demo clip. Five minutes covers the whole Replay (4 real minutes at ×30) with a minute to spare, and a clip's position is the Event clock's, shifted so the flood in the clip lands when the wave reaches that site. The clips are composed from short sources (0076), include real flood footage so the demo shows an extreme case, and are always labelled as illustrative; unlicensed footage stays in the gitignored stage folder. At the internet cue every tile goes Offline.
 
 ### Cache Pack
 

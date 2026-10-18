@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
+import { sourceData } from "./fakeMaplibre";
 
 const PROFILE_KEY = "storm-shield.household-profile";
 
@@ -82,6 +84,7 @@ test("a resident with a profile sees the nearest open Shelter, marked on the map
   saveProfile();
   stubNode({ packAvailable: true, open: ["test-gym"] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/Nearest open Shelter: Test Gym, 1\.1 km away/)).toBeVisible();
   expect(screen.getByText("Evacuation decisions come from official sources.")).toBeVisible();
@@ -93,6 +96,7 @@ test("the Shelter marker clears when no Shelter is open", async () => {
   saveProfile();
   stubNode({ packAvailable: true, open: [] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/No open Shelter announced yet/)).toBeVisible();
   expect(document.querySelector(".shelter-marker")).toBeNull();
@@ -102,6 +106,7 @@ test("a Node with no Cache Pack yet says the information is still loading", asyn
   saveProfile();
   stubNode({ packAvailable: false, open: [] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/still loading on this Node/)).toBeVisible();
   expect(document.querySelector(".shelter-marker")).toBeNull();
@@ -116,16 +121,18 @@ test("the route from the Grid point nearest home is drawn and sets the distance"
     routeFile: { "test-gym": ROUTE },
   });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/Nearest open Shelter: Test Gym, 1\.\d km by road/)).toBeVisible();
   expect(fetchedUrls()).toContain(HOME_ROUTE_FILE);
-  expect(document.querySelectorAll(".evacuation-route")).toHaveLength(1);
+  await waitFor(() => expect(sourceData("route").features).toHaveLength(1));
 });
 
 test("the Route request names a Grid point, not the home", async () => {
   saveProfile();
   stubNode({ packAvailable: true, open: ["test-gym"], routeGrid: ROUTE_GRID });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   // The straight-line plan shows before the Route file is asked for, so wait for the request.
   await waitFor(() =>
@@ -137,17 +144,19 @@ test("a home with no Route file falls back to straight-line distance and draws n
   saveProfile();
   stubNode({ packAvailable: true, open: ["test-gym"], routeGrid: ROUTE_GRID });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(
     await screen.findByText(/Test Gym, 1\.1 km away in a straight line, no road route available/),
   ).toBeVisible();
-  expect(document.querySelector(".evacuation-route")).toBeNull();
+  expect(sourceData("route").features).toHaveLength(0);
 });
 
 test("a pack built without Routes asks for none", async () => {
   saveProfile();
   stubNode({ packAvailable: true, open: ["test-gym"] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   await screen.findByText(/Nearest open Shelter/);
   expect(fetchedUrls().some((url) => url.includes("routes/"))).toBe(false);

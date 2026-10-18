@@ -43,9 +43,28 @@ def reticulum_config(settings: Settings) -> str:
 """
 
 
+_WIFI_DISCOVERY = "  [[Wi-Fi]]\n    type = AutoInterface\n    enabled = yes"
+
+
 def _interface_config(settings: Settings) -> str:
+    blocks = [_primary_interface(settings)]
+    if settings.also_wifi_discovery and settings.mesh_interface != "auto":
+        blocks.append(_WIFI_DISCOVERY)
+    if settings.also_tcp_listen and settings.mesh_interface != "tcp":
+        blocks.append(_tcp_listen("0.0.0.0", settings.tcp_port, name="Clients"))
+    return "\n".join(blocks)
+
+
+def _tcp_listen(listen_ip: str, listen_port: int, name: str = "Listen") -> str:
+    return (
+        f"  [[{name}]]\n    type = TCPServerInterface\n    enabled = yes\n"
+        f"    listen_ip = {listen_ip}\n    listen_port = {listen_port}"
+    )
+
+
+def _primary_interface(settings: Settings) -> str:
     if settings.mesh_interface == "auto":
-        return "  [[Wi-Fi]]\n    type = AutoInterface\n    enabled = yes"
+        return _WIFI_DISCOVERY
     if settings.mesh_interface == "tcp":
         listen_ip, listen_port = "0.0.0.0", settings.tcp_port
         dials = [_peer_address(entry, settings.tcp_port) for entry in _entries(settings.tcp_peers)]
@@ -60,16 +79,12 @@ def _interface_config(settings: Settings) -> str:
             ("127.0.0.1", LOOPBACK_BASE_PORT + slot)
             for slot in range(settings.loopback_first_slot, settings.loopback_slot)
         ]
-    listen = (
-        "  [[Listen]]\n    type = TCPServerInterface\n    enabled = yes\n"
-        f"    listen_ip = {listen_ip}\n    listen_port = {listen_port}"
-    )
     dial_peers = [
         f"  [[Peer {number}]]\n    type = TCPClientInterface\n    enabled = yes\n"
         f"    target_host = {host}\n    target_port = {port}"
         for number, (host, port) in enumerate(dials)
     ]
-    return "\n".join([listen, *dial_peers])
+    return "\n".join([_tcp_listen(listen_ip, listen_port), *dial_peers])
 
 
 def _entries(peers: str) -> list[str]:

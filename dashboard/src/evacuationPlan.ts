@@ -15,14 +15,30 @@ export type Shelter = {
   height_above_river_m: number;
 };
 
+// The vector map of Nepal a v4 or later pack carries (`scripts/pack_nepal.py`).
+export type NepalMap = {
+  // [south, west, north, east]
+  bbox: [number, number, number, number];
+  elevation: {
+    approximate: boolean;
+    // [lowest, highest] zoom of the whole-country tiles and of the valley and Kathmandu tiles.
+    nationalZooms: [number, number];
+    detailZooms: [number, number];
+  };
+  boundariesNote: string;
+  sources: { layer: string; name: string; licence: string; url: string; checked: string }[];
+};
+
 export type CachePackContents = {
   shelters: Shelter[];
   floodProne: FloodProneAreas;
   routeGrid: RouteGrid | null;
-  // The deepest zoom the pack holds tiles for; null when it holds none.
-  tileMaxZoom: number | null;
   // [south, west, north, east], the area the pack covers; null when its manifest has none.
   bbox: [number, number, number, number] | null;
+  // ISO time the pack was built; null when its manifest has none.
+  built: string | null;
+  // Null for a pack built before the Nepal map (the map then draws only the valley's own layers).
+  nepal: NepalMap | null;
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.

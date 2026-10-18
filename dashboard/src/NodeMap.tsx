@@ -1,86 +1,100 @@
-import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 
-import { divIcon } from "leaflet";
-import { useEffect, useRef } from "react";
+import { LngLatBounds, Map as MapLibreMap } from "maplibre-gl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import {
-  CircleMarker,
-  MapContainer,
-  Marker,
-  Polyline,
-  TileLayer,
-  Tooltip,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-
+  NATIONAL_ZOOM,
+  VALLEY_ZOOM,
+  addNepalBasemap,
+  baseStyle,
+  lineCollection,
+  readMapColors,
+  setOverlay,
+  type MapColors,
+} from "./basemap";
+import { MapMarker } from "./MapMarker";
 import { NodeTags } from "./NodeTags";
-import { FLOOD_PRONE_CAPTION, PackLayers } from "./PackLayers";
-import { MAP_CREDIT, onlineUrlForMissingPackTile, tileUrlTemplate } from "./mapTiles";
-import { stormSignalSentence } from "./floodRiskSentences";
-import type { Shelter } from "./evacuationPlan";
+import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
+import { visiblePlaces, type Place, type View } from "./placeLabels";
+import type { NepalMap, Shelter } from "./evacuationPlan";
 import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
-import type { FloodRisk } from "./nodeState";
+import type { RiverLine } from "./waveEta";
 
-const BETRAWATI: [number, number] = [27.9731, 85.186];
+const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
+const NEPAL_SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
 
-const DRAFT_HOME_ICON = divIcon({ className: "home-draft-marker", html: "⌂", iconSize: [28, 28] });
-const HOME_ICON = divIcon({ className: "home-marker", html: "⌂", iconSize: [28, 28] });
-
-function PickHomeOnClick({ onPick }: { onPick: (home: Home) => void }) {
-  useMapEvents({ click: (event) => onPick({ lat: event.latlng.lat, lon: event.latlng.lng }) });
-  return null;
+// 0 at the national zoom and 1 over the valley: the fleet's dots and labels grow with it.
+function zoomBlend(zoom: number): number {
+  return Math.min(1, Math.max(0, (zoom - NATIONAL_ZOOM) / (VALLEY_ZOOM - NATIONAL_ZOOM)));
 }
 
-function TapRoadOnClick({ onTap }: { onTap: (point: Home) => void }) {
-  useMapEvents({ click: (event) => onTap({ lat: event.latlng.lat, lon: event.latlng.lng }) });
-  return null;
+function viewOf(map: MapLibreMap): View {
+  const bounds = map.getBounds();
+  return {
+    zoom: map.getZoom(),
+    bounds: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+  };
 }
 
-// This Node hears itself before it hears anyone else, so the view is re-framed as new Nodes
-// appear, until the resident pans or zooms. After that it is never moved again.
-function FitToNodesUntilMoved({ nodes }: { nodes: NodeOnMap[] }) {
-  const map = useMap();
-  const moved = useRef(false);
-  const nodeIds = nodes.map((node) => node.id).join();
+function floodProneCollection(areas: FloodProneAreas | null): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: (areas?.features ?? []).map(({ geometry }) => ({
+      type: "Feature",
+      properties: {},
+      geometry,
+    })),
+  };
+}
 
-  useEffect(() => {
-    const container = map.getContainer();
-    const markMoved = () => (moved.current = true);
-    container.addEventListener("pointerdown", markMoved);
-    container.addEventListener("wheel", markMoved);
-    return () => {
-      container.removeEventListener("pointerdown", markMoved);
-      container.removeEventListener("wheel", markMoved);
-    };
-  }, [map]);
-
-  useEffect(() => {
-    if (moved.current || nodeIds === "") return;
+// This Node hears itself before it hears anyone else, so a map with no Nepal map is re-framed as
+// new Nodes appear, until the resident pans or zooms. After that it is never moved again.
+function frameUntilMoved(
+  map: MapLibreMap,
+  moved: { current: boolean },
+  nepal: NepalMap | null,
+  nodes: NodeOnMap[],
+) {
+  if (moved.current) return;
+  if (nepal) {
+    const [south, west, north, east] = nepal.bbox;
     map.fitBounds(
-      nodeIds.split(",").map((id) => nodes.find((node) => node.id === id)!.position),
-      { padding: [60, 60], maxZoom: 15 },
+      [
+        [west, south],
+        [east, north],
+      ],
+      { padding: NEPAL_SPACE_FOR_PANELS, animate: false },
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-frame only when the set of Nodes changes
-  }, [map, nodeIds]);
-  return null;
+  } else if (nodes.length > 0) {
+    const bounds = new LngLatBounds();
+    for (const {
+      position: [lat, lon],
+    } of nodes)
+      bounds.extend([lon, lat]);
+    map.fitBounds(bounds, { padding: 60, maxZoom: 15, animate: false });
+  }
 }
 
 type Props = {
   nodes: NodeOnMap[];
-  packTileMaxZoom: number | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  stormSignal: FloodRisk["storm_signal"] | null;
   home: Home | null;
   // From the Cache Pack; empty until a Node holds one.
   shelters: Shelter[];
   openShelterIds: string[];
   floodProne: FloodProneAreas | null;
+  nepal: NepalMap | null;
+  places: Place[];
+  // The valley's own river line, drawn only when the pack has no Nepal rivers.
+  river: RiverLine | null;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
+  // The closest Shelter when none can be reached before the wave; drawn dashed, with a line from home.
   outOfReachShelter: Shelter | null;
   route: LatLon[] | null;
   // The unsaved spot being chosen in the form; the saved Home is `home`.
@@ -98,14 +112,15 @@ type Props = {
 
 export function NodeMap({
   nodes,
-  packTileMaxZoom,
   selectedId,
   onSelect,
-  stormSignal,
   home,
   shelters,
   openShelterIds,
   floodProne,
+  nepal,
+  places,
+  river,
   shelter,
   outOfReachShelter,
   route,
@@ -119,9 +134,99 @@ export function NodeMap({
   onToggleBlocking,
   onTapRoad,
 }: Props) {
+  const [map, setMap] = useState<MapLibreMap | null>(null);
+  const [styleReady, setStyleReady] = useState(false);
+  const [view, setView] = useState<View | null>(null);
+  const colors = useRef<MapColors | null>(null);
+  const moved = useRef(false);
+  const nodeIds = nodes.map((node) => node.id).join();
+
+  const attach = useCallback((container: HTMLDivElement | null) => {
+    if (!container) return;
+    colors.current = readMapColors();
+    const created = new MapLibreMap({
+      container,
+      style: baseStyle(colors.current),
+      center: NEPAL_CENTRE,
+      zoom: NATIONAL_ZOOM,
+      attributionControl: false,
+      dragRotate: false,
+      pitchWithRotate: false,
+    });
+    const markMoved = () => (moved.current = true);
+    container.addEventListener("pointerdown", markMoved);
+    container.addEventListener("wheel", markMoved);
+    const blendWithZoom = () =>
+      container.style.setProperty("--zoom-blend", String(zoomBlend(created.getZoom())));
+    created.on("zoom", blendWithZoom);
+    created.on("moveend", () => setView(viewOf(created)));
+    created.on("load", () => {
+      blendWithZoom();
+      setView(viewOf(created));
+      setStyleReady(true);
+    });
+    setMap(created);
+    return () => {
+      container.removeEventListener("pointerdown", markMoved);
+      container.removeEventListener("wheel", markMoved);
+      created.remove();
+      setMap(null);
+      setStyleReady(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!map || !styleReady || !nepal || map.getSource("border")) return;
+    addNepalBasemap(map, nepal, colors.current!);
+  }, [map, styleReady, nepal]);
+
+  useEffect(() => {
+    if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
+    // Re-frame when the set of Nodes or the Nepal map changes, not on every reading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, styleReady, nepal, nodeIds]);
+
+  const floodProneData = useMemo(() => floodProneCollection(floodProne), [floodProne]);
+  const valleyRiverData = useMemo(
+    () => lineCollection(nepal ? [] : (river ?? []).map((reach) => reach.points)),
+    [nepal, river],
+  );
+  const routeData = useMemo(() => lineCollection(route ? [route] : []), [route]);
+  const outOfReachData = useMemo(
+    () =>
+      lineCollection(
+        home && outOfReachShelter ? [[[home.lat, home.lon], outOfReachShelter.pos]] : [],
+      ),
+    [home, outOfReachShelter],
+  );
+  const blockedData = useMemo(() => lineCollection(blockedRoadLines), [blockedRoadLines]);
+  useEffect(() => {
+    if (!map || !styleReady) return;
+    setOverlay(map, "flood-prone", floodProneData);
+    setOverlay(map, "valley-river", valleyRiverData);
+    setOverlay(map, "route", routeData);
+    setOverlay(map, "out-of-reach-line", outOfReachData);
+    setOverlay(map, "blocked-roads", blockedData);
+  }, [map, styleReady, floodProneData, valleyRiverData, routeData, outOfReachData, blockedData]);
+
+  useEffect(() => {
+    if (!map) return;
+    const onTap = picking
+      ? (point: Home) => onPickHome(point)
+      : blocking
+        ? (point: Home) => onTapRoad(point)
+        : null;
+    if (!onTap) return;
+    const listener = ({ lngLat }: { lngLat: { lat: number; lng: number } }) =>
+      onTap({ lat: lngLat.lat, lon: lngLat.lng });
+    map.on("click", listener);
+    return () => {
+      map.off("click", listener);
+    };
+  }, [map, picking, blocking, onPickHome, onTapRoad]);
+
   return (
-    <section aria-label="Map">
-      {stormSignal?.on && <p className="storm-signal">{stormSignalSentence(stormSignal)}</p>}
+    <section aria-label="Map" className="map-area">
       {floodProne && floodProne.features.length > 0 && (
         <p className="flood-prone-caption">{FLOOD_PRONE_CAPTION}</p>
       )}
@@ -141,91 +246,84 @@ export function NodeMap({
           </button>
         </div>
       )}
-      <MapContainer
-        center={BETRAWATI}
-        zoom={13}
-        className={picking || blocking ? "node-map picking" : "node-map"}
-      >
-        <TileLayer
-          // The pack arrives after the map is first drawn, and Leaflet reads maxNativeZoom only when
-          // it creates the layer, so the layer is rebuilt when the pack's depth becomes known.
-          key={packTileMaxZoom ?? "online"}
-          url={tileUrlTemplate(packTileMaxZoom !== null)}
-          maxNativeZoom={packTileMaxZoom ?? undefined}
-          attribution={MAP_CREDIT}
-          eventHandlers={{
-            tileerror: ({ tile }) => {
-              const image = tile as HTMLImageElement;
-              const onlineUrl = onlineUrlForMissingPackTile(image.src);
-              if (onlineUrl) image.src = onlineUrl;
-            },
-          }}
-        />
-        <FitToNodesUntilMoved nodes={nodes} />
-        {picking && <PickHomeOnClick onPick={onPickHome} />}
-        {blocking && !picking && <TapRoadOnClick onTap={onTapRoad} />}
-        {blockedRoadLines.map((line, index) => (
-          <Polyline key={index} positions={line} className="blocked-road" interactive={false} />
+      <div ref={attach} className={picking || blocking ? "node-map picking" : "node-map"} />
+      {map &&
+        view &&
+        visiblePlaces(places, view).map((place) => (
+          <MapMarker
+            key={place.name}
+            map={map}
+            lat={place.lat}
+            lon={place.lon}
+            className={place.key ? "place-label key" : "place-label"}
+          >
+            {place.name}
+          </MapMarker>
         ))}
-        {draftHome && (
-          <Marker
-            position={[draftHome.lat, draftHome.lon]}
-            icon={DRAFT_HOME_ICON}
-            interactive={false}
-          />
-        )}
-        {home && <Marker position={[home.lat, home.lon]} icon={HOME_ICON} interactive={false} />}
-        {route && <Polyline positions={route} className="evacuation-route" />}
-        {home && outOfReachShelter && (
-          <Polyline
-            positions={[[home.lat, home.lon], outOfReachShelter.pos]}
-            className="out-of-reach-line"
-            interactive={false}
-          />
-        )}
-        <PackLayers
-          shelters={shelters}
-          openShelterIds={openShelterIds}
-          chosenShelterId={shelter?.id ?? null}
-          outOfReachShelterId={outOfReachShelter?.id ?? null}
-          floodProne={floodProne}
-        />
-        {nodes.map((node) => {
-          const selected = node.id === selectedId;
-          // Leaflet fixes a path's class when it is created, so a state change remounts the marker.
+      {map &&
+        shelters.map((each) => {
+          const open = openShelterIds.includes(each.id);
+          const chosen = each.id === shelter?.id;
+          const outOfReach = each.id === outOfReachShelter?.id;
+          return (
+            <MapMarker
+              key={each.id}
+              map={map}
+              lat={each.pos[0]}
+              lon={each.pos[1]}
+              className={
+                chosen
+                  ? "shelter-marker"
+                  : outOfReach
+                    ? "shelter-marker out-of-reach"
+                    : open
+                      ? "shelter-pin"
+                      : "shelter-pin closed"
+              }
+            >
+              +<span className="shelter-label">{shelterLabel(each, open, outOfReach)}</span>
+            </MapMarker>
+          );
+        })}
+      {map && draftHome && (
+        <MapMarker map={map} lat={draftHome.lat} lon={draftHome.lon} className="home-draft-marker">
+          ⌂
+        </MapMarker>
+      )}
+      {map && home && (
+        <MapMarker map={map} lat={home.lat} lon={home.lon} className="home-marker">
+          ⌂
+        </MapMarker>
+      )}
+      {map &&
+        nodes.map((node) => {
           const state = [
+            node.simulated ? "simulated" : "real",
             node.stale ? "stale" : "fresh",
             !node.registered && "unverified",
             node.level,
-            selected && "selected",
-            picking && "picking",
+            node.id === selectedId && "selected",
           ]
             .filter(Boolean)
             .join(" ");
           return (
-            <CircleMarker
-              key={`${node.id} ${state}`}
-              center={node.position}
-              radius={selected ? 12 : 8}
-              className={`node-dot ${state}`}
-              interactive={!picking}
-              eventHandlers={{ click: () => onSelect(node.id) }}
+            <MapMarker
+              key={node.id}
+              map={map}
+              lat={node.position[0]}
+              lon={node.position[1]}
+              className={`node-marker ${state}`}
+              onClick={() => onSelect(node.id)}
             >
-              {/* An interactive tooltip bubbles its clicks to the marker, so only the marker listens. */}
-              <Tooltip
-                permanent
-                interactive={!picking}
-                direction="right"
-                className={`node-label ${state}`}
-              >
+              <span className="node-dot" />
+              <span className="node-label">
                 <strong>{node.label}</strong>
                 {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
                 <NodeTags node={node} />
-              </Tooltip>
-            </CircleMarker>
+              </span>
+            </MapMarker>
           );
         })}
-      </MapContainer>
     </section>
   );
 }
