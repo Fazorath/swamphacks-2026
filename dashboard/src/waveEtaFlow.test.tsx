@@ -35,6 +35,23 @@ const RIVER = {
   ],
 };
 
+const NEPAL_MANIFEST = {
+  built: "2026-10-18T12:00:00+00:00",
+  bbox: [27.7, 84.9, 28.1, 85.1],
+  nepal: {
+    bbox: [26.3, 80.0, 30.5, 88.3],
+    elevation: {
+      encoding: "terrarium",
+      approximate: true,
+      national_zooms: [5, 8],
+      detail_zooms: [9, 12],
+      detail_areas: [],
+    },
+    boundaries_note: "Boundaries are indicative",
+    sources: [],
+  },
+};
+
 const WARNING: CommunityWarning = {
   id: 7,
   t: SURGE_T + 3,
@@ -81,11 +98,14 @@ function stubNode({
   river = RIVER,
   warning = WARNING,
   shelters = [],
+  town = null,
 }: {
   eventT: number;
   river?: object | null;
   warning?: CommunityWarning;
   shelters?: object[];
+  // A place at the home, so the corner card has a town to name.
+  town?: string | null;
 }) {
   const answers: Record<string, unknown> = {
     "/api/state": fakeNodeState({
@@ -95,7 +115,17 @@ function stubNode({
       nodes: [fakeNodeSnapshot("porch", { river_km: 20, position: [KM_20.lat, KM_20.lon] })],
     }),
     "/api/replay": { v: 1, kind: "replay", state: "paused", event_t: eventT, rate: 30 },
-    "/api/cache-pack": { available: true, manifest: null },
+    "/api/cache-pack": { available: true, manifest: town ? NEPAL_MANIFEST : null },
+    "/api/cache-pack/files/nepal/places.geojson": {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { name: town, kind: "town" },
+          geometry: { type: "Point", coordinates: [KM_20.lon, KM_20.lat] },
+        },
+      ],
+    },
     "/api/shelters": { open: shelters.map((shelter) => (shelter as { id: string }).id) },
     "/api/cache-pack/files/shelters.json": shelters,
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
@@ -218,4 +248,33 @@ test("a Shelter the resident cannot reach in time becomes higher ground", async 
   );
   expect(sourceData("route").features).toHaveLength(0);
   await waitFor(() => expect(sourceData("out-of-reach-line").features).toHaveLength(1));
+});
+
+test("the corner card names the town and shows the plan's minutes", async () => {
+  saveProfile(KM_20);
+  stubNode({ eventT: SURGE_T + 60, town: "Betrawati" });
+  render(<App />);
+
+  const card = await screen.findByRole("complementary", { name: "Wave ETA" });
+  expect(await within(card).findByText("MIN · Betrawati")).toBeVisible();
+  expect(within(card).getByText("23")).toBeVisible();
+});
+
+test("past the arrival time the corner card says the wave is expected now", async () => {
+  saveProfile(KM_20);
+  stubNode({ eventT: SURGE_T + 3000, town: "Betrawati" });
+  render(<App />);
+
+  const card = await screen.findByRole("complementary", { name: "Wave ETA" });
+  expect(within(card).getByText("wave expected now")).toBeVisible();
+});
+
+test("a home with no Wave ETA gets no corner card", async () => {
+  saveProfile(KM_MINUS_5);
+  stubNode({ eventT: SURGE_T + 60 });
+  render(<App />);
+
+  await screen.findByRole("article", { name: "Community Warning" });
+  await waitFor(() => expect(requests.join()).toContain("river.geojson"));
+  expect(screen.queryByRole("complementary", { name: "Wave ETA" })).toBeNull();
 });

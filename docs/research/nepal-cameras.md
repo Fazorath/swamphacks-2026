@@ -57,7 +57,7 @@ A source qualifies only if all three hold: it needs no key we cannot keep secret
 
 ## Outreach
 
-Draft, to be sent by Leonardo from leonardorofa@gmail.com to the Centre for Hydrology and Water Resources Research and to the Water and Energy Commission Secretariat, Ministry of Energy, Water Resources and Irrigation. **Date sent: not yet sent. Answer: none.**
+Draft, to be sent from the team address stormshieldteam.uf@gmail.com to the Centre for Hydrology and Water Resources Research and to the Water and Energy Commission Secretariat, Ministry of Energy, Water Resources and Irrigation. **Date sent: not yet sent. Answer: none.**
 
 > Subject: May a hackathon demo show the Timure / border river cameras?
 >
@@ -73,7 +73,7 @@ Draft, to be sent by Leonardo from leonardorofa@gmail.com to the Centre for Hydr
 >
 > We will use only what you allow. Thank you for the work you did to keep people in the valley safe.
 >
-> Leonardo Rofa, on behalf of the Storm Shield team
+> The Storm Shield team (SwampHacks 2026), stormshieldteam.uf@gmail.com
 
 ## Decision
 
