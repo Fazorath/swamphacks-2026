@@ -956,6 +956,100 @@ section p {
   padding-left: 1.1rem;
 }
 
+/* Wave ETA corner card (D-24, treatment A "Beacon"): bottom-right of the map, left of the right
+   Panel column. Only transform and opacity move; the red edge pulse is a pseudo-element's opacity. */
+.wave-eta-card {
+  position: absolute;
+  right: calc(336px + 1.5rem);
+  bottom: 0.75rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 300px;
+  min-height: 190px;
+  padding: 14px 18px 16px;
+  background: var(--surface-glass);
+  border: 2px dashed var(--community-warning);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.wave-eta-head {
+  display: flex;
+  justify-content: space-between;
+  color: var(--community-warning);
+  font: 600 11px/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.wave-eta-number {
+  color: var(--countdown-far);
+  font: 600 120px/1 var(--font-mono);
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 24px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.wave-eta-now {
+  color: var(--countdown-now);
+  font: 700 34px/1.1 var(--font-sans);
+}
+
+.wave-eta-town {
+  color: var(--text-primary);
+  font: 600 14px/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wave-eta-card.soon .wave-eta-number {
+  color: var(--countdown-soon);
+  animation: wave-eta-breathe 2s ease-in-out infinite;
+}
+
+.wave-eta-card.now .wave-eta-number {
+  color: var(--countdown-now);
+}
+
+.wave-eta-card.now::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--countdown-now);
+  border-radius: 10px;
+  animation: wave-eta-edge 2s ease-in-out infinite;
+}
+
+@keyframes wave-eta-breathe {
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes wave-eta-edge {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-eta-card.soon .wave-eta-number,
+  .wave-eta-card.now::after {
+    animation: none;
+  }
+
+  .wave-eta-card.now::after {
+    opacity: 1;
+  }
+}
+
 /* Phone (ui.md): the map fills the screen, the other three tabs cover it, and the tab bar stays
    under the thumb. Every control is at least 44 px. */
 main.phone {
