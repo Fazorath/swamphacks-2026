@@ -34,7 +34,7 @@ Run these before calling any ticket done. An agent must not claim "done" without
 
 ## No Pis or sensors
 
-Agents and their drivers currently have **no Raspberry Pis or sensors**; phones are available. Any check that says "unplug the internet" or "over the mesh" is rehearsed on one laptop: two or more Node processes with `NODE_MESH_INTERFACE=loopback`, each with its own `NODE_PORT`, `NODE_LOOPBACK_SLOT` and `NODE_DATA_DIR`, and "no internet" simulated by stopping whatever serves the Cache Pack. A phone on the same Tailscale network can open the dashboard from the laptop's Tailscale address, which covers "renders on a phone". Never report a Pi or sensor check as passed; say it was rehearsed locally and what is still unproven on real devices. The recipe is in `docs/agents/lessons.md`.
+Agents and their drivers currently have **no Raspberry Pis or sensors**; phones are available. Any check that says "unplug the internet" or "over the mesh" is rehearsed on one laptop: two or more Node processes with `NODE_MESH_INTERFACE=loopback`, each with its own `NODE_PORT`, `NODE_LOOPBACK_SLOT` and `NODE_DATA_DIR` (a group that does not start at slot 0 also sets `NODE_LOOPBACK_FIRST_SLOT` to its lowest slot, or it joins every Node below it), and "no internet" simulated by stopping whatever serves the Cache Pack. A phone on the same Tailscale network can open the dashboard from the laptop's Tailscale address, which covers "renders on a phone". Never report a Pi or sensor check as passed; say it was rehearsed locally and what is still unproven on real devices. The recipe is in `docs/agents/lessons.md`.
 
 ## Workflow
 
@@ -47,7 +47,7 @@ Idea → spec → tickets → build → review → merge.
 5. **Review** before merge: `code-review` against `main`.
 6. **Merge** into `main` yourself and push. No waiting on a teammate.
 
-Tracker rules: `docs/agents/issue-tracker.md`. Claim a ticket before starting it, and say so in the group chat.
+Tracker rules: `docs/agents/issue-tracker.md`. Claim a ticket before starting it, and say so in the group chat. Every new ticket gets an `Assignee` from the routing table there (UI → Fazorath; routes, evacuation algorithms and data builds → refloow-0; breadboard, hardware and Mesh transport → amitathik7; tests, workflow and miscellaneous fixes → leonardorofaDV); whoever writes a ticket, person or agent, sets it.
 
 Other playbooks: `prototype` (throwaway UI/logic experiments), `diagnosing-bugs` (anything broken or slow), `domain-modeling` (keeps `CONTEXT.md`, the shared glossary), `resolving-merge-conflicts`, `handoff` (context running low), `wait-what` (agent lost you).
 

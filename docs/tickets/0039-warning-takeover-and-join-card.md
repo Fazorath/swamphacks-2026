@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/storm-shield.md`
 
 **Design:** `docs/design/ui.md` ("Warning Takeover", "Join card", "Evacuation Plan Panel" first row); canvas artboards `C-Takeover`, `C-Join`, `D-Takeover-Official`, `D-Takeover-Community`, `P-Takeover`, `P-Takeover-Community`.

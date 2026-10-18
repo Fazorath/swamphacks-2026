@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     mesh_interface: ReticulumInterface = "auto"
     # Each Node on one machine needs its own slot; only read when mesh_interface is "loopback".
     loopback_slot: int = 0
+    # The lowest slot of this Node's group. A Node dials only the slots of its own group, so a
+    # group started higher up (the demo, a test) never joins Nodes in slots below it.
+    loopback_first_slot: int = 0
     # "tcp" is the fixed-address interface (for example over Tailscale): this Node listens on
     # tcp_port and dials every host in tcp_peers, a comma-separated list of "host" or "host:port".
     # Every Node must list every other Node, because Reticulum does not relay between clients.

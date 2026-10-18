@@ -18,9 +18,9 @@ ANNOUNCE_EVERY_SECONDS = 10
 NODE_ID_LENGTH = 12
 SIGNATURE_LENGTH = 64
 
-# Slot n listens on LOOPBACK_BASE_PORT + n and dials every lower slot, so each pair of Nodes on
-# this machine shares exactly one connection. A hub-and-spoke layout does not work: Reticulum does
-# not pass one client's broadcast on to another client.
+# Slot n listens on LOOPBACK_BASE_PORT + n and dials every lower slot of its group, so each pair of
+# Nodes in a group shares exactly one connection. A hub-and-spoke layout does not work: Reticulum
+# does not pass one client's broadcast on to another client.
 LOOPBACK_BASE_PORT = 4250
 
 logger = logging.getLogger(__name__)
@@ -50,8 +50,16 @@ def _interface_config(settings: Settings) -> str:
         listen_ip, listen_port = "0.0.0.0", settings.tcp_port
         dials = [_peer_address(entry, settings.tcp_port) for entry in _entries(settings.tcp_peers)]
     else:
+        if not 0 <= settings.loopback_first_slot <= settings.loopback_slot:
+            raise ValueError(
+                f"NODE_LOOPBACK_FIRST_SLOT {settings.loopback_first_slot} must be between 0 and "
+                f"NODE_LOOPBACK_SLOT {settings.loopback_slot}"
+            )
         listen_ip, listen_port = "127.0.0.1", LOOPBACK_BASE_PORT + settings.loopback_slot
-        dials = [("127.0.0.1", LOOPBACK_BASE_PORT + slot) for slot in range(settings.loopback_slot)]
+        dials = [
+            ("127.0.0.1", LOOPBACK_BASE_PORT + slot)
+            for slot in range(settings.loopback_first_slot, settings.loopback_slot)
+        ]
     listen = (
         "  [[Listen]]\n    type = TCPServerInterface\n    enabled = yes\n"
         f"    listen_ip = {listen_ip}\n    listen_port = {listen_port}"

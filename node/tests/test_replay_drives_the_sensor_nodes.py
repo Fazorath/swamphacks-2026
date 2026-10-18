@@ -244,8 +244,9 @@ def test_resume_at_the_end_is_refused(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
     _start_replay(meshed_nodes)
     assert meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "end"}).status_code == 200
-    _wait_until(lambda: _event_clock(meshed_nodes, "hub")["state"] == "playing")
-    assert meshed_nodes["hub"].post("/api/replay/pause").status_code == 200
+    # The end phase is the replay's last second, so the Hub pauses there by itself at once; a pause
+    # sent by the test raced it and was refused whenever the Hub got there first.
+    _wait_until(lambda: _event_clock(meshed_nodes, "hub")["state"] == "paused")
     response = meshed_nodes["hub"].post("/api/replay/resume")
     assert response.status_code == 409
     assert "ended" in response.json()["detail"]

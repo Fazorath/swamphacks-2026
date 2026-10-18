@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/storm-shield.md`
 
 **Design:** `docs/design/ui.md` ("Layout" Layer rail table and Panels); canvas artboards `C-Rail`, `C-Controls`.

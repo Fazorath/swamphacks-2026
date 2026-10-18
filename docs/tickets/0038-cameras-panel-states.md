@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/flash-flood-replay.md` (replaces the FL511 source in `docs/specs/online-status-and-cameras.md`)
 
 **Design:** `docs/design/ui.md` ("Cameras Panel"); canvas artboards `C-Cameras`, `D-MeshOnly`, `P-MeshOnly`.

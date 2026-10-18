@@ -162,6 +162,18 @@ _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
 
+**God's Eye View**:
+The desktop dashboard's map of the whole of Nepal, drawn from vector data in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
+_Avoid_: globe, surveillance map, overview
+
+**Simulated Fleet**:
+About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by the Hub with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible "Simulated network" badge.
+_Avoid_: fake nodes, mock nodes, virtual nodes
+
+**Contact lost**:
+The cue on a Node's marker when it has been silent for about 5 seconds: its glow dies and a ring counts down to Stale at 15 seconds. Display only; it changes no Flood Risk or Surge rule.
+_Avoid_: disconnected, dropped, offline node
+
 **Warning Takeover**:
 The modal that interrupts any view when a new Official Alert or Community Warning arrives, with one large acknowledge button; it fills a phone's screen and floats over the dimmed map on a larger one. Acknowledging it on one device never clears it on another.
 _Avoid_: popup, alarm, klaxon, notification

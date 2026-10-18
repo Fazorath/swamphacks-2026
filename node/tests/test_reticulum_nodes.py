@@ -14,6 +14,9 @@ from storm_shield.reticulum_mesh import LOOPBACK_BASE_PORT
 
 FIRST_HTTP_PORT = 8101
 FIRST_TCP_PORT = 4350
+# Its own loopback group, clear of the slots people run Nodes in by hand, so none of those dial in.
+# scripts/stop-nodes.sh lists the ports this group listens on.
+FIRST_LOOPBACK_SLOT = 60
 NODE_COUNT = 3
 
 
@@ -33,7 +36,8 @@ class RunningNode:
             "NODE_NAME": f"node-{self._slot}",
             "NODE_PORT": str(FIRST_HTTP_PORT + self._slot),
             "NODE_MESH_INTERFACE": self._interface,
-            "NODE_LOOPBACK_SLOT": str(self._slot),
+            "NODE_LOOPBACK_SLOT": str(FIRST_LOOPBACK_SLOT + self._slot),
+            "NODE_LOOPBACK_FIRST_SLOT": str(FIRST_LOOPBACK_SLOT),
             "NODE_TCP_PORT": str(FIRST_TCP_PORT + self._slot),
             "NODE_TCP_PEERS": ",".join(
                 f"127.0.0.1:{FIRST_TCP_PORT + other}"
@@ -86,7 +90,7 @@ def _fail_if_ports_are_taken() -> None:
     """A Node left running elsewhere would answer in place of ours; say so instead of timing out."""
     ports = [
         base + slot
-        for base in (FIRST_HTTP_PORT, FIRST_TCP_PORT, LOOPBACK_BASE_PORT)
+        for base in (FIRST_HTTP_PORT, FIRST_TCP_PORT, LOOPBACK_BASE_PORT + FIRST_LOOPBACK_SLOT)
         for slot in range(NODE_COUNT)
     ]
     taken = []
@@ -100,6 +104,18 @@ def _fail_if_ports_are_taken() -> None:
             f"ports {taken} already have a listener, probably a Node left running; "
             "run scripts/stop-nodes.sh and try again"
         )
+
+
+def _each_hears_exactly(nodes: list[RunningNode], ids: set[str]) -> bool:
+    """Fails at once on a stranger: waiting would only end in a timeout that hides who dialed in."""
+    heard = [node.heard_from() for node in nodes]
+    strangers = set().union(*heard) - ids
+    if strangers:
+        raise AssertionError(
+            f"the Nodes heard {sorted(strangers)} from outside this test, "
+            "probably a Node left running that dials these ports; run scripts/stop-nodes.sh"
+        )
+    return all(entry == ids for entry in heard)
 
 
 @pytest.fixture(params=["loopback", "tcp"])
@@ -119,7 +135,7 @@ def test_nodes_find_each_other_and_a_step_crosses_the_mesh(nodes: list[RunningNo
     _eventually(lambda: all(len(node.id()) == 12 for node in nodes))
     ids = {node.id() for node in nodes}
     assert len(ids) == 3
-    _eventually(lambda: all(node.heard_from() == ids for node in nodes))
+    _eventually(lambda: _each_hears_exactly(nodes, ids))
 
     porch_id = nodes[0].id()
     before = nodes[2].pressure_from(porch_id)

@@ -28,6 +28,24 @@ def test_loopback_slot_dials_only_lower_slots() -> None:
     assert config.count("TCPClientInterface") == 2
 
 
+def test_a_loopback_group_never_dials_below_its_first_slot() -> None:
+    config = reticulum_config(
+        Settings(mesh_interface="loopback", loopback_slot=22, loopback_first_slot=20)
+    )
+    assert "listen_port = 4272" in config
+    assert "target_port = 4270" in config
+    assert "target_port = 4271" in config
+    assert config.count("TCPClientInterface") == 2
+
+
+@pytest.mark.parametrize("first_slot", [-1, 3])
+def test_a_first_slot_outside_the_group_names_the_setting(first_slot: int) -> None:
+    with pytest.raises(ValueError, match="NODE_LOOPBACK_FIRST_SLOT"):
+        reticulum_config(
+            Settings(mesh_interface="loopback", loopback_slot=2, loopback_first_slot=first_slot)
+        )
+
+
 def test_a_malformed_tcp_peer_names_the_setting() -> None:
     with pytest.raises(ValueError, match="NODE_TCP_PEERS"):
         reticulum_config(Settings(mesh_interface="tcp", tcp_peers="100.64.0.2:abc"))

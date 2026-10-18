@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/weather-layers.md`
 
 - [ ] One low-resolution canvas under the Nodes, Route and Shelters, interpolated and smoothed; panning and zooming keep it aligned

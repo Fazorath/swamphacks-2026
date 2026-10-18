@@ -319,11 +319,37 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Still true after the audit:** `roads.json` and the real Road graph have never been built from the Nepal extract (0018), so the demo cannot block a road; the camera tiles are still FL511 Florida feeds in the Nepal demo (0011); `run-demo.sh` registration (0012/0049) and the full two-phone replay (0049) were never run end to end; 0016 (breadboard) is open.
 - `weatherGrid.ts` (`valueAt`, `windAt`, `speedBand`) is only used by its tests until the weather layer tickets (0054 to 0057, 0059) land; that is on purpose.
 
+## Measured wave speed (ticket 0050)
+
+- **The second Node's Surge updates the origin's warning instead of getting a warning of its own**, when it is downstream, later, and the speed is under 300 km/h (`MAX_MEASURED_SPEED_KMH`). Otherwise it warns on its own as before, which is why `test_two_nodes_surging_make_one_warning_each` still passes: its Surges are 8 s apart, over 1,000 km/h.
+- **In a replay, a test's `advance(seconds)` moves the Event clock 30 times as far**, so a measured speed there is distance over *event* time. A 32 s advance is 16 event minutes.
+- **A home must be within 2 km of a river vertex to get an ETA**, and the test river has a vertex every 10 km: pick test homes on vertices (`at(0)`, `at(20)`), or the answer is `not-near-river`, not the reach you meant.
+- Rerun of `test_reticulum_nodes.py` needs ports 4250 and 8000 free; another session's Node (a different worktree) held them during the first full run, so those four tests were run later. Check `ss -ltnp` before `scripts/stop-nodes.sh`: it would kill a teammate's or your own other session's Node.
+- Not rehearsed on loopback Reticulum or in a browser; the update path is covered in the in-memory Mesh only.
+
 ## Shelter or higher ground (ticket 0048)
 
 - **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
 - **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
 - **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
+
+## Theme, bundled fonts and icons (ticket 0032)
+
+- **Vitest turns every imported stylesheet into an empty string, `?raw` and `import.meta.glob` included**, so a test that scans CSS that way passes with nothing checked. `theme.test.ts` reads the files with `node:fs` (hence `@types/node` and `"node"` in `tsconfig.json` types) and also asserts it saw `App.css` and `App.tsx`.
+- **The theme file is `dashboard/src/theme.css`**, loaded before `App.css` in `main.tsx`; `App.css` uses roles only (`--accent`, `--risk-low`, `--surface-panel`…), never a primitive. The old names (`--community`, `--low`, `--muted`, `--line`…) are gone. A new colour is a role in `theme.css` first.
+- **Fonts are the `latin-*.css` files** of `@fontsource/ibm-plex-sans` (400, 600, 700) and `-mono` (500, 600), so the build carries about 10 small woff/woff2 files and no Google request. Checked in Chrome from a Node on a private port: the three weights the first screen uses loaded from the Node's own origin and no resource came from another host. The internet was not actually unplugged, so "works offline" rests on that same-origin result.
+- **Text-glyph icons remain**: the `⌂` home markers in `NodeMap.tsx` are not `lucide-react`. They go with the marker anatomy in 0035.
+- **A rule's own `font-family` beats the grouped mono rule near the top of `App.css`**: `.tag` kept a hardcoded `ui-monospace` and showed the system font until a computed-style check in Chrome caught it. `theme.test.ts` now fails on any `font-family` that is not `var(--font-sans)` or `var(--font-mono)`.
+- `.tag.stale` was amber; the design says Stale is muted grey because amber means Elevated, so it is `--text-secondary` now.
+
+## Reticulum loopback test fails in the whole-file run (found 2026-10-17, while merging 0050; fixed the same day)
+
+- **`test_nodes_find_each_other_and_a_step_crosses_the_mesh[loopback]` failed because a running demo dialed into the test's Nodes.** A loopback Node dialed every slot from 0 up to its own, so `run-demo.sh` with `DEMO_SLOT_BASE=20` (Nodes at slots 20 to 24) kept dialing 4250 to 4269 every 5 s. Once the test's Nodes listened there, the demo's readings arrived and `heard_from() == ids` never held. The three test Nodes themselves met in under 5 s. It failed alone too, whenever the demo was up; it "passed earlier that day" because no demo was running then. TIME_WAIT, `~/.reticulum` and a shared instance were not involved (each Node has its own config dir with `share_instance = No`).
+- **Fix:** `NODE_LOOPBACK_FIRST_SLOT` (default 0) is the lowest slot of a Node's group, and a Node dials only its own group. `run-demo.sh` passes `DEMO_SLOT_BASE` as it; the test runs as group 60 (ports 4310 to 4312) and fails at once, naming the stranger, if a Node from outside the test is heard. Rehearsing at slots 20, 30 or 40 by hand, set `NODE_LOOPBACK_FIRST_SLOT` to the group's first slot too, or your group joins every Node below it.
+- **The busy-port guard cannot see this**: the intruder dials *out* to the test's ports and listens elsewhere. `ss -tanp | grep 425` shows who connects, and `/proc/<pid>/environ` shows its `NODE_LOOPBACK_SLOT`.
+- **Unrelated flake seen while checking the fix:** `test_replay_drives_the_sensor_nodes.py::test_resume_at_the_end_is_refused` failed 1 run in 3 of its file (`pause` answered 409). After the jump to `end` the Hub's own loop pauses the clock at 10:30 almost at once, and when it wins the race the test's `pause` is refused. The test now waits for the Hub's own pause and then checks Resume; 15 of 15 runs passed.
+- **Never chain `scripts/check.sh | tail` before `git push`**: `tail` hides the exit code and a failing pytest still pushed. Test `check.sh`'s own exit status.
+- **A baseline "without my change" must be a commit before your merge**: `8e8b951` already held 0050 and gave a false answer. Use the parent of your merge.
 
 ## Valley Road Routes (ticket 0051)
 

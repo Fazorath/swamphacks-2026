@@ -11,8 +11,22 @@ Every ticket carries these lines:
 **Blocked by:** 0002, 0003   (or "None (can start immediately)")
 **Status:** ready-for-agent | in-progress | done
 **Owner:** unclaimed | <name>
+**Assignee:** <git user.name of the suggested person>
 **Spec:** docs/specs/<feature-slug>.md
 ```
+
+## Assigning
+
+`Assignee` says who a ticket was written for; it is a suggestion. `Owner` still means claimed, so `claim.sh` and the pre-commit claim guard are unchanged: `claim.sh` still sets `Owner` and still refuses a ticket someone else owns. Whoever writes a ticket (a person or an agent, including `to-tickets`) sets `Assignee` from this table. Anyone can re-assign by editing that one line.
+
+| Kind of ticket | Assignee |
+|---|---|
+| UI: dashboard look, map, markers, panels, motion | Fazorath |
+| Routes and evacuation algorithms; weather, forecast and Cache Pack data builds; backend rules | refloow-0 |
+| Breadboard, hardware, Mesh and Reticulum transport | amitathik7 |
+| Tests, workflow, scripts, miscellaneous fixes, anything that fits none of the above | leonardorofaDV |
+
+A ticket that spans two kinds goes by the files it mostly touches. The handle must equal that person's `git config user.name`, or `claim.sh` will treat their own ticket as someone else's.
 
 ## Claiming
 

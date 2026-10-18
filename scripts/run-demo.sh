@@ -91,6 +91,7 @@ start_node() {
   # stopping uv would leave the Node running and holding its ports.
   env NODE_NAME="$name" NODE_ROLE="$role" NODE_PORT=$((base_port + slot)) \
     NODE_MESH_INTERFACE=loopback NODE_LOOPBACK_SLOT=$((slot_base + slot)) \
+    NODE_LOOPBACK_FIRST_SLOT="$slot_base" \
     NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \

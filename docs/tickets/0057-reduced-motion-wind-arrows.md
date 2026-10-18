@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/weather-layers.md`
 
 - [ ] With `prefers-reduced-motion: reduce` the Wind layer draws arrows on a screen-space grid and starts no animation loop

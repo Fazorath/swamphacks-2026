@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/weather-layers.md`
 
 **Design:** `docs/design/ui.md` ("Layout" Layer rail); the canvas has no Weather artboard yet, so build from the control kit (`C-Controls`) and add an artboard if time allows.
@@ -17,4 +19,5 @@
 - [ ] The choice is remembered per device; unreadable storage falls back to Off and does not crash
 - [ ] The picker is keyboard-operable and follows the control kit states
 - [ ] Vitest: one layer at a time, Off clears, remembered state restored, broken storage falls back
+- [ ] The layer draws on the MapLibre map from 0033 (the Leaflet map is gone); the canvas overlays follow the map's own projection
 - [ ] All **Commands** pass
