@@ -4,9 +4,9 @@
 
 **Blocked by:** 0043, 0048
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
-**Owner:** unclaimed
+**Owner:** refloow-0
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
