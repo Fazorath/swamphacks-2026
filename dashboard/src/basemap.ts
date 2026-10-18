@@ -86,7 +86,13 @@ export function hatchImage(colour: string): { width: number; height: number; dat
 
 // The data drawn over the map; each is a GeoJSON source the app fills as its props change.
 export type OverlayName =
-  "flood-prone" | "valley-river" | "route" | "blocked-roads" | "wave-trail" | "wave-head";
+  | "flood-prone"
+  | "valley-river"
+  | "route"
+  | "out-of-reach-line"
+  | "blocked-roads"
+  | "wave-trail"
+  | "wave-head";
 
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -98,6 +104,7 @@ export function baseStyle(colors: MapColors): StyleSpecification {
       "flood-prone": { type: "geojson", data: EMPTY },
       "valley-river": { type: "geojson", data: EMPTY },
       route: { type: "geojson", data: EMPTY },
+      "out-of-reach-line": { type: "geojson", data: EMPTY },
       "blocked-roads": { type: "geojson", data: EMPTY },
       // The gradient along the trail needs the line's own length (lineMetrics).
       "wave-trail": { type: "geojson", data: EMPTY, lineMetrics: true },
@@ -136,6 +143,17 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         source: "route",
         layout: { "line-cap": "round", "line-join": "round" },
         paint: { "line-color": colors.route, "line-width": 5 },
+      },
+      {
+        id: "out-of-reach-line",
+        type: "line",
+        source: "out-of-reach-line",
+        paint: {
+          "line-color": colors.route,
+          "line-width": 3,
+          "line-opacity": 0.7,
+          "line-dasharray": [1, 2.5],
+        },
       },
       {
         id: "blocked-roads",

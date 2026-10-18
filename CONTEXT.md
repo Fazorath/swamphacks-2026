@@ -168,6 +168,10 @@ _Avoid_: refuge, safe place
 Whether a Shelter is open or closed, set by the Hub operator and announced over the Mesh; a Shelter counts as open only once the Hub has announced it.
 _Avoid_: availability, capacity
 
+**High-ground point**:
+A hand-placed spot on the hillside above a town, picked into the Cache Pack with its climb above the river. It is not a Shelter: never open or closed, never ranked by Route. The map shows the points only while the Evacuation Plan says to get to higher ground, with no Reachable Shelter.
+_Avoid_: safe zone, refuge
+
 **Flood-Prone Area**:
 The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered. The map always marks it approximate.
 _Avoid_: evacuation zone, surge zone

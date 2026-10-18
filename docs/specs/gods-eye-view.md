@@ -79,6 +79,12 @@ Contact lost is display only; Flood Risk, Surge and the 15 s and 60 s rules do n
 ### High ground
 
 - **Hand-placed points**, 1 or 2 each near Syabrubesi, Betrawati and Trishuli, with the height above the river read from the elevation data, a walking time uphill, a source note and a check date, like the placeholder Shelters. They draw as a chevron-up pin, a rounded triangle with an up arrow outlined in `ink-50`, smaller than a Shelter pin (D-43, D-45), labelled "90 m up · 11 min walk" (D-44; replaces "+90 m above the river, 11 min uphill"). They are hidden on a calm day and appear, the nearest one highlighted with a cyan outline, only when the Evacuation Plan says "No Shelter you can reach in time. Get to higher ground" (D-45). A computed version, or points submitted by trusted contributors and checked against elevation data, is a later idea and a pitch line only.
+- **Decided in the 0068 grill (2026-10-18).** Words: **High-ground point** (`CONTEXT.md`).
+  - *File.* The Cache Pack carries `high_ground.json`; a pack without it shows no pins and no error. Per point: id, name, position, town, climb above the river, `walk_minutes` from the town, a source note and a check date. The climb is read by the build from the pack's elevation tiles (point minus the nearest river vertex), never typed.
+  - *Build refuses* a point inside the Flood-Prone Area or within 100 m of it, a climb under 50 m, or no town within 2 km. The points are PLACEHOLDERs chosen from the elevation tiles: two at Syabrubesi, one each at Betrawati and Trishuli.
+  - *Walking time.* One formula (straight line x 1.4 at 4 km/h, the plan's). The file's `walk_minutes` is from the town's key place; with a home, the map label and the plan use the walk from home instead.
+  - *When shown.* Only in the plan state "No Shelter you can reach in time": a Wave ETA for the home and no Reachable Shelter, re-judged every second. The nearest point by straight line from home is outlined cyan and named in the plan. If it is more than 2 km from home, no pins show and the generic line stays. Whether the walk beats the wave is not checked; the line shows "wave in N min".
+  - *Not done here.* No `cache-pack-v6` Release and no `run-demo.sh` change: the pins reach the demo when someone rebuilds and re-points it.
 
 ### Layout changes to `ui.md`
 
@@ -93,6 +99,7 @@ Contact lost is display only; Flood Risk, Surge and the 15 s and 60 s rules do n
 - MapLibre needs WebGL, which jsdom lacks: test the marker states and fleet logic as pure functions and the map component against a mocked map, as the Leaflet tests did.
 - A check that no run-time request goes to another host while the map loads (no CARTO, no AWS).
 - The performance bar is checked by hand on the demo laptop and noted in the ticket.
+- High ground: the build's refusals and the climb from fixed elevation numbers (Node seam, pytest); the climb line, the "only with no Reachable Shelter" rule, the 2 km limit and the highlight as pure functions and a flow test against the mocked map (dashboard seam, Vitest).
 - Server side: the fleet never appears in the Mesh, Flood Risk or warnings (test with a Surging fleet entry).
 
 ## Out of Scope

@@ -50,6 +50,9 @@ export type EvacuationPlan = {
   officialAlerts: OfficialAlert[];
   lines: string[];
   shelter: Shelter | null;
+  // With a wave coming and no Shelter reachable in time, the closest one outside the Flood-Prone
+  // Area, so the map still shows which way is uphill; never a place the plan calls safe.
+  outOfReachShelter: Shelter | null;
   // From the Grid point nearest home to the Shelter; null when the plan has no Route to draw.
   route: LatLon[] | null;
   officialLine: string;
@@ -127,6 +130,13 @@ function byRoadThenStraightLine(a: Candidate, b: Candidate): number {
   return a.km - b.km;
 }
 
+type NearestShelter = {
+  shelter: Shelter | null;
+  outOfReachShelter?: Shelter;
+  route: LatLon[] | null;
+  lines: string[];
+};
+
 function nearestFittingShelter(
   profile: HouseholdProfile,
   pack: CachePackContents,
@@ -134,7 +144,7 @@ function nearestFittingShelter(
   routes: Routes | null,
   rerouting: Rerouting | null,
   wave: WaveWindow | null,
-): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } {
+): NearestShelter {
   const open = pack.shelters.filter((shelter) => openShelterIds.includes(shelter.id));
   if (open.length === 0) {
     return {
@@ -165,11 +175,16 @@ function nearestFittingShelter(
       )
     : fitting;
   if (wave && reachable.length === 0) {
-    const [closest] = [...fitting].sort(
+    const byDistance = [...fitting].sort(
       (a, b) => distanceKm(profile.home, a.pos) - distanceKm(profile.home, b.pos),
     );
+    const outOfReachShelter = byDistance.find(
+      (shelter) => !inFloodProneArea({ lat: shelter.pos[0], lon: shelter.pos[1] }, pack.floodProne),
+    );
+    const closest = outOfReachShelter ?? byDistance[0];
     return {
       shelter: null,
+      outOfReachShelter,
       route: null,
       lines: [
         `Nearest Shelter ${closest.name}: ${walkAndWave(profile.home, closest, secondsLeft)}`,
@@ -276,6 +291,7 @@ export function evacuationPlan({
     officialAlerts: [] as OfficialAlert[],
     lines: [] as string[],
     shelter: null,
+    outOfReachShelter: null,
     route: null,
     officialLine: OFFICIAL_LINE,
   };
@@ -301,7 +317,7 @@ export function evacuationPlan({
   const area = homeInFloodProneArea
     ? "Your home is inside a mapped Flood-Prone Area."
     : "Your home is outside the mapped Flood-Prone Areas (the river corridor, approximate).";
-  const { shelter, route, lines } = nearestFittingShelter(
+  const { shelter, outOfReachShelter, route, lines } = nearestFittingShelter(
     profile,
     pack,
     openShelterIds,
@@ -316,6 +332,7 @@ export function evacuationPlan({
     ),
     lines: [area, ...lines],
     shelter,
+    outOfReachShelter: outOfReachShelter ?? null,
     route,
   };
 }

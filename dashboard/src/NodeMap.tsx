@@ -206,6 +206,8 @@ type Props = {
   ambientFlow: boolean;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
+  // The closest Shelter when none can be reached before the wave; drawn dashed, with a line from home.
+  outOfReachShelter: Shelter | null;
   route: LatLon[] | null;
   // Pixels at each edge that open Panels cover.
   panelRoom: { left: number; right: number };
@@ -252,6 +254,7 @@ export function NodeMap({
   clock,
   ambientFlow,
   shelter,
+  outOfReachShelter,
   route,
   panelRoom,
   draftHome,
@@ -393,14 +396,22 @@ export function NodeMap({
     [nepal, river],
   );
   const routeData = useMemo(() => lineCollection(route ? [route] : []), [route]);
+  const outOfReachData = useMemo(
+    () =>
+      lineCollection(
+        home && outOfReachShelter ? [[[home.lat, home.lon], outOfReachShelter.pos]] : [],
+      ),
+    [home, outOfReachShelter],
+  );
   const blockedData = useMemo(() => lineCollection(blockedRoadLines), [blockedRoadLines]);
   useEffect(() => {
     if (!map || !styleReady) return;
     setOverlay(map, "flood-prone", floodProneData);
     setOverlay(map, "valley-river", valleyRiverData);
     setOverlay(map, "route", routeData);
+    setOverlay(map, "out-of-reach-line", outOfReachData);
     setOverlay(map, "blocked-roads", blockedData);
-  }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
+  }, [map, styleReady, floodProneData, valleyRiverData, routeData, outOfReachData, blockedData]);
 
   const eventT = clock?.event_t ?? null;
   // The painted field changes at most once a second, as the polled Event clock does.
@@ -452,7 +463,7 @@ export function NodeMap({
           view,
           places,
           shelters,
-          shelter?.id,
+          (shelter ?? outOfReachShelter)?.id,
           [...nodes, ...fleet],
           selectedId,
           waveStamps,
@@ -520,13 +531,22 @@ export function NodeMap({
         shelters.map((each) => {
           const open = openShelterIds.includes(each.id);
           const chosen = each.id === shelter?.id;
+          const outOfReach = each.id === outOfReachShelter?.id;
           return (
             <MapMarker
               key={each.id}
               map={map}
               lat={each.pos[0]}
               lon={each.pos[1]}
-              className={chosen ? "shelter-marker" : open ? "shelter-pin" : "shelter-pin closed"}
+              className={
+                chosen
+                  ? "shelter-marker"
+                  : outOfReach
+                    ? "shelter-marker out-of-reach"
+                    : open
+                      ? "shelter-pin"
+                      : "shelter-pin closed"
+              }
             >
               <MapPin size={18} aria-hidden="true" />
               <span
@@ -534,7 +554,7 @@ export function NodeMap({
                   placement.get(`shelter:${each.id}`) == null ? " label-hidden" : ""
                 }`}
               >
-                {shelterLabel(each, open)}
+                {shelterLabel(each, open, outOfReach)}
               </span>
             </MapMarker>
           );
