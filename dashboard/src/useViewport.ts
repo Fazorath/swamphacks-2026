@@ -21,5 +21,8 @@ function useMedia(query: string): boolean {
   );
 }
 
+// With reduced motion every change is an instant swap: the components leave their animation
+// classes off, not only the stylesheet's media query.
+export const usePrefersReducedMotion = () => useMedia("(prefers-reduced-motion: reduce)");
 export const useIsPhone = () => useMedia(PHONE_QUERY);
 export const useIsTablet = () => useMedia(TABLET_QUERY);

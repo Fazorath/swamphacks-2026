@@ -1634,3 +1634,89 @@ section p.flood-prone-caption {
   padding-left: 1rem;
   font-size: 0.8rem;
 }
+
+/* Readings Panel motion (ui.md, "Motion"): only opacity animates, and every change is a swap
+   when the resident prefers reduced motion. Numbers sit in fixed-width slots so nothing shifts. */
+.reading-slot {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-level .slot-value {
+  min-width: 6ch;
+}
+
+.trend-arrow {
+  display: inline-block;
+  width: 1.2ch;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.trend-arrow.rising {
+  color: var(--risk-elevated);
+}
+
+.trend-arrow.falling {
+  color: var(--accent);
+}
+
+.reading-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.slot-value.tick {
+  animation: slot-flash 600ms ease-out 1;
+}
+
+@keyframes slot-flash {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.node-card {
+  transition: opacity 300ms ease-out;
+}
+
+.node-card.stale {
+  opacity: 0.6;
+}
+
+.node-card.enters,
+.flood-risk-chip.fades-in {
+  animation: fade-in 300ms ease-out 1;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot-value.tick,
+  .node-card.enters,
+  .flood-risk-chip.fades-in,
+  .card-flash {
+    animation: none;
+  }
+
+  .node-card {
+    transition: none;
+  }
+}
