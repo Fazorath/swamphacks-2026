@@ -36,6 +36,7 @@ import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
 import { waveArrival, waveFrontKm } from "./waveEta";
+import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
 function onThisNodesOwnMachine(): boolean {
@@ -360,6 +361,7 @@ export function App() {
               {planPanel}
               {camerasPanel}
             </div>
+            <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
           </>
         )}
       </div>
