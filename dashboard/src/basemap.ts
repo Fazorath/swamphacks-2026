@@ -141,7 +141,7 @@ export function baseStyle(colors: MapColors): StyleSpecification {
 }
 
 // Under the first overlay, so a river never hides the Route.
-const FIRST_OVERLAY = "valley-river";
+export const FIRST_OVERLAY = "valley-river";
 
 // The Osiris-style basemap, lifted one step (D-07), from the vector files the pack holds. Nothing
 // here has a label layer: MapLibre would need a glyph server for text, so place names are DOM

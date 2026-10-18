@@ -34,6 +34,11 @@ import {
   type TerrainChoice,
 } from "./terrain";
 import { markerState } from "./markerState";
+import { fieldCorners, paintWeatherField } from "./weatherField";
+import type { WeatherLayer } from "./weatherLayer";
+import { weatherImageUrl } from "./weatherImageUrl";
+import { showWeatherField } from "./weatherOnMap";
+import type { WeatherReplay } from "./useWeatherReplay";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -201,6 +206,10 @@ type Props = {
   onTerrainSlow: () => void;
   // Counts presses of the Valley button; each one flies the camera to the valley.
   valleyFlights: number;
+  // The Weather layer on the terrain, and the Event clock it follows (null: the file's first hour).
+  weatherLayer: WeatherLayer;
+  weather: WeatherReplay;
+  eventT: number | null;
 };
 
 export function NodeMap({
@@ -234,6 +243,9 @@ export function NodeMap({
   terrain,
   onTerrainSlow,
   valleyFlights,
+  weatherLayer,
+  weather,
+  eventT,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -362,6 +374,19 @@ export function NodeMap({
     setOverlay(map, "route", routeData);
     setOverlay(map, "blocked-roads", blockedData);
   }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
+
+  // The painted field changes at most once a second, as the polled Event clock does.
+  useEffect(() => {
+    if (!map || !styleReady) return;
+    if (weatherLayer === "off" || weather.status !== "ready") {
+      showWeatherField(map, null);
+      return;
+    }
+    const { grid, times } = weather.grid;
+    const timeMs = eventT === null ? Date.parse(times[0]) : eventT * 1000;
+    const image = paintWeatherField(weather.grid, weatherLayer, timeMs);
+    showWeatherField(map, { url: weatherImageUrl(image), corners: fieldCorners(grid) });
+  }, [map, styleReady, weatherLayer, weather, eventT]);
 
   useEffect(() => {
     if (!map) return;

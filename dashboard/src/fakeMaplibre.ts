@@ -4,7 +4,7 @@
 type Handler = (event: unknown) => void;
 type GeoJsonData = GeoJSON.GeoJSON | string;
 
-type SourceSpec = { type: string; data?: GeoJsonData; tiles?: string[] };
+type SourceSpec = { type: string; data?: GeoJsonData; tiles?: string[]; url?: string };
 
 class FakeMap {
   readonly container: HTMLElement;
@@ -78,7 +78,22 @@ class FakeMap {
       setData: (data: GeoJsonData) => {
         spec.data = data;
       },
+      updateImage: ({ url }: { url: string }) => {
+        spec.url = url;
+      },
     };
+  }
+
+  getLayer(id: string) {
+    return this.layerIds.includes(id) ? { id } : undefined;
+  }
+
+  removeLayer(id: string) {
+    this.layerIds.splice(this.layerIds.indexOf(id), 1);
+  }
+
+  removeSource(id: string) {
+    this.sources.delete(id);
   }
 
   project([lon, lat]: [number, number]) {
