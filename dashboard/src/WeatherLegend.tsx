@@ -3,7 +3,8 @@ import { WEATHER_CHOICES, type WeatherLayer } from "./weatherLayer";
 import type { WeatherReplay } from "./useWeatherReplay";
 
 export const RECORDED_TAG = "RECORDED WEATHER · 26 Aug 2026";
-const COARSE_NOTE = "Coarse grid (a point every 0.5°) of model data: context for the country, not a village measurement.";
+const COARSE_NOTE =
+  "Coarse grid (a point every 0.5°) of model data: context for the country, not a village measurement.";
 
 function scale(layer: FieldLayer, unit: string) {
   if (layer === "cloud") {
