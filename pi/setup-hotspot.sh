@@ -7,6 +7,7 @@
 set -euo pipefail
 
 connection="storm-shield-hotspot"
+address="10.88.0.1"
 action="${1:-}"
 
 cd "$(dirname "$0")/.."
@@ -30,16 +31,19 @@ case "$action" in
     # whatever uplink the Pi has: with Ethernet plugged in, the hotspot has internet. The demo
     # needs the Pi's cable out. IPv6 link-local is what Reticulum's AutoInterface uses to find
     # the other Nodes. autoconnect is off on purpose: the hotspot never starts by itself at boot.
+    # The address is not NetworkManager's default 10.42.0.1: a laptop sharing its connection over
+    # the Ethernet cable is also 10.42.0.1, so ssh to the Pi reached the laptop instead.
     nmcli connection add type wifi ifname wlan0 con-name "$connection" autoconnect no \
       ssid "$HOTSPOT_SSID" 802-11-wireless.mode ap 802-11-wireless.band bg \
       wifi-sec.key-mgmt wpa-psk wifi-sec.proto rsn wifi-sec.pairwise ccmp wifi-sec.group ccmp \
-      wifi-sec.psk "$HOTSPOT_PASSWORD" ipv4.method shared ipv6.method link-local >/dev/null
+      wifi-sec.psk "$HOTSPOT_PASSWORD" ipv4.method shared ipv4.addresses "$address/24" \
+      ipv6.method link-local >/dev/null
     if nmcli -t -f TYPE,STATE device | grep -q '^ethernet:connected'; then
       echo "hotspot: warning: Ethernet is connected, so the hotspot shares its internet." >&2
       echo "hotspot: unplug it before the demo." >&2
     fi
     nmcli connection up "$connection"
-    echo "hotspot: '$HOTSPOT_SSID' is up; the Pi is at 10.42.0.1"
+    echo "hotspot: '$HOTSPOT_SSID' is up; the Pi is at $address"
     ;;
   down)
     # Already down is the state asked for, not an error.
