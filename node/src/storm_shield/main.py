@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from storm_shield.breadboard import open_breadboard
 from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
@@ -183,6 +184,18 @@ def create_app(
         own_measurements,
         keep_reading,
     )
+
+    def press_a_step(step_name: str) -> None:
+        with publisher.lock:
+            scenario.go_to(step_name)
+            publisher.share()
+
+    def reset_the_scenario() -> None:
+        with publisher.lock:
+            scenario.reset()
+            publisher.share()
+
+    breadboard = open_breadboard(settings.gpio, press_a_step, reset_the_scenario)
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
@@ -489,9 +502,14 @@ def create_app(
             tasks.append(asyncio.create_task(fetch_cache_pack()))
         if settings.role == "hub" or settings.weather_forecast_url:
             tasks.append(asyncio.create_task(keep_weather_forecast_fresh()))
-        yield
-        for task in tasks:
-            task.cancel()
+        try:
+            yield
+        finally:
+            for task in tasks:
+                task.cancel()
+            # Released even if the app stops on an error, or the pins stay held.
+            if breadboard:
+                breadboard.close()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
@@ -554,9 +572,10 @@ def create_app(
 
     @app.post("/api/scenario/reset")
     def reset_scenario() -> ScenarioState:
+        # The lock is re-entrant: holding it here keeps a Breadboard press from landing between the
+        # reset and the step we report.
         with publisher.lock:
-            scenario.reset()
-            publisher.share()
+            reset_the_scenario()
             return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")

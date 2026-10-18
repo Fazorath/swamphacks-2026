@@ -13,7 +13,7 @@ from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
 from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
-from storm_shield.settings import Settings
+from storm_shield.settings import GpioMode, Settings
 from storm_shield.shelter_status import ShelterStatus
 
 HUB = "hub"
@@ -55,11 +55,13 @@ class MeshedNodes:
         replay_track: str = "",
         publish_every_seconds: float = 0.02,
         sign_up_repeat_seconds: float = 10,
+        gpio: GpioMode = "off",
     ) -> None:
         """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
         settings = self._settings(
             name,
             hub_identity=HUB,
+            gpio=gpio,
             replay_track=replay_track,
             publish_every_seconds=publish_every_seconds,
             sign_up_repeat_seconds=sign_up_repeat_seconds,
@@ -104,6 +106,8 @@ class MeshedNodes:
 
     def _settings(self, name: str, **overrides: Any) -> Settings:
         own = self._directory / name
+        # Off unless a test asks, so a run on a real Pi never reads its pins.
+        overrides = {"gpio": "off", **overrides}
         return Settings(
             name=name,
             dashboard_dir=own / "no-dashboard",

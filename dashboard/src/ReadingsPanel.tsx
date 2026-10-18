@@ -4,9 +4,15 @@ import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
 import { Panel, type PanelControl } from "./Panel";
 import type { NodeOnMap } from "./nodesOnMap";
-import type { FloodRisk } from "./nodeState";
-import { KIND_LABELS } from "./readingKinds";
 import { readingsLadder, rungBeforeWave } from "./readingsLadder";
+import type { FloodRisk, ReadingKind } from "./nodeState";
+
+export const KIND_LABELS: Record<ReadingKind, string> = {
+  pressure: "Pressure",
+  rain_rate: "Rain rate",
+  water_level: "Water level",
+  soil_moisture: "Soil moisture",
+};
 
 function post(path: string, afterPost: () => void) {
   fetch(path, { method: "POST" })
