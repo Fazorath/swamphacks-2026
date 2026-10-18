@@ -41,7 +41,7 @@
 | [0036-phone-layout](0036-phone-layout.md) | ready-for-agent | unclaimed | Fazorath |
 | [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | ready-for-agent | unclaimed | Fazorath |
 | [0038-cameras-panel-states](0038-cameras-panel-states.md) | ready-for-agent | unclaimed | Fazorath |
-| [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | ready-for-agent | unclaimed | Fazorath |
+| [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | in-progress | Fazorath | Fazorath |
 | [0040-node-serves-state-snapshot](0040-node-serves-state-snapshot.md) | done | leonardorofaDV | - |
 | [0041-dashboard-reads-the-state-snapshot](0041-dashboard-reads-the-state-snapshot.md) | done | leonardorofaDV | - |
 | [0042-node-unreachable](0042-node-unreachable.md) | done | leonardorofaDV | - |
