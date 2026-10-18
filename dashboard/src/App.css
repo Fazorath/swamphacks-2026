@@ -88,6 +88,28 @@ h1 {
   font-weight: 600;
 }
 
+/* Water level is always a reconstruction (D-47): it sits beside the Simulated badge in its colour. */
+.water-reconstruction-note {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.water-reconstruction {
+  color: var(--map-river);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  padding: 0.2rem 0.55rem;
+  background: var(--surface-raised);
+  border: 1px dashed var(--map-river);
+  border-radius: 4px;
+  /* Above the head, so the pill never covers the line it names. */
+  transform: translateY(-1.6rem);
+  pointer-events: none;
+}
+
 .mesh-only {
   color: var(--accent);
   font-weight: 600;
@@ -1950,4 +1972,118 @@ section p.flood-prone-caption {
 
 .join-qr-ink {
   fill: var(--qr-ink);
+}
+
+/* Warning band (D-22, D-23, D-27): over the top of the map, never dimming it, with no button. The
+   border pulses twice over 3 s in time with the chime's two notes (D-55); reduced motion gets none. */
+.warning-band {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  height: 120px;
+  padding: 0.75rem 1.5rem;
+  overflow: hidden;
+  border-bottom: 3px solid var(--border-strong);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  animation: warning-band-in 300ms ease-out;
+}
+
+.warning-band p {
+  margin: 0 0 0.25rem;
+}
+
+.warning-band.community {
+  border: 2px dashed var(--community-warning);
+  background: color-mix(in srgb, var(--community-warning) 12%, var(--surface-solid));
+}
+
+.warning-band.official {
+  border-color: var(--official-tag);
+  background: var(--official-bg);
+  color: var(--official-ink);
+}
+
+.warning-band-tag {
+  display: flex;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.warning-band-sentence {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .warning-band.community {
+    animation:
+      warning-band-in 300ms ease-out,
+      warning-band-pulse 1.5s ease-in-out 2;
+  }
+}
+
+@keyframes warning-band-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes warning-band-pulse {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.acknowledge {
+  margin-top: 0.5rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.acknowledged {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+}
+
+/* The chip beside the Flood Risk chip once a warning is acknowledged (D-29). */
+.warning-chip {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+}
+
+.warning-chip.community {
+  border: 1px dashed var(--community-warning);
+  color: var(--community-warning);
+}
+
+.warning-chip.official {
+  border-color: var(--official-tag);
+  color: var(--official-tag);
+}
+
+/* The red ring on the Node that started the wave (D-28); two rings, then it is gone. */
+.origin-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 2px solid var(--risk-high);
+  border-radius: 50%;
+  animation: rise-ring 900ms ease-out 2 forwards;
+  pointer-events: none;
 }

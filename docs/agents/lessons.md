@@ -560,6 +560,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
 - **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.
 
+## Rising-water sheet (ticket 0071)
+
+- **The height lines read each real Node's last water level** (`waterReaches`, from the state snapshot), not the timeline file, so no number is new. A Node that went silent keeps its peak (S0 7.5 m, S2 9.6 m); lines appear once the wave has reached the Node (or at the origin Node).
+- **The sideways distance is a drawn scale (300 m per metre of water), not terrain**: it does not follow the valley walls, because no DEM is sampled. Check by eye in 3D whether the lines read as a level; if not, the fix is sampling the pack's elevation.
+- **`packUrl` used `new URL(...)`, which percent-encodes `{z}/{x}/{y}`**, so MapLibre asked for `elevation/%7Bz%7D/...` (3,000+ 404s in the Hub log) and the demo had no terrain, height bands or hillshade at all; the tests only checked the address's prefix. Found from the Hub's access log when the owner said the map had no elevation. `packUrl` now joins the origin as text, and a test checks the template stays literal.
+- Opened in Chrome (2026-10-18): the 3D valley shows relief and the gauge lines at Syabrubesi. The 60 fps check and a phone look are still open.
+- A full `vitest run` with the demo and Chrome open failed 17 unrelated tests once and passed the next run; `weatherLayersFlow` "no forecast" read the picture before it was drawn and now waits.
+
 ## Camera list (ticket 0075)
 
 - **The live-source half of the ticket was dropped in grilling**: 0074 found no qualifying feed and 0038 had deleted the FL511 fetcher, so a live path would have been untested speculation. `kind` stays `replay`; a live source gets its own ticket when a feed qualifies.
@@ -578,6 +586,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Rehearsed in Chrome by the owner (2026-10-18)** on a lone Hub (port 8651, fake `HOTSPOT_SSID`): the takeover, acknowledgement, banner, reload and phone layout all worked, and the Join card showed both codes. A Hub alone is enough, since Official Alerts come from the Replay timeline; jump to "Authorities learn of the flood" in the Hub Panel's Replay tab. The Wi-Fi code for a network that does not exist makes a phone say "unable to join", which proves the phone read it as a Wi-Fi code and no more; a real join needs the Pi hotspot, still unproven.
 - **Open the rehearsal at `http://localhost:<port>`, not the Tailscale address**: `/api/join` and the Hub button both need loopback. A Hub started without `CACHE_PACK_URL` has no pack and the map is blank; serve `.demo/pack/cache-pack.zip` with `python3 -m http.server --directory <dir>` and export `CACHE_PACK_URL` (the pack unpacks within seconds).
 - A loopback group's slot can already be taken by a teammate's Node (4320 held a Node from another session): check `lsof -nP -iTCP -sTCP:LISTEN` and move to a free `NODE_LOOPBACK_SLOT` with a matching `NODE_LOOPBACK_FIRST_SLOT`; the failure is exit 255 with an empty log unless the Node's output is captured.
+
+## Warning choreography (ticket 0066)
+
+- **The desktop shows `WarningBand` (in the stage, over the map) and the phone keeps `WarningTakeover`**; both chime through `useChimeForWarning`. Acknowledge is a button on each card in the Alerts Panel; the chip beside Flood Risk comes from `bannerWarnings`, so it shows for the newest acknowledged warning of each kind.
+- **A `role="alert"` band joins the page's other alerts**, so tests that used `getByRole("alert")` for the "Node unreachable" banner found two; they now find it by text. Desktop tests that read a warning find the band by `role="alert"` name "Warning", phone tests the `alertdialog`.
+- **The fake map's `flyTo` ends in a microtask**, as the real one ends later, so code that listens for `moveend` after calling `flyTo` works in tests. The tilt waits for a `moveend` with no `originalEvent`, so a resident who grabs the map mid-flight is not tilted against.
+- A full parallel `vitest run` timed out 12 tests on this laptop (all pass alone); `--maxWorkers=2` passed all 424.
+- Not seen in a browser: the band's look, the double border pulse, the red origin ring, and the fly-then-tilt on real MapLibre.
 
 ## High-ground points (ticket 0068)
 

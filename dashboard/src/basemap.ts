@@ -11,9 +11,10 @@ const DISTRICT_LINES_FROM_ZOOM = NATIONAL_ZOOM + 1;
 
 const PACK_FILES = "/api/cache-pack/files/";
 
-// MapLibre fetches in a worker, which cannot resolve a relative URL against the page.
+// MapLibre fetches in a worker, which cannot resolve a relative URL against the page. The origin
+// is joined as text: `new URL` would percent-encode the `{z}/{x}/{y}` MapLibre fills in per tile.
 function packUrl(path: string): string {
-  return new URL(PACK_FILES + path, window.location.origin).href;
+  return window.location.origin + PACK_FILES + path;
 }
 
 // The colours of the map, read from the theme's roles at run time (theme.css owns every value).
@@ -92,7 +93,9 @@ export type OverlayName =
   | "out-of-reach-line"
   | "blocked-roads"
   | "wave-trail"
-  | "wave-head";
+  | "wave-head"
+  | "water-level"
+  | "water-ticks";
 
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -109,6 +112,8 @@ export function baseStyle(colors: MapColors): StyleSpecification {
       // The gradient along the trail needs the line's own length (lineMetrics).
       "wave-trail": { type: "geojson", data: EMPTY, lineMetrics: true },
       "wave-head": { type: "geojson", data: EMPTY },
+      "water-level": { type: "geojson", data: EMPTY },
+      "water-ticks": { type: "geojson", data: EMPTY },
     },
     layers: [
       { id: "outside", type: "background", paint: { "background-color": colors.outside } },
@@ -160,6 +165,24 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         type: "line",
         source: "blocked-roads",
         paint: { "line-color": colors.blocked, "line-width": 6, "line-dasharray": [1.3, 1] },
+      },
+      // The water level on the valley walls (D-46): a dashed height line with a tick every metre.
+      {
+        id: "water-level",
+        type: "line",
+        source: "water-level",
+        paint: {
+          "line-color": colors.river,
+          "line-width": 3,
+          "line-opacity": 0.9,
+          "line-dasharray": [3, 2],
+        },
+      },
+      {
+        id: "water-ticks",
+        type: "line",
+        source: "water-ticks",
+        paint: { "line-color": colors.river, "line-width": 2, "line-opacity": 0.7 },
       },
       // The wave front (D-16, D-17, D-19): white only, fading from the head back to the tail.
       {

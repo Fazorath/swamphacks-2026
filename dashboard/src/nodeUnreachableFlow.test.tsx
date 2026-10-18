@@ -141,7 +141,7 @@ test.each(["down", "error"] as const)(
     expect(banner()).not.toBeInTheDocument();
     expect(screen.getByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
     await seconds(1);
-    expect(screen.getByRole("alert")).toHaveTextContent("Node unreachable");
+    expect(banner()).toBeInTheDocument();
   },
 );
 

@@ -1,4 +1,6 @@
-import { TriangleAlert } from "lucide-react";
+import { Check, TriangleAlert } from "lucide-react";
+
+import { communityKey, officialKey } from "./acknowledgedWarnings";
 
 import {
   issuedAsGiven,
@@ -19,6 +21,19 @@ import { Panel, type PanelControl } from "./Panel";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
+// The only place a desktop resident acknowledges a warning (D-27).
+function AcknowledgeControl({ done, onAcknowledge }: { done: boolean; onAcknowledge: () => void }) {
+  return done ? (
+    <p className="acknowledged">
+      <Check size={14} aria-hidden="true" /> Acknowledged
+    </p>
+  ) : (
+    <button type="button" className="acknowledge" onClick={onAcknowledge}>
+      Acknowledge
+    </button>
+  );
+}
+
 export function AlertsPanel({
   alerts,
   warnings,
@@ -29,6 +44,8 @@ export function AlertsPanel({
   waveArrival,
   eventT,
   online,
+  acknowledged,
+  onAcknowledge,
   panel,
 }: {
   alerts: OfficialAlert[];
@@ -40,6 +57,8 @@ export function AlertsPanel({
   waveArrival: WaveArrival | null;
   eventT: number | null;
   online: boolean;
+  acknowledged: string[];
+  onAcknowledge: (key: string) => void;
   panel: PanelControl;
 }) {
   const leadTime = leadTimeLine(firstCommunityWarningAt, alerts);
@@ -73,6 +92,10 @@ export function AlertsPanel({
           ) : (
             <p className="official-alert-offline">Source link opens when online</p>
           )}
+          <AcknowledgeControl
+            done={acknowledged.includes(officialKey(alert))}
+            onAcknowledge={() => onAcknowledge(officialKey(alert))}
+          />
         </article>
       ))}
       {[...warnings].reverse().map((warning) => {
@@ -95,6 +118,10 @@ export function AlertsPanel({
             ) : (
               <p>Official source link opens when online</p>
             )}
+            <AcknowledgeControl
+              done={acknowledged.includes(communityKey(warning))}
+              onAcknowledge={() => onAcknowledge(communityKey(warning))}
+            />
           </article>
         );
       })}

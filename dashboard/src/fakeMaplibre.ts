@@ -39,6 +39,14 @@ class FakeMap {
     return this;
   }
 
+  once(type: string, handler: Handler) {
+    const once: Handler = (event) => {
+      this.off(type, once);
+      handler(event);
+    };
+    return this.on(type, once);
+  }
+
   off(type: string, handler: Handler) {
     this.handlers.set(
       type,
@@ -132,11 +140,22 @@ class FakeMap {
     this.terrain = terrain;
   }
 
+  // What jumpTo was given: the camera moving with no flight.
+  readonly jumps: { zoom?: number; pitch?: number }[] = [];
+
   flyTo(options: { zoom?: number; pitch?: number }) {
     this.flights.push(options);
     this.zoom = options.zoom ?? this.zoom;
     this.pitch = options.pitch ?? this.pitch;
     this.emit("zoomend", {});
+    // A real flight ends later, after the caller has had the chance to listen for it.
+    queueMicrotask(() => this.emit("moveend", {}));
+  }
+
+  jumpTo(options: { zoom?: number; pitch?: number }) {
+    this.jumps.push(options);
+    this.zoom = options.zoom ?? this.zoom;
+    this.pitch = options.pitch ?? this.pitch;
   }
 
   getBounds() {
@@ -147,7 +166,7 @@ class FakeMap {
     this.fitted.push(bounds);
   }
 
-  easeTo(options: { pitch?: number }) {
+  easeTo(options: { pitch?: number; duration?: number }) {
     this.eased.push(options);
     this.pitch = options.pitch ?? this.pitch;
   }

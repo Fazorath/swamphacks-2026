@@ -216,7 +216,7 @@ describe("Weather layers on the map", () => {
     await pick("Temperature");
 
     await waitFor(() => expect(within(legend()).getByText(/RECORDED/)).toBeInTheDocument());
-    expect(weatherUrl()).toBeDefined();
+    await waitFor(() => expect(weatherUrl()).toBeDefined());
   });
 
   it.each([

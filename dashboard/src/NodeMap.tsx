@@ -54,6 +54,9 @@ import { usePrefersReducedMotion } from "./useViewport";
 import type { RiverLine } from "./waveEta";
 import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
 import { useRiverFlow } from "./useRiverFlow";
+import { RisingWaterLayer } from "./RisingWaterLayer";
+import type { WaterReach } from "./risingWater";
+import { waveFront } from "./waveFront";
 import { WaveFrontLayer } from "./WaveFrontLayer";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
@@ -81,6 +84,9 @@ function mapTagCount(node: NodeOnMap): number {
 }
 
 // A town the wave reached keeps the time it arrived beside its name (D-21).
+// How long the pitch takes to ease to the valley angle once the fly has landed (D-26).
+const TILT_MS = 1500;
+
 function placeLabelText(name: string, waveStamps: Map<string, number>): string {
   const arrivedAt = waveStamps.get(name);
   return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
@@ -201,6 +207,8 @@ type Props = {
   river: RiverLine | null;
   // What the wave front needs: the Surges that started it and the Event clock it runs on.
   warnings: CommunityWarning[];
+  // The Node a new Community Warning started at: it rings and the camera goes to it, once per key.
+  warningFocus: { key: string; nodeId: string } | null;
   clock: EventClock | null;
   // False with the Fleet toggle off: the slow dashes on the rivers stop with the fleet.
   ambientFlow: boolean;
@@ -234,6 +242,8 @@ type Props = {
   weatherLayer: WeatherLayer;
   weather: WeatherData;
   weatherAtMs: number;
+  // The water levels the wave has reached, drawn as height lines on the valley walls (D-46).
+  waterReaches: WaterReach[];
 };
 
 export function NodeMap({
@@ -253,6 +263,7 @@ export function NodeMap({
   places,
   river,
   warnings,
+  warningFocus,
   clock,
   ambientFlow,
   shelter,
@@ -275,6 +286,7 @@ export function NodeMap({
   weatherLayer,
   weather,
   weatherAtMs,
+  waterReaches,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -375,6 +387,33 @@ export function NodeMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, valleyFlights]);
 
+  // D-26: fly flat to the Surging Node, then ease the pitch to the valley angle. The tilt waits for
+  // the flight's own end, so a resident who grabs the map mid-flight is not tilted against.
+  const focusKey = warningFocus?.key;
+  const focusNode = [...nodes, ...fleet].find((node) => node.id === warningFocus?.nodeId);
+  const focusLat = focusNode?.position[0];
+  const focusLon = focusNode?.position[1];
+  const focusFound = focusNode !== undefined;
+  useEffect(() => {
+    if (!map || !styleReady || focusLat === undefined || focusLon === undefined) return;
+    moved.current = true;
+    const tilted = terrainChoice.current === "3d" && nepal !== null;
+    const view = { center: [focusLon, focusLat] as [number, number], zoom: VALLEY_VIEW.zoom };
+    if (reducedMotion) {
+      map.jumpTo({ ...view, pitch: tilted ? TERRAIN_PITCH : 0 });
+      return;
+    }
+    map.flyTo({ ...view, pitch: 0 });
+    if (tilted) {
+      map.once("moveend", (event: { originalEvent?: unknown }) => {
+        if (!event.originalEvent) map.easeTo({ pitch: TERRAIN_PITCH, duration: TILT_MS });
+      });
+    }
+    // One camera move per warning: the Node's position, the terrain choice and the Nepal map
+    // settling later must not fly again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, styleReady, focusKey, focusFound]);
+
   useEffect(() => {
     if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
     // Re-frame when the set of Nodes or the Nepal map changes, not on every reading.
@@ -458,6 +497,18 @@ export function NodeMap({
       )
     : new Map<string, number>();
 
+  // The label sits on the water: on the wave's head while terrain is on and moving, otherwise on
+  // the highest water level, as a static marked height.
+  const highest = waterReaches.reduce<WaterReach | null>(
+    (top, reach) => (top === null || reach.levelM > top.levelM ? reach : top),
+    null,
+  );
+  const followsHead = terrain === "3d" && !reducedMotion && waving;
+  const waterLabelAt =
+    highest === null
+      ? null
+      : ((followsHead ? waveFront(river, warnings, eventT)?.head : null) ?? highest.at);
+
   // Derived during render, from the last placement so a label keeps its side until it must move.
   const labels =
     map && view
@@ -506,6 +557,17 @@ export function NodeMap({
           clock={clock}
           reducedMotion={reducedMotion}
         />
+      )}
+      {map && styleReady && <RisingWaterLayer map={map} reaches={waterReaches} />}
+      {map && waterLabelAt && (
+        <MapMarker
+          map={map}
+          lat={waterLabelAt[0]}
+          lon={waterLabelAt[1]}
+          className="water-reconstruction"
+        >
+          RECONSTRUCTION
+        </MapMarker>
       )}
       {map &&
         view &&
@@ -605,6 +667,7 @@ export function NodeMap({
             selected={false}
             popoverOpen={node.id === fleetOpenId}
             rises={rises[node.id] ?? 0}
+            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
             onSelect={onToggleFleet}
             side={sideOf(`node:${node.id}`)}
             labelHidden={placement.get(`node:${node.id}`) === null}
@@ -619,6 +682,7 @@ export function NodeMap({
             selected={node.id === selectedId}
             wavePassed={wavePassedIds.has(node.id)}
             rises={rises[node.id] ?? 0}
+            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
             onSelect={onSelect}
             side={sideOf(`node:${node.id}`)}
             labelHidden={placement.get(`node:${node.id}`) === null}
