@@ -3,6 +3,7 @@ import {
   CloudRain,
   Gauge,
   Home,
+  Network,
   Radio,
   Route,
   TriangleAlert,
@@ -10,9 +11,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { MapLayerName, MapLayers } from "./mapLayers";
 import type { PanelName } from "./openPanels";
-
-export type MapLayerName = "nodes" | "flood-prone" | "shelters" | "route" | "storm-signal";
 
 type Button = {
   label: string;
@@ -23,9 +23,10 @@ type Button = {
 };
 
 type Props = {
-  hiddenLayers: MapLayerName[];
+  layers: MapLayers;
   openPanels: PanelName[];
   registeredNodes: number;
+  simulatedNodes: number;
   openShelters: number;
   liveCameras: number;
   onToggleLayer: (layer: MapLayerName) => void;
@@ -33,9 +34,10 @@ type Props = {
 };
 
 export function LayerRail({
-  hiddenLayers,
+  layers,
   openPanels,
   registeredNodes,
+  simulatedNodes,
   openShelters,
   liveCameras,
   onToggleLayer,
@@ -49,7 +51,7 @@ export function LayerRail({
   ): Button => ({
     label,
     icon,
-    on: !hiddenLayers.includes(name),
+    on: layers[name],
     count,
     onPress: () => onToggleLayer(name),
   });
@@ -67,11 +69,12 @@ export function LayerRail({
   });
   const buttons = [
     layer("Nodes", Radio, "nodes", registeredNodes),
+    layer("Fleet", Network, "fleet", simulatedNodes),
     panel("Readings", Gauge, "readings", null),
-    layer("Flood-Prone Areas", Waves, "flood-prone", null),
+    layer("Flood-Prone Areas", Waves, "floodProne", null),
     layer("Shelters", Home, "shelters", openShelters),
     layer("Route", Route, "route", null),
-    layer("Storm Signal", CloudRain, "storm-signal", null),
+    layer("Storm Signal", CloudRain, "stormSignal", null),
     panel("Alerts", TriangleAlert, "alerts", null),
     panel("Cameras", Camera, "cameras", liveCameras),
   ];

@@ -99,6 +99,7 @@ describe("the map", () => {
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
+      "route-casing",
       "route",
       "blocked-roads",
     ]);
@@ -139,6 +140,7 @@ describe("the map", () => {
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
+      "route-casing",
       "route",
       "blocked-roads",
     ]);

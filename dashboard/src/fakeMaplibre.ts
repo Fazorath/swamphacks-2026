@@ -61,6 +61,22 @@ class FakeMap {
     else this.layerIds.splice(at, 0, layer.id);
   }
 
+  readonly images = new Set<string>();
+  readonly visibility = new Map<string, string>();
+
+  addImage(id: string) {
+    this.images.add(id);
+  }
+
+  hasImage(id: string) {
+    return this.images.has(id);
+  }
+
+  setLayoutProperty(layerId: string, property: string, value: string) {
+    if (!this.layerIds.includes(layerId)) throw new Error(`no layer ${layerId}`);
+    if (property === "visibility") this.visibility.set(layerId, value);
+  }
+
   getSource(id: string) {
     const spec = this.sources.get(id);
     if (!spec) return undefined;
@@ -161,4 +177,9 @@ export function addressesTheMapWouldFetch(): string[] {
 
 export function tapMap(lat: number, lon: number) {
   lastMap().emit("click", { lngLat: { lat, lng: lon } });
+}
+
+// Whether a map layer is shown: layers start visible, as in MapLibre.
+export function layerShown(layerId: string): boolean {
+  return lastMap().visibility.get(layerId) !== "none";
 }

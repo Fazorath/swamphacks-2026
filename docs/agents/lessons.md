@@ -433,6 +433,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A warning that arrives after a resident opened a third right-side Panel pushes the oldest one out** (two per side). Tests that expand Cameras must wait for the state first; `nodeUnreachableFlow.test.tsx` swaps Cameras for Alerts for that reason.
 - **Defaults follow `ui.md` D-50, not the ticket's "calm: Readings and Evacuation Plan"**: calm is Readings alone; Elevated/High adds the Plan; a warning adds the Alerts too. Readings stay open (other side).
 - **The Storm Signal button only hides the top-bar pill**; there is no edge-darkening layer yet. The Alerts button has no badge because nothing acknowledges warnings yet.
+- **0034 and 0035 each built a layer-button column; the merged one is `LayerRail`** (icons, badges, Panel buttons) over 0035's `useMapLayers` state, with a Fleet button and the 0078 label placement passed into `NodeMarker` (`labelSide`). `NodeMap` hides map layers itself (`layers` prop); tests read `layerShown(...)`.
 - Panel re-centring (`easeTo` with padding) and the rail look are tested only against the fake map; not seen in a real browser.
 
 ## Map labels do not overlap (ticket 0078)
