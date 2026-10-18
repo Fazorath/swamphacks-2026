@@ -14,6 +14,14 @@ import {
   type MapColors,
 } from "./basemap";
 import { MapMarker } from "./MapMarker";
+import {
+  estimatedLabelSize,
+  placeLabels,
+  samePlacement,
+  type MapLabel,
+  type Placement,
+  type Side,
+} from "./labelPlacement";
 import { NodeTags } from "./NodeTags";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -38,6 +46,59 @@ function viewOf(map: MapLibreMap): View {
     zoom: map.getZoom(),
     bounds: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
   };
+}
+
+const TAG_WIDTH_PX = 70;
+
+function nodeTagCount(node: NodeOnMap): number {
+  return [node.simulated, !node.registered, node.level, node.stale].filter(Boolean).length;
+}
+
+// Every label that competes for room on screen. The chosen Shelter, key places and the real Nodes
+// are never left out; the rest give way to them (0078).
+function labelsOnScreen(
+  map: MapLibreMap,
+  view: View,
+  places: Place[],
+  shelters: Shelter[],
+  chosenShelterId: string | undefined,
+  nodes: NodeOnMap[],
+  selectedId: string | null,
+): MapLabel[] {
+  const at = (lat: number, lon: number) => map.project([lon, lat]);
+  const labels: MapLabel[] = [];
+  for (const place of visiblePlaces(places, view)) {
+    labels.push({
+      id: `place:${place.name}`,
+      ...at(place.lat, place.lon),
+      ...estimatedLabelSize(place.name, 12),
+      rank: place.key ? 1 : 4,
+      must: place.key,
+    });
+  }
+  for (const each of shelters) {
+    const chosen = each.id === chosenShelterId;
+    labels.push({
+      id: `shelter:${each.id}`,
+      ...at(each.pos[0], each.pos[1]),
+      ...estimatedLabelSize(shelterLabel(each, true), 12),
+      rank: chosen ? 0 : 3,
+      must: chosen,
+    });
+  }
+  const fleetShowing = zoomBlend(view.zoom) >= 0.5;
+  for (const node of nodes) {
+    if (node.simulated && !fleetShowing) continue;
+    const text = node.label + (node.waterLevelCm !== null ? ` · ${node.waterLevelCm} cm` : "");
+    labels.push({
+      id: `node:${node.id}`,
+      ...at(node.position[0], node.position[1]),
+      ...estimatedLabelSize(text, 13, nodeTagCount(node) * TAG_WIDTH_PX),
+      rank: node.id === selectedId ? 0 : node.simulated ? 5 : 2,
+      must: !node.simulated,
+    });
+  }
+  return labels;
 }
 
 function floodProneCollection(areas: FloodProneAreas | null): GeoJSON.FeatureCollection {
@@ -136,6 +197,7 @@ export function NodeMap({
   const [view, setView] = useState<View | null>(null);
   const colors = useRef<MapColors | null>(null);
   const moved = useRef(false);
+  const [placement, setPlacement] = useState<Placement>(new Map());
   const nodeIds = nodes.map((node) => node.id).join();
 
   const attach = useCallback((container: HTMLDivElement | null) => {
@@ -214,6 +276,13 @@ export function NodeMap({
     };
   }, [map, picking, blocking, onPickHome, onTapRoad]);
 
+  // Derived during render, from the last placement so a label keeps its side until it must move.
+  const labels =
+    map && view ? labelsOnScreen(map, view, places, shelters, shelter?.id, nodes, selectedId) : [];
+  const nextPlacement = placeLabels(labels, placement);
+  if (!samePlacement(nextPlacement, placement)) setPlacement(nextPlacement);
+  const sideOf = (id: string): Side => placement.get(id) ?? "right";
+
   return (
     <section aria-label="Map" className="map-area">
       {floodProne && floodProne.features.length > 0 && (
@@ -238,17 +307,21 @@ export function NodeMap({
       <div ref={attach} className={picking || blocking ? "node-map picking" : "node-map"} />
       {map &&
         view &&
-        visiblePlaces(places, view).map((place) => (
-          <MapMarker
-            key={place.name}
-            map={map}
-            lat={place.lat}
-            lon={place.lon}
-            className={place.key ? "place-label key" : "place-label"}
-          >
-            {place.name}
-          </MapMarker>
-        ))}
+        visiblePlaces(places, view)
+          .filter((place) => placement.get(`place:${place.name}`) !== null)
+          .map((place) => (
+            <MapMarker
+              key={place.name}
+              map={map}
+              lat={place.lat}
+              lon={place.lon}
+              className={place.key ? "place-label key" : "place-label"}
+            >
+              <span className={`map-label label-${sideOf(`place:${place.name}`)}`}>
+                {place.name}
+              </span>
+            </MapMarker>
+          ))}
       {map &&
         shelters.map((each) => {
           const open = openShelterIds.includes(each.id);
@@ -261,7 +334,14 @@ export function NodeMap({
               lon={each.pos[1]}
               className={chosen ? "shelter-marker" : open ? "shelter-pin" : "shelter-pin closed"}
             >
-              +<span className="shelter-label">{shelterLabel(each, open)}</span>
+              +
+              <span
+                className={`map-label shelter-label label-${sideOf(`shelter:${each.id}`)}${
+                  placement.get(`shelter:${each.id}`) === null ? " label-hidden" : ""
+                }`}
+              >
+                {shelterLabel(each, open)}
+              </span>
             </MapMarker>
           );
         })}
@@ -296,7 +376,11 @@ export function NodeMap({
               onClick={() => onSelect(node.id)}
             >
               <span className="node-dot" />
-              <span className="node-label">
+              <span
+                className={`map-label node-label label-${sideOf(`node:${node.id}`)}${
+                  placement.get(`node:${node.id}`) === null ? " label-hidden" : ""
+                }`}
+              >
                 <strong>{node.label}</strong>
                 {node.waterLevelCm !== null && ` · ${node.waterLevelCm} cm`}
                 <NodeTags node={node} />
