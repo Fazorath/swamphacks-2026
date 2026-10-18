@@ -156,6 +156,8 @@ type Props = {
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   route: LatLon[] | null;
+  // Pixels at each edge that open Panels cover.
+  panelRoom: { left: number; right: number };
   // The unsaved spot being chosen in the form; the saved Home is `home`.
   draftHome: Home | null;
   picking: boolean;
@@ -182,6 +184,7 @@ export function NodeMap({
   river,
   shelter,
   route,
+  panelRoom,
   draftHome,
   picking,
   onPickHome,
@@ -244,6 +247,18 @@ export function NodeMap({
     // Re-frame when the set of Nodes or the Nepal map changes, not on every reading.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, nepal, nodeIds]);
+
+  // A Panel opening must not cover the selected Node, so the map's centre moves to the clear part.
+  const selected = nodes.find((node) => node.id === selectedId);
+  const selectedLat = selected?.position[0];
+  const selectedLon = selected?.position[1];
+  useEffect(() => {
+    if (!map || !styleReady || selectedLat === undefined || selectedLon === undefined) return;
+    map.easeTo({
+      center: [selectedLon, selectedLat],
+      padding: { top: 0, bottom: 0, left: panelRoom.left, right: panelRoom.right },
+    });
+  }, [map, styleReady, selectedLat, selectedLon, panelRoom.left, panelRoom.right]);
 
   const floodProneData = useMemo(() => floodProneCollection(floodProne), [floodProne]);
   const valleyRiverData = useMemo(
