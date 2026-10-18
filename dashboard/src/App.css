@@ -233,9 +233,6 @@ button:disabled {
 }
 
 .shelter-label {
-  position: absolute;
-  left: 100%;
-  margin-left: 0.4rem;
   padding: 0.1rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: 0.25rem;
@@ -461,6 +458,51 @@ section p {
   z-index: 1;
 }
 
+/* Where a label sits beside its point is chosen by labelPlacement.ts, one side class each. */
+.map-label {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.label-right {
+  top: 50%;
+  left: 100%;
+  margin-left: 0.4rem;
+  transform: translateY(-50%);
+}
+
+.label-left {
+  top: 50%;
+  right: 100%;
+  margin-right: 0.4rem;
+  transform: translateY(-50%);
+}
+
+.label-above {
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 0.4rem;
+  transform: translateX(-50%);
+}
+
+.label-below {
+  top: 100%;
+  left: 50%;
+  margin-top: 0.4rem;
+  transform: translateX(-50%);
+}
+
+/* A Shelter label that lost its spot still shows in full under the pointer. */
+.map-label.label-hidden {
+  display: none;
+}
+
+.shelter-pin:hover .map-label.label-hidden,
+.shelter-marker:hover .map-label.label-hidden {
+  display: block;
+  z-index: 1;
+}
+
 .place-label {
   color: var(--map-label);
   font-size: 0.75rem;
@@ -496,12 +538,7 @@ section p {
 }
 
 .node-label {
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  margin-left: 0.4rem;
   padding: 0.1rem 0.4rem;
-  transform: translateY(-50%);
   border: 1px solid var(--border);
   border-radius: 0.25rem;
   background: var(--surface-solid);
