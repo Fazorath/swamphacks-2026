@@ -22,6 +22,7 @@ import { usePlaces } from "./placeLabels";
 import { fleetOnMap, nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { StatusStrip } from "./StatusStrip";
+import { readTerrainChoice, saveTerrainChoice, type TerrainChoice } from "./terrain";
 import { TopBar } from "./TopBar";
 import { blockedRoadLines, roadNear } from "./rerouting";
 import { useBlockedRoads } from "./useBlockedRoads";
@@ -150,6 +151,16 @@ export function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [hubPanelOpen, setHubPanelOpen] = useState(false);
   const [nodePanelOpen, setNodePanelOpen] = useState(false);
+  const [terrainChoice, setTerrainChoice] = useState(readTerrainChoice);
+  // The frame-rate watch turns terrain off without touching the saved choice (D-35).
+  const [terrainDropped, setTerrainDropped] = useState(false);
+  const [valleyFlights, setValleyFlights] = useState(0);
+  const terrainShown = terrainDropped ? "2d" : terrainChoice;
+  const chooseTerrain = (choice: TerrainChoice) => {
+    setTerrainChoice(choice);
+    setTerrainDropped(false);
+    saveTerrainChoice(choice);
+  };
   const [picking, setPicking] = useState(false);
   const [draftHome, setDraftHome] = useState<Home | null>(null);
   // The panels slide in over the same edge, so only one is open at a time.
@@ -297,6 +308,9 @@ export function App() {
           blocking={blocking}
           onToggleBlocking={() => setBlocking((on) => !on)}
           onTapRoad={tapRoad}
+          terrain={terrainShown}
+          onTerrainSlow={() => setTerrainDropped(true)}
+          valleyFlights={valleyFlights}
         />
         {phone ? (
           <>
@@ -360,6 +374,9 @@ export function App() {
               simulated={fleet.length}
               real={nodes.length}
               nepal={cachePack?.nepal ?? null}
+              terrain={terrainShown}
+              onChooseTerrain={chooseTerrain}
+              onFlyToValley={() => setValleyFlights((count) => count + 1)}
             />
             <div className="panel-column left">{readingsPanel}</div>
             <div className="panel-column right">
@@ -382,6 +399,7 @@ export function App() {
         cachePackBuilt={cachePack?.built ?? null}
         cachePackLoaded={cachePack !== null}
         nepal={cachePack?.nepal ?? null}
+        terrainDropped={terrainDropped}
       />
       {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
     </main>

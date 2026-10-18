@@ -92,6 +92,7 @@ describe("the map", () => {
     expect(lastMap().layerIds).toEqual([
       "outside",
       "land",
+      "height-bands",
       "hillshade",
       "districts",
       "rivers",

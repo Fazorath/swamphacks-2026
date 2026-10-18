@@ -59,6 +59,9 @@
   --map-district: var(--navy-600);
   --map-label: var(--ink-300);
   --map-shadow: var(--ink-black);
+  --map-height-low: var(--navy-700);
+  --map-height-mid: var(--navy-600);
+  --map-height-high: var(--ink-400);
   /* 3D height bands (D-32) and the faint step shade that stands in for hillshade (D-05) */
   --terrain-low: var(--navy-900);
   --terrain-mid: var(--navy-800);

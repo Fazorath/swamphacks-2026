@@ -27,6 +27,8 @@ type Props = {
   cachePackBuilt: string | null;
   cachePackLoaded: boolean;
   nepal: NepalMap | null;
+  // True once the frame-rate watch has turned terrain off (D-35).
+  terrainDropped: boolean;
 };
 
 export function StatusStrip({
@@ -40,6 +42,7 @@ export function StatusStrip({
   cachePackBuilt,
   cachePackLoaded,
   nepal,
+  terrainDropped,
 }: Props) {
   const simulated = nodes.filter((node) => node.simulated).length;
   const youngest = nodes.length > 0 ? Math.min(...nodes.map((node) => node.ageSeconds)) : null;
@@ -75,6 +78,7 @@ export function StatusStrip({
       {status === "mesh_only" && (
         <span className="mesh-only">Mesh-only · Mesh features keep working</span>
       )}
+      {terrainDropped && <span className="terrain-off">Terrain off · frame rate</span>}
       <span className="map-credit" title={mapCredit(nepal)}>
         {mapCredit(nepal)}
       </span>

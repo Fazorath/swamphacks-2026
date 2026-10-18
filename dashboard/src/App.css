@@ -93,6 +93,55 @@ h1 {
   font-weight: 600;
 }
 
+.terrain-off {
+  color: var(--risk-elevated);
+  font-weight: 600;
+}
+
+.terrain-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.terrain-switch {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.terrain-switch button,
+.valley-button {
+  padding: 0.2rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.valley-button {
+  border: 1px solid var(--border-strong);
+  border-radius: 0.4rem;
+}
+
+.terrain-switch button[aria-pressed="true"] {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.terrain-switch button:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.terrain-reason {
+  margin: 0.3rem 0 0;
+  color: var(--text-dim);
+}
+
 .map-credit {
   min-width: 0;
   margin-left: auto;
