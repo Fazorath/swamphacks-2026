@@ -9,9 +9,9 @@ Four inputs. Each pin uses the Pi's internal pull-down, so a pin with nothing pl
 | Input | BCM pin | Physical pin | Effect |
 |---|---|---|---|
 | Pressure drop | 17 | 11 | Scenario jumps to `pressure_drop` |
-| Rain | 27 | 13 | Scenario jumps to `rain` |
-| Water rising | 22 | 15 | Scenario jumps to `water_rising` |
-| Reset | 23 | 16 | Scenario goes back to `normal_day` |
+| Rain | 22 | 15 | Scenario jumps to `rain` |
+| Water rising | 5 | 29 | Scenario jumps to `water_rising` |
+| Reset | 16 | 36 | Scenario goes back to `normal_day` |
 | 3.3 V (the wire's source) | – | 1 or 17 | – |
 
 The table lives in `node/src/storm_shield/breadboard.py`; change both together.

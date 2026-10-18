@@ -10,8 +10,8 @@ from storm_shield.settings import GpioMode
 logger = logging.getLogger(__name__)
 
 # BCM pin numbers; change pi/README.md's pin table with them.
-STEP_PINS: dict[int, str] = {17: "pressure_drop", 27: "rain", 22: "water_rising"}
-RESET_PIN = 23
+STEP_PINS: dict[int, str] = {17: "pressure_drop", 22: "rain", 5: "water_rising"}
+RESET_PIN = 16
 
 # A jumper wire bounces for a few milliseconds when it touches the pin.
 DEBOUNCE_SECONDS = 0.05

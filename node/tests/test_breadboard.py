@@ -15,9 +15,9 @@ from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
 
 PRESSURE_DROP_PIN = 17
-RAIN_PIN = 27
-WATER_RISING_PIN = 22
-RESET_PIN = 23
+RAIN_PIN = 22
+WATER_RISING_PIN = 5
+RESET_PIN = 16
 
 
 @pytest.fixture
