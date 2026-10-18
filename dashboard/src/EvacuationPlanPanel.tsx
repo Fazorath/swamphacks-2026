@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { agoWords } from "./agoWords";
+import { Panel, type PanelControl } from "./Panel";
 import type { EvacuationPlan } from "./evacuationPlan";
 import { officialTag, SOURCE_LABELS } from "./officialAlerts";
 import type { WaveArrival } from "./waveEta";
@@ -29,6 +30,7 @@ export function EvacuationPlanPanel({
   waveArrival,
   eventT,
   shelterStatusConfirmedAt,
+  panel,
 }: {
   plan: EvacuationPlan;
   exampleHome: boolean;
@@ -36,10 +38,10 @@ export function EvacuationPlanPanel({
   eventT: number | null;
   // Set only while the Node is unreachable: when its last answer arrived.
   shelterStatusConfirmedAt: number | null;
+  panel: PanelControl;
 }) {
   return (
-    <section aria-label="Evacuation Plan">
-      <h2>Evacuation Plan</h2>
+    <Panel label="Evacuation Plan" {...panel}>
       {exampleHome && (
         <p className="example-home">
           Example home, not yours. Fill in your household profile to see your own plan.
@@ -73,6 +75,6 @@ export function EvacuationPlanPanel({
         <ShelterStatusAge confirmedAt={shelterStatusConfirmedAt} />
       )}
       <p className="official-line">{plan.officialLine}</p>
-    </section>
+    </Panel>
   );
 }

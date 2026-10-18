@@ -404,3 +404,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Real fetch (2026-10-18):** 153 points, 72 hours, three variables, 134 KB, one request.
 - **A forecast on disk with the valley grid or wind variables is refused by `_check_shape`**, so a Hub upgraded in place fetches again instead of serving a grid the dashboard cannot place.
 - **Not done:** no `cache-pack-v4` carrying the national `weather_replay.json` was built or released (the full build needs Overpass and the repo is private). Until it is, a pack's weather file still has the valley grid and the dashboard layers must tolerate that.
+
+## MapLibre shell (ticket 0033)
+
+- **jsdom has no WebGL**, so `setup.ts` swaps `maplibre-gl` for `src/fakeMaplibre.ts` in every test; read back what the app gave the map with `sourceData(name)`, `lastMap().layerIds`, `addressesTheMapWouldFetch()` and `tapMap(lat, lon)`. A source `data` URL must be absolute (MapLibre fetches in a worker), so it is built from `window.location.origin`.
+- **No text layers**: MapLibre symbol layers need a glyph server (a request to another host), so place names are `MapMarker` DOM elements chosen by zoom and view (`placeLabels.ts`).
+- **A calm day opens only the Readings Panel**, so a test about another Panel calls `expandPanel("Evacuation Plan")` (`expandPanel.ts`) right after `render`.
+- Not seen in a real browser: the Chrome extension was not connected, so the by-hand checks in the ticket are open.
+

@@ -14,6 +14,7 @@ import {
   type CommunityWarning,
 } from "./communityWarnings";
 import type { NodeSnapshot } from "./nodeState";
+import { Panel, type PanelControl } from "./Panel";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
@@ -32,6 +33,7 @@ export function AlertsPanel({
   waveArrival,
   eventT,
   online,
+  panel,
 }: {
   alerts: OfficialAlert[];
   warnings: CommunityWarning[];
@@ -42,12 +44,12 @@ export function AlertsPanel({
   waveArrival: WaveArrival | null;
   eventT: number | null;
   online: boolean;
+  panel: PanelControl;
 }) {
   const leadTime = leadTimeLine(firstCommunityWarningAt, alerts);
   const newestFirst = [...alerts].sort((a, b) => issuedUnix(b) - issuedUnix(a));
   return (
-    <section aria-label="Alerts">
-      <h2>Alerts</h2>
+    <Panel label="Alerts" {...panel}>
       {leadTime && <p className="lead-time">{leadTime}</p>}
       {newestFirst.length === 0 && warnings.length === 0 && (
         <div className="empty-panel">
@@ -100,6 +102,6 @@ export function AlertsPanel({
           </article>
         );
       })}
-    </section>
+    </Panel>
   );
 }

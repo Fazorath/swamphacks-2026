@@ -57,7 +57,8 @@ function pack(overrides: Partial<CachePackContents> = {}): CachePackContents {
     shelters: [NEAR_PLAIN, FAR_BOTH, NEAREST_FLAGGED],
     floodProne: { features: [] },
     routeGrid: null,
-    tileMaxZoom: null,
+    built: null,
+    nepal: null,
     bbox: null,
     ...overrides,
   };

@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
 
 const SHELTERS = [
@@ -73,6 +74,7 @@ afterEach(() => {
 test("a Sensor Node has no Hub button", async () => {
   stubNode("sensor");
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/porch · Sensor Node/)).toBeVisible();
   expect(screen.queryByRole("button", { name: "Hub" })).toBeNull();
@@ -81,6 +83,7 @@ test("a Sensor Node has no Hub button", async () => {
 test("the Hub Panel lists every Shelter and closing one posts the right body", async () => {
   stubNode("hub");
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
@@ -99,6 +102,7 @@ test("a closed Shelter can be opened again", async () => {
   openIds = ["test-gym"];
   stubNode("hub");
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
@@ -113,6 +117,7 @@ test("a closed Shelter can be opened again", async () => {
 test("a poll that began before a change does not bring back the old list", async () => {
   stubNode("hub");
   render(<App />);
+  expandPanel("Evacuation Plan");
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });
   fireEvent.click(within(panel).getByRole("tab", { name: "Shelters" }));
@@ -132,6 +137,7 @@ test("a poll that began before a change does not bring back the old list", async
 test("opening the Hub Panel closes the household panel", async () => {
   stubNode("hub");
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   fireEvent.click(screen.getByRole("button", { name: "My household" }));
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
@@ -143,6 +149,7 @@ test("opening the Hub Panel closes the household panel", async () => {
 test("a closed nearest Shelter changes the plan on the next poll", async () => {
   stubNode("hub");
   render(<App />);
+  expandPanel("Evacuation Plan");
   expect(await screen.findByText(/Nearest open Shelter: Test Gym/)).toBeVisible();
 
   openIds = ["far-hall"];
@@ -155,6 +162,7 @@ test("a refused change is shown in the panel and leaves the list as it was", asy
   stubNode("hub");
   refusal = "unknown Shelter 'far-hall'";
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   fireEvent.click(await screen.findByRole("button", { name: "Hub" }));
   const panel = screen.getByRole("dialog", { name: "Hub Panel" });

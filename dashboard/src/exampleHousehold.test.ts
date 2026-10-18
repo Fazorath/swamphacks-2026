@@ -5,7 +5,8 @@ const PACK: CachePackContents = {
   shelters: [],
   floodProne: { features: [] },
   routeGrid: null,
-  tileMaxZoom: null,
+  built: null,
+  nepal: null,
   bbox: [27.86, 85.08, 28.46, 85.47],
 };
 

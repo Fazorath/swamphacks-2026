@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
+import { sourceData } from "./fakeMaplibre";
 
 const PROFILE_KEY = "storm-shield.household-profile";
 const BLOCKED_KEY = "storm-shield.blocked-roads";
@@ -87,10 +89,11 @@ test("a Blocked Road on the Route reroutes the plan and is drawn on the map", as
   blockDirectRoad();
   stubNode({ roads: true });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText("Rerouted around 1 blocked road.")).toBeVisible();
   expect(screen.getByText(/Test Gym, 3\.1 km by road/)).toBeVisible();
-  await waitFor(() => expect(document.querySelectorAll(".blocked-road")).toHaveLength(1));
+  await waitFor(() => expect(sourceData("blocked-roads").features).toHaveLength(1));
 });
 
 test("rerouting sends nothing about the Blocked Roads or the home", async () => {
@@ -98,6 +101,7 @@ test("rerouting sends nothing about the Blocked Roads or the home", async () => 
   blockDirectRoad();
   stubNode({ roads: true });
   render(<App />);
+  expandPanel("Evacuation Plan");
   await screen.findByText("Rerouted around 1 blocked road.");
 
   const requests = vi.mocked(fetch).mock.calls;
@@ -111,6 +115,7 @@ test("without a Road graph the Route stays and there is no way to block a road",
   blockDirectRoad();
   stubNode({ roads: false });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText(/Test Gym, 1\.\d km by road/)).toBeVisible();
   expect(screen.queryByRole("button", { name: "Block a road" })).toBeNull();
@@ -121,6 +126,7 @@ test("the resident can switch road-blocking mode on and off", async () => {
   saveProfile();
   stubNode({ roads: true });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   fireEvent.click(await screen.findByRole("button", { name: "Block a road" }));
   expect(screen.getByText(/Tap a road to block it/)).toBeVisible();

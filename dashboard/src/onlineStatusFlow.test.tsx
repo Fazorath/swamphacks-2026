@@ -1,6 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
 import { POLL_EVERY_MS } from "./usePolledJson";
 
@@ -55,6 +56,7 @@ function tile(label: string) {
 
 test("the header says the Node is Online", async () => {
   render(<App />);
+  expandPanel("Cameras");
   expect(await screen.findByText("Online")).toBeInTheDocument();
   expect(screen.queryByText("Mesh-only")).not.toBeInTheDocument();
 });
@@ -62,12 +64,14 @@ test("the header says the Node is Online", async () => {
 test("the header says Mesh-only when the Node has no internet", async () => {
   nodeStatus = "mesh_only";
   render(<App />);
+  expandPanel("Cameras");
   expect(await screen.findByText("Mesh-only")).toBeInTheDocument();
   expect(screen.queryByText("Online")).not.toBeInTheDocument();
 });
 
 test("live camera tiles show their picture and how long ago it was taken", async () => {
   render(<App />);
+  expandPanel("Cameras");
   const archer = await screen.findByRole("article", { name: `Camera ${ARCHER}` });
   expect(within(archer).getByRole("img", { name: ARCHER })).toHaveAttribute(
     "src",
@@ -79,6 +83,7 @@ test("live camera tiles show their picture and how long ago it was taken", async
 
 test("when the Node goes Mesh-only the tiles read Offline and show no picture", async () => {
   render(<App />);
+  expandPanel("Cameras");
   await screen.findByRole("img", { name: ARCHER });
   nodeStatus = "mesh_only";
   cameraTiles = OFFLINE_TILES;
@@ -92,6 +97,7 @@ test("when the Node goes Mesh-only the tiles read Offline and show no picture", 
 test("an Unavailable tile is told apart from an Offline one and leaves the others live", async () => {
   cameraTiles = ONE_UNAVAILABLE;
   render(<App />);
+  expandPanel("Cameras");
   await screen.findByRole("img", { name: ARCHER });
   const broken = tile(NEWBERRY);
   expect(within(broken).getByText("Unavailable")).toBeInTheDocument();
@@ -105,6 +111,7 @@ test("an Unavailable tile is told apart from an Offline one and leaves the other
 
 test("a failed poll leaves the badge and the tiles as they were", async () => {
   render(<App />);
+  expandPanel("Cameras");
   await screen.findByRole("img", { name: ARCHER });
   nodeReachable = false;
   await nextPoll();

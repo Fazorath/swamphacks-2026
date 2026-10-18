@@ -2,6 +2,7 @@ import { Fragment, useEffect } from "react";
 
 import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
+import { Panel, type PanelControl } from "./Panel";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { FloodRisk, ReadingKind } from "./nodeState";
 
@@ -27,6 +28,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onScenarioChanged: () => void;
+  panel: PanelControl;
 };
 
 export function ReadingsPanel({
@@ -35,6 +37,7 @@ export function ReadingsPanel({
   selectedId,
   onSelect,
   onScenarioChanged,
+  panel,
 }: Props) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -48,8 +51,7 @@ export function ReadingsPanel({
   const firstNotCountedId = nodes.find((node) => !node.registered && !node.isThisNode)?.id;
 
   return (
-    <section aria-label="Readings">
-      <h2>Readings</h2>
+    <Panel label="Readings" {...panel}>
       <FloodRiskCard floodRisk={floodRisk} />
       {nodes.map((node) => (
         <Fragment key={node.id}>
@@ -81,6 +83,6 @@ export function ReadingsPanel({
         Step scenario (n)
       </button>{" "}
       <button onClick={() => post("/api/scenario/reset", onScenarioChanged)}>Reset (r)</button>
-    </section>
+    </Panel>
   );
 }
