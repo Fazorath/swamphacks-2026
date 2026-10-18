@@ -468,3 +468,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
 - **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
 - **Manual check done (2026-10-18):** the owner used a phone over Tailscale against `scripts/run-demo.sh` on `main`; all four tabs worked. The wrapped status strip took over 30% of the screen, so it is one sideways-scrolling line now. Tailscale was stopped on the laptop at first (`tailscale status` says so), and a leftover pack server on 8900 blocked `run-demo.sh` until it was stopped. **Still open:** the bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a home pick has no on-screen cancel on the phone.
+
+## 3D terrain (ticket 0067)
+
+- **MapLibre 4.7.1 has no tint-by-height layer** (`color-relief` is 5.x), so the height bands are a custom protocol that repaints the pack's Terrarium tile; `hillshade` alone only shades slopes. The fake map records `terrain`, `pitch` and `flights`; `addressesTheMapWouldFetch` strips a custom protocol's prefix so the "own Node only" test still sees the real address.
+- Unseen in a real browser: the `OffscreenCanvas` repaint, terrain performance, and the Valley fly. The by-hand performance criteria in the ticket are open.

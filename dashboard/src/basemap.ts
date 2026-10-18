@@ -1,5 +1,6 @@
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 
+import { BAND_PROTOCOL, parseHex, registerBandProtocol, type Rgb } from "./heightBands";
 import type { NepalMap } from "./evacuationPlan";
 import type { LatLon } from "./routeGrid";
 
@@ -23,6 +24,9 @@ export type MapColors = Record<
   | "border"
   | "district"
   | "shadow"
+  | "heightLow"
+  | "heightMid"
+  | "heightHigh"
   | "floodProne"
   | "route"
   | "routeCasing"
@@ -37,6 +41,9 @@ const ROLES: Record<keyof MapColors, string> = {
   border: "--map-border",
   district: "--map-district",
   shadow: "--map-shadow",
+  heightLow: "--map-height-low",
+  heightMid: "--map-height-mid",
+  heightHigh: "--map-height-high",
   floodProne: "--flood-prone",
   route: "--accent",
   routeCasing: "--map-shadow",
@@ -58,6 +65,7 @@ export const HATCH_IMAGE = "flood-hatch";
 const HATCH_SIZE = 8;
 const HATCH_THICKNESS = 2;
 const FALLBACK_HATCH_RGB = [107, 134, 168];
+const FALLBACK_BAND_RGB: Rgb = [51, 71, 107];
 
 export function hatchImage(colour: string): { width: number; height: number; data: Uint8Array } {
   const [red, green, blue] = /^#[0-9a-f]{6}$/i.test(colour)
@@ -148,6 +156,18 @@ export function addNepalBasemap(map: MapLibreMap, nepal: NepalMap, colors: MapCo
     minzoom: nationalZooms[0],
     maxzoom: detailZooms[1],
   });
+  registerBandProtocol(
+    [colors.heightLow, colors.heightMid, colors.heightHigh].map(
+      (colour) => parseHex(colour) ?? FALLBACK_BAND_RGB,
+    ),
+  );
+  map.addSource("elevation-bands", {
+    type: "raster",
+    tiles: [`${BAND_PROTOCOL}://${packUrl("elevation/{z}/{x}/{y}.png")}`],
+    tileSize: 256,
+    minzoom: nationalZooms[0],
+    maxzoom: detailZooms[1],
+  });
   for (const name of ["border", "districts", "rivers"]) {
     map.addSource(name, { type: "geojson", data: packUrl(`nepal/${name}.geojson`) });
   }
@@ -155,6 +175,7 @@ export function addNepalBasemap(map: MapLibreMap, nepal: NepalMap, colors: MapCo
     { id: "land", type: "fill", source: "border", paint: { "fill-color": colors.land } },
     FIRST_OVERLAY,
   );
+  map.addLayer({ id: "height-bands", type: "raster", source: "elevation-bands" }, FIRST_OVERLAY);
   map.addLayer(
     {
       id: "hillshade",
