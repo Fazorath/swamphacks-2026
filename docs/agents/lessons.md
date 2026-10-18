@@ -588,3 +588,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Not done:** no `cache-pack-v6` Release and no `run-demo.sh` change, so the pins reach a demo laptop only after someone rebuilds with the full `build_cache_pack.py` (Overpass, minutes) and re-points the Hub. The pins, label and cyan outline are tested against the fake map only, not seen in a browser or on a phone; label overlap with Shelter labels at Syabrubesi is unchecked.
 - A worktree session refuses a command that mixes `cd` with a heredoc `python3 - <<E`; write the script to the scratchpad and run it as a plain command.
 - 0068 merge push: the pre-push `check.sh` reported `dashboard: vitest` FAIL on a tree whose own `check.sh` had passed minutes earlier; a rerun of the whole suite alone passed (51 files, 423 tests). Which test failed is unknown because the push output was piped through `tail`; run `git push` unpiped.
+
+## Hub reachable from WSL2 (2026-10-18)
+
+- **A Pi Hub and a WSL2 Sensor "recognised each other" yet the Sensor never counted**: WSL2 is behind NAT, so the Wi-Fi discovery multicast never crossed, and the Pi's `/api/state` listed only itself. A Hub started with `scripts/run-live.sh` had no TCP listener, so `nc -vz <pi> 4242` said "refused" while ping worked (something answered; nothing listened). `run-live.sh` now sets `NODE_ALSO_TCP_LISTEN=1` for a Hub; the WSL laptop runs `JOIN_MESH=tcp scripts/join-demo.sh <pi>:8000 <town>` (`pi/README.md`).
+- **A Hub's own readings count on the Hub with no sign-up** (it is always in its registry), so a breadboard press shows on the Pi alone until a Sensor holds the right `HUB_IDENTITY` and hears the registry.
+- Only `bash -n` was run on the `run-live.sh` change here; the Pi and WSL2 path was tested by the owner, not by an agent.
