@@ -12,19 +12,28 @@ const SIDE_OF: Record<PanelName, "left" | "right"> = {
   cameras: "right",
 };
 const MOST_OPEN_PER_SIDE = 2;
+const MOST_OPEN_PER_SIDE_ON_A_TABLET = 1;
 const STORAGE_KEY = "storm-shield.open-panels";
 
 // Oldest first, so the oldest of a side is the one a third Panel pushes out.
-export function withPanelToggled(open: PanelName[], name: PanelName): PanelName[] {
+export function withPanelToggled(
+  open: PanelName[],
+  name: PanelName,
+  mostPerSide = MOST_OPEN_PER_SIDE,
+): PanelName[] {
   if (open.includes(name)) return open.filter((each) => each !== name);
   const next = [...open, name];
   const sameSide = next.filter((each) => SIDE_OF[each] === SIDE_OF[name]);
-  const oldest = sameSide.length > MOST_OPEN_PER_SIDE ? sameSide[0] : null;
+  const oldest = sameSide.length > mostPerSide ? sameSide[0] : null;
   return next.filter((each) => each !== oldest);
 }
 
-export function withPanelOpened(open: PanelName[], name: PanelName): PanelName[] {
-  return open.includes(name) ? open : withPanelToggled(open, name);
+export function withPanelOpened(
+  open: PanelName[],
+  name: PanelName,
+  mostPerSide = MOST_OPEN_PER_SIDE,
+): PanelName[] {
+  return open.includes(name) ? open : withPanelToggled(open, name, mostPerSide);
 }
 
 // A calm day shows the Readings and nothing else (D-50); a warning, or a Flood Risk of Elevated or
@@ -58,7 +67,8 @@ function writeStored(open: PanelName[]) {
 
 // Which Panels are open. Until the resident or a warning chooses, the defaults for the Flood Risk
 // apply; after that the choice is remembered on this device.
-export function useOpenPanels(defaults: PanelName[]) {
+export function useOpenPanels(defaults: PanelName[], tablet: boolean) {
+  const mostPerSide = tablet ? MOST_OPEN_PER_SIDE_ON_A_TABLET : MOST_OPEN_PER_SIDE;
   const [chosen, setChosen] = useState<PanelName[] | null>(readStored);
   const open = chosen ?? defaults;
   const choose = (next: PanelName[]) => {
@@ -67,7 +77,8 @@ export function useOpenPanels(defaults: PanelName[]) {
   };
   return {
     open,
-    toggle: (name: PanelName) => choose(withPanelToggled(open, name)),
-    show: (...names: PanelName[]) => choose(names.reduce(withPanelOpened, open)),
+    toggle: (name: PanelName) => choose(withPanelToggled(open, name, mostPerSide)),
+    show: (...names: PanelName[]) =>
+      choose(names.reduce((now, each) => withPanelOpened(now, each, mostPerSide), open)),
   };
 }
