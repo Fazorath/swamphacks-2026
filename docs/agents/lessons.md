@@ -342,6 +342,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A rule's own `font-family` beats the grouped mono rule near the top of `App.css`**: `.tag` kept a hardcoded `ui-monospace` and showed the system font until a computed-style check in Chrome caught it. `theme.test.ts` now fails on any `font-family` that is not `var(--font-sans)` or `var(--font-mono)`.
 - `.tag.stale` was amber; the design says Stale is muted grey because amber means Elevated, so it is `--text-secondary` now.
 
+## God's Eye View artboards (2026-10-18)
+
+- **The `G-` boards carry real geometry** (geoBoundaries ADM0/ADM2, OpenStreetMap rivers through Overpass, the pack's `river.source.geojson`, Terrarium tiles for the relief); sources, licences and the projections are in `docs/design/canvas/README.md`. The generator stayed out of the repo (about 400 lines); the README says how to redo it.
+- **`overpass-api.de` answers 406 to a bare `curl`**: send a `User-Agent` (as `scripts/derive_river.py` does) and `Accept: application/json`. Natural Earth 10 m rivers hold only three partial lines inside Nepal, so they are no use for this map.
+- **Douglas–Peucker on a closed ring collapses it to one point** when the first and last vertices coincide (the chord has zero length); measure from the shared point in that case. The national border vanished until this was caught on a screenshot.
+- **The Claude in Chrome extension was not connected in this session**; headless Chrome (`--headless=new --screenshot --window-size=1440,900`) renders the `.dc.html` boards fine for checking overlap. Console errors were read from `--enable-logging=stderr` (none from the boards).
+- A 250 m contour step at the gorge zoom made one board 530 KB; 500 m steps with loops clipped to the frame keep every board under 320 KB.
+
 ## Reticulum loopback test fails in the whole-file run (found 2026-10-17, while merging 0050; fixed the same day)
 
 - **`test_nodes_find_each_other_and_a_step_crosses_the_mesh[loopback]` failed because a running demo dialed into the test's Nodes.** A loopback Node dialed every slot from 0 up to its own, so `run-demo.sh` with `DEMO_SLOT_BASE=20` (Nodes at slots 20 to 24) kept dialing 4250 to 4269 every 5 s. Once the test's Nodes listened there, the demo's readings arrived and `heard_from() == ids` never held. The three test Nodes themselves met in under 5 s. It failed alone too, whenever the demo was up; it "passed earlier that day" because no demo was running then. TIME_WAIT, `~/.reticulum` and a shared instance were not involved (each Node has its own config dir with `share_instance = No`).

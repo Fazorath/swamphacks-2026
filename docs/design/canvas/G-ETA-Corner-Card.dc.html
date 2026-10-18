@@ -30,7 +30,7 @@
 @keyframes g-band-pulse { 25%, 75% { box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--community-warning) 60%, transparent); } }
 .g-band strong { font-size: 24px; font-weight: 700; line-height: 1.25; }
 .g-band p { font-size: 14px; color: var(--text-secondary); }
-.g-eta { position: absolute; z-index: 1; width: 300px; padding: 14px 18px 16px; border: 2px dashed var(--community-warning); border-radius: 10px; background: var(--surface-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 2px; }
+.g-eta { position: absolute; z-index: 1; width: 300px; min-height: 190px; box-sizing: border-box; padding: 14px 18px 16px; border: 2px dashed var(--community-warning); border-radius: 10px; background: var(--surface-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 2px; }
 .g-eta .g-eta-n { font: 600 120px/1 var(--font-mono); letter-spacing: -0.04em; color: var(--countdown-far); }
 .g-eta.is-soon .g-eta-n { color: var(--countdown-soon); }
 .g-eta.is-now .g-eta-n, .g-eta.is-now .g-eta-now { color: var(--countdown-now); }
@@ -38,6 +38,7 @@
 .g-chip-warning { --chip: var(--community-warning); border-style: dashed; }
 .g-legend { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; font: 500 11px/1 var(--font-mono); color: var(--text-secondary); letter-spacing: 0.04em; }
 .g-legend > span { display: inline-flex; align-items: center; gap: 8px; height: 14px; }
+.ss-popover .ss-card-head { padding-right: 28px; }
 .g-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; position: relative; }
 .g-badge-sim { display: inline-flex; align-items: center; gap: 6px; color: var(--text-primary); }
 .g-rung { position: relative; padding-left: 26px; }
