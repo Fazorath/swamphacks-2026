@@ -21,5 +21,5 @@
 - [x] Ambient flow: slow dim drifting dashes along the other rivers (D-20), decorative only, off when the Fleet toggle is off or reduced motion is on
 - [x] With reduced motion on, the front is a marked reach (a comet that steps once per clock answer, no gliding) plus the ETA, not an animation
 - [x] The measured wave speed (0050), when present, moves the front the same way it moves the ETA
-- [ ] Performance bar holds with the front and ambient flow running; checked by hand and noted here. NOT checked: no browser in this session. Check 60 fps on the demo laptop (see `lessons.md`, "Wave front and river flow")
+- [x] Performance bar holds with the front and ambient flow running. Checked in Chrome on the demo laptop (2026-10-18, Hub serving a synthetic warning and a ×30 clock): 60 fps, p95 frame 17.6 ms, at the national view, with the Fleet toggle (dashes) off, and in the 3D valley view
 - [x] All **Commands** pass
