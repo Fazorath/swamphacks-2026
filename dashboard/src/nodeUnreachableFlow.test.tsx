@@ -2,16 +2,11 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
 import { expandPanel } from "./expandPanel";
+import { fakeCameraTile } from "./fakeCameraTile";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
 
-const TILE = {
-  id: 1655,
-  label: "Betrawati bridge",
-  state: "live",
-  taken_at: "2026-08-26T08:41:00+05:45",
-  age_s: 12,
-};
+const TILE = fakeCameraTile({ label: "Betrawati bridge" });
 
 const NOTICE: OfficialAlert = {
   id: "dhm-notice",
@@ -128,8 +123,8 @@ async function showLiveData() {
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
   // The Official Alert has opened the Alerts and the Plan; a third Panel pushes the Alerts out.
   expandPanel("Cameras");
-  await screen.findByRole("img", { name: TILE.label });
-  await screen.findByText(/NPT/);
+  await screen.findByLabelText(TILE.label);
+  await screen.findByText(/NPT · REPLAY/);
   await screen.findByText(/Nearest open Shelter: Test Gym/);
 }
 
@@ -201,8 +196,8 @@ test("while unreachable, everything live goes and what helps the resident plan s
   expect(screen.queryByText(/Pressure: 1015 hPa/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Elevated/)).not.toBeInTheDocument();
   expect(screen.queryByText("Online")).not.toBeInTheDocument();
-  expect(screen.queryByRole("img", { name: TILE.label })).not.toBeInTheDocument();
-  expect(screen.queryByText(/NPT/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(TILE.label)).not.toBeInTheDocument();
+  expect(screen.queryByText(/NPT · REPLAY/)).not.toBeInTheDocument();
 
   expect(document.querySelector(".node-map")).toBeInTheDocument();
   expect(screen.getByText("Household profile saved")).toBeInTheDocument();
@@ -224,8 +219,8 @@ test("camera and Event clock polling stop while unreachable and resume after", a
 
   nodeAnswer = "ok";
   await seconds(1);
-  expect(await screen.findByRole("img", { name: TILE.label })).toBeInTheDocument();
-  expect(await screen.findByText(/NPT/)).toBeInTheDocument();
+  expect(await screen.findByLabelText(TILE.label)).toBeInTheDocument();
+  expect(await screen.findByText(/NPT · REPLAY/)).toBeInTheDocument();
 });
 
 test("the plan says how long ago Shelter status was last confirmed, and the age grows", async () => {

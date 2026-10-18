@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     also_tcp_listen: bool = False
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
-    # How often this Node checks whether it has internet, and whether a camera picture is due.
+    # How often this Node checks whether it has internet.
     internet_check_seconds: float = 5
     # How often the Hub repeats its Shelter status, so a Node that joined late or missed a packet
     # converges.
@@ -92,6 +92,12 @@ class Settings(BaseSettings):
     cache_pack_dir: Path = Field(
         default=Path(__file__).resolve().parents[3] / "cache-pack",
         validation_alias="CACHE_PACK_DIR",
+    )
+    # Where the Hub finds its Camera Clips and their manifest.json. scripts/run-demo.sh points it
+    # at the gitignored stage set when there is one, otherwise at the committed fallback.
+    camera_clips_dir: Path = Field(
+        default=Path(__file__).resolve().parents[3] / "camera-clips",
+        validation_alias="CAMERA_CLIPS_DIR",
     )
     # Whose Shelter status this Node believes (the Hub prints its identity at startup). Blank or
     # wrong means no Shelter status is accepted, so the Node shows nothing open.

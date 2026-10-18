@@ -40,7 +40,7 @@
 | [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | done | Fazorath | Fazorath |
 | [0036-phone-layout](0036-phone-layout.md) | done | Fazorath | Fazorath |
 | [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | in-progress | Fazorath | Fazorath |
-| [0038-cameras-panel-states](0038-cameras-panel-states.md) | in-progress | leonardorofaDV | Fazorath |
+| [0038-cameras-panel-states](0038-cameras-panel-states.md) | done | leonardorofaDV | Fazorath |
 | [0039-warning-takeover-and-join-card](0039-warning-takeover-and-join-card.md) | in-progress | Fazorath | Fazorath |
 | [0040-node-serves-state-snapshot](0040-node-serves-state-snapshot.md) | done | leonardorofaDV | - |
 | [0041-dashboard-reads-the-state-snapshot](0041-dashboard-reads-the-state-snapshot.md) | done | leonardorofaDV | - |
