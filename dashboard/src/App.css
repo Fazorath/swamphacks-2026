@@ -1394,6 +1394,7 @@ main.phone {
   list-style: none;
 }
 
+[aria-label="Replay speed"] button[aria-pressed="true"],
 .phase-list button[aria-current="step"] {
   border-color: var(--risk-low);
   font-weight: 700;
