@@ -544,6 +544,12 @@ section .empty-panel p {
   margin: 0;
 }
 
+.weather-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .weather-scale {
   display: flex;
   align-items: center;

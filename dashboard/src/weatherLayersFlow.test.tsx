@@ -38,8 +38,22 @@ const WEATHER = {
   },
 };
 
+const HOUR = 3_600_000;
+
+// A forecast that starts now and runs two hours: 0 °C, then 30 °C.
+function forecastFetched(hoursAgo: number) {
+  const now = Date.now();
+  return {
+    ...WEATHER,
+    variables: { ...WEATHER.variables, cloud_cover: [everywhere(10), everywhere(90)] },
+    fetched_at: new Date(now - hoursAgo * HOUR).toISOString(),
+    times: [new Date(now).toISOString(), new Date(now + 168 * HOUR).toISOString()],
+  };
+}
+
 let eventT: number | null;
 let weather: unknown;
+let forecast: unknown;
 
 function stubNode() {
   vi.stubGlobal(
@@ -55,6 +69,7 @@ function stubNode() {
         "/api/replay":
           eventT === null ? { state: "stopped" } : { state: "paused", event_t: eventT, rate: 30 },
         ...(weather === null ? {} : { "/api/weather/replay": weather }),
+        ...(forecast === null ? {} : { "/api/weather/forecast": forecast }),
       };
       return url in answers ? Response.json(answers[url]) : new Response(null, { status: 404 });
     }),
@@ -77,6 +92,7 @@ async function openMap() {
 beforeEach(() => {
   eventT = HOUR_0_T;
   weather = WEATHER;
+  forecast = forecastFetched(1);
   stubNode();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -109,18 +125,98 @@ describe("Weather layers on the map", () => {
     await waitFor(() => expect(weatherUrl()).not.toBe(atHourZero), { timeout: 4000 });
   });
 
-  it("shows the file's first hour when no Replay is running", async () => {
-    eventT = null;
+  describe("with no Replay running", () => {
+    const requested = () =>
+      vi
+        .mocked(fetch)
+        .mock.calls.map(([url]) => String(url))
+        .filter((url) => /weather/.test(url));
+
+    beforeEach(() => {
+      eventT = null;
+    });
+
+    it("reads the forecast, not the replay file", async () => {
+      await openMap();
+      await pick("Temperature");
+
+      await waitFor(() => expect(within(legend()).getByText(/^FORECAST/)).toBeInTheDocument());
+      expect(requested()).toEqual(["/api/weather/forecast"]);
+      expect(legend().textContent).not.toContain("RECORDED");
+    });
+
+    it("switches to the replay file when a Replay starts and back when it ends", async () => {
+      await openMap();
+      await pick("Temperature");
+      await waitFor(() => expect(within(legend()).getByText(/^FORECAST/)).toBeInTheDocument());
+
+      eventT = HOUR_0_T;
+      await waitFor(() => expect(within(legend()).getByText(/RECORDED/)).toBeInTheDocument(), {
+        timeout: 4000,
+      });
+
+      eventT = null;
+      await waitFor(() => expect(within(legend()).getByText(/^FORECAST/)).toBeInTheDocument(), {
+        timeout: 4000,
+      });
+    });
+
+    it("moves every layer with the slider", async () => {
+      await openMap();
+      for (const choice of ["Temperature", "Cloud cover", "Rain"]) {
+        await pick(choice);
+        await waitFor(() => expect(weatherUrl()).toBeDefined());
+        const now = weatherUrl();
+
+        fireEvent.change(screen.getByRole("slider"), { target: { value: "168" } });
+        await waitFor(() => expect(weatherUrl()).not.toBe(now));
+        fireEvent.change(screen.getByRole("slider"), { target: { value: "0" } });
+      }
+    });
+
+    it("has a slider from now to seven days", async () => {
+      await openMap();
+      await pick("Rain");
+
+      const slider = await screen.findByRole("slider");
+      expect(slider).toHaveAttribute("min", "0");
+      expect(slider).toHaveAttribute("max", "168");
+      fireEvent.change(slider, { target: { value: "24" } });
+      expect(legend().textContent).toContain("now + 24 h");
+    });
+
+    it.each([
+      [1, "FORECAST · updated 1 h ago"],
+      [5, "OFFLINE · last forecast 5 h old"],
+    ])("tags a forecast fetched %s h ago", async (hoursAgo, tag) => {
+      forecast = forecastFetched(hoursAgo);
+      await openMap();
+      await pick("Rain");
+
+      await waitFor(() => expect(within(legend()).getByText(tag)).toBeInTheDocument());
+    });
+
+    it("says the forecast is not available when the Node has none, and draws nothing", async () => {
+      forecast = null;
+      await openMap();
+      await pick("Rain");
+
+      await waitFor(() =>
+        expect(
+          within(legend()).getByText(/Forecast not available on this Node/),
+        ).toBeInTheDocument(),
+      );
+      expect(lastMap().layerIds).not.toContain("weather");
+    });
+  });
+
+  it("keeps the replay layers working when the Node has no forecast", async () => {
+    forecast = null;
     await openMap();
     await pick("Temperature");
-    await waitFor(() => expect(weatherUrl()).toBeDefined());
-    const noClock = weatherUrl();
 
-    eventT = HOUR_0_T;
-
-    // The clock at hour 0 paints the same picture as no clock: the first hour.
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    expect(weatherUrl()).toBe(noClock);
+    await waitFor(() => expect(within(legend()).getByText(/RECORDED/)).toBeInTheDocument());
+    expect(weatherUrl()).toBeDefined();
   });
 
   it.each([

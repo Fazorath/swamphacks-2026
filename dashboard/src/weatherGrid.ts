@@ -6,6 +6,8 @@ export type WeatherVariable = (typeof WEATHER_VARIABLES)[number];
 export interface WeatherGrid {
   source: string;
   credit: string;
+  /** Only the Hub's forecast has it: when the Hub last got this file from the weather service. */
+  fetched_at?: string;
   grid: { south: number; west: number; rows: number; cols: number; step_deg: number };
   times: string[];
   units: Record<WeatherVariable, string>;

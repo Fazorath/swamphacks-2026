@@ -39,7 +39,7 @@ import { fieldCorners, paintWeatherField } from "./weatherField";
 import type { WeatherLayer } from "./weatherLayer";
 import { weatherImageUrl } from "./weatherImageUrl";
 import { showWeatherField } from "./weatherOnMap";
-import type { WeatherReplay } from "./useWeatherReplay";
+import type { WeatherData } from "./useWeatherGrid";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -227,9 +227,11 @@ type Props = {
   onTerrainSlow: () => void;
   // Counts presses of the Valley button; each one flies the camera to the valley.
   valleyFlights: number;
-  // The Weather layer on the terrain, and the Event clock it follows (null: the file's first hour).
+  // The Weather layer on the terrain, and the moment it shows: the Event clock during a Replay,
+  // otherwise the forecast time the slider picked (epoch ms).
   weatherLayer: WeatherLayer;
-  weather: WeatherReplay;
+  weather: WeatherData;
+  weatherAtMs: number;
 };
 
 export function NodeMap({
@@ -269,6 +271,7 @@ export function NodeMap({
   valleyFlights,
   weatherLayer,
   weather,
+  weatherAtMs,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -418,11 +421,12 @@ export function NodeMap({
       showWeatherField(map, null);
       return;
     }
-    const { grid, times } = weather.grid;
-    const timeMs = eventT === null ? Date.parse(times[0]) : eventT * 1000;
-    const image = paintWeatherField(weather.grid, weatherLayer, timeMs);
-    showWeatherField(map, { url: weatherImageUrl(image), corners: fieldCorners(grid) });
-  }, [map, styleReady, weatherLayer, weather, eventT]);
+    const image = paintWeatherField(weather.grid, weatherLayer, weatherAtMs);
+    showWeatherField(map, {
+      url: weatherImageUrl(image),
+      corners: fieldCorners(weather.grid.grid),
+    });
+  }, [map, styleReady, weatherLayer, weather, weatherAtMs]);
 
   useEffect(() => {
     if (!map) return;
