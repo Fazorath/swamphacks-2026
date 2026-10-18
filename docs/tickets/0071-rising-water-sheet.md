@@ -4,7 +4,7 @@
 
 **Blocked by:** 0065, 0067
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** Fazorath
 
@@ -14,8 +14,10 @@
 
 **Design:** `docs/design/gods-eye-view-decisions.md`; canvas artboards `G-Rising-Water`.
 
-- [ ] The water level is a height line with tick marks: a dashed `river-300` line either side of the river at each reach's reconstructed level from the replay timeline, a tick every metre, no filled sheet (D-46); no new invented numbers
-- [ ] The label `RECONSTRUCTION` sits on the water, following the head, and the status strip shows "Water level: RECONSTRUCTION" beside the Simulated badge while the line is drawn (D-47); the tone rules in `docs/specs/flash-flood-replay.md` hold: terrain and water level only, no houses, people or damage imagery
-- [ ] It runs only while terrain is on; with 2D, the switch off or reduced motion, it is a static marked height instead
-- [ ] Performance bar holds with it on; checked by hand and noted here
-- [ ] All **Commands** pass
+- [x] The water level is a height line with tick marks: a dashed `river-300` line either side of the river at each reach's reconstructed level from the replay timeline, a tick every metre, no filled sheet (D-46); no new invented numbers
+- [x] The label `RECONSTRUCTION` sits on the water, following the head, and the status strip shows "Water level: RECONSTRUCTION" beside the Simulated badge while the line is drawn (D-47); the tone rules in `docs/specs/flash-flood-replay.md` hold: terrain and water level only, no houses, people or damage imagery
+- [x] It runs only while terrain is on; with 2D, the switch off or reduced motion, it is a static marked height instead
+- [x] Performance bar holds with it on; checked by hand and noted here
+- [x] All **Commands** pass
+
+Performance checked by hand on 2026-10-18 by the owner on the demo laptop: smooth in the 3D valley with the water lines on, Replay from Collapse. Frame-rate numbers were not recorded.

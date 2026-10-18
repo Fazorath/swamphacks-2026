@@ -29,6 +29,8 @@ type Props = {
   nepal: NepalMap | null;
   // True once the frame-rate watch has turned terrain off (D-35).
   terrainDropped: boolean;
+  // True while the map draws a water level, which is always a reconstruction (D-47).
+  waterDrawn: boolean;
 };
 
 export function StatusStrip({
@@ -43,6 +45,7 @@ export function StatusStrip({
   cachePackLoaded,
   nepal,
   terrainDropped,
+  waterDrawn,
 }: Props) {
   const simulated = nodes.filter((node) => node.simulated).length;
   const youngest = nodes.length > 0 ? Math.min(...nodes.map((node) => node.ageSeconds)) : null;
@@ -57,6 +60,7 @@ export function StatusStrip({
             {simulated} simulated · {nodes.length - simulated} real
           </span>
         ))}
+      {waterDrawn && <span className="water-reconstruction-note">Water level: RECONSTRUCTION</span>}
       {contactNotes.map((note) => (
         <span key={note.key} className="contact-note">
           {note.text}

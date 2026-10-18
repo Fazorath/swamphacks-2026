@@ -54,6 +54,9 @@ import { usePrefersReducedMotion } from "./useViewport";
 import type { RiverLine } from "./waveEta";
 import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
 import { useRiverFlow } from "./useRiverFlow";
+import { RisingWaterLayer } from "./RisingWaterLayer";
+import type { WaterReach } from "./risingWater";
+import { waveFront } from "./waveFront";
 import { WaveFrontLayer } from "./WaveFrontLayer";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
@@ -239,6 +242,8 @@ type Props = {
   weatherLayer: WeatherLayer;
   weather: WeatherData;
   weatherAtMs: number;
+  // The water levels the wave has reached, drawn as height lines on the valley walls (D-46).
+  waterReaches: WaterReach[];
 };
 
 export function NodeMap({
@@ -281,6 +286,7 @@ export function NodeMap({
   weatherLayer,
   weather,
   weatherAtMs,
+  waterReaches,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -491,6 +497,18 @@ export function NodeMap({
       )
     : new Map<string, number>();
 
+  // The label sits on the water: on the wave's head while terrain is on and moving, otherwise on
+  // the highest water level, as a static marked height.
+  const highest = waterReaches.reduce<WaterReach | null>(
+    (top, reach) => (top === null || reach.levelM > top.levelM ? reach : top),
+    null,
+  );
+  const followsHead = terrain === "3d" && !reducedMotion && waving;
+  const waterLabelAt =
+    highest === null
+      ? null
+      : ((followsHead ? waveFront(river, warnings, eventT)?.head : null) ?? highest.at);
+
   // Derived during render, from the last placement so a label keeps its side until it must move.
   const labels =
     map && view
@@ -539,6 +557,17 @@ export function NodeMap({
           clock={clock}
           reducedMotion={reducedMotion}
         />
+      )}
+      {map && styleReady && <RisingWaterLayer map={map} reaches={waterReaches} />}
+      {map && waterLabelAt && (
+        <MapMarker
+          map={map}
+          lat={waterLabelAt[0]}
+          lon={waterLabelAt[1]}
+          className="water-reconstruction"
+        >
+          RECONSTRUCTION
+        </MapMarker>
       )}
       {map &&
         view &&
