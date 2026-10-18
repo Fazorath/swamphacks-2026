@@ -1,8 +1,8 @@
 # Camera Clips
 
-Three five-minute demo camera clips, built by `scripts/make_camera_clips.py` from the sources in `scripts/camera-clips/sources.json`. The Hub's Cameras Panel plays one per site, lined up with the Event clock (tickets 0075 and 0077). `manifest.json` gives each clip's length, its credits and `flood_onset_s`, the second the water visibly jumps.
+Three five-minute demo camera clips, built by `scripts/make_camera_clips.py` from the sources in `scripts/camera-clips/sources.json`. The Hub's Cameras Panel plays `clip-1-calm-then-surge` as its one camera, in step with the Event clock (ticket 0038); one clip per site, lined up with the wave, comes with tickets 0075 and 0077. `manifest.json` gives each clip's length, its credits and `flood_onset_s`, the second the water visibly jumps.
 
-**All three are illustrative.** They are joined from other people's footage, some of it slowed down or played forward then backward to fill the time, and none of it was filmed at the Node's site. The Cameras Panel is to label them as a replay (ticket 0075).
+**All three are illustrative.** They are joined from other people's footage, some of it slowed down or played forward then backward to fill the time, and none of it was filmed at the Node's site. The Cameras Panel labels the tile `CAMERA · REPLAY` and prints the manifest's credit and "illustrative footage" line.
 
 | Clip | Shows | `flood_onset_s` |
 |---|---|---|

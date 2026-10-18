@@ -1,111 +1,108 @@
+import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Literal
+from pathlib import Path
+from typing import Any, Literal
 
-import httpx
 from pydantic import BaseModel
 
 from storm_shield.internet_connection import Status
+from storm_shield.settings import Role
 
 logger = logging.getLogger(__name__)
 
-# FL511's own website feed, not a documented API: no key, one JPEG per camera, cached upstream
-# for 60 s. docs/tickets/0011-online-status-and-camera-tiles.md records how it was chosen.
-PICTURE_URL = "https://fl511.com/map/Cctv/{camera_id}"
-FETCH_TIMEOUT_SECONDS = 5
-# Matches the upstream cache, so we never ask a feed we do not own more often than it changes.
-REFRESH_EVERY_SECONDS = 60
-# Three missed refreshes in a row and the picture is too old to call live.
-LIVE_FOR_SECONDS = 3 * REFRESH_EVERY_SECONDS
+MANIFEST_FILE = "manifest.json"
 
 
 @dataclass(frozen=True)
 class Camera:
-    id: int
+    id: str
     label: str
+    # The clip's key in the manifest beside the clip files (scripts/make_camera_clips.py).
+    clip: str
 
 
-CAMERAS = (
-    Camera(1655, "I-75 southbound at SR-24 / Archer Rd"),
-    Camera(1647, "I-75 southbound at SR-26 / Newberry Rd"),
-    Camera(1536, "I-75 northbound at SR-121 / Williston Rd"),
-    Camera(1463, "I-75 northbound at Paynes Prairie"),
-)
-
-
-@dataclass(frozen=True)
-class Picture:
-    jpeg: bytes
-    taken_at: datetime
+# No live Nepal camera or free API turned up (docs/research/nepal-cameras.md), so the Hub's camera
+# plays a recording. Tickets 0075 and 0077 grow this into a list.
+CAMERAS = (Camera("hub-betrawati", "Betrawati", "clip-1-calm-then-surge"),)
 
 
 class CameraTile(BaseModel):
-    id: int
+    id: str
     label: str
+    # Every camera is a recording for now; a live source arrives with 0075.
+    kind: Literal["replay"]
+    # "live" means the camera is working, whatever its kind. Offline is the Node being Mesh-only;
+    # Unavailable is anything else that stops this Viewer getting the clip.
     state: Literal["live", "offline", "unavailable"]
-    # Only a live tile has a picture to date.
-    taken_at: datetime | None = None
-    age_s: float | None = None
+    # The rest is only known for a working tile.
+    credit: str | None = None
+    illustrative: str | None = None
+    flood_onset_s: float | None = None
+    length_s: float | None = None
+    # Event time (Unix seconds) at which the clip's first frame plays.
+    event_start_t: int | None = None
+
+
+@dataclass(frozen=True)
+class ClipFiles:
+    video: Path
+    poster: Path
 
 
 class Cameras:
-    """The latest picture of each camera, fetched once and shared with every Viewer."""
+    """The Hub's recorded cameras. Only the Hub holds the clips; a Sensor Node has none to serve."""
 
-    def __init__(self, source: httpx.Client) -> None:
-        self._source = source
-        self._pictures: dict[int, Picture] = {}
-        self._last_tried: dict[int, datetime] = {}
+    def __init__(self, clips_dir: Path, role: Role, event_start_t: int) -> None:
+        self._clips_dir = clips_dir
+        self._role = role
+        self._event_start_t = event_start_t
+        if role == "hub":
+            for camera in CAMERAS:
+                if self.clip_files(camera.id, "online") is None:
+                    logger.warning("camera %s has no clip in %s", camera.id, clips_dir)
 
-    def knows(self, camera_id: int) -> bool:
+    def tiles(self, status: Status) -> list[CameraTile]:
+        return [self._tile(camera, status) for camera in CAMERAS]
+
+    def knows(self, camera_id: str) -> bool:
         return any(camera.id == camera_id for camera in CAMERAS)
 
-    def refresh_due(self, now: datetime) -> None:
-        for camera in CAMERAS:
-            last_tried = self._last_tried.get(camera.id)
-            if last_tried and (now - last_tried).total_seconds() < REFRESH_EVERY_SECONDS:
-                continue
-            # A failing camera waits out the same minute as a working one.
-            self._last_tried[camera.id] = now
-            self._fetch(camera, now)
-
-    def picture(self, camera_id: int, status: Status, now: datetime) -> bytes | None:
-        if status == "mesh_only":
+    def clip_files(self, camera_id: str, status: Status) -> ClipFiles | None:
+        """None when there is nothing to serve: a Sensor, a Mesh-only Node or a missing clip."""
+        camera = next((camera for camera in CAMERAS if camera.id == camera_id), None)
+        if camera is None or self._role != "hub" or status == "mesh_only":
             return None
-        live = self._live_picture(camera_id, now)
-        return live.jpeg if live else None
+        entry = self._manifest_entry(camera)
+        if entry is None:
+            return None
+        files = ClipFiles(self._clips_dir / entry["file"], self._clips_dir / entry["poster"])
+        return files if files.video.is_file() and files.poster.is_file() else None
 
-    def tiles(self, status: Status, now: datetime) -> list[CameraTile]:
-        return [self._tile(camera, status, now) for camera in CAMERAS]
-
-    def _tile(self, camera: Camera, status: Status, now: datetime) -> CameraTile:
+    def _tile(self, camera: Camera, status: Status) -> CameraTile:
         if status == "mesh_only":
-            return CameraTile(id=camera.id, label=camera.label, state="offline")
-        live = self._live_picture(camera.id, now)
-        if live is None:
-            return CameraTile(id=camera.id, label=camera.label, state="unavailable")
+            return CameraTile(id=camera.id, label=camera.label, kind="replay", state="offline")
+        entry = self._manifest_entry(camera)
+        if self.clip_files(camera.id, status) is None or entry is None:
+            return CameraTile(id=camera.id, label=camera.label, kind="replay", state="unavailable")
+        sources = entry["sources"]
+        credits = sorted({sources[piece["source"]]["credit"] for piece in entry["pieces"]})
         return CameraTile(
             id=camera.id,
             label=camera.label,
+            kind="replay",
             state="live",
-            taken_at=live.taken_at,
-            age_s=(now - live.taken_at).total_seconds(),
+            credit="; ".join(credits),
+            illustrative=entry["illustrative"],
+            flood_onset_s=entry["flood_onset_s"],
+            length_s=entry["length_s"],
+            event_start_t=self._event_start_t,
         )
 
-    def _live_picture(self, camera_id: int, now: datetime) -> Picture | None:
-        picture = self._pictures.get(camera_id)
-        if picture is None or (now - picture.taken_at).total_seconds() > LIVE_FOR_SECONDS:
-            return None
-        return picture
-
-    def _fetch(self, camera: Camera, now: datetime) -> None:
+    def _manifest_entry(self, camera: Camera) -> dict[str, Any] | None:
         try:
-            upstream = self._source.get(PICTURE_URL.format(camera_id=camera.id))
-        except httpx.HTTPError as error:
-            logger.warning("camera %s request failed: %s", camera.id, type(error).__name__)
-            return
-        is_picture = upstream.headers.get("content-type", "").startswith("image/jpeg")
-        if upstream.status_code != 200 or not is_picture or not upstream.content:
-            logger.warning("camera %s gave no picture (HTTP %s)", camera.id, upstream.status_code)
-            return
-        self._pictures[camera.id] = Picture(upstream.content, now)
+            manifest = json.loads((self._clips_dir / MANIFEST_FILE).read_text())
+            entry: dict[str, Any] = manifest["clips"][camera.clip]
+            return entry
+        except (OSError, KeyError, ValueError):
+            return None

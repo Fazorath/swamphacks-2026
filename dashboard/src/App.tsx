@@ -225,7 +225,9 @@ export function App() {
       panel={panel("plan")}
     />
   );
-  const camerasPanel = <CamerasPanel tiles={cameras} panel={panel("cameras")} />;
+  const camerasPanel = (
+    <CamerasPanel tiles={cameras} clock={eventClock.clock} panel={panel("cameras")} />
+  );
   const latestOfficialAlert = latestAlert(officialAlerts);
   const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
@@ -363,7 +365,11 @@ export function App() {
               registeredNodes={nodes.filter((node) => node.registered).length}
               openShelters={openShelterCount}
               fleetNodes={fleet.length}
-              liveCameras={cameras.filter((tile) => tile.state === "live").length}
+              playingCameras={
+                eventClock.clock?.state === "playing"
+                  ? cameras.filter((tile) => tile.state === "live").length
+                  : 0
+              }
               onToggleLayer={toggleLayer}
               onTogglePanel={panels.toggle}
               weatherLayer={weather.layer}

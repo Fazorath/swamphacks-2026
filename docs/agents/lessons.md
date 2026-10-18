@@ -493,3 +493,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+
+## Hub replay camera (ticket 0038)
+
+- **jsdom cannot play a `<video>`**: `play`, `pause` and `currentTime` do nothing (and log "not implemented"). `fakeMedia.ts`, installed in `setup.ts`, gives every video a readable clock and paused flag; the sync tests read `currentTime` and `paused` back.
+- **The tile text `NPT` now appears twice** (header and `CAMERA · REPLAY 09:18 NPT`), so tests that waited for the header with `/NPT/` failed on "multiple elements". Use `/NPT · REPLAY/` for the header. A `<video>` has no `img` role: find it by its label.
+- **The clip is positioned from the clock the dashboard polls once a second**, so between polls the browser's own playback (1x, which is the Event clock at ×30) carries it; it is moved only when it drifts 1.5 s or the clock jumps or resets. An autoplay refusal is only logged (`console.warn`); the `TAP TO PLAY` fallback is 0077.
+- **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
+- **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.

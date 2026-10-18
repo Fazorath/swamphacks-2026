@@ -19,7 +19,7 @@ from storm_shield.cache_pack import (
     RETRY_EVERY_SECONDS,
     CachePack,
 )
-from storm_shield.cameras import FETCH_TIMEOUT_SECONDS, Cameras, CameraTile
+from storm_shield.cameras import Cameras, CameraTile, ClipFiles
 from storm_shield.community_reading import CommunityReading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
@@ -133,7 +133,6 @@ def create_app(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     tile_source: httpx.Client | None = None,
     internet_source: httpx.Client | None = None,
-    camera_source: httpx.Client | None = None,
     weather_source: httpx.Client | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
@@ -148,7 +147,6 @@ def create_app(
     internet = InternetConnection(
         internet_source or httpx.Client(timeout=CONNECTIVITY_TIMEOUT_SECONDS)
     )
-    cameras = Cameras(camera_source or httpx.Client(timeout=FETCH_TIMEOUT_SECONDS))
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
@@ -159,6 +157,7 @@ def create_app(
             f"NODE_REPLAY_TRACK {settings.replay_track!r} is not in the replay timeline "
             f"({', '.join(timeline.tracks)})"
         )
+    cameras = Cameras(settings.camera_clips_dir, settings.role, timeline.start_unix)
     event_clock = EventClock()
     simulated_fleet = SimulatedFleet()
 
@@ -421,16 +420,6 @@ def create_app(
                     logger.exception("could not check whether this Node has internet")
                 await asyncio.sleep(settings.internet_check_seconds)
 
-        # Apart from the internet check, so slow cameras never delay noticing the cable is out.
-        async def keep_cameras_fresh() -> None:
-            while True:
-                try:
-                    if internet.status == "online":
-                        await asyncio.to_thread(cameras.refresh_due, clock())
-                except Exception:
-                    logger.exception("could not refresh the camera pictures")
-                await asyncio.sleep(settings.internet_check_seconds)
-
         # Also how a Hub whose pack arrives late starts announcing; it waits at most one period.
         async def keep_repeating_shelter_status() -> None:
             while True:
@@ -489,7 +478,6 @@ def create_app(
         tasks = [
             asyncio.create_task(keep_sharing()),
             asyncio.create_task(keep_checking_internet()),
-            asyncio.create_task(keep_cameras_fresh()),
             asyncio.create_task(keep_signing_up()),
         ]
         if settings.role == "hub":
@@ -548,20 +536,27 @@ def create_app(
 
     @app.get("/api/cameras")
     def camera_tiles() -> list[CameraTile]:
-        return cameras.tiles(internet.status, clock())
+        return cameras.tiles(internet.status)
 
-    @app.get("/api/cameras/{camera_id}.jpg")
-    def camera_picture(camera_id: int) -> Response:
+    def clip_files(camera_id: str) -> ClipFiles:
         if not cameras.knows(camera_id):
             raise HTTPException(status_code=404, detail="no such camera")
-        picture = cameras.picture(camera_id, internet.status, clock())
-        if picture is None:
+        files = cameras.clip_files(camera_id, internet.status)
+        if files is None:
             raise HTTPException(
-                status_code=503,
-                detail="no live picture: this Node is Mesh-only or the camera failed",
+                status_code=404,
+                detail="no clip: this Node is a Sensor or Mesh-only, or the clip is missing",
             )
-        # A cached copy shown later would look live, which is exactly what this must never do.
-        return Response(picture, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+        return files
+
+    # FileResponse answers range requests, which is what lets a phone start and seek the clip.
+    @app.get("/api/cameras/{camera_id}/clip")
+    def camera_clip(camera_id: str) -> FileResponse:
+        return FileResponse(clip_files(camera_id).video, media_type="video/mp4")
+
+    @app.get("/api/cameras/{camera_id}/poster")
+    def camera_poster(camera_id: str) -> FileResponse:
+        return FileResponse(clip_files(camera_id).poster, media_type="image/jpeg")
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:
