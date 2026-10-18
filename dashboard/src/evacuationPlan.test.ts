@@ -385,6 +385,42 @@ describe("with a Wave ETA", () => {
     expect(plan({ wave: wave(29), openShelterIds: ["near-plain"] }).shelter).toBe(NEAR_PLAIN);
   });
 
+  test("a Shelter out of reach in time is still given for the map, never as the chosen one", () => {
+    const tooLate = plan({ wave: wave(28), openShelterIds: ["near-plain"] });
+    expect(tooLate.shelter).toBeNull();
+    expect(tooLate.outOfReachShelter).toBe(NEAR_PLAIN);
+    expect(plan({ wave: wave(29), openShelterIds: ["near-plain"] }).outOfReachShelter).toBeNull();
+    expect(plan({ wave: null, openShelterIds: ["near-plain"] }).outOfReachShelter).toBeNull();
+  });
+
+  test("the out-of-reach Shelter is the closest one outside the Flood-Prone Area", () => {
+    const ring: [number, number][] = [
+      [-82.321, 29.6505],
+      [-82.319, 29.6505],
+      [-82.319, 29.6515],
+      [-82.321, 29.6515],
+      [-82.321, 29.6505],
+    ];
+    const floodProne = {
+      features: [{ geometry: { type: "Polygon" as const, coordinates: [ring] } }],
+    };
+    const both = plan({
+      wave: wave(1),
+      pack: pack({ floodProne }),
+      openShelterIds: ["near-plain", "nearest-flagged"],
+    });
+    expect(both.outOfReachShelter).toBe(NEAR_PLAIN);
+    expect(both.lines).toContain("Nearest Shelter Near Plain: 24 min walk, wave in 1 min.");
+
+    const onlyFlagged = plan({
+      wave: wave(1),
+      pack: pack({ floodProne }),
+      openShelterIds: ["nearest-flagged"],
+    });
+    expect(onlyFlagged.outOfReachShelter).toBeNull();
+    expect(onlyFlagged.lines.join(" ")).toContain("Nearest Shelter");
+  });
+
   test("at the arrival time it is always higher ground", () => {
     const result = plan({ wave: wave(0), openShelterIds: ["near-plain"] });
     expect(result.lines).toContain("Nearest Shelter Near Plain: 24 min walk, wave expected now.");

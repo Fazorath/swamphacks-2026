@@ -202,7 +202,9 @@ test("while unreachable, everything live goes and what helps the resident plan s
   expect(document.querySelector(".node-map")).toBeInTheDocument();
   expect(screen.getByText("Household profile saved")).toBeInTheDocument();
   expect(screen.getByText("porch · Hub")).toBeInTheDocument();
-  expect(screen.getByText(NOTICE.headline)).toBeInTheDocument();
+  expect(
+    within(screen.getByRole("region", { name: "Alerts" })).getByText(NOTICE.headline),
+  ).toBeInTheDocument();
   expect(screen.getByText(/Nearest open Shelter: Test Gym/)).toBeInTheDocument();
 });
 

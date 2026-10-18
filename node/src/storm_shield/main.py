@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 import httpx
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -59,6 +59,9 @@ from storm_shield.simulated_fleet import FLEET_FILE, FleetEntry, SimulatedFleet
 from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
 from storm_shield.weather_forecast import FORECAST_TIMEOUT_SECONDS, WeatherForecast
 
+# The address pi/setup-hotspot.sh gives the machine that hosts the hotspot.
+HOTSPOT_ADDRESS = "10.88.0.1"
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
 
@@ -743,6 +746,19 @@ def create_app(
             return set_replay(
                 "paused" if keeps_paused else "playing", timeline.event_t_at(phase.at)
             )
+
+    @app.get("/api/join")
+    def hotspot_to_join(request: Request) -> dict[str, str]:
+        # The password is a secret, so only the person at this machine (the projected Hub) gets it.
+        if request.client is None or request.client.host not in LOOPBACK_HOSTS:
+            raise HTTPException(status_code=403, detail="only this Node's own machine may ask")
+        if not settings.hotspot_ssid:
+            raise HTTPException(status_code=404, detail="HOTSPOT_SSID is not set on this Node")
+        return {
+            "ssid": settings.hotspot_ssid,
+            "password": settings.hotspot_password,
+            "url": settings.hotspot_dashboard_url or f"http://{HOTSPOT_ADDRESS}:{settings.port}",
+        }
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")
     def map_tile(z: int, x: int, y: int) -> Response:

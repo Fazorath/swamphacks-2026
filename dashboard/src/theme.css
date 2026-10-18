@@ -24,6 +24,8 @@
   --river-500: #3b82c4;
   --river-300: #7fb3e6;
   --road-700: #223250;
+  --qr-black: #000000;
+  --qr-white: #ffffff;
 
   --bg-page: var(--navy-950);
   --surface-panel: var(--navy-900);
@@ -75,6 +77,9 @@
   --contact-lost: var(--ink-300);
   --stale: var(--ink-400);
   --scrim: color-mix(in srgb, var(--ink-black) 60%, transparent);
+  /* a QR code is read by a camera: plain black on white in every theme */
+  --qr-ink: var(--qr-black);
+  --qr-paper: var(--qr-white);
   --focus-ring: var(--accent);
 
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;

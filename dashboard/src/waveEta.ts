@@ -39,7 +39,7 @@ export function parseRiverLine(geojson: unknown): RiverLine {
   });
 }
 
-function distanceKm(a: Home, [lat, lon]: [number, number]): number {
+export function distanceKm(a: Home, [lat, lon]: [number, number]): number {
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
   const deltaLat = toRadians(lat - a.lat);
   const deltaLon = toRadians(lon - a.lon);
