@@ -379,7 +379,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A place's OpenStreetMap node can sit on a hill edge**: Kathmandu's city node read 1,521 m, 240 m above the valley floor, so its position is Durbar Square. Read a point and its neighbours (a 3 by 3 spread 0.004 degrees apart) before trusting one pixel.
 - **Syabrubesi and Timure have no Latin name in OpenStreetMap**, so the key places file supplies them with the replay spec's coordinates.
 - **Test every raw vertex of a river against the border, not the simplified ones**: a straight river crossing Nepal simplifies to its two ends, both outside, and was dropped (caught by a test).
-- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. `Release cache-pack-v4` is not published yet.
+- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. **Published as Release `cache-pack-v5`** (10.0 MB, 2026-10-18), not v4: the v4 tag already held a 2.5 MB valley pack, and `scripts/run-demo.sh` downloads `cache-pack-v4` by name. Point the demo at v5 only after 0033, because v5 has no raster tiles and the current Leaflet map needs a CARTO key without them.
 - The map credit, "Boundaries are indicative" and "elevation is approximate" are in the manifest's `nepal` entry; printing them on the map is 0033.
 
 
