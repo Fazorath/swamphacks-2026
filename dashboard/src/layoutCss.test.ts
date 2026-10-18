@@ -22,9 +22,9 @@ describe("the Panel columns stay on screen", () => {
     expect(rule(".status-strip")).toMatch(/overflow:\s*hidden/);
   });
 
-  it("collapses the right column to its headings before the map gets too narrow", () => {
+  it("keeps the blur off the phone's Panels", () => {
     expect(css).toMatch(
-      /@media \(48rem < width < 56\.25rem\)\s*\{[^@]*\.panel-column\.right \.panel-body\s*\{\s*display:\s*none/,
+      /@media \(hover: hover\) and \(width >= 56\.25rem\)\s*\{\s*\.panel\s*\{[^}]*backdrop-filter/,
     );
   });
 });

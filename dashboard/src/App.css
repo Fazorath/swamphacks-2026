@@ -449,7 +449,7 @@ section .empty-panel p {
   pointer-events: auto;
 }
 
-@media (hover: hover) and (width > 48rem) {
+@media (hover: hover) and (width >= 56.25rem) {
   .panel {
     background: var(--surface-glass);
     backdrop-filter: blur(12px);
@@ -883,60 +883,118 @@ section p {
   padding-left: 1.1rem;
 }
 
-/* Both columns plus a usable map no longer fit: the right column keeps only its headings. */
-@media (48rem < width < 56.25rem) {
-  .panel-column.right {
-    width: 14rem;
-  }
-
-  .panel-column.right .panel-body {
-    display: none;
-  }
+/* Phone (ui.md): the map fills the screen, the other three tabs cover it, and the tab bar stays
+   under the thumb. Every control is at least 44 px. */
+main.phone {
+  height: 100dvh;
 }
 
-@media (width <= 48rem) {
-  main {
-    height: auto;
-    min-height: 100vh;
-  }
+.phone button,
+.phone input,
+.phone select {
+  min-height: 2.75rem;
+}
 
-  .stage {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+.phone .top-bar {
+  gap: 0.75rem;
+}
 
-  .map-area {
-    position: relative;
-    height: 60vh;
-  }
+.phone .panel {
+  background: var(--surface-solid);
+}
 
-  .layer-rail {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0 0.75rem;
-  }
+.phone-pane {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-y: auto;
+  background: var(--bg-page);
+}
 
-  .panel-column {
-    position: static;
-    width: auto;
-    padding: 0 0.75rem;
-  }
+.phone .panel-chevron {
+  display: none;
+}
 
-  .panel-column.left,
-  .panel-column.right {
-    width: auto;
-  }
+.phone-tabs {
+  z-index: 3;
+  display: flex;
+  flex: none;
+  background: var(--surface-solid);
+  border-top: 1px solid var(--border);
+}
 
-  .status-strip {
-    flex-wrap: wrap;
-    white-space: normal;
-  }
+.phone-tabs button {
+  display: flex;
+  flex: 1;
+  min-height: 3.25rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
 
-  .map-credit {
-    margin-left: 0;
-  }
+.phone-tabs button[aria-selected="true"] {
+  color: var(--accent);
+}
+
+.pinned-alert {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--risk-elevated);
+  border-radius: 0.5rem;
+}
+
+.node-sheet {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  padding: 0.75rem 1rem;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.node-sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.node-sheet-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.node-sheet-head button {
+  margin-left: auto;
+}
+
+.node-sheet ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.phone .status-strip {
+  flex-wrap: wrap;
+  white-space: normal;
 }
 
 .connection-badge.online {
