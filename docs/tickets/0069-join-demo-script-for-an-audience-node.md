@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** in-progress
+**Status:** done
 
 **Owner:** leonardorofaDV
 
@@ -25,4 +25,6 @@
 Folded into this ticket, not new tickets:
 
 - [x] The Hub can run Wi-Fi discovery and listen for TCP clients beside its primary interface (off by default; `run-demo.sh` turns both on for the Hub), with config tests
-- [ ] One Docker image whose entrypoint is `join-demo.sh`, for Windows and any Docker host; on a non-host network it dials the Hub over TCP
+- [x] One Docker image whose entrypoint is `join-demo.sh`, for Windows and any Docker host; on a non-host network it dials the Hub over TCP
+
+The image was built and run on Docker Desktop (Windows) against a Hub on the same machine; the Wi-Fi discovery path and any second laptop are unproven. See `docs/agents/lessons.md` (Audience Node).

@@ -43,7 +43,7 @@ docker run --rm -it -v storm-shield-join-data:/data storm-shield-join 192.168.1.
 docker run --rm -it --network host -e JOIN_MESH=auto -v storm-shield-join-data:/data storm-shield-join 192.168.1.20 Dhunche
 ```
 
-(Linux native, Docker on Windows, Docker on Linux.) Use `-it`, or Ctrl-C does not reach the script.
+(Linux native, Docker on Windows, Docker on Linux.) Use `-it`, or Ctrl-C does not reach the script. A Hub on a non-default TCP port needs `-e JOIN_HUB_TCP_PORT=<port>`.
 
 The script refuses to start if the Hub does not answer, if the address is not a Hub, or if its own
 ports are in use. It then prints its Node id and the accept step, and says "Heard the Hub over the
@@ -84,4 +84,6 @@ The script's fix list, in order of how often it was the cause:
 ## What this does not prove
 
 It was rehearsed on one machine over loopback and local TCP. Wi-Fi discovery between two real
-laptops, Docker Desktop on Windows, and the lid-closed case are unproven.
+laptops, `--network host` on a Linux Docker host, a Windows laptop other than the Hub's own machine,
+and the lid-closed case are unproven. The image itself was built and run on Docker Desktop (Windows)
+against a Hub on the same machine, over TCP, with a pause and unpause standing in for Wi-Fi off and on.
