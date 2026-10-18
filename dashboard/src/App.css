@@ -1282,11 +1282,12 @@ main.phone {
   background: var(--surface-panel);
 }
 
-.camera-tile img {
+.camera-tile video {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  background: var(--bg-page);
 }
 
 .camera-tile p {
@@ -1294,25 +1295,41 @@ main.phone {
   font-size: 0.8rem;
 }
 
+.camera-tag {
+  display: block;
+  padding: 0.25rem 0.5rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.camera-credit {
+  padding: 0 0.5rem 0.25rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
 .camera-tile.offline,
 .camera-tile.unavailable {
   display: grid;
   aspect-ratio: 16 / 9;
   place-content: center;
+  justify-items: center;
   text-align: center;
 }
 
 .camera-tile.offline {
+  border-style: dashed;
   background: var(--bg-page);
   color: var(--text-secondary);
 }
 
 .camera-tile.unavailable {
-  border-style: dashed;
   border-color: var(--risk-elevated);
 }
 
-.camera-tile.unavailable strong {
+.camera-tile.unavailable strong,
+.camera-tile.unavailable svg {
   color: var(--risk-elevated);
 }
 
