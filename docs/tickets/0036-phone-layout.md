@@ -22,5 +22,5 @@
 - [x] From 900 px up the desktop layout is unchanged; tablets show one Panel open per side
 - [x] The Alerts tab shows an empty state until 0013 and 0014 fill it
 - [x] Vitest flow tests at a phone width: each tab shows its content, selecting a Node opens the sheet
-- [ ] Manual check: on a phone over Tailscale, all four tabs work (rehearsal, not a Pi check)
+- [x] Manual check: on a phone over Tailscale, all four tabs work (rehearsal, not a Pi check)
 - [x] All **Commands** pass
