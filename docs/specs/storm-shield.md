@@ -172,7 +172,7 @@ The cut line comes first, and the tickets build it end to end. One Sensor Node p
 - Live camera feeds while offline, and choosing the camera source now.
 - On-device rerouting when roads are blocked (a low-priority stretch).
 - Carrying the Cache Pack over the mesh.
-- Push notifications, SMS, or anything outside the dashboard.
+- Push notifications, SMS, or anything outside the dashboard, except the team email on a new Community Warning (`docs/specs/flash-flood-replay.md`, "Flood alert email", decided 2026-10-18).
 - Coverage beyond Gainesville / Alachua County.
 
 ## Further Notes
