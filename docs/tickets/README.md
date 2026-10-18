@@ -34,7 +34,7 @@
 | [0029-hub-sets-shelter-status-and-announces-it](0029-hub-sets-shelter-status-and-announces-it.md) | done | Fazorath |
 | [0030-hub-remembers-shelter-status-across-restart](0030-hub-remembers-shelter-status-across-restart.md) | done | Fazorath |
 | [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | done | Fazorath |
-| [0032-theme-fonts-and-icons](0032-theme-fonts-and-icons.md) | ready-for-agent | unclaimed |
+| [0032-theme-fonts-and-icons](0032-theme-fonts-and-icons.md) | in-progress | Fazorath |
 | [0033-full-bleed-map-shell](0033-full-bleed-map-shell.md) | ready-for-agent | unclaimed |
 | [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | ready-for-agent | unclaimed |
 | [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | ready-for-agent | unclaimed |
