@@ -341,3 +341,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Text-glyph icons remain**: the `⌂` home markers in `NodeMap.tsx` are not `lucide-react`. They go with the marker anatomy in 0035.
 - **A rule's own `font-family` beats the grouped mono rule near the top of `App.css`**: `.tag` kept a hardcoded `ui-monospace` and showed the system font until a computed-style check in Chrome caught it. `theme.test.ts` now fails on any `font-family` that is not `var(--font-sans)` or `var(--font-mono)`.
 - `.tag.stale` was amber; the design says Stale is muted grey because amber means Elevated, so it is `--text-secondary` now.
+
+## Reticulum loopback test fails in the whole-file run (found 2026-10-17, while merging 0050)
+
+- **`test_reticulum_nodes.py::test_nodes_find_each_other_and_a_step_crosses_the_mesh[loopback]` fails every time the whole file runs** (3 other tests pass), and passes alone in about 6 s (`-k "step_crosses and loopback"`). It fails the same way on `bd537a2`, the commit before 0050 merged, so 0050 did not cause it. The failure is `_eventually`'s 40 s timeout ("the Nodes did not reach the expected state in time"); the log shows `TCPInterface[Peer 0/127.0.0.1:4250] ... Connection refused`.
+- **It passed in the same file earlier that day** (4 passed in 50 s) with identical `node/` code, so suspect leftover state, not a code change: a port in TIME_WAIT, a Reticulum shared instance, or `~/.reticulum` shared between sessions running tests at once. Not tested yet.
+- **Last touched:** the test file by Fazorath (`32e3dbd`, only a busy-port guard); `reticulum_mesh.py` by Amit (`a783148`, the registry). Neither changed behaviour the test relies on.
+- **Next step:** run the file on a clean machine or after a reboot. Passing there means local state; failing there means look at the shared Reticulum instance.
+- **Never chain `scripts/check.sh | tail` before `git push`**: `tail` hides the exit code and a failing pytest still pushed. Test `check.sh`'s own exit status.
+- **A baseline "without my change" must be a commit before your merge**: `8e8b951` already held 0050 and gave a false answer. Use the parent of your merge.
