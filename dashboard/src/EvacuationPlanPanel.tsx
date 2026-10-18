@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { agoWords } from "./agoWords";
+import { JoinCard } from "./JoinCard";
 import { Panel, type PanelControl } from "./Panel";
 import type { EvacuationPlan } from "./evacuationPlan";
 import { officialTag, SOURCE_LABELS } from "./officialAlerts";
@@ -27,6 +28,7 @@ function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
 export function EvacuationPlanPanel({
   plan,
   exampleHome,
+  handOff,
   waveArrival,
   eventT,
   shelterStatusConfirmedAt,
@@ -34,6 +36,8 @@ export function EvacuationPlanPanel({
 }: {
   plan: EvacuationPlan;
   exampleHome: boolean;
+  // The projected Hub has no household of its own: it hands the plan to a phone.
+  handOff: boolean;
   waveArrival: WaveArrival | null;
   eventT: number | null;
   // Set only while the Node is unreachable: when its last answer arrived.
@@ -42,6 +46,7 @@ export function EvacuationPlanPanel({
 }) {
   return (
     <Panel label="Evacuation Plan" {...panel}>
+      {handOff && <JoinCard />}
       {exampleHome && (
         <p className="example-home">
           Example home, not yours. Fill in your household profile to see your own plan.

@@ -41,6 +41,8 @@ import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
 import { waveArrival, waveFrontKm } from "./waveEta";
+import { WarningBanners, WarningTakeover } from "./WarningTakeover";
+import { bannerWarnings, pendingWarnings, useAcknowledgedWarnings } from "./acknowledgedWarnings";
 import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
@@ -224,6 +226,7 @@ export function App() {
     <EvacuationPlanPanel
       plan={plan}
       exampleHome={example !== null}
+      handOff={!phone && profile === null}
       waveArrival={arrival}
       eventT={eventT}
       shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
@@ -234,6 +237,10 @@ export function App() {
     <CamerasPanel tiles={cameras} clock={eventClock.clock} panel={panel("cameras")} />
   );
   const latestOfficialAlert = latestAlert(officialAlerts);
+  const [acknowledged, acknowledge] = useAcknowledgedWarnings();
+  const pending = pendingWarnings(officialAlerts, communityWarnings, acknowledged);
+  const allNodes = lastAnswer?.state.nodes ?? [];
+  const thisNodeId = lastAnswer?.state.id ?? "";
   const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
     <main className={phone ? "phone" : undefined}>
@@ -254,6 +261,11 @@ export function App() {
           your household profile are still here.
         </p>
       )}
+      <WarningBanners
+        shown={bannerWarnings(officialAlerts, communityWarnings, acknowledged)}
+        nodes={allNodes}
+        thisNodeId={thisNodeId}
+      />
       {storageProblem && (
         <p role="alert" className="banner">
           {STORAGE_PROBLEM_MESSAGES[storageProblem]}
@@ -418,6 +430,15 @@ export function App() {
         terrainDropped={terrainDropped}
       />
       {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
+      <WarningTakeover
+        pending={pending}
+        nodes={allNodes}
+        thisNodeId={thisNodeId}
+        waveArrival={arrival}
+        eventT={eventT}
+        online={state?.status === "online"}
+        onAcknowledge={acknowledge}
+      />
     </main>
   );
 }

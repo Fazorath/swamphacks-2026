@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 
 import {
+  issuedAsGiven,
   issuedUnix,
   leadTimeLine,
   officialTag,
@@ -17,11 +18,6 @@ import type { NodeSnapshot } from "./nodeState";
 import { Panel, type PanelControl } from "./Panel";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
-
-// "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
-function issuedAsGiven(issued: string): string {
-  return `${issued.slice(0, 10)} ${issued.slice(11, 16)} ${issued.slice(19)}`;
-}
 
 export function AlertsPanel({
   alerts,

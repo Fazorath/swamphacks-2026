@@ -541,3 +541,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
 - **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
 - **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.
+
+## Warning Takeover and Join card (ticket 0039)
+
+- **Case-only file names collided again**: `joinCard.ts` beside `JoinCard.tsx` made tsc fail ("differs only in casing") on macOS. The logic files are `joinHotspot.ts` and `acknowledgedWarnings.ts`.
+- **The Join card needs the hotspot name and password, which are secrets**, so `GET /api/join` (HOTSPOT_SSID, HOTSPOT_PASSWORD, optional HOTSPOT_DASHBOARD_URL, default `http://10.88.0.1:<port>`) answers only requests from loopback (403 otherwise, 404 with no SSID). The projected Hub is localhost, so the card shows its codes there; a Node that sets nothing shows a one-line reason instead.
+- **A takeover duplicates the Alerts Panel text on purpose**, so older tests that did `getByText(headline)` had to scope to the Alerts region. A new flow test that reads a warning should `within(...)` the dialog or the Panel.
+- **The chime module remembers a tap for the whole test file** (`chime.ts` flag): put the "silent before a tap" test before any that fires `pointerDown`.
+- Seen only in jsdom: the 880 px card, 64 px button, dimming and slow pulse are CSS and were not looked at in a browser; the phone scan of the two codes was not done.

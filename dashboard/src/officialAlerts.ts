@@ -22,6 +22,11 @@ export function officialTag(alert: OfficialAlert): string {
   return alert.mode === "replay" ? "OFFICIAL · REPLAY" : "OFFICIAL";
 }
 
+// "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
+export function issuedAsGiven(issued: string): string {
+  return `${issued.slice(0, 10)} ${issued.slice(11, 16)} ${issued.slice(19)}`;
+}
+
 export function issuedUnix(alert: OfficialAlert): number {
   return Date.parse(alert.issued) / 1000;
 }
