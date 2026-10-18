@@ -563,7 +563,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 ## Camera list (ticket 0075)
 
 - **The live-source half of the ticket was dropped in grilling**: 0074 found no qualifying feed and 0038 had deleted the FL511 fetcher, so a live path would have been untested speculation. `kind` stays `replay`; a live source gets its own ticket when a feed qualifies.
-- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry is skipped; an unreadable file leaves the Hub with no cameras. Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
+- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry or a repeated id is skipped; a file that is unreadable or not a list leaves the Hub with no cameras (code-review found that `null` or `5` crashed startup). Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
 - Tests that expected exactly one tile now pick a tile by id (`_tile(client, id)`). The dashboard still renders whatever tiles come back; the per-site timing shift is 0077.
 - `dashboard: vitest` failed once in a full `check.sh` run and passed in three reruns with no change near it; rerun before chasing it.
 

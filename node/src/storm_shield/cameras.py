@@ -37,13 +37,21 @@ def load_cameras() -> tuple[Camera, ...]:
     except (OSError, ValueError):
         logger.exception("could not read the camera list %s; the Hub has no cameras", CAMERAS_FILE)
         return ()
-    cameras = []
+    if not isinstance(entries, list):
+        logger.error("the camera list %s is not a list; the Hub has no cameras", CAMERAS_FILE)
+        return ()
+    cameras: dict[str, Camera] = {}
     for entry in entries:
         try:
-            cameras.append(Camera(**entry))
+            camera = Camera(**entry)
         except (TypeError, ValueError):
             logger.exception("skipping a malformed camera entry in %s: %r", CAMERAS_FILE, entry)
-    return tuple(cameras)
+            continue
+        if camera.id in cameras:
+            logger.error("skipping a second camera with the id %s in %s", camera.id, CAMERAS_FILE)
+            continue
+        cameras[camera.id] = camera
+    return tuple(cameras.values())
 
 
 class CameraTile(BaseModel):
@@ -113,30 +121,13 @@ class Cameras:
         return playable[0] if playable else None
 
     def _tile(self, camera: Camera, status: Status) -> CameraTile:
+        playable = None if status == "mesh_only" else self._playable(camera)
+        state: Literal["live", "offline", "unavailable"]
         if status == "mesh_only":
-            return self._tile_without_clip(camera, "offline")
-        playable = self._playable(camera)
-        if playable is None:
-            return self._tile_without_clip(camera, "unavailable")
-        _, entry = playable
-        return CameraTile(
-            id=camera.id,
-            label=camera.label,
-            site=camera.site,
-            lat=camera.lat,
-            lon=camera.lon,
-            kind="replay",
-            state="live",
-            credit=entry.credit,
-            illustrative=entry.illustrative,
-            flood_onset_s=entry.flood_onset_s,
-            length_s=entry.length_s,
-            event_start_t=self._event_start_t,
-        )
-
-    @staticmethod
-    def _tile_without_clip(camera: Camera, state: Literal["offline", "unavailable"]) -> CameraTile:
-        return CameraTile(
+            state = "offline"
+        else:
+            state = "unavailable" if playable is None else "live"
+        tile = CameraTile(
             id=camera.id,
             label=camera.label,
             site=camera.site,
@@ -144,6 +135,18 @@ class Cameras:
             lon=camera.lon,
             kind="replay",
             state=state,
+        )
+        if playable is None:
+            return tile
+        _, entry = playable
+        return tile.model_copy(
+            update={
+                "credit": entry.credit,
+                "illustrative": entry.illustrative,
+                "flood_onset_s": entry.flood_onset_s,
+                "length_s": entry.length_s,
+                "event_start_t": self._event_start_t,
+            }
         )
 
     def _playable(self, camera: Camera) -> tuple[ClipFiles, ClipEntry] | None:

@@ -247,15 +247,56 @@ def test_an_unreadable_camera_list_leaves_the_hub_with_no_cameras(
 
 
 def test_a_malformed_camera_entry_is_skipped_and_the_others_still_work(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     cameras = tmp_path / "cameras.json"
     good = {"id": "good", "label": "Good", "site": "hub", "lat": 1, "lon": 2, "clip": CLIP_KEYS[0]}
     cameras.write_text(json.dumps([{"id": "no-position"}, good]))
     monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
-    with _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
+    with caplog.at_level("ERROR"), _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
         _wait_until(lambda: _state_of_the_tile(client, "good") == "live", "the good camera")
         assert [tile["id"] for tile in client.get("/api/cameras").json()] == ["good"]
+    assert "no-position" in caplog.text
+
+
+def test_a_repeated_camera_id_keeps_the_first_and_warns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    cameras = tmp_path / "cameras.json"
+    first = {
+        "id": "same",
+        "label": "First",
+        "site": "hub",
+        "lat": 1,
+        "lon": 2,
+        "clip": CLIP_KEYS[0],
+    }
+    cameras.write_text(json.dumps([first, {**first, "label": "Second"}]))
+    monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
+    with caplog.at_level("ERROR"), _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
+        assert [tile["label"] for tile in client.get("/api/cameras").json()] == ["First"]
+    assert "same" in caplog.text
+
+
+@pytest.mark.parametrize("contents", ["null", "5", '{"id": "x"}'])
+def test_a_camera_list_that_is_not_a_list_leaves_no_cameras_and_the_hub_starts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, contents: str
+) -> None:
+    cameras = tmp_path / "cameras.json"
+    cameras.write_text(contents)
+    monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
+    with _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
+        assert client.get("/api/cameras").json() == []
+
+
+def test_a_missing_poster_makes_only_that_camera_unavailable(tmp_path: Path) -> None:
+    clips = _clips_folder(tmp_path / "clips")
+    manifest = json.loads((clips / "manifest.json").read_text())
+    manifest["clips"][CLIP_KEYS[2]] = {**CLIP_ENTRY, "poster": "gone.jpg"}
+    (clips / "manifest.json").write_text(json.dumps(manifest))
+    with _node(clips, Internet()) as client:
+        _wait_until(lambda: _state_of_the_tile(client) == "live", "the camera to be live")
+        assert _state_of_the_tile(client, "s1-timure") == "unavailable"
 
 
 def test_a_clip_file_missing_beside_a_manifest_makes_only_that_camera_unavailable(
