@@ -25,6 +25,6 @@
 - [x] The Node serves the new files under its pack routes; a pack without them (v3) still works and the map falls back to the river and corridor it has
 - [ ] Sources, licences (CC BY, ODbL, SRTM) and check dates are in `scripts/cache-pack/README.md` and shown on the map credit; borders are drawn as the dataset gives them
   - README table written; the map credit is built from the manifest's `nepal.sources` by 0033 (the Leaflet map still shows CARTO's).
-- [ ] Release `cache-pack-v4` is built and noted in `docs/agents/lessons.md` with its real size; the raster tiles are left out
-  - Built and measured (8.4 MB zip, noted in lessons); not yet uploaded as a GitHub Release.
+- [x] Release `cache-pack-v4` is built and noted in `docs/agents/lessons.md` with its real size; the raster tiles are left out
+  - Published as `cache-pack-v5` (10.0 MB), because the `cache-pack-v4` tag was already taken by a 2.5 MB valley pack that `scripts/run-demo.sh` downloads. `run-demo.sh` still uses v4 until someone points it at v5 and the map no longer needs raster tiles (0033).
 - [x] Python tests for the new manifest entries and the fallback; `scripts/check.sh` passes
