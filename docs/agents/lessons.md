@@ -563,7 +563,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 ## Camera list (ticket 0075)
 
 - **The live-source half of the ticket was dropped in grilling**: 0074 found no qualifying feed and 0038 had deleted the FL511 fetcher, so a live path would have been untested speculation. `kind` stays `replay`; a live source gets its own ticket when a feed qualifies.
-- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry is skipped; an unreadable file leaves the Hub with no cameras. Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
+- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry or a repeated id is skipped; a file that is unreadable or not a list leaves the Hub with no cameras (code-review found that `null` or `5` crashed startup). Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
 - Tests that expected exactly one tile now pick a tile by id (`_tile(client, id)`). The dashboard still renders whatever tiles come back; the per-site timing shift is 0077.
 - `dashboard: vitest` failed once in a full `check.sh` run and passed in three reruns with no change near it; rerun before chasing it.
 
@@ -586,3 +586,13 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The fake map's `flyTo` ends in a microtask**, as the real one ends later, so code that listens for `moveend` after calling `flyTo` works in tests. The tilt waits for a `moveend` with no `originalEvent`, so a resident who grabs the map mid-flight is not tilted against.
 - A full parallel `vitest run` timed out 12 tests on this laptop (all pass alone); `--maxWorkers=2` passed all 424.
 - Not seen in a browser: the band's look, the double border pulse, the red origin ring, and the fly-then-tilt on real MapLibre.
+
+## High-ground points (ticket 0068)
+
+- **Placeholder spots come from `scripts/cache-pack/high_ground.source.json`; the build reads each climb itself** from the Terrarium tiles (point minus the nearest river vertex) and refuses a point in or within 100 m of the corridor, under 50 m of climb, or with no key place within 2 km. Run on the real `cache-pack-v5` tiles the four points climb 90 to 126 m (96, 126, 90, 96). Nothing was visited; every `source` note says PLACEHOLDER.
+- **Scanning for candidates is slow unless the PNG decode is cached**: `pack_nepal.elevation_at` decodes a 256 by 256 tile on every call, and a 80 by 80 grid scan over three towns ran past 5 minutes before it was stopped. Wrapping `pack_nepal._decode_rgb` in `functools.lru_cache` made it finish in under two.
+- **The walk formula lives twice** (`pack_high_ground.py` and `evacuationPlan.ts`: straight line x 1.4 at 4 km/h, rounded up); the file's `walk_minutes` is from the town, the map and plan use the walk from home. Change both together.
+- **A pack without the file is handled by the manifest**: `useCachePack` asks for `high_ground.json` only when the manifest's `files` lists it, so an older pack gives no pins and no 404 in the console.
+- **Not done:** no `cache-pack-v6` Release and no `run-demo.sh` change, so the pins reach a demo laptop only after someone rebuilds with the full `build_cache_pack.py` (Overpass, minutes) and re-points the Hub. The pins, label and cyan outline are tested against the fake map only, not seen in a browser or on a phone; label overlap with Shelter labels at Syabrubesi is unchecked.
+- A worktree session refuses a command that mixes `cd` with a heredoc `python3 - <<E`; write the script to the scratchpad and run it as a plain command.
+- 0068 merge push: the pre-push `check.sh` reported `dashboard: vitest` FAIL on a tree whose own `check.sh` had passed minutes earlier; a rerun of the whole suite alone passed (51 files, 423 tests). Which test failed is unknown because the push output was piped through `tail`; run `git push` unpiped.

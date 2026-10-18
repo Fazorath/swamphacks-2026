@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { CachePackContents, NepalMap } from "./evacuationPlan";
+import type { CachePackContents, HighGroundPoint, NepalMap } from "./evacuationPlan";
 import type { RouteGrid } from "./routeGrid";
 
 const RETRY_EVERY_MS = 5000;
@@ -45,6 +45,7 @@ async function fetchCachePack(): Promise<CachePackContents | null> {
       route_grid?: RouteGrid;
       bbox?: CachePackContents["bbox"];
       nepal?: ManifestNepal;
+      files?: Record<string, string>;
     } | null;
   };
   if (status.available !== true) return null;
@@ -52,12 +53,16 @@ async function fetchCachePack(): Promise<CachePackContents | null> {
     getJson("/api/cache-pack/files/shelters.json"),
     getJson("/api/cache-pack/files/flood_prone.geojson"),
   ]);
+  // A pack built before High-ground points lacks the file; asking for it would only log a 404.
+  const highGround: HighGroundPoint[] = status.manifest?.files?.["high_ground.json"]
+    ? ((await getJson("/api/cache-pack/files/high_ground.json")) as HighGroundPoint[])
+    : [];
   // A pack built without Routes has no grid.
   const routeGrid = status.manifest?.route_grid ?? null;
   const bbox = status.manifest?.bbox ?? null;
   const built = status.manifest?.built ?? null;
   const nepal = nepalMap(status.manifest?.nepal);
-  return { shelters, floodProne, routeGrid, bbox, built, nepal } as CachePackContents;
+  return { shelters, highGround, floodProne, routeGrid, bbox, built, nepal } as CachePackContents;
 }
 
 // The pack never changes once a Node holds a valid one, so it is read once and then kept.

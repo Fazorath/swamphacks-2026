@@ -354,6 +354,7 @@ export function App() {
           ambientFlow={shows("fleet")}
           shelter={plan.shelter}
           outOfReachShelter={plan.outOfReachShelter}
+          highGround={plan.highGround}
           route={shows("route") ? plan.route : null}
           panelRoom={panelRoom}
           draftHome={panelOpen ? draftHome : null}

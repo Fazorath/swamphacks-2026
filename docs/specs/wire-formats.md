@@ -153,6 +153,7 @@ cache-pack.zip
 ├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }?, "files": { "<path>": "<sha256>" } }
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
 │                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
+├── high_ground.json      [ { "id", "name", "pos": [lat, lon], "town", "climb_m": 96, "walk_minutes": 7, "source", "checked" } ]: High-ground points; `climb_m` is read from the elevation tiles, `walk_minutes` is from the town's key place; packs before 0068 lack it
 ├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
 ├── weather_replay.json   the recorded weather of 25 to 27 Aug 2026 as a Weather Grid (below); packs built before the Weather layers lack it
