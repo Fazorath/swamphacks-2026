@@ -41,8 +41,8 @@ for attempt in 1 2 3; do
     done*) echo "claim: $slug is already done." >&2; exit 1 ;;
   esac
 
-  # "Blocked by: 0043, 0046" or "None (can start immediately)".
-  for blocker in $(git show "origin/main:$ticket" | field "Blocked by" | grep -oE '[0-9]{4}' || true); do
+  # "Blocked by: 0043, 0046" or "None (can start immediately; read by 0033)": a parenthetical is a note, not a blocker.
+  for blocker in $(git show "origin/main:$ticket" | field "Blocked by" | sed "s/(.*//" | grep -oE '[0-9]{4}' || true); do
     blocker_file="$(git ls-tree --name-only origin/main docs/tickets/ | grep "^docs/tickets/$blocker-" || true)"
     blocker_status="$(git show "origin/main:$blocker_file" | field Status)"
     case "$blocker_status" in
