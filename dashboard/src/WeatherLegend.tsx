@@ -5,7 +5,7 @@ import type { WeatherData } from "./useWeatherGrid";
 export const RECORDED_TAG = "RECORDED WEATHER · 26 Aug 2026";
 // Past this long without a fresh fetch the Hub is probably offline, and the tag says so.
 const FORECAST_OLD_AFTER_HOURS = 3;
-export const FORECAST_HOURS_SHOWN = 7 * 24;
+const FORECAST_SLIDER_MAX_HOURS = 7 * 24;
 const COARSE_NOTE =
   "Coarse grid (a point every 0.5°) of model data: context for the country, not a village measurement.";
 
@@ -37,8 +37,9 @@ function scale(layer: FieldLayer, unit: string) {
 
 export function forecastTag(fetchedAt: string | undefined, nowMs: number): string {
   if (fetchedAt === undefined) return "FORECAST";
-  const hours = Math.max(0, Math.floor((nowMs - Date.parse(fetchedAt)) / 3_600_000));
-  if (hours > FORECAST_OLD_AFTER_HOURS) return `OFFLINE · last forecast ${hours} h old`;
+  const ageMs = Math.max(0, nowMs - Date.parse(fetchedAt));
+  const hours = Math.floor(ageMs / 3_600_000);
+  if (ageMs > FORECAST_OLD_AFTER_HOURS * 3_600_000) return `OFFLINE · last forecast ${hours} h old`;
   return hours === 0 ? "FORECAST · updated just now" : `FORECAST · updated ${hours} h ago`;
 }
 
@@ -87,8 +88,7 @@ export function WeatherLegend({
               <input
                 type="range"
                 min={0}
-                max={FORECAST_HOURS_SHOWN}
-                step={1}
+                max={FORECAST_SLIDER_MAX_HOURS}
                 value={forecastHours}
                 onChange={(event) => onForecastHours(Number(event.target.value))}
               />

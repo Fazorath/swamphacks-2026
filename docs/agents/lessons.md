@@ -537,6 +537,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
 - **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
 
+## Live forecast in the layers (ticket 0059)
+
+- **"Replay running" is `useEventClock().clock !== null`**: Reset leaves the clock paused at 08:30, so the layers keep the recorded weather until the Hub stops the clock. With no clock they read `/api/weather/forecast`; the weather fetch waits for the first `/api/replay` answer (`heard`) so it does not ask for the wrong file first.
+- **The forecast tag compares exact age, not floored hours**: OFFLINE starts just after 3 h. The slider is now + 0 to 168 h (the Hub fetches 7 days); `now` ticks once a minute, so the picture repaints once a minute with no Replay.
+- Not seen in a browser; tested against the fake map only.
+
 ## Peer Mesh in Docker grilling (2026-10-18)
 
 - **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
