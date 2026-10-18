@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import type { Side } from "./labelPlacement";
 import { MapMarker } from "./MapMarker";
 import { markerState } from "./markerState";
+import { FleetPopover } from "./FleetPopover";
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
 
@@ -15,6 +16,8 @@ type Props = {
   map: MapLibreMap;
   node: NodeOnMap;
   selected: boolean;
+  // A fleet Node's popover beside its dot (D-38); its click toggles it instead of selecting.
+  popoverOpen?: boolean;
   // How many times this Node's Flood Risk has risen; a new count plays the ring once.
   rises: number;
   onSelect: (id: string) => void;
@@ -25,7 +28,16 @@ type Props = {
 
 // One Node on the map. It updates in place on every poll: React changes the class and the text,
 // and MapMarker keeps the same element on the map until the Node's position changes.
-export function NodeMarker({ map, node, selected, rises, onSelect, side, labelHidden }: Props) {
+export function NodeMarker({
+  map,
+  node,
+  selected,
+  popoverOpen = false,
+  rises,
+  onSelect,
+  side,
+  labelHidden,
+}: Props) {
   const { appearance, glowPx, contactArc } = markerState(node);
   const real = !node.simulated;
   const classes = [
@@ -44,7 +56,7 @@ export function NodeMarker({ map, node, selected, rises, onSelect, side, labelHi
       lat={node.position[0]}
       lon={node.position[1]}
       className={classes}
-      onClick={node.fleet ? undefined : () => onSelect(node.id)}
+      onClick={() => onSelect(node.id)}
     >
       {rises > 0 && <span key={rises} className="rise-ring" />}
       <span className="node-dot" style={{ "--glow": `${glowPx}px` } as CSSProperties}>
@@ -71,6 +83,7 @@ export function NodeMarker({ map, node, selected, rises, onSelect, side, labelHi
         {contactArc !== null && <span className="tag contact-lost">CONTACT LOST</span>}
         {real && <span className="tag real">REAL</span>}
       </span>
+      {popoverOpen && <FleetPopover node={node} onClose={() => onSelect(node.id)} />}
     </MapMarker>
   );
 }

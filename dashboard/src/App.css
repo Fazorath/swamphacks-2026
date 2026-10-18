@@ -1211,3 +1211,87 @@ section p.flood-prone-caption {
 .shelter-pin.closed svg {
   fill: none;
 }
+
+.tag.live-sensors {
+  color: var(--accent);
+}
+
+.river-ladder {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.rung,
+.wave-front {
+  position: relative;
+  padding-left: 1.6rem;
+}
+
+/* The river: one line down the left edge of every rung and wave marker. */
+.rung::before,
+.wave-front::before {
+  content: "";
+  position: absolute;
+  left: 0.45rem;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--map-river);
+}
+
+.rung-km {
+  display: block;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.wave-front {
+  padding-bottom: 0.5rem;
+  color: var(--risk-high);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.wave-front::after {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 0.25rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--risk-high);
+}
+
+.hero-level {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.fleet-popover {
+  position: absolute;
+  z-index: 3;
+  top: -0.5rem;
+  left: 1.25rem;
+  min-width: 11rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.fleet-popover h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.fleet-popover ul {
+  margin: 0 0 0.4rem;
+  padding-left: 1rem;
+  font-size: 0.8rem;
+}

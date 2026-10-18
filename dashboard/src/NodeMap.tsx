@@ -153,6 +153,9 @@ type Props = {
   stormSignalOn: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  // The fleet Node whose popover is open (D-38); opening it never touches the Readings Panel.
+  fleetOpenId: string | null;
+  onToggleFleet: (id: string) => void;
   home: Home | null;
   // From the Cache Pack; empty until a Node holds one.
   shelters: Shelter[];
@@ -187,6 +190,8 @@ export function NodeMap({
   stormSignalOn,
   selectedId,
   onSelect,
+  fleetOpenId,
+  onToggleFleet,
   home,
   shelters,
   openShelterIds,
@@ -396,8 +401,9 @@ export function NodeMap({
             map={map}
             node={node}
             selected={false}
+            popoverOpen={node.id === fleetOpenId}
             rises={rises[node.id] ?? 0}
-            onSelect={onSelect}
+            onSelect={onToggleFleet}
             side={sideOf(`node:${node.id}`)}
             labelHidden={placement.get(`node:${node.id}`) === null}
           />
