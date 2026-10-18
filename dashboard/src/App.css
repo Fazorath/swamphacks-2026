@@ -442,8 +442,18 @@ section .empty-panel p {
   text-align: left;
 }
 
+.weather-choice {
+  transition:
+    color var(--dur-press) var(--ease-out),
+    background var(--dur-press) var(--ease-out);
+}
+
 .weather-choice:hover {
   background: var(--surface-raised);
+}
+
+.weather-choice:active {
+  background: var(--border);
 }
 
 .weather-choice.on {

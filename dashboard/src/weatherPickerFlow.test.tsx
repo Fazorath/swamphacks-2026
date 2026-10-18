@@ -79,7 +79,7 @@ describe("the Weather picker", () => {
     expect(legend()).toBeNull();
   });
 
-  it("closes on Escape without changing the layer", () => {
+  it("closes on Escape without changing the layer, and gives focus back", () => {
     render(<App />);
     pick("Rain");
     fireEvent.click(weatherButton());
@@ -88,6 +88,21 @@ describe("the Weather picker", () => {
 
     expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(legend()).toHaveTextContent("Rain");
+    expect(weatherButton()).toHaveFocus();
+  });
+
+  it("opens with focus on the chosen layer and steps through the choices with the arrow keys", () => {
+    render(<App />);
+    pick("Cloud cover");
+    fireEvent.click(weatherButton());
+    expect(screen.getByRole("radio", { name: "Cloud cover" })).toHaveFocus();
+
+    fireEvent.keyDown(screen.getByRole("radiogroup"), { key: "ArrowDown" });
+    expect(screen.getByRole("radio", { name: "Rain" })).toHaveFocus();
+
+    fireEvent.keyDown(screen.getByRole("radiogroup"), { key: "ArrowUp" });
+    fireEvent.keyDown(screen.getByRole("radiogroup"), { key: "ArrowUp" });
+    expect(screen.getByRole("radio", { name: "Temperature" })).toHaveFocus();
   });
 });
 

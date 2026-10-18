@@ -11,7 +11,7 @@ export const WEATHER_CHOICES: { layer: WeatherLayer; label: string }[] = [
 
 const STORAGE_KEY = "storm-shield.weather-layer";
 
-export function readStoredWeatherLayer(): WeatherLayer {
+function readStored(): WeatherLayer {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     // A choice that no longer exists (the dropped Wind) is Off, like unreadable storage.
@@ -32,7 +32,7 @@ function writeStored(layer: WeatherLayer) {
 
 // Exactly one Weather layer is on, and the choice is remembered on this device.
 export function useWeatherLayer() {
-  const [layer, setLayer] = useState<WeatherLayer>(readStoredWeatherLayer);
+  const [layer, setLayer] = useState<WeatherLayer>(readStored);
   const choose = (next: WeatherLayer) => {
     setLayer(next);
     writeStored(next);
