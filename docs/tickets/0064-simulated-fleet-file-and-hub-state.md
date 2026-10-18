@@ -2,7 +2,9 @@
 
 **What to build:** The Cache Pack carries a fleet file of about 40 sites along Nepal's rivers (about 30 towns and 10 headwater sites), each with a track of Simulated Readings built from real Open-Meteo weather at its own position for the Replay's window. Every Node that holds the pack serves them in the state snapshot, in a `fleet` array apart from `nodes`, following its own Event clock. They never touch the Mesh, Flood Risk, a Community Warning or the Node registry. Decided in the grill on 2026-10-18; formats in `docs/specs/wire-formats.md` → "Simulated Fleet".
 
-**Blocked by:** None (positions are typed, not snapped to 0063's river line; 0035 checks them on the map)
+**Blocked by:** None
+
+Positions are typed, not snapped to the river line of the ticket before it in the spec; 0035 checks them on the map.
 
 **Status:** ready-for-agent
 
