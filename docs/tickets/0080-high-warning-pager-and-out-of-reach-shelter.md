@@ -12,7 +12,7 @@
 
 **Spec:** `docs/specs/flash-flood-replay.md`
 
-- [x] `usePager(nodes, home)` returns an alert when a Node within `PAGER_RADIUS_KM` (60) of the saved home newly reaches High, and plays the pager tone: two harsh square-wave tones alternating in three bursts, about 4 s, never looping
+- [x] `usePager(nodes, home)` returns an alert when a Node within `PAGER_RADIUS_KM` (60) of the saved home newly reaches High, and plays the pager tone: two harsh square-wave tones alternating in three bursts, about 3 s, never looping
 - [x] A Node already High when the page first lists Nodes does not page; a Node that stays High pages once; after Dismiss the same Node reaching High again pages again; Elevated Nodes, High Nodes beyond the radius, and a page with no saved household stay silent
 - [x] A red banner names the Node and its distance ("N km from your home") until dismissed; the sound waits for the page's first tap, as browsers require, and logs a warning when it cannot play
 - [x] With a Wave ETA and no Shelter reachable in time, the plan also returns `outOfReachShelter`: the closest fitting Shelter outside the Flood-Prone Area. It is never the chosen Shelter, has no road route, and its name always shows on the map

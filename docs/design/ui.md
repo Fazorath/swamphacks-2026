@@ -195,6 +195,7 @@ Any new Official Alert or Community Warning takes over. It is the only thing all
 - Acknowledgement is per device and stored in that browser, keyed by the warning's id. A new warning opens the takeover again; the same one does not.
 - After acknowledging, a banner stays under the top bar and the card stays in the Alerts Panel. A warning never silently disappears.
 - One short two-note chime when the takeover opens, on any device whose page has been tapped once (browsers block sound before that). It never loops. The border pulses slowly; never a strobe. With reduced motion on, no pulse.
+- The one exception to the calm chime is the pager (0080): when a Node within 60 km of the saved household newly reaches a High warning, a harsh alternating two-tone beep plays for about 3 s with a red banner at the top. It plays once per Node reaching High, never loops, and has the same tap-first rule.
 
 ## Loading, empty and error states
 
