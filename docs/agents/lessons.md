@@ -268,7 +268,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **A press is a wire from the Pi's 3.3 V pin to an input pin**, not a button. The Pi's internal pull-down (`pull_up=False`) keeps an empty pin low, and a press jumps the Scenario to that pin's step (`Scenario.go_to`); only reset goes back. Pin table: `pi/README.md`.
 - **`gpiozero`'s `MockFactory` stores `bounce_time` but does not simulate bounce**, so the 50 ms debounce is untested; it is the library's, set on each `Button`. Drive a mock pin with `factory.pin(17).drive_high()`; set `Device.pin_factory = MockFactory()` in a fixture and restore `None` after.
-- **`lgpio`, the backend `gpiozero` needs on a Pi, is source-only on PyPI and needs `swig`**, so `uv lock` fails if it is a dependency. The `pi` group holds only `gpiozero`; the README builds `lgpio` on the Pi. Not proven on a Pi yet.
+- **`lgpio`, the backend `gpiozero` needs on a Pi, is source-only on PyPI and needs `swig`**, so `uv lock` fails if it is a dependency. The `pi` group holds only `gpiozero`; the README builds `lgpio` on the Pi. On the team's Pi (Python 3.13, so Debian 13 Trixie rather than Bookworm) `uv pip install lgpio` first failed with `cannot find -llgpio` until `sudo apt install liblgpio-dev`; `swig` and `python3-dev` alone are not enough.
 - **`claim.sh` compares the ticket's Owner with `git config user.name`**, so an Owner written as a handle (`amitathik7`) against the name "Amit Athi Kesavan" makes it refuse. The ticket was already claimed, so 0016 skipped the script.
 - `MeshedNodes` Nodes start with `gpio="off"` so a test run on a real Pi never reads its pins. `pi/setup-hotspot.sh up` was only exercised for its missing-setting and bad-argument paths here; the `nmcli` part never ran.
 

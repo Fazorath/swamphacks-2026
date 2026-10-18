@@ -29,7 +29,7 @@ A press jumps straight to its step, so pressing out of order or twice is safe. I
 ## Running the Node with the Breadboard
 
 ```
-sudo apt install -y swig python3-dev   # lgpio, the pin backend gpiozero uses, builds from source
+sudo apt install -y swig python3-dev build-essential liblgpio-dev   # lgpio, the pin backend gpiozero uses, builds from source and links liblgpio
 cd node && uv sync --group pi && uv pip install lgpio
 NODE_GPIO=on uv run storm-shield-node
 ```
