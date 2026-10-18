@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { App } from "./App";
 import { lastMap, sourceData } from "./fakeMaplibre";
+import { fakeCameraTile } from "./fakeCameraTile";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import { defaultPanels, withPanelToggled } from "./openPanels";
 
@@ -24,9 +25,9 @@ const SHELTERS = [
 ];
 
 const CAMERAS = [
-  { id: 1, label: "I-75 at 39th", state: "live", taken_at: "t1", age_s: 3 },
-  { id: 2, label: "I-75 at 8th", state: "live", taken_at: "t2", age_s: 3 },
-  { id: 3, label: "US-441", state: "offline", taken_at: null, age_s: null },
+  fakeCameraTile(),
+  fakeCameraTile({ id: "second", label: "Second" }),
+  fakeCameraTile({ id: "third", label: "Third", state: "offline" }),
 ];
 
 function stubNode(state = fakeNodeState({ nodes: [fakeNodeSnapshot("porch")] })) {
@@ -56,6 +57,7 @@ function stubNode(state = fakeNodeState({ nodes: [fakeNodeSnapshot("porch")] }))
     },
     "/api/shelters": { open: ["gym", "hall"] },
     "/api/cameras": CAMERAS,
+    "/api/replay": { state: "playing", event_t: 1787712300, rate: 30 },
   };
   vi.stubGlobal(
     "fetch",
@@ -76,7 +78,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("the rail's counts", () => {
-  it("count Registered Nodes, open Shelters and live cameras", async () => {
+  it("count Registered Nodes, open Shelters and cameras playing", async () => {
     stubNode(
       fakeNodeState({
         nodes: [
