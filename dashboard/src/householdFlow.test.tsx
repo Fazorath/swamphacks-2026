@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { App } from "./App";
 import { fakeNodeState } from "./fakeNodeState";
+import { tapMap } from "./fakeMaplibre";
 import { STATE_POLL_MS } from "./useNodeState";
 
 const KEY = "storm-shield.household-profile";
@@ -39,7 +40,7 @@ afterEach(() => {
 
 function tapHomeOnMap() {
   fireEvent.click(screen.getByRole("button", { name: "Set home on map" }));
-  fireEvent.click(document.querySelector(".node-map")!, { clientX: 10, clientY: 10 });
+  tapMap(29.65, -82.32);
   fireEvent.click(screen.getByRole("button", { name: "Done" }));
 }
 
@@ -159,7 +160,7 @@ test("no request carries the profile, across several poll cycles and an unreacha
   const routeFileRequests = requests.filter((path) => path.includes("/routes/"));
   expect(routeFileRequests.length).toBeGreaterThan(0);
   for (const path of routeFileRequests) {
-    expect(path).toMatch(/^\/api\/cache-pack\/files\/routes\/\d+_\d+\.json$/);
+    expect(path).toMatch(/^\/api\/cache-pack\/files\/routes\/-?\d+_-?\d+\.json$/);
   }
   expect(requests.filter((path) => path === "/api/state").length).toBeGreaterThanOrEqual(5);
   const sent = JSON.stringify(requests.filter((path) => !path.includes("/routes/")));

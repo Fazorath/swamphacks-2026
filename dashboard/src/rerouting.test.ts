@@ -36,6 +36,7 @@ const SHELTER_A: Shelter = {
   pos: [29.66, -82.32],
   special_needs: false,
   pet_friendly: false,
+  height_above_river_m: 80,
 };
 const SHELTER_B: Shelter = {
   ...SHELTER_A,
@@ -88,7 +89,9 @@ function planFor({
     shelters: [SHELTER_A, SHELTER_B],
     floodProne: { features: floodProne },
     routeGrid: null,
-    tileMaxZoom: null,
+    built: null,
+    nepal: null,
+    bbox: null,
   };
   return evacuationPlan({
     profile: PROFILE,
@@ -98,6 +101,7 @@ function planFor({
     routes: { "shelter-a": PRECOMPUTED, "shelter-b": [NODES[0], NODES[4]] },
     rerouting: { graph, blocked },
     officialAlerts: [],
+    wave: null,
   });
 }
 
@@ -150,13 +154,16 @@ test("a pack with no Road graph keeps the precomputed Route", () => {
       shelters: [SHELTER_A],
       floodProne: { features: [] },
       routeGrid: null,
-      tileMaxZoom: null,
+      built: null,
+      nepal: null,
+      bbox: null,
     },
     openShelterIds: ["shelter-a"],
     floodRisk: null,
     routes: { "shelter-a": PRECOMPUTED },
     rerouting: null,
     officialAlerts: [],
+    wave: null,
   });
   expect(result.route).toBe(PRECOMPUTED);
 });
@@ -168,13 +175,16 @@ test("a home far from any road keeps the precomputed Route", () => {
       shelters: [SHELTER_A],
       floodProne: { features: [] },
       routeGrid: null,
-      tileMaxZoom: null,
+      built: null,
+      nepal: null,
+      bbox: null,
     },
     openShelterIds: ["shelter-a"],
     floodRisk: null,
     routes: { "shelter-a": PRECOMPUTED },
     rerouting: { graph: GRAPH, blocked: [DIRECT] },
     officialAlerts: [],
+    wave: null,
   });
   expect(result.route).toBe(PRECOMPUTED);
 });

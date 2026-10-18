@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
 
@@ -131,6 +132,7 @@ test("the riverbank alert is marked for a household in the Flood-Prone Area and 
 test("with no Official Alert the panel says why it is empty", async () => {
   stubNode("online", []);
   render(<App />);
+  expandPanel("Alerts");
 
   expect(
     await screen.findByText("No Official Alerts or Community Warnings right now."),

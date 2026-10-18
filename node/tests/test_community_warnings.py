@@ -4,7 +4,12 @@ from typing import Any
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
-from storm_shield.community_warning import CommunityWarning
+from storm_shield.community_warning import (
+    CommunityWarning,
+    HeardCommunityWarnings,
+    MeasuredSpeed,
+)
+from storm_shield.replay import ReplayClockMessage
 
 S0_RIVER_KM = -12.2
 
@@ -190,3 +195,110 @@ def test_a_replay_run_again_shows_one_card_per_node(meshed_nodes: MeshedNodes) -
 
     assert len(_warning_log(meshed_nodes)) == 2
     assert len(_warnings_shown_on(meshed_nodes["porch"])) == 1
+
+
+def _surge_after(meshed_nodes: MeshedNodes, node: str, river_km: float, minutes: float) -> None:
+    meshed_nodes.advance(minutes * 60)
+    _surge(meshed_nodes, node, river_km=river_km)
+
+
+def test_a_second_nodes_surge_updates_the_warning_with_the_measured_speed(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start("porch")
+    _register(meshed_nodes, "s0")
+    _register(meshed_nodes, "s1")
+    _surge(meshed_nodes, "s0", river_km=0.0)
+    first = _warning_log(meshed_nodes)[0]
+
+    # _surge adds 8 s between its readings, so 12 min minus 8 s makes the Surges 12 min apart:
+    # 15.6 km in 12 min is 78 km/h.
+    _surge_after(meshed_nodes, "s1", river_km=15.6, minutes=12 - 8 / 60)
+
+    for shown in (_warning_log(meshed_nodes), _warnings_shown_on(meshed_nodes["porch"])):
+        assert len(shown) == 1
+        assert shown[0]["id"] == first["id"]
+        assert shown[0]["origin"] == "s0"
+        measured = shown[0]["measured"]
+        assert (measured["node"], measured["km"]) == ("s1", 15.6)
+        assert measured["speed_kmh"] == 78.0
+        assert measured["surge_t"] - shown[0]["surge_t"] == 12 * 60
+
+
+def test_a_surge_upstream_of_the_origin_is_not_a_measurement(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    _register(meshed_nodes, "s0")
+    _register(meshed_nodes, "s1")
+    _surge(meshed_nodes, "s1", river_km=15.6)
+
+    _surge_after(meshed_nodes, "s0", river_km=0.0, minutes=12)
+
+    log = _warning_log(meshed_nodes)
+    assert len(log) == 2
+    assert all(warning["measured"] is None for warning in log)
+
+
+def test_an_impossible_speed_is_not_a_measurement(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    _register(meshed_nodes, "s0")
+    _register(meshed_nodes, "s1")
+    _surge(meshed_nodes, "s0", river_km=0.0)
+
+    # 15.6 km in about a minute is over 800 km/h.
+    _surge_after(meshed_nodes, "s1", river_km=15.6, minutes=1)
+
+    log = _warning_log(meshed_nodes)
+    assert len(log) == 2
+    assert all(warning["measured"] is None for warning in log)
+
+
+def test_a_third_node_does_not_refine_the_measurement(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    for node in ("s0", "s1", "s2"):
+        _register(meshed_nodes, node)
+    _surge(meshed_nodes, "s0", river_km=0.0)
+    _surge_after(meshed_nodes, "s1", river_km=15.6, minutes=12)
+    measured = _warning_log(meshed_nodes)[0]["measured"]
+
+    _surge_after(meshed_nodes, "s2", river_km=40.0, minutes=20)
+
+    log = _warning_log(meshed_nodes)
+    assert [warning["origin"] for warning in log] == ["s2", "s0"]
+    assert log[1]["measured"] == measured
+
+
+def test_the_measurement_shows_only_once_the_event_clock_reaches_the_second_surge(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start("porch")
+    _register(meshed_nodes, "s0")
+    _register(meshed_nodes, "s1")
+    meshed_nodes["hub"].post("/api/replay/start")
+    # 32 s of real time is 16 min of event time: 20 km at 75 km/h.
+    _surge(meshed_nodes, "s0", river_km=0.0)
+    _surge_after(meshed_nodes, "s1", river_km=20.0, minutes=24 / 60)
+    assert _warnings_shown_on(meshed_nodes["porch"])[0]["measured"]["speed_kmh"] == 75.0
+
+    # 08:37 is after the origin's Surge (about 08:34) and before the second's (about 08:50).
+    meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "collapse"})
+
+    shown = _warnings_shown_on(meshed_nodes["porch"])
+    assert len(shown) == 1
+    assert shown[0]["measured"] is None
+
+
+def test_an_older_copy_of_a_warning_does_not_undo_its_measurement() -> None:
+    heard = HeardCommunityWarnings()
+    plain = CommunityWarning(
+        id=7, t=1, nodes=["s0"], reasons=["water_surge"], origin="s0", origin_km=0.0, surge_t=1
+    )
+    measured = plain.model_copy(
+        update={"measured": MeasuredSpeed(node="s1", km=15.6, surge_t=721, speed_kmh=78.0)}
+    )
+
+    heard.hear(measured)
+    heard.hear(plain)
+
+    assert heard.shown_at(ReplayClockMessage(state="stopped", event_t=0, rate=30)) == [measured]

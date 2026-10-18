@@ -25,3 +25,5 @@ Skills in `.claude/skills/` are adapted from [mattpocock/skills](https://github.
 ## Run the demo
 
 `scripts/run-demo.sh` starts the Cache Pack server, the Hub and Sensors S0 to S3 on this laptop and prints the dashboard addresses for the projector and the phones; Ctrl-C stops everything. Setup notes (hotspot, projector, the two phones' Household Profiles) are in `scripts/demo-setup.md`.
+
+A volunteer's laptop joins the same Mesh with `scripts/join-demo.sh <hub address> <town>`, or the Docker image on Windows; the runbook is `scripts/join-demo.md`.

@@ -1,10 +1,4 @@
-export const WEATHER_VARIABLES = [
-  "temperature_2m",
-  "cloud_cover",
-  "precipitation",
-  "wind_speed_10m",
-  "wind_direction_10m",
-] as const;
+export const WEATHER_VARIABLES = ["temperature_2m", "cloud_cover", "precipitation"] as const;
 
 export type WeatherVariable = (typeof WEATHER_VARIABLES)[number];
 
@@ -18,35 +12,8 @@ export interface WeatherGrid {
   variables: Record<WeatherVariable, number[][]>;
 }
 
-export interface WindVector {
-  /** Metres per second towards the east. */
-  u: number;
-  /** Metres per second towards the north. */
-  v: number;
-}
-
-// Upper edge in m/s of each Beaufort force 0 to 11; anything faster is force 12.
-const BEAUFORT_BANDS: [number, string][] = [
-  [0.5, "Calm"],
-  [1.6, "Light air"],
-  [3.4, "Light breeze"],
-  [5.5, "Gentle breeze"],
-  [8, "Moderate breeze"],
-  [10.8, "Fresh breeze"],
-  [13.9, "Strong breeze"],
-  [17.2, "Near gale"],
-  [20.8, "Gale"],
-  [24.5, "Strong gale"],
-  [28.5, "Storm"],
-  [32.7, "Violent storm"],
-];
-
-export function speedBand(ms: number): string {
-  return BEAUFORT_BANDS.find(([upperEdge]) => ms < upperEdge)?.[1] ?? "Hurricane force";
-}
-
-// Checking a grid and parsing its times is the same work on every call, and a wind layer
-// asks thousands of times a frame, so each grid is checked once.
+// Checking a grid and parsing its times is the same work on every call, and a layer asks for
+// every cell of the map, so each grid is checked once.
 const hourTimes = new WeakMap<WeatherGrid, number[]>();
 
 function checkedHourTimes(weather: WeatherGrid): number[] {
@@ -83,9 +50,10 @@ function clampedPosition(value: number, count: number): [number, number, number]
   return [low, Math.min(low + 1, count - 1), position - low];
 }
 
-function interpolate(
+/** The value at a place and time (epoch ms); outside the grid or its hours, the nearest edge value. */
+export function valueAt(
   weather: WeatherGrid,
-  valueIn: (hour: number, index: number) => number,
+  variable: WeatherVariable,
   lat: number,
   lon: number,
   timeMs: number,
@@ -95,7 +63,8 @@ function interpolate(
   const [row0, row1, rowFraction] = clampedPosition((lat - south) / step_deg, rows);
   const [col0, col1, colFraction] = clampedPosition((lon - west) / step_deg, cols);
   const inHour = (hour: number): number => {
-    const at = (row: number, col: number): number => valueIn(hour, row * cols + col);
+    const at = (row: number, col: number): number =>
+      weather.variables[variable][hour][row * cols + col];
     const southEdge = at(row0, col0) * (1 - colFraction) + at(row0, col1) * colFraction;
     const northEdge = at(row1, col0) * (1 - colFraction) + at(row1, col1) * colFraction;
     return southEdge * (1 - rowFraction) + northEdge * rowFraction;
@@ -107,41 +76,4 @@ function interpolate(
   const before = after - 1;
   const fraction = (timeMs - times[before]) / (times[after] - times[before]);
   return inHour(before) * (1 - fraction) + inHour(after) * fraction;
-}
-
-/** The value at a place and time (epoch ms); outside the grid or its hours, the nearest edge value. */
-export function valueAt(
-  weather: WeatherGrid,
-  variable: WeatherVariable,
-  lat: number,
-  lon: number,
-  timeMs: number,
-): number {
-  return interpolate(
-    weather,
-    (hour, index) => weather.variables[variable][hour][index],
-    lat,
-    lon,
-    timeMs,
-  );
-}
-
-/** Wind as u and v. Direction is where the wind comes from, so a wind from 0° blows south. */
-export function windAt(weather: WeatherGrid, lat: number, lon: number, timeMs: number): WindVector {
-  const component = (toward: (speed: number, radians: number) => number) =>
-    interpolate(
-      weather,
-      (hour, index) =>
-        toward(
-          weather.variables.wind_speed_10m[hour][index],
-          (weather.variables.wind_direction_10m[hour][index] * Math.PI) / 180,
-        ),
-      lat,
-      lon,
-      timeMs,
-    );
-  return {
-    u: component((speed, radians) => -speed * Math.sin(radians)),
-    v: component((speed, radians) => -speed * Math.cos(radians)),
-  };
 }

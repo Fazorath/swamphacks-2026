@@ -32,3 +32,4 @@ node/data/
 
 # local demo state (data folders, logs, downloaded pack)
 /.demo/
+/.join-demo/

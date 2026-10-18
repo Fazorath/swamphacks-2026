@@ -12,14 +12,33 @@ export type Shelter = {
   pos: [number, number];
   special_needs: boolean;
   pet_friendly: boolean;
+  height_above_river_m: number;
+};
+
+// The vector map of Nepal a v4 or later pack carries (`scripts/pack_nepal.py`).
+export type NepalMap = {
+  // [south, west, north, east]
+  bbox: [number, number, number, number];
+  elevation: {
+    approximate: boolean;
+    // [lowest, highest] zoom of the whole-country tiles and of the valley and Kathmandu tiles.
+    nationalZooms: [number, number];
+    detailZooms: [number, number];
+  };
+  boundariesNote: string;
+  sources: { layer: string; name: string; licence: string; url: string; checked: string }[];
 };
 
 export type CachePackContents = {
   shelters: Shelter[];
   floodProne: FloodProneAreas;
   routeGrid: RouteGrid | null;
-  // The deepest zoom the pack holds tiles for; null when it holds none.
-  tileMaxZoom: number | null;
+  // [south, west, north, east], the area the pack covers; null when its manifest has none.
+  bbox: [number, number, number, number] | null;
+  // ISO time the pack was built; null when its manifest has none.
+  built: string | null;
+  // Null for a pack built before the Nepal map (the map then draws only the valley's own layers).
+  nepal: NepalMap | null;
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.
@@ -37,6 +56,17 @@ export type EvacuationPlan = {
 };
 
 export const OFFICIAL_LINE = "Evacuation decisions come from official sources.";
+const HIGHER_GROUND_LINE =
+  "No Shelter you can reach in time. Get to higher ground, away from the river, now.";
+
+// When the wave reaches home, on the Event clock (Unix seconds), and what the clock says now.
+export type WaveWindow = { arrivalAt: number; eventT: number };
+
+// A Shelter must be reached this long before the wave, to leave room for a slower walk.
+const SAFETY_MARGIN_SECONDS = 5 * 60;
+// Roads and paths wind, so the walk is longer than the straight line.
+const DETOUR_FACTOR = 1.4;
+const WALKING_SPEED_KMH = 4;
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -58,9 +88,26 @@ function routeLengthKm(route: LatLon[]): number {
   return total;
 }
 
+const secondsUntil = ({ arrivalAt, eventT }: WaveWindow) => arrivalAt - eventT;
+
+function walkingSeconds(from: Home, to: LatLon): number {
+  return ((distanceKm(from, to) * DETOUR_FACTOR) / WALKING_SPEED_KMH) * 3600;
+}
+
+const minutesRoundedUp = (seconds: number) => Math.ceil(seconds / 60);
+
+function waveWords(secondsLeft: number): string {
+  return secondsLeft > 0 ? `wave in ${minutesRoundedUp(secondsLeft)} min` : "wave expected now";
+}
+
+function walkAndWave(home: Home, shelter: Shelter, secondsLeft: number): string {
+  const walk = minutesRoundedUp(walkingSeconds(home, shelter.pos));
+  return `${walk} min walk, ${waveWords(secondsLeft)}.`;
+}
+
 type Candidate = { shelter: Shelter; route: LatLon[] | null; km: number };
 
-function describe({ shelter, route, km }: Candidate): string {
+function describe({ shelter, route, km }: Candidate, showHeight: boolean): string {
   const features = [
     shelter.special_needs && "special-needs",
     shelter.pet_friendly && "pet-friendly",
@@ -70,7 +117,8 @@ function describe({ shelter, route, km }: Candidate): string {
   const distance = route
     ? `${km.toFixed(1)} km by road`
     : `${km.toFixed(1)} km away in a straight line, no road route available`;
-  return `Nearest open Shelter: ${shelter.name}, ${distance}${features ? ` (${features})` : ""}.`;
+  const height = showHeight ? `, ${shelter.height_above_river_m} m above the river` : "";
+  return `Nearest open Shelter: ${shelter.name}, ${distance}${height}${features ? ` (${features})` : ""}.`;
 }
 
 // A Shelter with no Route from home's Grid point ranks after every one that has a Route.
@@ -85,6 +133,7 @@ function nearestFittingShelter(
   openShelterIds: string[],
   routes: Routes | null,
   rerouting: Rerouting | null,
+  wave: WaveWindow | null,
 ): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } {
   const open = pack.shelters.filter((shelter) => openShelterIds.includes(shelter.id));
   if (open.length === 0) {
@@ -107,7 +156,28 @@ function nearestFittingShelter(
       lines: ["No open Shelter matches this household. Follow official sources."],
     };
   }
-  const candidates = fitting
+  const secondsLeft = wave ? secondsUntil(wave) : 0;
+  const reachable = wave
+    ? fitting.filter(
+        (shelter) =>
+          !inFloodProneArea({ lat: shelter.pos[0], lon: shelter.pos[1] }, pack.floodProne) &&
+          walkingSeconds(profile.home, shelter.pos) < secondsLeft - SAFETY_MARGIN_SECONDS,
+      )
+    : fitting;
+  if (wave && reachable.length === 0) {
+    const [closest] = [...fitting].sort(
+      (a, b) => distanceKm(profile.home, a.pos) - distanceKm(profile.home, b.pos),
+    );
+    return {
+      shelter: null,
+      route: null,
+      lines: [
+        `Nearest Shelter ${closest.name}: ${walkAndWave(profile.home, closest, secondsLeft)}`,
+        HIGHER_GROUND_LINE,
+      ],
+    };
+  }
+  const candidates = reachable
     .map((shelter): Candidate => {
       const route = routes?.[shelter.id] ?? null;
       return {
@@ -118,9 +188,10 @@ function nearestFittingShelter(
     })
     .sort(byRoadThenStraightLine);
   const [nearest] = candidates;
-  const rerouted = rerouting && reroutedPlan(profile, pack, fitting, nearest, rerouting);
+  const rerouted = rerouting && reroutedPlan(profile, pack, reachable, nearest, rerouting, wave);
   if (rerouted) return rerouted;
-  const lines = [describe(nearest)];
+  const lines = [describe(nearest, wave !== null)];
+  if (wave) lines.push(walkAndWave(profile.home, nearest.shelter, secondsLeft));
   if (nearest.route) {
     lines.push("The route is the shortest by road and ignores flooding and road closures.");
   }
@@ -132,9 +203,10 @@ function nearestFittingShelter(
 function reroutedPlan(
   profile: HouseholdProfile,
   pack: CachePackContents,
-  fitting: Shelter[],
+  reachable: Shelter[],
   nearest: Candidate,
   { graph, blocked }: Rerouting,
+  wave: WaveWindow | null,
 ): { shelter: Shelter | null; route: LatLon[] | null; lines: string[] } | null {
   const affected = nearest.route
     ? routeIsAffected(nearest.route, graph, blocked, pack.floodProne)
@@ -143,7 +215,7 @@ function reroutedPlan(
   const reached = rerouteHome({
     graph,
     home: profile.home,
-    shelters: fitting,
+    shelters: reachable,
     blocked,
     floodProne: pack.floodProne,
   });
@@ -154,13 +226,17 @@ function reroutedPlan(
       shelter: nearest.shelter,
       route: null,
       lines: [
-        describe({ ...nearest, route: null, km: distanceKm(profile.home, nearest.shelter.pos) }),
+        describe(
+          { ...nearest, route: null, km: distanceKm(profile.home, nearest.shelter.pos) },
+          wave !== null,
+        ),
         "Roads you marked as blocked cut off every Shelter. Follow official sources.",
       ],
     };
   }
   const [best] = reached;
-  const lines = [describe(best)];
+  const lines = [describe(best, wave !== null)];
+  if (wave) lines.push(walkAndWave(profile.home, best.shelter, secondsUntil(wave)));
   if (blocked.length > 0) {
     lines.push(`Rerouted around ${blocked.length} blocked road${blocked.length === 1 ? "" : "s"}.`);
   }
@@ -180,6 +256,7 @@ export function evacuationPlan({
   routes,
   rerouting,
   officialAlerts,
+  wave,
 }: {
   profile: HouseholdProfile | null;
   pack: CachePackContents | null;
@@ -188,6 +265,8 @@ export function evacuationPlan({
   routes: Routes | null;
   rerouting: Rerouting | null;
   officialAlerts: OfficialAlert[];
+  // Null with no Community Warning, or none with a Wave ETA for this home.
+  wave: WaveWindow | null;
 }): EvacuationPlan {
   const risk = floodRisk?.level
     ? { level: floodRisk.level, reasons: cardReasons(floodRisk).map(reasonSentence) }
@@ -228,6 +307,7 @@ export function evacuationPlan({
     openShelterIds,
     routes,
     rerouting,
+    wave,
   );
   return {
     ...plan,

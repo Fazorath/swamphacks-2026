@@ -74,6 +74,16 @@ function travelSeconds(river: RiverLine, fromKm: number, toKm: number): number {
   return seconds;
 }
 
+// Below the second Node the measured speed replaces the reconstructed reaches, counted from that
+// Node's own Surge; above it the reconstructed speeds from the origin still apply.
+function arrivalAt(river: RiverLine, warning: CommunityWarning, homeKm: number): number {
+  const { measured } = warning;
+  if (measured && homeKm > measured.km) {
+    return measured.surge_t + ((homeKm - measured.km) / measured.speed_kmh) * SECONDS_PER_HOUR;
+  }
+  return warning.surge_t + travelSeconds(river, warning.origin_km, homeKm);
+}
+
 export type WaveArrival =
   // Event time (Unix seconds) at which the wave reaches home.
   { kind: "expected"; at: number } | { kind: "not-near-river" };
@@ -90,7 +100,7 @@ export function waveArrival(
   if (homeKm === null) return { kind: "not-near-river" };
   const arrivals = warnings
     .filter((warning) => warning.origin_km < homeKm)
-    .map((warning) => warning.surge_t + travelSeconds(river, warning.origin_km, homeKm));
+    .map((warning) => arrivalAt(river, warning, homeKm));
   return arrivals.length === 0 ? null : { kind: "expected", at: Math.min(...arrivals) };
 }
 

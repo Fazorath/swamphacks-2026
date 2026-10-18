@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>God's Eye View · Wave ETA corner card</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0}
+.g-river-name { font: 600 11px var(--font-mono); letter-spacing: 0.16em; fill: var(--map-river); }
+.g-town { font: 600 10px var(--font-mono); letter-spacing: 0.1em; fill: var(--map-label); paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; stroke-linejoin: round; }
+.g-town.is-lit { fill: var(--wave); }
+.g-stamp { font: 600 10px var(--font-mono); fill: var(--wave); letter-spacing: 0.04em; paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; }
+.g-leader { stroke: var(--text-dim); stroke-width: 1; fill: none; }
+.g-fleet { fill: var(--risk-low); stroke: var(--map-land); stroke-width: 1; }
+.g-real { fill: none; stroke: var(--text-primary); stroke-width: 1.5; }
+.g-arc { fill: none; stroke: var(--contact-lost); stroke-width: 2; stroke-linecap: butt; transform-box: fill-box; transform-origin: center; transform: rotate(-90deg); }
+.g-struck { text-decoration: line-through; }
+.g-wave-head { fill: var(--wave); }
+.g-wave-glow { fill: var(--wave); opacity: 0.35; filter: blur(5px); }
+.g-wave-trail { fill: none; stroke: var(--wave); stroke-linecap: round; }
+.g-flow { fill: none; stroke: var(--wave); stroke-width: 1; stroke-dasharray: 2 14; opacity: 0.35; animation: g-flow 6s linear infinite; }
+@keyframes g-flow { to { stroke-dashoffset: -16; } }
+.g-pulse-once { fill: none; stroke: currentColor; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ss-marker-pulse 1.6s var(--ease-out) infinite; }
+.g-band { position: relative; z-index: 2; display: flex; align-items: center; gap: 24px; height: 120px; padding: 0 28px; background: color-mix(in srgb, var(--community-warning) 12%, var(--surface-panel)); border-bottom: 2px dashed var(--community-warning); animation: g-band-pulse 3s ease-in-out 2; }
+@keyframes g-band-pulse { 25%, 75% { box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--community-warning) 60%, transparent); } }
+.g-band strong { font-size: 24px; font-weight: 700; line-height: 1.25; }
+.g-band p { font-size: 14px; color: var(--text-secondary); }
+.g-eta { position: absolute; z-index: 1; width: 300px; min-height: 190px; box-sizing: border-box; padding: 14px 18px 16px; border: 2px dashed var(--community-warning); border-radius: 10px; background: var(--surface-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 2px; }
+.g-eta .g-eta-n { font: 600 120px/1 var(--font-mono); letter-spacing: -0.04em; color: var(--countdown-far); }
+.g-eta.is-soon .g-eta-n { color: var(--countdown-soon); }
+.g-eta.is-now .g-eta-n, .g-eta.is-now .g-eta-now { color: var(--countdown-now); }
+.g-eta .g-eta-now { font: 700 34px/1.1 var(--font-sans); color: var(--countdown-now); }
+.g-chip-warning { --chip: var(--community-warning); border-style: dashed; }
+.g-legend { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; font: 500 11px/1 var(--font-mono); color: var(--text-secondary); letter-spacing: 0.04em; }
+.g-legend > span { display: inline-flex; align-items: center; gap: 8px; height: 14px; }
+.ss-popover .ss-card-head { padding-right: 28px; }
+.g-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; position: relative; }
+.g-badge-sim { display: inline-flex; align-items: center; gap: 6px; color: var(--text-primary); }
+.g-rung { position: relative; padding-left: 26px; }
+.g-rung::before { content: ""; position: absolute; left: 7px; top: -12px; bottom: -12px; border-left: 2px solid var(--map-river); }
+.g-rung.is-first::before { top: 14px; }
+.g-rung.is-last::before { bottom: auto; height: 26px; }
+.g-rung::after { content: ""; position: absolute; left: 3px; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--rung, var(--risk-low)); box-shadow: 0 0 0 2px var(--surface-panel); }
+.g-rung .ss-card { padding: 8px 10px 10px 12px; gap: 6px; }
+.g-rung .ss-hero b { font-size: 24px; }
+.g-wave-mark { position: relative; height: 18px; padding-left: 26px; display: flex; align-items: center; gap: 8px; font: 600 11px/1 var(--font-mono); color: var(--wave); letter-spacing: 0.04em; }
+.g-wave-mark::before { content: ""; position: absolute; left: 7px; top: -8px; bottom: -8px; border-left: 2px solid var(--map-river); }
+.g-wave-mark::after { content: ""; position: absolute; left: 2px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--wave); box-shadow: 0 0 10px 3px color-mix(in srgb, var(--wave) 45%, transparent); }
+.g-hg { fill: var(--map-land); stroke: var(--text-primary); stroke-width: 1.5; stroke-linejoin: round; }
+.g-hg.is-plan { stroke: var(--accent); }
+.g-height-line { fill: none; stroke: var(--map-river); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.g-tick { stroke: var(--map-river); stroke-width: 1; }
+.g-recon { font: 600 10px var(--font-mono); letter-spacing: 0.12em; fill: var(--map-river); paint-order: stroke; stroke: var(--map-land); stroke-width: 3px; }
+
+.g-eta.g-eta--b { border-width: 3px; background: color-mix(in srgb, var(--countdown-far) 10%, var(--surface-panel)); }
+.g-eta.g-eta--b.is-soon { border-color: var(--countdown-soon); background: color-mix(in srgb, var(--countdown-soon) 12%, var(--surface-panel)); }
+.g-eta.g-eta--b.is-now { border-color: var(--countdown-now); background: color-mix(in srgb, var(--countdown-now) 14%, var(--surface-panel)); animation: g-eta-shake 1s ease-in-out infinite; }
+.g-eta.g-eta--b .g-eta-n { animation: g-eta-tick 1s ease-out infinite; }
+@keyframes g-eta-tick { 0% { transform: scale(1.03); } 30%, 100% { transform: scale(1); } }
+@keyframes g-eta-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 40% { transform: translateX(2px); } 60% { transform: translateX(0); } }
+.g-eta .g-rail { position: relative; height: 8px; border-radius: 4px; background: var(--surface-raised); overflow: hidden; margin-top: 8px; }
+.g-eta .g-rail i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--countdown-far); transform-origin: left; }
+.g-eta.is-soon .g-rail i { background: var(--countdown-soon); }
+.g-eta.is-now .g-rail i { background: var(--countdown-now); animation: g-eta-blink 1s steps(2, start) infinite; }
+@keyframes g-eta-blink { to { opacity: 0.35; } }
+.g-eta.g-eta--a .g-eta-n { text-shadow: 0 0 24px color-mix(in srgb, currentColor 45%, transparent); }
+.g-eta.g-eta--a.is-now { animation: ss-border-pulse 2s ease-in-out infinite; --pulse: var(--countdown-now); }
+.g-eta.g-eta--a.is-soon .g-eta-n { animation: g-eta-breathe 2s ease-in-out infinite; }
+@keyframes g-eta-breathe { 50% { opacity: 0.72; } }
+</style>
+</helmet>
+<div class="ss" style="min-height: 100vh; padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 56px">
+<header style="display: flex; flex-direction: column; gap: 14px; max-width: 920px">
+<div class="ss-label" style="color: var(--accent); letter-spacing: 0.12em">Components · three treatments, owner to pick (ticket 0072)</div>
+<h1 style="font-size: 44px; line-height: 1.05; font-weight: 700">Wave ETA corner card</h1>
+<p style="font-size: 17px; line-height: 1.55; color: var(--text-secondary)">Fixed bottom-right of the map beside the right Panels, 300 px wide, the number at 120 px mono with the town as its label, inside the violet dashed Community edge (D-24). White, amber under 15 min, red under 5, “wave expected now” in red (D-25); it borrows only amber and red (D-54). The owner asked for it to read as critical danger from the back of a room; these are three ways, each shown in its four states. Nothing here is chosen.</p>
+</header>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">A · Beacon</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">The card as the board drew it (D-24): violet dashed edge, number at 120 px with one soft text shadow in its own colour. Motion: the number breathes (opacity 1 to 0.72, 2 s) under 15 min; under 5 the whole edge pulses like the Takeover border. Only transform and opacity move. Quietest of the three; reads as the Community colour first and the danger colour second.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--a " aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">37</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">white · 15 min or more</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--a is-soon" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">12</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">amber · under 15 (D-25)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--a is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">4</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">red · under 5</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--a is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-now">wave expected now</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">zero or past · “wave expected now” in red</figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">B · Tinted hazard</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">The card's fill takes the countdown colour at 12 % like the band, and the dashed edge thickens to 3 px and turns amber, then red. Motion: the number scales 1.03 to 1 on every minute tick (transform); under 5 the card nudges 2 px left and right once a second. Loudest; the colour fills a 300 px block, so it reads from the back of a room, but a red box may compete with an Official card.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--b " aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">37</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">white · 15 min or more</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--b is-soon" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">12</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">amber · under 15 (D-25)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--b is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-n">4</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">red · under 5</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--b is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span><span>ARRIVES 09:21</span></span><span class="g-eta-now">wave expected now</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">zero or past · “wave expected now” in red</figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">C · Depletion rail</h2><p style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">A rail under the number drains from the warning's full window (44 min at Betrawati) to zero, so the shrinking bar carries the urgency even when the number is not read. Motion: the rail's fill is a scaleX transform; under 5 it blinks at 1 Hz (opacity). Tallest card (about 150 px). Judges see time running out, not only a number.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 20px; align-items: start"><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--c " aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span></span><span class="g-eta-n">37</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span><div class="g-rail" aria-hidden="true"><i style="width: 100%; transform: scaleX(0.84)"></i></div><span class="ss-label" style="font-size: 10px; color: var(--text-dim)">37 of 44 min left · ARRIVES 09:21</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">white · 15 min or more</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--c is-soon" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span></span><span class="g-eta-n">12</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span><div class="g-rail" aria-hidden="true"><i style="width: 100%; transform: scaleX(0.27)"></i></div><span class="ss-label" style="font-size: 10px; color: var(--text-dim)">12 of 44 min left · ARRIVES 09:21</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">amber · under 15 (D-25)</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--c is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span></span><span class="g-eta-n">4</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span><div class="g-rail" aria-hidden="true"><i style="width: 100%; transform: scaleX(0.09)"></i></div><span class="ss-label" style="font-size: 10px; color: var(--text-dim)">4 of 44 min left · ARRIVES 09:21</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">red · under 5</figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style=""><aside class="g-eta g-eta--c is-now" aria-label="Wave ETA" style="position: static; width: 100%"><span class="ss-label" style="display: flex; justify-content: space-between; color: var(--community-warning)"><span><svg class="ss-i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: inline-block; vertical-align: -2px"><line x1="10" x2="14" y1="2" y2="2"></line> <line x1="12" x2="15" y1="14" y2="11"></line> <circle cx="12" cy="14" r="8"></circle></svg> WAVE ETA</span></span><span class="g-eta-now">wave expected now</span><span class="ss-label" style="color: var(--text-primary); font-size: 14px">MIN · BETRAWATI</span><div class="g-rail" aria-hidden="true"><i style="width: 100%; transform: scaleX(0.00)"></i></div><span class="ss-label" style="font-size: 10px; color: var(--text-dim)">ARRIVES 09:21</span></aside></div>
+<figcaption class="ss-mono" style="font-size: 11px; line-height: 1.4; color: var(--text-secondary)">zero or past · “wave expected now” in red</figcaption>
+</figure></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px; max-width: 900px"><h2 style="font-size: 24px; font-weight: 700">Common to all three</h2></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 20px; align-items: start">
+<div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel)"><div style="display: flex; flex-direction: column; gap: 8px"><strong style="font-size: 17px">Where it sits</strong><span style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">Right 360 px, bottom 12 px: beside the 336 px right Panel stack, above the status strip, never over the home town's marker.</span></div></div>
+<div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel)"><div style="display: flex; flex-direction: column; gap: 8px"><strong style="font-size: 17px">What moves</strong><span style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">Only transform and opacity, at most one text shadow on the number. Reduced motion: colour changes become instant swaps and nothing loops.</span></div></div>
+<div style="padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-panel)"><div style="display: flex; flex-direction: column; gap: 8px"><strong style="font-size: 17px">When it shows</strong><span style="font-size: 15px; line-height: 1.5; color: var(--text-secondary)">From the moment the band appears, while a Community Warning with a Wave ETA for this home is in effect; acknowledging does not hide it (D-27). The minutes come from waveEta.ts, as the plan's do.</span></div></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1750}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/storm-shield.md`
 
 **Design:** `docs/design/ui.md` ("Readings Panel", "Motion", "Performance"); canvas artboards `C-NodeCard`, `C-Tags`, `D-PressureDrop`, `D-Raining`, `D-Elevated`, `Flow-Transitions`.

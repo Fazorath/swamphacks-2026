@@ -1,0 +1,10 @@
+.git
+.claude
+.demo
+.join-demo
+.env
+node/.venv
+node/data
+dashboard/node_modules
+dashboard/dist
+cache-pack

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { agoWords } from "./agoWords";
+import { Panel, type PanelControl } from "./Panel";
 import type { EvacuationPlan } from "./evacuationPlan";
 import { officialTag, SOURCE_LABELS } from "./officialAlerts";
 import type { WaveArrival } from "./waveEta";
@@ -25,19 +26,27 @@ function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
 
 export function EvacuationPlanPanel({
   plan,
+  exampleHome,
   waveArrival,
   eventT,
   shelterStatusConfirmedAt,
+  panel,
 }: {
   plan: EvacuationPlan;
+  exampleHome: boolean;
   waveArrival: WaveArrival | null;
   eventT: number | null;
   // Set only while the Node is unreachable: when its last answer arrived.
   shelterStatusConfirmedAt: number | null;
+  panel: PanelControl;
 }) {
   return (
-    <section aria-label="Evacuation Plan">
-      <h2>Evacuation Plan</h2>
+    <Panel label="Evacuation Plan" {...panel}>
+      {exampleHome && (
+        <p className="example-home">
+          Example home, not yours. Fill in your household profile to see your own plan.
+        </p>
+      )}
       <WaveEtaLine arrival={waveArrival} eventT={eventT} />
       {plan.risk && (
         <div className={`plan-risk ${plan.risk.level}`}>
@@ -66,6 +75,6 @@ export function EvacuationPlanPanel({
         <ShelterStatusAge confirmedAt={shelterStatusConfirmedAt} />
       )}
       <p className="official-line">{plan.officialLine}</p>
-    </section>
+    </Panel>
   );
 }

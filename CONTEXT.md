@@ -74,6 +74,10 @@ _Avoid_: demo script, simulation, playback
 A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
+**Camera Clip**:
+A five-minute illustrative video a demo camera plays in place of a live feed, composed from short credited sources and lined up with the Event clock; it never claims to show the Node's own site. A manifest beside the clips credits every source and gives `flood_onset_s`, the second the water visibly jumps. Unlicensed footage lives only in the gitignored `.demo/clips/`.
+_Avoid_: recording, live feed, camera footage
+
 **Event clock**:
 The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
 _Avoid_: replay time, sim time
@@ -162,6 +166,30 @@ _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
 
+**Real Node**:
+A Node that is actually on the Mesh (the Hub, the breadboard Pi, an Audience Node), as opposed to an entry of the Simulated Fleet. Shown with the `REAL` ring.
+_Avoid_: physical node, live node
+
+**Audience Node**:
+A Registered Node on a volunteer's laptop, started with `scripts/join-demo.sh`. It is a Real Node on the real Mesh, but its readings are the Scenario's, so they are simulated.
+_Avoid_: guest node, visitor node, demo laptop
+
+**God's Eye View**:
+The desktop dashboard's map of the whole of Nepal, drawn from vector data in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
+_Avoid_: globe, surveillance map, overview
+
+**Simulated Fleet**:
+About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by every Node that holds it, with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible badge that counts them against the real Nodes ("40 simulated Nodes · 6 real").
+_Avoid_: fake nodes, mock nodes, virtual nodes
+
+**Headwater Node**:
+A Node placed where a flood starts (a glacial lake outlet, a glacier front, an upper valley), so its Surge is the earliest sign for the towns downstream. S0 is the Replay's Headwater Node; the Simulated Fleet shows where others would sit.
+_Avoid_: sentinel, upstream sensor, enthusiast node
+
+**Contact lost**:
+The cue on a Node's marker when it has been silent for about 5 seconds: its glow dies and a ring counts down to Stale at 15 seconds. Display only; it changes no Flood Risk or Surge rule.
+_Avoid_: disconnected, dropped, offline node
+
 **Warning Takeover**:
 The modal that interrupts any view when a new Official Alert or Community Warning arrives, with one large acknowledge button; it fills a phone's screen and floats over the dimmed map on a larger one. Acknowledging it on one device never clears it on another.
 _Avoid_: popup, alarm, klaxon, notification
@@ -179,11 +207,11 @@ The column of buttons along the left edge of the dashboard that shows and hides 
 _Avoid_: sidebar, toolbar, nav
 
 **Weather layer**:
-One of Wind, Temperature, Cloud cover or Rain, drawn over the map from a Weather Grid; only one shows at a time, chosen from the Weather button on the Layer rail. It is context for the valley, never a measurement at a village and never offered as a cause of the flood.
+One of Temperature, Cloud cover or Rain, laid over the map's terrain from a Weather Grid; only one shows at a time, chosen from the Weather button on the Layer rail. It is context for the country and the valley, never a measurement at a village and never offered as a cause of the flood.
 _Avoid_: overlay, weather widget, radar
 
 **Weather Grid**:
-Hourly wind, temperature, cloud cover and rain on a coarse grid of points (about 0.1° apart) over the valley. During the Replay it is the recorded weather of 26 August 2026, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
+Hourly temperature, cloud cover and rain on a coarse grid of points (about 0.5° apart) over the whole of Nepal. During the Replay it is the recorded weather of 26 August 2026, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
 _Avoid_: weather data, forecast feed
 
 **Panel**:

@@ -31,11 +31,18 @@ class Settings(BaseSettings):
     mesh_interface: ReticulumInterface = "auto"
     # Each Node on one machine needs its own slot; only read when mesh_interface is "loopback".
     loopback_slot: int = 0
+    # The lowest slot of this Node's group. A Node dials only the slots of its own group, so a
+    # group started higher up (the demo, a test) never joins Nodes in slots below it.
+    loopback_first_slot: int = 0
     # "tcp" is the fixed-address interface (for example over Tailscale): this Node listens on
     # tcp_port and dials every host in tcp_peers, a comma-separated list of "host" or "host:port".
     # Every Node must list every other Node, because Reticulum does not relay between clients.
     tcp_port: int = 4242
     tcp_peers: str = ""
+    # The Hub of the one-laptop demo talks to S0 to S3 on loopback, and also to an Audience Node:
+    # over Wi-Fi discovery, or over TCP when that laptop sits behind Docker's NAT. Off elsewhere.
+    also_wifi_discovery: bool = False
+    also_tcp_listen: bool = False
     # Holds this Node's Reticulum config and identity. Never shared between Nodes, never committed.
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     # How often this Node checks whether it has internet, and whether a camera picture is due.

@@ -1,4 +1,4 @@
-import type { CommunityWarning } from "./communityWarnings";
+import { measuredSpeedLine, type CommunityWarning } from "./communityWarnings";
 import {
   MAX_DISTANCE_TO_RIVER_KM,
   parseRiverLine,
@@ -148,5 +148,49 @@ describe("reading the pack's river line", () => {
         ],
       }),
     ).toThrow(/river.geojson/);
+  });
+});
+
+describe("the measured wave speed", () => {
+  // The second Node sits at km 10 and surged 1000 s after the origin; the wave took 20 km in
+  // 1000 s between them, and 120 km/h from there on.
+  const measured = { node: "s1", km: 10, surge_t: SURGE_T + 1000, speed_kmh: 120 };
+  const measuredWarning = { ...warningAt(-10), measured };
+
+  it("replaces the reconstructed speeds below the second Node, counted from its Surge", () => {
+    const arrival = waveArrival(RIVER, at(20), [measuredWarning]);
+    expect(arrival?.kind === "expected" && arrival.at).toBeCloseTo(
+      SURGE_T + 1000 + (10 / 120) * 3600,
+      0,
+    );
+  });
+
+  it("keeps the reconstructed speeds for a home above the second Node", () => {
+    const seconds = (10 / 190) * 3600;
+    const arrival = waveArrival(RIVER, at(0), [measuredWarning]);
+    expect(arrival?.kind === "expected" && arrival.at).toBeCloseTo(SURGE_T + seconds, 0);
+  });
+
+  it("gives a home upstream of the origin no ETA, measured or not", () => {
+    expect(waveArrival(RIVER, at(-10), [{ ...measuredWarning, origin_km: -5 }])).toBeNull();
+  });
+});
+
+describe("the measured speed line", () => {
+  const names: Record<string, string> = { s0: "S0", s1: "S1" };
+  const nameOf = (id: string) => names[id] ?? id;
+
+  it("shows distance, time and speed with the two Nodes' names", () => {
+    const warning = {
+      ...warningAt(-5.6),
+      measured: { node: "s1", km: 10, surge_t: SURGE_T + 720, speed_kmh: 78 },
+    };
+    expect(measuredSpeedLine(warning, nameOf)).toBe(
+      "Measured: 15.6 km in 12 min = 78 km/h (S0 to S1)",
+    );
+  });
+
+  it("is absent until a second Node has surged", () => {
+    expect(measuredSpeedLine(warningAt(-5.6), nameOf)).toBeNull();
   });
 });

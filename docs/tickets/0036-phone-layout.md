@@ -8,6 +8,8 @@
 
 **Owner:** unclaimed
 
+**Assignee:** Fazorath
+
 **Spec:** `docs/specs/storm-shield.md`
 
 **Design:** `docs/design/ui.md` ("Phone"); canvas artboards `P-Map-Calm`, `P-Map-Selected`, `P-Map-Storm`, `P-Readings`, `P-Plan-Calm`, `P-Plan-Storm`, `P-Plan-NoProfile`, `P-Plan-NoShelter`, `P-Plan-NoRoute`, `P-Plan-NoCachePack`, `P-Route`, `P-Profile-Empty`, `P-Profile-Picking`, `P-Profile-Saved`.

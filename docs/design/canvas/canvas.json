@@ -29,6 +29,10 @@
     {
       "id": "flows",
       "name": "Flows"
+    },
+    {
+      "id": "gods-eye",
+      "name": "God's Eye View"
     }
   ],
   "designSystems": [],
@@ -581,6 +585,114 @@
       "title": "Flows · State transitions",
       "page": "flows",
       "expand": "fill"
+    },
+    "G-National-Calm.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · God's Eye View · National, calm (D-01 to D-11, D-34, D-36, D-39 to D-41, D-48, D-49)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Valley-3D.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · God's Eye View · Valley, tilted 45° (D-02, D-05, D-08, D-10, D-30 to D-33)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Warning-Moment.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · God's Eye View · Warning moment (D-16 to D-19, D-21 to D-28, D-51, D-55)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Warning-Acknowledged.dc.html": {
+      "x": 4560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · God's Eye View · Warning acknowledged (D-18, D-24, D-25, D-27, D-29, D-50)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Contact-Lost-Stale.dc.html": {
+      "x": 6080,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "MUST · God's Eye View · Contact lost and Stale (D-14, D-15, D-52)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Fleet-Popover.dc.html": {
+      "x": 7600,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · God's Eye View · Fleet popover and sources (D-09, D-38, D-40, D-42)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-High-Ground.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "SIMPLE · God's Eye View · High ground (D-43 to D-45)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Rising-Water.dc.html": {
+      "x": 1520,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "Stretch · God's Eye View · Rising water (D-46, D-47)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Marker-Anatomy.dc.html": {
+      "x": 0,
+      "y": 2640,
+      "w": 1440,
+      "h": 1650,
+      "title": "God's Eye View · Marker anatomy (D-06, D-08 to D-15, D-52, D-53)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-ETA-Corner-Card.dc.html": {
+      "x": 1520,
+      "y": 2640,
+      "w": 1440,
+      "h": 1750,
+      "title": "God's Eye View · Wave ETA corner card, three treatments (D-24, D-25, D-54)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Readings-Ladder.dc.html": {
+      "x": 3040,
+      "y": 2640,
+      "w": 1440,
+      "h": 1900,
+      "title": "God's Eye View · Readings Panel, river ladder (D-36 to D-38)",
+      "page": "gods-eye",
+      "expand": "fill"
+    },
+    "G-Wave-Arrival.dc.html": {
+      "x": 4560,
+      "y": 2640,
+      "w": 1440,
+      "h": 1350,
+      "title": "God's Eye View · Wave arrival at a town (D-16 to D-18, D-21)",
+      "page": "gods-eye",
+      "expand": "fill"
     }
   },
   "order": [
@@ -646,7 +758,19 @@
     "P-Unreachable.dc.html",
     "P-MeshOnly.dc.html",
     "Flow-Demo.dc.html",
-    "Flow-Transitions.dc.html"
+    "Flow-Transitions.dc.html",
+    "G-National-Calm.dc.html",
+    "G-Valley-3D.dc.html",
+    "G-Warning-Moment.dc.html",
+    "G-Warning-Acknowledged.dc.html",
+    "G-Contact-Lost-Stale.dc.html",
+    "G-Fleet-Popover.dc.html",
+    "G-High-Ground.dc.html",
+    "G-Rising-Water.dc.html",
+    "G-Marker-Anatomy.dc.html",
+    "G-ETA-Corner-Card.dc.html",
+    "G-Readings-Ladder.dc.html",
+    "G-Wave-Arrival.dc.html"
   ],
   "notes": {
     "t-found": {
@@ -736,6 +860,30 @@
       "y": -300,
       "maxW": 2960,
       "page": "flows"
+    },
+    "t-g1": {
+      "kind": "title1",
+      "text": "God's Eye View · desktop, calm to warning (real Nepal geometry)",
+      "x": 0,
+      "y": -300,
+      "maxW": 9120,
+      "page": "gods-eye"
+    },
+    "t-g2": {
+      "kind": "title1",
+      "text": "God's Eye View · high ground and the rising-water stretch",
+      "x": 0,
+      "y": 1020,
+      "maxW": 3040,
+      "page": "gods-eye"
+    },
+    "t-g3": {
+      "kind": "title1",
+      "text": "God's Eye View · components, the corner card options and the wave sequence",
+      "x": 0,
+      "y": 2340,
+      "maxW": 6080,
+      "page": "gods-eye"
     }
   }
 }

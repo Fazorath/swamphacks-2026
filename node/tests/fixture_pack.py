@@ -2,6 +2,7 @@ import hashlib
 import io
 import json
 import zipfile
+from typing import Any
 
 SHELTERS = [
     {
@@ -28,6 +29,24 @@ WEATHER_REPLAY = {"source": "fixture", "credit": "fixture credit", "times": ["20
 TILE = b"\x89PNG fixture tile"
 TILE_PATH = "tiles/10/754/429.png"
 WEATHER_PATH = "weather_replay.json"
+FLEET_PATH = "fleet.json"
+NEPAL_BORDER_PATH = "nepal/border.geojson"
+NEPAL_BORDER = {"type": "FeatureCollection", "features": []}
+ELEVATION_PATH = "elevation/5/24/13.png"
+ELEVATION_TILE = b"\x89PNG fixture elevation"
+NEPAL_ENTRY = {
+    "bbox": [26.3, 80.0, 30.5, 88.3],
+    "elevation": {
+        "encoding": "terrarium",
+        "approximate": True,
+        "national_zooms": [5, 5],
+        "detail_zooms": [9, 9],
+        "detail_areas": [[27.86, 85.08, 28.46, 85.47]],
+    },
+    "sources": [
+        {"layer": "border", "name": "fixture", "licence": "CC BY 4.0", "checked": "2026-10-18"}
+    ],
+}
 
 
 def build_fixture_pack(
@@ -36,6 +55,9 @@ def build_fixture_pack(
     leave_out_tile: bool = False,
     with_weather: bool = False,
     corrupt_weather: bool = False,
+    with_nepal: bool = False,
+    corrupt_nepal: bool = False,
+    fleet: dict[str, Any] | None = None,
     shelters: list[dict[str, object]] = SHELTERS,
 ) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
@@ -47,12 +69,21 @@ def build_fixture_pack(
     }
     if with_weather:
         files[WEATHER_PATH] = json.dumps(WEATHER_REPLAY).encode()
-    manifest = {
+    if fleet is not None:
+        files[FLEET_PATH] = json.dumps(fleet).encode()
+    if with_nepal:
+        files[NEPAL_BORDER_PATH] = json.dumps(NEPAL_BORDER).encode()
+        files[ELEVATION_PATH] = ELEVATION_TILE
+    manifest: dict[str, Any] = {
         "v": 1,
         "built": "2026-10-16T00:00:00Z",
         "bbox": [27.86, 85.08, 28.46, 85.47],
         "files": {path: hashlib.sha256(content).hexdigest() for path, content in files.items()},
     }
+    if with_nepal:
+        manifest["nepal"] = NEPAL_ENTRY
+    if corrupt_nepal:
+        files[ELEVATION_PATH] = b"tampered"
     if corrupt_tile:
         files[TILE_PATH] = b"tampered"
     if corrupt_weather:

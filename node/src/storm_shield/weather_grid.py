@@ -7,33 +7,29 @@ VARIABLES = (
     "temperature_2m",
     "cloud_cover",
     "precipitation",
-    "wind_speed_10m",
-    "wind_direction_10m",
 )
 UNITS = {
     "temperature_2m": "°C",
     "cloud_cover": "%",
     "precipitation": "mm/h",
-    "wind_speed_10m": "m/s",
-    "wind_direction_10m": "°",
 }
 CREDIT = "Weather data by Open-Meteo.com (CC BY 4.0)"
-GRID_STEP_DEGREES = 0.1
+GRID_STEP_DEGREES = 0.5
 COORDINATE_DECIMALS = 2
 
 BBox = tuple[float, float, float, float]  # (south, west, north, east)
-# The Cache Pack's box: the Lhende Khola down to below Trishuli.
-VALLEY_BBOX: BBox = (27.86, 85.08, 28.46, 85.47)
+# All of Nepal: the Cache Pack's map, and the box the Weather Grid fills.
+NEPAL_BBOX: BBox = (26.3, 80.0, 30.5, 88.3)
 
 
 def grid_points(bbox: BBox) -> tuple[int, int, list[tuple[float, float]]]:
-    """Rows, columns and (lat, lon) of a grid that starts at the box's south-west corner and covers it.
+    """Rows, columns and (lat, lon) of a grid that starts at the box's south-west corner and stays inside it.
 
     Points run south to north, then west to east: the order the file stores its values in.
     """
     south, west, north, east = bbox
-    rows = math.ceil(round((north - south) / GRID_STEP_DEGREES, 6)) + 1
-    cols = math.ceil(round((east - west) / GRID_STEP_DEGREES, 6)) + 1
+    rows = math.floor(round((north - south) / GRID_STEP_DEGREES, 6)) + 1
+    cols = math.floor(round((east - west) / GRID_STEP_DEGREES, 6)) + 1
     points = [
         (
             round(south + row * GRID_STEP_DEGREES, COORDINATE_DECIMALS),

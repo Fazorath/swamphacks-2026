@@ -328,3 +328,116 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Every Command passes on `main`**: 252 Node tests, 170 dashboard tests. The 4 `test_reticulum_nodes.py` errors seen mid-session were a Node left running from another worktree (pid started 19:48, parent init, no run-live loop); `scripts/stop-nodes.sh` freed 4250 and 8000 and the file passed.
 - **Still true after the audit:** `roads.json` and the real Road graph have never been built from the Nepal extract (0018), so the demo cannot block a road; the camera tiles are still FL511 Florida feeds in the Nepal demo (0011); `run-demo.sh` registration (0012/0049) and the full two-phone replay (0049) were never run end to end; 0016 (breadboard) is open.
 - `weatherGrid.ts` (`valueAt`, `windAt`, `speedBand`) is only used by its tests until the weather layer tickets (0054 to 0057, 0059) land; that is on purpose.
+
+## Measured wave speed (ticket 0050)
+
+- **The second Node's Surge updates the origin's warning instead of getting a warning of its own**, when it is downstream, later, and the speed is under 300 km/h (`MAX_MEASURED_SPEED_KMH`). Otherwise it warns on its own as before, which is why `test_two_nodes_surging_make_one_warning_each` still passes: its Surges are 8 s apart, over 1,000 km/h.
+- **In a replay, a test's `advance(seconds)` moves the Event clock 30 times as far**, so a measured speed there is distance over *event* time. A 32 s advance is 16 event minutes.
+- **A home must be within 2 km of a river vertex to get an ETA**, and the test river has a vertex every 10 km: pick test homes on vertices (`at(0)`, `at(20)`), or the answer is `not-near-river`, not the reach you meant.
+- Rerun of `test_reticulum_nodes.py` needs ports 4250 and 8000 free; another session's Node (a different worktree) held them during the first full run, so those four tests were run later. Check `ss -ltnp` before `scripts/stop-nodes.sh`: it would kill a teammate's or your own other session's Node.
+- Not rehearsed on loopback Reticulum or in a browser; the update path is covered in the in-memory Mesh only.
+
+## Shelter or higher ground (ticket 0048)
+
+- **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
+- **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
+- **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
+
+## Theme, bundled fonts and icons (ticket 0032)
+
+- **Vitest turns every imported stylesheet into an empty string, `?raw` and `import.meta.glob` included**, so a test that scans CSS that way passes with nothing checked. `theme.test.ts` reads the files with `node:fs` (hence `@types/node` and `"node"` in `tsconfig.json` types) and also asserts it saw `App.css` and `App.tsx`.
+- **The theme file is `dashboard/src/theme.css`**, loaded before `App.css` in `main.tsx`; `App.css` uses roles only (`--accent`, `--risk-low`, `--surface-panel`…), never a primitive. The old names (`--community`, `--low`, `--muted`, `--line`…) are gone. A new colour is a role in `theme.css` first.
+- **Fonts are the `latin-*.css` files** of `@fontsource/ibm-plex-sans` (400, 600, 700) and `-mono` (500, 600), so the build carries about 10 small woff/woff2 files and no Google request. Checked in Chrome from a Node on a private port: the three weights the first screen uses loaded from the Node's own origin and no resource came from another host. The internet was not actually unplugged, so "works offline" rests on that same-origin result.
+- **Text-glyph icons remain**: the `⌂` home markers in `NodeMap.tsx` are not `lucide-react`. They go with the marker anatomy in 0035.
+- **A rule's own `font-family` beats the grouped mono rule near the top of `App.css`**: `.tag` kept a hardcoded `ui-monospace` and showed the system font until a computed-style check in Chrome caught it. `theme.test.ts` now fails on any `font-family` that is not `var(--font-sans)` or `var(--font-mono)`.
+- `.tag.stale` was amber; the design says Stale is muted grey because amber means Elevated, so it is `--text-secondary` now.
+
+## God's Eye View artboards (2026-10-18)
+
+- **The `G-` boards carry real geometry** (geoBoundaries ADM0/ADM2, OpenStreetMap rivers through Overpass, the pack's `river.source.geojson`, Terrarium tiles for the relief); sources, licences and the projections are in `docs/design/canvas/README.md`. The generator stayed out of the repo (about 400 lines); the README says how to redo it.
+- **`overpass-api.de` answers 406 to a bare `curl`**: send a `User-Agent` (as `scripts/derive_river.py` does) and `Accept: application/json`. Natural Earth 10 m rivers hold only three partial lines inside Nepal, so they are no use for this map.
+- **Douglas–Peucker on a closed ring collapses it to one point** when the first and last vertices coincide (the chord has zero length); measure from the shared point in that case. The national border vanished until this was caught on a screenshot.
+- **The Claude in Chrome extension was not connected in this session**; headless Chrome (`--headless=new --screenshot --window-size=1440,900`) renders the `.dc.html` boards fine for checking overlap. Console errors were read from `--enable-logging=stderr` (none from the boards).
+- A 250 m contour step at the gorge zoom made one board 530 KB; 500 m steps with loops clipped to the frame keep every board under 320 KB.
+
+## Reticulum loopback test fails in the whole-file run (found 2026-10-17, while merging 0050; fixed the same day)
+
+- **`test_nodes_find_each_other_and_a_step_crosses_the_mesh[loopback]` failed because a running demo dialed into the test's Nodes.** A loopback Node dialed every slot from 0 up to its own, so `run-demo.sh` with `DEMO_SLOT_BASE=20` (Nodes at slots 20 to 24) kept dialing 4250 to 4269 every 5 s. Once the test's Nodes listened there, the demo's readings arrived and `heard_from() == ids` never held. The three test Nodes themselves met in under 5 s. It failed alone too, whenever the demo was up; it "passed earlier that day" because no demo was running then. TIME_WAIT, `~/.reticulum` and a shared instance were not involved (each Node has its own config dir with `share_instance = No`).
+- **Fix:** `NODE_LOOPBACK_FIRST_SLOT` (default 0) is the lowest slot of a Node's group, and a Node dials only its own group. `run-demo.sh` passes `DEMO_SLOT_BASE` as it; the test runs as group 60 (ports 4310 to 4312) and fails at once, naming the stranger, if a Node from outside the test is heard. Rehearsing at slots 20, 30 or 40 by hand, set `NODE_LOOPBACK_FIRST_SLOT` to the group's first slot too, or your group joins every Node below it.
+- **The busy-port guard cannot see this**: the intruder dials *out* to the test's ports and listens elsewhere. `ss -tanp | grep 425` shows who connects, and `/proc/<pid>/environ` shows its `NODE_LOOPBACK_SLOT`.
+- **Unrelated flake seen while checking the fix:** `test_replay_drives_the_sensor_nodes.py::test_resume_at_the_end_is_refused` failed 1 run in 3 of its file (`pause` answered 409). After the jump to `end` the Hub's own loop pauses the clock at 10:30 almost at once, and when it wins the race the test's `pause` is refused. The test now waits for the Hub's own pause and then checks Resume; 15 of 15 runs passed.
+- **Never chain `scripts/check.sh | tail` before `git push`**: `tail` hides the exit code and a failing pytest still pushed. Test `check.sh`'s own exit status.
+- **A baseline "without my change" must be a commit before your merge**: `8e8b951` already held 0050 and gave a false answer. Use the parent of your merge.
+
+## Valley Road Routes (ticket 0051)
+
+- **Real build, 2026-10-18** (`build_cache_pack.py --roads-pbf` with `uv run --with pyrosm`, Windows, Python 3.14 resolved fine): reading the 415 MB Nepal extract takes 40 to 100 s; 2,291 junctions and 2,405 segments in the Road graph. Route files by grid: 100 m is 36.8 MB, 250 m 5.8 MB (just over the 5 MB budget), **500 m 1.4 MB (341 files), so the pack uses 500 m**. A home can be up to about 350 m from its Grid point; the Route line starts there.
+- **The corridor rule drops most Routes in the gorge.** Syabrubesi gompa has 64 Routes without it and none with it (the first build, which skipped the legs to and from the road, kept 1; code-review caught that); Sundaradevi and Karki go from 697 to 144 and 160. The road runs beside the river, so a hillside home's drive goes into the corridor and out again. Those Shelters use the straight-line walk with no line, as the ticket specifies, and the phone's own check (`routeIsAffected`) treats any touch of the corridor as affected too.
+- **The leg from the Grid point to the road and the leg from the road to the Shelter are sampled too**, not only the stretches between road nodes: the Shelter's road node can be up to 500 m away, across the corridor.
+- **A bridge between two road nodes can lie outside the corridor at both ends**, so `touches_segment` samples every 40 m instead of testing nodes only.
+- A one-off script that imports `build_cache_pack` from `scratchpad` needs `sys.path` set to the repo's `scripts` folder; run from `node/` the path is `../scripts`.
+- **A Node left over from an earlier session held loopback port 4250** and made four `test_reticulum_nodes.py` tests error in `scripts/check.sh`. `scripts/stop-nodes.sh` cannot find it on Windows (`pkill` and `lsof` are missing); use `Get-NetTCPConnection` and `Stop-Process`.
+- **Example home**: with no saved profile and a valley pack, `exampleHousehold` (28.1654, 85.3398, Syabrubesi, 3.0 km by road to Komin school once the gompa lost its Route; a first pick at 28.0599, 85.2303 was 26 km by road from any Shelter, because the five Shelters sit up to 66 km apart, so choose a home by its road distance to a Shelter) feeds the plan, the Routes request and the map marker; the Cache Pack manifest's `bbox` now reaches the dashboard (`CachePackContents.bbox`) so other packs keep the prompt. Seen only through type, lint and unit checks, not yet in a browser.
+- Rehearsed on loopback: a Hub started on the new pack (served by `python -m http.server`) validated its checksums and served a Route file with the Gompa's Route. Not checked in a browser; software path only, no Pi.
+
+## Simulated Fleet (ticket 0064)
+
+- **The real build worked against Open-Meteo** (40 sites in one request, 2 days of 3 hourly variables, 185 KB of `fleet.json`). The archive's `soil_moisture_0_to_7cm` is m³/m³ (the file stores %), and several points come back as a list, one point as an object.
+- **Real rain makes the three rising towns rise only a little over the window**: the 24 h rain is a slow sum, so Taplejung sits at about 201 to 206 cm (calm base 80) the whole 08:30 to 10:30, Arughat at about 148 and Kakarbhitta at 128. They read as elevated, not as a ramp. Raise `GAIN_CM_PER_MM` only if the map needs a visible climb; the cap (200 cm) keeps every rise below the Surge size.
+- **The 15 km rule dropped Chatara** (13.9 km from Dharan). The source coordinates are typed from memory and unchecked on a map; 0035 verifies them.
+- **A track is cut at `silent_at`**, so the Node needs no silent logic: it reads the last point at or before the Event clock and ages from there.
+- The Node reads `fleet.json` through `SimulatedFleet`, which re-parses only when the file's modified time changes; it never touches the Mesh, `ReadingStore` or the registry, so a Surging entry cannot move Flood Risk.
+
+## Nepal vector Cache Pack (ticket 0063)
+
+- **Real build, 2026-10-18** (`scripts/build_cache_pack.py`, no key, no `--roads-pbf`, no raster tiles): 10.0 MB zip, about 7.6 MB more than v3's 2.4 MB, inside the ticket's 6 to 10 MB. Vectors 1.3 MB (border 0.07, districts 0.07, rivers 1.13 with 1,827 lines, places 0.06), elevation 9.63 MB in 138 tiles. The elevation budget is 10 MB, raised from 8.5 when Kathmandu got detail tiles; PNGs do not compress, so it counts raw bytes. Run it again with `--roads-pbf` for the road graph and Routes; that was not done here.
+- **geoBoundaries licences differ per level**: ADM0 is CC BY 4.0, ADM2 (75 districts) Public Domain, ADM1 CC BY 3.0 IGO. The build copies each from the API metadata, so check the README table if the dataset is rebuilt.
+- **Overpass answers 406 without a `User-Agent` and 502 now and then**; the builder sends one and retries through `pack_weather.ATTEMPTS`. The river query is 40 MB of raw geometry (7,315 ways) and takes a minute or two.
+- **The build checks its own elevation**: it decodes the Terrarium PNGs itself (no Pillow in the Node's venv) and compares each key place with a published height. Published heights are loose (Timure's 1,900 m is a climate-table label, Trishuli has no direct figure), so tolerances are 100 to 200 m and each is explained in `key_places.source.json`.
+- **A place's OpenStreetMap node can sit on a hill edge**: Kathmandu's city node read 1,521 m, 240 m above the valley floor, so its position is Durbar Square. Read a point and its neighbours (a 3 by 3 spread 0.004 degrees apart) before trusting one pixel.
+- **Syabrubesi and Timure have no Latin name in OpenStreetMap**, so the key places file supplies them with the replay spec's coordinates.
+- **Test every raw vertex of a river against the border, not the simplified ones**: a straight river crossing Nepal simplifies to its two ends, both outside, and was dropped (caught by a test).
+- **Raster tiles are opt-in now (`--raster-tiles`, needs `CARTO_API_KEY`)**, so a v4 pack has none and the current Leaflet map asks `/api/tiles` (CARTO through the Node) until 0033 replaces it. **Published as Release `cache-pack-v5`** (10.0 MB, 2026-10-18), not v4: the v4 tag already held a 2.5 MB valley pack, and `scripts/run-demo.sh` downloads `cache-pack-v4` by name. Point the demo at v5 only after 0033, because v5 has no raster tiles and the current Leaflet map needs a CARTO key without them.
+- The map credit, "Boundaries are indicative" and "elevation is approximate" are in the manifest's `nepal` entry; printing them on the map is 0033.
+
+
+## Weather layers regrilled on MapLibre (2026-10-18)
+
+- **A canvas laid over a pitched MapLibre map cannot follow the terrain.** Projecting a lat/lon field onto it cell by cell with `map.project` left the cells apart in 3D (white squares with dark gaps) and floating over the mountains. A MapLibre `image` source on the Nepal box drapes on the terrain and held 60 fps; repaint the image, not the map, when the hour changes.
+- **Wind particles over the map fell to about 3 fps with terrain on** (about 2,000 particles × 7 tail points re-projected every frame), so Wind was dropped: 0056 and 0057 are deleted, 0073 removes `windAt`, `speedBand` and the wind variables.
+- **The valley grid (7 × 5 at 0.1°) is a small patch on the national map**; 0073 moves the Weather Grid to Nepal at 0.5° (153 points, one archive request, about 200 KB). The prototype got all 153 points from the archive in one browser `fetch` (Open-Meteo allows CORS).
+- The prototype is `dashboard/prototype-weather-layers.html` on branch `prototype/weather-layers` (MapLibre 4.7.1 from unpkg, AWS Terrarium terrain); serve the folder with `python3 -m http.server` and use `?variant=A` to `D`.
+
+## National Weather Grid (ticket 0073)
+
+- **The grid is the points that fit inside the Nepal box**, not a cover of it: `grid_points` floors, so 26.3 to 30.5 N at 0.5° is 9 rows (last 30.3) and 80.0 to 88.3 E is 17 columns (last 88.0), 153 points. `NEPAL_BBOX` now lives in `weather_grid.py` because the Hub needs it at run time; `pack_nepal.py` imports it. `build_cache_pack.py` keeps its own valley `BBOX` for tiles, routes and the fleet.
+- **Real fetch (2026-10-18):** 153 points, 72 hours, three variables, 134 KB, one request.
+- **A forecast on disk with the valley grid or wind variables is refused by `_check_shape`**, so a Hub upgraded in place fetches again instead of serving a grid the dashboard cannot place.
+- **Not done:** no `cache-pack-v4` carrying the national `weather_replay.json` was built or released (the full build needs Overpass and the repo is private). Until it is, a pack's weather file still has the valley grid and the dashboard layers must tolerate that.
+
+## MapLibre shell (ticket 0033)
+
+- **jsdom has no WebGL**, so `setup.ts` swaps `maplibre-gl` for `src/fakeMaplibre.ts` in every test; read back what the app gave the map with `sourceData(name)`, `lastMap().layerIds`, `addressesTheMapWouldFetch()` and `tapMap(lat, lon)`. A source `data` URL must be absolute (MapLibre fetches in a worker), so it is built from `window.location.origin`.
+- **No text layers**: MapLibre symbol layers need a glyph server (a request to another host), so place names are `MapMarker` DOM elements chosen by zoom and view (`placeLabels.ts`).
+- **A calm day opens only the Readings Panel**, so a test about another Panel calls `expandPanel("Evacuation Plan")` (`expandPanel.ts`) right after `render`.
+- The Chrome extension was not connected for the build, so the owner did the by-hand checks (zoom shrink, first paint, 60 fps, real `cache-pack-v5`); all passed. Overlapping labels over the valley are still there.
+
+
+## Audience Node (ticket 0069)
+
+- **The demo Hub used to be unreachable from any other laptop**: it ran on the loopback Mesh only, and a Node has one primary interface. `NODE_ALSO_WIFI_DISCOVERY` and `NODE_ALSO_TCP_LISTEN` (both off by default) add Wi-Fi discovery and a TCP listener on all addresses beside the primary; `run-demo.sh` turns them on for the Hub only, so S0 to S3 stay loopback-only and an audience laptop never hears their readings. A Hub started with all three bound UDP 29716 and 42671 on `eth0` and listened on `0.0.0.0:<tcp port>`.
+- **Docker Desktop cannot do Wi-Fi discovery**: its network is NAT behind a VM and multicast does not cross it (host networking attaches to the VM, not the Wi-Fi adapter). The image therefore defaults to `JOIN_MESH=tcp` and dials the Hub's TCP port; on Linux, `--network host -e JOIN_MESH=auto` uses discovery.
+- **`scripts/join-demo.sh` died silently on a machine without `ifconfig`**: a missing command in a pipeline ends a `set -euo pipefail` script with no message (found in the Wi-Fi discovery rehearsal). Any optional lookup (`ip` on Linux, `ifconfig` on macOS) needs `|| true`.
+- **Rehearsed on one machine** (WSL2 on a Windows laptop): a Hub and the script as separate processes. Over loopback and over local TCP the Node got the Hub's id from `/api/state`, signed up, was accepted with the printed `curl` line, and showed in the Hub's state. Freezing the Node with `SIGSTOP` made its age on the Hub climb past 15 s (Stale); `SIGCONT` brought it back to 2 s with no restart. A second run with the same `JOIN_DIR` kept the Node id and was already registered. Busy ports, no Hub, a Sensor instead of a Hub, an unknown town and `kill -TERM` (ports freed, Node gone) all behaved. In Wi-Fi discovery mode against a Hub not on it, the 60 s fix list printed.
+- **The image was built and run on Docker Desktop (Windows, Linux engine)** against a Hub started in WSL: `docker build` took no special steps; `docker run ... host.docker.internal:8710 Dhunche` with `-e JOIN_HUB_TCP_PORT=4742` read the Hub's id, joined the Hub's Mesh over TCP, signed up, and the Hub's state showed it. After the accept, `docker pause` for 20 s took its age on the Hub to 22 s; `docker unpause` brought it back to 2 s with no restart; `docker stop` took 3 s (the script's trap handled SIGTERM; no 10 s SIGKILL) and exited 0. The WSL shell here has no Docker integration; from WSL use `docker.exe`, and start Docker Desktop with `cmd.exe /c start "" "<path>\Docker Desktop.exe"` from a script file (a worktree session refuses it as a plain command).
+- **Still unproven:** Wi-Fi discovery between two real laptops (two Nodes on one host cannot share UDP 29716, and the Docker VM is on another network), `--network host` on a Linux Docker host, the firewall and Docker fixes in the list, a Windows laptop that is not the Hub's own machine, and a real Wi-Fi off and on. Never report those as passed.
+- **Code-review found, and the script now handles:** a name with `.`, `(` or `/` broke the log pattern that finds the Node's id (names are limited to letters, digits, `-` and `_`; latitude and longitude must be numbers); a missing `lsof` made the port check pass silently; `grep -q` at the end of a pipe can fail the left side with SIGPIPE under `pipefail` (use `grep ... >/dev/null`); with no town argument every laptop would be called Dhunche, so the town (or a name with a position) is required.
+- `scripts/check.sh`: all eight Commands pass (mypy, ruff check and format, pytest, dashboard typecheck, eslint, prettier, vitest).
+- A worktree session refuses `cd x && ...`, `env VAR=... script &` and `bash script` as plain commands; write a small script under the scratchpad and run it with `bash <path> <worktree>`.
+- **The pre-push check warned once on the 0069 merge to `main` ("main is getting code that fails the Commands") and the same commit passed `check.sh` three times** (before the merge, on the merged tree, and after the push). Which Command failed is unknown: the push was piped through `tail -3`, which kept only the last lines of the hook's output. Run `git push` unpiped so the hook's `check.sh` summary stays visible; the known flake is `test_reticulum_nodes.py` (see the entries above).
+- `scripts/run-demo.sh` now downloads `cache-pack-v5` (Nepal vectors and elevation, no raster tiles). A laptop that already ran the demo keeps the old pack in `.demo/pack/`, and a Node never replaces a valid pack: delete `.demo/pack/` (and the Hub's saved `shelter_status.json`) once to pick up v5. Only `bash -n` was run on the script, not the download.
+
+## Map labels do not overlap (ticket 0078)
+
+- **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
+- **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.

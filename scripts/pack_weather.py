@@ -7,7 +7,7 @@ from storm_shield.weather_grid import VARIABLES, BBox, grid_points, weather_grid
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 SOURCE = "Open-Meteo archive (reanalysis), roughly 10 to 25 km per cell"
-# The answer is three days of five variables at 35 points, so give it longer than the tiles get.
+# The answer is three days of three variables at 153 points, so give it longer than the tiles get.
 REQUEST_TIMEOUT_SECONDS = 180
 ATTEMPTS = 5
 RETRY_PAUSE_SECONDS = 10
@@ -21,7 +21,7 @@ def weather_replay_from_archive(answers: list[dict[str, Any]], bbox: BBox) -> di
 def fetch_weather_replay(
     client: httpx.Client, bbox: BBox, first_day: str, last_day: str
 ) -> dict[str, Any]:
-    """Ask the archive for every grid point (UTC hours, m/s) and shape the answer.
+    """Ask the archive for every grid point (UTC hours) and shape the answer.
 
     One request, retried on a network error or an error status: a single failure must not
     abort a build that has not yet fetched its tiles.
@@ -33,7 +33,6 @@ def fetch_weather_replay(
         "start_date": first_day,
         "end_date": last_day,
         "hourly": ",".join(VARIABLES),
-        "wind_speed_unit": "ms",
         "timezone": "UTC",
     }
     for attempt in range(1, ATTEMPTS + 1):

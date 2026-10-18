@@ -7,8 +7,14 @@ import {
   SOURCE_LABELS,
   type OfficialAlert,
 } from "./officialAlerts";
-import { OFFICIAL_SOURCE, warningSentence, type CommunityWarning } from "./communityWarnings";
+import {
+  measuredSpeedLine,
+  OFFICIAL_SOURCE,
+  warningSentence,
+  type CommunityWarning,
+} from "./communityWarnings";
 import type { NodeSnapshot } from "./nodeState";
+import { Panel, type PanelControl } from "./Panel";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
@@ -27,6 +33,7 @@ export function AlertsPanel({
   waveArrival,
   eventT,
   online,
+  panel,
 }: {
   alerts: OfficialAlert[];
   warnings: CommunityWarning[];
@@ -37,12 +44,12 @@ export function AlertsPanel({
   waveArrival: WaveArrival | null;
   eventT: number | null;
   online: boolean;
+  panel: PanelControl;
 }) {
   const leadTime = leadTimeLine(firstCommunityWarningAt, alerts);
   const newestFirst = [...alerts].sort((a, b) => issuedUnix(b) - issuedUnix(a));
   return (
-    <section aria-label="Alerts">
-      <h2>Alerts</h2>
+    <Panel label="Alerts" {...panel}>
       {leadTime && <p className="lead-time">{leadTime}</p>}
       {newestFirst.length === 0 && warnings.length === 0 && (
         <div className="empty-panel">
@@ -72,22 +79,29 @@ export function AlertsPanel({
           )}
         </article>
       ))}
-      {[...warnings].reverse().map((warning) => (
-        <article key={warning.id} className="community-warning" aria-label="Community Warning">
-          <WaveEtaLine arrival={waveArrival} eventT={eventT} />
-          <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
-          <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
-          <p>Signed by the Hub · verified</p>
-          <p>Check official sources for any evacuation decision.</p>
-          {online ? (
-            <a href={OFFICIAL_SOURCE.url} target="_blank" rel="noreferrer">
-              Official source: {OFFICIAL_SOURCE.name}
-            </a>
-          ) : (
-            <p>Official source link opens when online</p>
-          )}
-        </article>
-      ))}
-    </section>
+      {[...warnings].reverse().map((warning) => {
+        const measuredLine = measuredSpeedLine(
+          warning,
+          (id) => nodes.find((node) => node.id === id)?.name ?? id,
+        );
+        return (
+          <article key={warning.id} className="community-warning" aria-label="Community Warning">
+            <WaveEtaLine arrival={waveArrival} eventT={eventT} />
+            <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
+            <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
+            {measuredLine && <p className="measured-speed">{measuredLine}</p>}
+            <p>Signed by the Hub · verified</p>
+            <p>Check official sources for any evacuation decision.</p>
+            {online ? (
+              <a href={OFFICIAL_SOURCE.url} target="_blank" rel="noreferrer">
+                Official source: {OFFICIAL_SOURCE.name}
+              </a>
+            ) : (
+              <p>Official source link opens when online</p>
+            )}
+          </article>
+        );
+      })}
+    </Panel>
   );
 }

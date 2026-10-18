@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
+import { sourceData } from "./fakeMaplibre";
 
 const SHELTERS = [
   { id: "gym", name: "Test Gym", pos: [29.66, -82.32], special_needs: true, pet_friendly: false },
@@ -62,6 +64,7 @@ afterEach(() => vi.restoreAllMocks());
 test("every Shelter in the Cache Pack is marked with its name and the flags it has", async () => {
   stubNode({ packAvailable: true, open: ["gym", "hall", "school"] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText("Test Gym · special needs")).toBeVisible();
   expect(await screen.findByText("Town Hall · pets")).toBeVisible();
@@ -72,6 +75,7 @@ test("every Shelter in the Cache Pack is marked with its name and the flags it h
 test("a Shelter the Hub has not announced as open says Closed", async () => {
   stubNode({ packAvailable: true, open: ["hall"] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText("Test Gym · special needs · Closed")).toBeVisible();
   expect(await screen.findByText("Town Hall · pets")).toBeVisible();
@@ -81,9 +85,10 @@ test("a Shelter the Hub has not announced as open says Closed", async () => {
 test("the corridor is drawn and captioned as approximate", async () => {
   stubNode({ packAvailable: true, open: [] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   expect(await screen.findByText("Flood-Prone Area: hand-drawn, approximate")).toBeVisible();
-  await waitFor(() => expect(document.querySelector("path.flood-prone-area")).not.toBeNull());
+  await waitFor(() => expect(sourceData("flood-prone").features).not.toHaveLength(0));
 });
 
 test("the Shelter the plan chose is marked once, apart from the others", async () => {
@@ -101,6 +106,7 @@ test("the Shelter the plan chose is marked once, apart from the others", async (
   );
   stubNode({ packAvailable: true, open: ["gym", "hall", "school"] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   await screen.findByText(/Nearest open Shelter: Test Gym/);
   await waitFor(() => expect(document.querySelectorAll(".shelter-marker")).toHaveLength(1));
@@ -110,9 +116,10 @@ test("the Shelter the plan chose is marked once, apart from the others", async (
 test("a Node without a Cache Pack shows no Shelters and no corridor", async () => {
   stubNode({ packAvailable: false, open: [] });
   render(<App />);
+  expandPanel("Evacuation Plan");
 
   await screen.findByRole("region", { name: "Map" });
   expect(document.querySelector(".shelter-pin")).toBeNull();
-  expect(document.querySelector(".flood-prone-area")).toBeNull();
+  expect(sourceData("flood-prone").features).toHaveLength(0);
   expect(screen.queryByText("Flood-Prone Area: hand-drawn, approximate")).toBeNull();
 });

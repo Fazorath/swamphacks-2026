@@ -4,7 +4,19 @@ from pathlib import Path
 
 import httpx
 from fastapi.testclient import TestClient
-from fixture_pack import FLOOD_PRONE, RIVER, SHELTERS, TILE, TILE_PATH, build_fixture_pack
+from fixture_pack import (
+    ELEVATION_PATH,
+    ELEVATION_TILE,
+    FLOOD_PRONE,
+    NEPAL_BORDER,
+    NEPAL_BORDER_PATH,
+    NEPAL_ENTRY,
+    RIVER,
+    SHELTERS,
+    TILE,
+    TILE_PATH,
+    build_fixture_pack,
+)
 
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
@@ -57,6 +69,38 @@ def test_node_downloads_the_pack_and_serves_it_after_the_source_is_gone(tmp_path
         assert node.get("/api/cache-pack/files/flood_prone.geojson").json() == FLOOD_PRONE
         assert node.get("/api/cache-pack/files/river.geojson").json() == RIVER
         assert node.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE
+
+
+def test_node_serves_the_nepal_files_and_lists_their_sources(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack(with_nepal=True))
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: _has_pack(node))
+        source.running = False
+
+        assert node.get("/api/cache-pack").json()["manifest"]["nepal"] == NEPAL_ENTRY
+        assert node.get(f"/api/cache-pack/files/{NEPAL_BORDER_PATH}").json() == NEPAL_BORDER
+        assert node.get(f"/api/cache-pack/files/{ELEVATION_PATH}").content == ELEVATION_TILE
+
+
+def test_a_pack_without_the_nepal_files_still_works(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack())
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: _has_pack(node))
+
+        assert "nepal" not in node.get("/api/cache-pack").json()["manifest"]
+        assert node.get(f"/api/cache-pack/files/{NEPAL_BORDER_PATH}").status_code == 404
+        assert node.get(f"/api/cache-pack/files/{ELEVATION_PATH}").status_code == 404
+        assert node.get("/api/cache-pack/files/river.geojson").json() == RIVER
+        assert node.get("/api/shelters").status_code == 200
+
+
+def test_a_pack_with_a_tampered_elevation_tile_is_refused(tmp_path: Path) -> None:
+    source = PackSource(build_fixture_pack(with_nepal=True, corrupt_nepal=True))
+    with _node(tmp_path, source.client) as node:
+        _wait_until(lambda: source.requests >= 1)
+        time.sleep(0.2)
+        assert not _has_pack(node)
+        assert not (tmp_path / "node" / "files").exists()
 
 
 def test_pack_without_a_source_is_unavailable(tmp_path: Path) -> None:

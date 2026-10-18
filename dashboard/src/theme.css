@@ -1,0 +1,84 @@
+/* Storm Shield theme: the only file with raw colour values. Primitives are the palette; roles say
+   what a colour is for, and every other stylesheet and component uses roles only. Re-theme by
+   changing the role mapping here. docs/design/canvas/theme.css mirrors it. */
+:root {
+  --navy-950: #0a111d;
+  --navy-925: #0e1829;
+  --navy-900: #111b2d;
+  --navy-800: #17243a;
+  --navy-700: #243450;
+  --navy-600: #33476b;
+  --ink-50: #e8eef8;
+  --ink-300: #9fb0ca;
+  --ink-400: #7a8aa6;
+  --ink-black: #05090f;
+  --cyan-400: #4cc9f0;
+  --green-400: #3dd68c;
+  --amber-400: #f5a524;
+  --red-300: #ff9494;
+  --paper-50: #f2f5fa;
+  --blue-950: #0b1f4d;
+  --blue-800: #1e40af;
+  --violet-300: #c0a8ff;
+  --slate-400: #6b86a8;
+  --river-500: #3b82c4;
+  --river-300: #7fb3e6;
+  --road-700: #223250;
+
+  --bg-page: var(--navy-950);
+  --surface-panel: var(--navy-900);
+  --surface-raised: var(--navy-800);
+  --surface-glass: color-mix(in srgb, var(--navy-900) 72%, transparent);
+  --surface-solid: color-mix(in srgb, var(--navy-900) 94%, transparent);
+  --border: var(--navy-700);
+  --border-strong: var(--navy-600);
+  --text-primary: var(--ink-50);
+  --text-secondary: var(--ink-300);
+  --text-dim: var(--ink-400);
+  --accent: var(--cyan-400);
+  --accent-ink: var(--navy-950);
+  --risk-low: var(--green-400);
+  --risk-elevated: var(--amber-400);
+  --risk-high: var(--red-300);
+  --official-bg: var(--paper-50);
+  --official-ink: var(--blue-950);
+  --official-tag: var(--blue-800);
+  --official-tag-ink: var(--paper-50);
+  --community-warning: var(--violet-300);
+  --flood-prone: var(--slate-400);
+  --danger: var(--red-300);
+  --map-ground: var(--navy-925);
+  --map-block: var(--navy-900);
+  --map-road: var(--road-700);
+  --map-water: var(--river-500);
+  /* God's Eye View (D-01, D-07): lifted land, rivers one step lighter, border and labels in ink */
+  --map-outside: var(--navy-925);
+  --map-land: var(--navy-900);
+  --map-river: var(--river-300);
+  --map-border: var(--ink-400);
+  --map-district: var(--navy-600);
+  --map-label: var(--ink-300);
+  --map-shadow: var(--ink-black);
+  /* 3D height bands (D-32) and the faint step shade that stands in for hillshade (D-05) */
+  --terrain-low: var(--navy-900);
+  --terrain-mid: var(--navy-800);
+  --terrain-high: var(--navy-700);
+  --terrain-shade: color-mix(in srgb, var(--ink-black) 35%, transparent);
+  /* the wave front (D-19), the countdown's three colours (D-25), contact lost and Stale (D-14, D-15) */
+  --wave: var(--ink-50);
+  --countdown-far: var(--ink-50);
+  --countdown-soon: var(--amber-400);
+  --countdown-now: var(--red-300);
+  --contact-lost: var(--ink-300);
+  --stale: var(--ink-400);
+  --scrim: color-mix(in srgb, var(--ink-black) 60%, transparent);
+  --focus-ring: var(--accent);
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --dur-press: 120ms;
+  --dur-panel: 180ms;
+  --dur-fade: 300ms;
+  --dur-flash: 600ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

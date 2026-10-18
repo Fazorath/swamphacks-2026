@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
+import { expandPanel } from "./expandPanel";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
 
@@ -124,6 +125,8 @@ function banner() {
 
 async function showLiveData() {
   render(<App />);
+  expandPanel("Cameras");
+  expandPanel("Evacuation Plan");
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
   await screen.findByRole("img", { name: TILE.label });
   await screen.findByText(/NPT/);
