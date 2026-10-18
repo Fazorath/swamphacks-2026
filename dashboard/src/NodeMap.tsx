@@ -45,7 +45,7 @@ import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { CommunityWarning } from "./communityWarnings";
 import type { EventClock } from "./useEventClock";
-import { useReducedMotion } from "./useViewport";
+import { usePrefersReducedMotion } from "./useViewport";
 import type { RiverLine } from "./waveEta";
 import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
 import { useRiverFlow } from "./useRiverFlow";
@@ -262,7 +262,7 @@ export function NodeMap({
   const [view, setView] = useState<View | null>(null);
   const colors = useRef<MapColors | null>(null);
   const moved = useRef(false);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = usePrefersReducedMotion();
   const terrainChoice = useRef(terrain);
   const onTerrainSlowRef = useRef(onTerrainSlow);
   useEffect(() => {

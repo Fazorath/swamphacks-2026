@@ -1,5 +1,6 @@
 import time
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 import pytest
@@ -167,6 +168,43 @@ def test_jumping_while_paused_stays_paused(meshed_nodes: MeshedNodes) -> None:
     assert (clock["state"], clock["event_t"]) == ("paused", REPLAY_START + 10 * 60)
 
 
+def _is_at_rate(meshed_nodes: MeshedNodes, name: str, rate: int) -> bool:
+    return _event_clock(meshed_nodes, name)["rate"] == rate
+
+
+def test_changing_the_rate_while_playing_reaches_every_node_without_moving_the_clock(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start_sensor("porch")
+    _start_replay(meshed_nodes)
+    meshed_nodes.advance(10)
+    assert meshed_nodes["hub"].post("/api/replay/rate", json={"rate": 5}).status_code == 200
+    for name in ("hub", "porch"):
+        _wait_until(partial(_is_at_rate, meshed_nodes, name, 5))
+        clock = _event_clock(meshed_nodes, name)
+        assert (clock["state"], clock["event_t"]) == ("playing", REPLAY_START + 10 * 30)
+    meshed_nodes.advance(10)
+    assert _event_clock(meshed_nodes, "hub")["event_t"] == REPLAY_START + 10 * 30 + 10 * 5
+
+
+def test_a_rate_chosen_before_start_is_the_rate_the_replay_starts_at(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub()
+    assert meshed_nodes["hub"].post("/api/replay/rate", json={"rate": 10}).status_code == 200
+    assert _event_clock(meshed_nodes, "hub")["state"] == "stopped"
+    _start_replay(meshed_nodes)
+    assert _event_clock(meshed_nodes, "hub")["rate"] == 10
+    meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "border"})
+    assert _event_clock(meshed_nodes, "hub")["rate"] == 10
+
+
+def test_a_rate_too_slow_for_the_surge_is_refused(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    assert meshed_nodes["hub"].post("/api/replay/rate", json={"rate": 1}).status_code == 422
+
+
 def test_jumping_to_an_unknown_phase_is_refused(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
     assert meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "nope"}).status_code == 422
@@ -284,3 +322,24 @@ def test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start(
         state = meshed_nodes["hub"].get("/api/state").json()
         surged.update(state["flood_risk"]["surged"])
     assert surged == {"s0", "s1", "s2", "s3"}
+
+
+@pytest.mark.parametrize("rate", [5, 10])
+def test_the_collapse_surge_still_reaches_the_hub_at_a_slower_rate(
+    meshed_nodes: MeshedNodes, rate: int
+) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes["s0"].post("/api/registry/signup")
+    meshed_nodes["hub"].post("/api/registry/accept", json={"id": "s0"})
+    meshed_nodes["hub"].post("/api/replay/rate", json={"rate": rate})
+    _start_replay(meshed_nodes)
+    surged: set[str] = set()
+    elapsed = 0
+    while elapsed < SENSORS_AND_SILENCE["S0"]:
+        meshed_nodes.advance(REPLAY_PUBLISH_EVERY_SECONDS)
+        elapsed += REPLAY_PUBLISH_EVERY_SECONDS * rate
+        if elapsed < SENSORS_AND_SILENCE["S0"]:
+            _wait_until_heard_just_now(meshed_nodes, "s0")
+        surged.update(meshed_nodes["hub"].get("/api/state").json()["flood_risk"]["surged"])
+    assert surged == {"s0"}

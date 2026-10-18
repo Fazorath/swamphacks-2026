@@ -242,6 +242,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
 - **A Hub with no `registry.json` starts `ver` at the Unix time** (like `seq`), so deleting the file no longer leaves running Nodes ignoring it. In a `MeshedNodes` test the first Hub start also uses the clock, so `advance(...)` before a start-over or the new `ver` can equal the old one.
 
+## Replay speed toggle (2026-10-18)
+
+- **The Hub offers x5, x10 and x30 (`POST /api/replay/rate`); x1 is refused on purpose.** Replay readings carry the real clock as their timestamp, so a Surge (300 cm in under 60 s) is judged in real seconds: S0's 3.5 m rise takes 89 s at x1 and never counts, 18 s at x5 does. `test_the_collapse_surge_still_reaches_the_hub_at_a_slower_rate` covers x5 and x10.
+- **The chosen rate lives on the Hub and is used by Start, Resume, Reset and Jump**; changing it mid-replay re-announces the clock at the same `event_t`. Software path only, not seen in a browser.
+
 ## Replay weather in the Cache Pack (ticket 0052)
 
 - **Open-Meteo answers with its own model-cell coordinates** (asked 27.86, 85.08; got 27.873, 85.034), so `weather_replay.json` stores the grid we asked for, not the answer's `latitude`/`longitude`. A multi-point request returns a list, a single point a dict.
@@ -501,3 +506,16 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
 - **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
 - Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
+
+## Readings card motion (ticket 0037)
+
+- **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.
+- **A flash is a remount**: `ReadingSlot` bumps a key when its value changes, so the CSS animation restarts. Reduced motion is checked in the components (`usePrefersReducedMotion`, test switch `setReducedMotion`) and in a media query.
+- **Not done / not seen in a browser:** Stale dims by opacity only (desaturating needs `filter`, outside the transform/opacity rule); the chip fades in without fading the old one out; every card fades in on mount, not only new Nodes; the row slots have no fixed width of their own (the three grid columns do).
+
+## Flood alert email (ticket 0081)
+
+- **The Hub's email is separate from the Gmail connector in Claude Code.** The Hub sends over SMTP (`smtp.gmail.com:465`) with `ALERT_EMAIL_FROM`, `ALERT_EMAIL_APP_PASSWORD` and `ALERT_EMAIL_TO` from `.env` (all three, or nothing is sent). `scripts/run-demo.sh` loads `.env`, so a start from the demo script picks them up; a Node started any other way must export them.
+- **Create the app password once, on the team account:** turn on 2-step verification, then Google Account, Security, App passwords, make one called "Storm Shield Hub", and paste the 16 characters into `.env` (spaces are fine to drop). The normal password is rejected for SMTP. The password never goes in chat, a ticket or the repo.
+- **A send needs internet.** The first Community Warning (08:37 Surge) comes before the 09:20 internet cue, so it normally goes out; a failure is logged as `could not email the flood alert for <node>: <error type>` and nothing else changes. The log never carries the SMTP server's reply text, because it can echo the login.
+- **Not proven without the app password:** the tests replace `smtplib.SMTP_SSL`, so a real Gmail send, the 465 port and the app password itself have not been run.

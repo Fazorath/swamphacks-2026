@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 // has the desktop's Panels but only one open per side.
 const PHONE_QUERY = "(width < 900px)";
 const TABLET_QUERY = "(width < 1200px)";
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 function matches(query: string): boolean {
   return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
@@ -22,6 +21,8 @@ function useMedia(query: string): boolean {
   );
 }
 
+// With reduced motion every change is an instant swap: the components leave their animation
+// classes off, not only the stylesheet's media query.
+export const usePrefersReducedMotion = () => useMedia("(prefers-reduced-motion: reduce)");
 export const useIsPhone = () => useMedia(PHONE_QUERY);
 export const useIsTablet = () => useMedia(TABLET_QUERY);
-export const useReducedMotion = () => useMedia(REDUCED_MOTION_QUERY);

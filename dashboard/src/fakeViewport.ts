@@ -24,8 +24,8 @@ export function setViewport(newWidth: number) {
   act(() => listeners.forEach((listener) => listener()));
 }
 
-export function setReducedMotion(reduced: boolean) {
-  reducedMotion = reduced;
+export function setReducedMotion(reduce: boolean) {
+  reducedMotion = reduce;
   act(() => listeners.forEach((listener) => listener()));
 }
 
