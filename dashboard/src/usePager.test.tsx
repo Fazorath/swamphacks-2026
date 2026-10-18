@@ -23,6 +23,7 @@ function node(id: string, position: [number, number], over: Partial<NodeOnMap> =
     waterLevelCm: null,
     simulated: false,
     fleet: false,
+    riverKm: null,
     stale: false,
     registered: true,
     level: null,

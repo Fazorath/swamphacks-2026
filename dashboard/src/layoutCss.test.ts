@@ -27,4 +27,10 @@ describe("the Panel columns stay on screen", () => {
       /@media \(hover: hover\) and \(width >= 56\.25rem\)\s*\{\s*\.panel\s*\{[^}]*backdrop-filter/,
     );
   });
+
+  it("keeps the phone's status strip to one line that scrolls sideways", () => {
+    expect(css).toMatch(
+      /\.phone \.status-strip\s*\{[^}]*overflow-x:\s*auto[^}]*white-space:\s*nowrap/,
+    );
+  });
 });

@@ -109,3 +109,27 @@ export function waveEtaLine(arrivalAt: number, eventT: number): string {
   if (secondsLeft <= 0) return "Wave expected now";
   return `Wave expected at your home in about ${Math.ceil(secondsLeft / 60)} min`;
 }
+
+// Where the wave front is on the river at `eventT`, as a River km: the furthest any warning's front
+// has got, or null while no warning has started a wave. Found by inverting the arrival time, which
+// grows with River km.
+export function waveFrontKm(
+  river: RiverLine,
+  warnings: CommunityWarning[],
+  eventT: number,
+): number | null {
+  const endKm = Math.max(...river.map(({ km }) => km[km.length - 1]));
+  const fronts = warnings
+    .filter((warning) => warning.surge_t < eventT)
+    .map((warning) => {
+      let behind = warning.origin_km;
+      let ahead = endKm;
+      for (let step = 0; step < 40; step++) {
+        const middle = (behind + ahead) / 2;
+        if (arrivalAt(river, warning, middle) <= eventT) behind = middle;
+        else ahead = middle;
+      }
+      return behind;
+    });
+  return fronts.length === 0 ? null : Math.max(...fronts);
+}

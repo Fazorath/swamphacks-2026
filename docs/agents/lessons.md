@@ -460,8 +460,15 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **On a Windows checkout every file has CRLF, and `layoutCss.test.ts` fails** ("no rule for .panel-column in App.css") because its regex needs `\n\n` between rules. Stripping the `\r` from `App.css` makes it pass; git stores LF, so it is a local quirk, not a repo bug. A Python script that rewrites a file in text mode also writes CRLF here; open with `newline=""` to keep the endings.
 - **A Shelter with no Route is not "unreachable"**: the valley pack has no Route to the Syabrubesi gompa (the corridor rule dropped them), so the out-of-reach Shelter gets a dashed straight line from home, labelled as a direction only. Real high-ground targets are ticket 0068.
 
+## Readings Panel ladder (ticket 0070)
+
+- **The state has no flag for the breadboard Pi**, so `readingsLadder` pins the first real (non-simulated) Node with no River km that is not the Hub. A real Audience Node with no River km would be pinned by mistake; add a flag to the reading if that happens.
+- **A fleet marker's popover sits inside the marker element**, so its clicks bubble to the marker's own listener; `MapMarker` ignores clicks inside `[data-marker-ignore]`.
+- `test_reticulum_nodes.py` errored at setup in a full run because Nodes left by an earlier `check.sh` run of mine still held 8103/4312; they were mine (start time matched the run), killed, and the file passed alone.
+- Not seen in a browser: the ladder layout, the wave marker and the popover position are tested against the fake map only.
+
 ## Phone layout (ticket 0036)
 
 - **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
 - **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
-- **Not done:** the manual check on a phone over Tailscale (no browser or phone in this session), so 44 px targets, the sheet and the pinned alert are unseen outside jsdom. The bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a tapped home pick has no on-screen cancel on the phone.
+- **Manual check done (2026-10-18):** the owner used a phone over Tailscale against `scripts/run-demo.sh` on `main`; all four tabs worked. The wrapped status strip took over 30% of the screen, so it is one sideways-scrolling line now. Tailscale was stopped on the laptop at first (`tailscale status` says so), and a leftover pack server on 8900 blocked `run-demo.sh` until it was stopped. **Still open:** the bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a home pick has no on-screen cancel on the phone.

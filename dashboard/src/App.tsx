@@ -39,7 +39,7 @@ import { useRoadGraph } from "./useRoadGraph";
 import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
-import { waveArrival } from "./waveEta";
+import { waveArrival, waveFrontKm } from "./waveEta";
 import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
@@ -70,6 +70,8 @@ export function App() {
   const rises = useLevelRises(nodes);
   const contactNotes = useContactNotes([...nodes, ...fleet]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [fleetOpenId, setFleetOpenId] = useState<string | null>(null);
+  const toggleFleetOpen = (id: string) => setFleetOpenId((current) => (current === id ? null : id));
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const pager = usePager(nodes, profile?.home ?? null);
@@ -106,6 +108,7 @@ export function App() {
     arrival && arrival.kind === "expected" && eventT !== null
       ? { arrivalAt: arrival.at, eventT }
       : null;
+  const waveKm = river && eventT !== null ? waveFrontKm(river, communityWarnings, eventT) : null;
   const plan = evacuationPlan({
     profile: shownProfile,
     pack: cachePack,
@@ -181,6 +184,8 @@ export function App() {
     <ReadingsPanel
       nodes={nodes}
       floodRisk={floodRisk}
+      hubId={state?.role === "hub" ? state.id : null}
+      waveKm={waveKm}
       selectedId={selectedId}
       onSelect={toggleSelected}
       rises={rises}
@@ -275,6 +280,8 @@ export function App() {
           stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
           selectedId={selectedId}
           onSelect={toggleSelected}
+          fleetOpenId={fleetOpenId}
+          onToggleFleet={toggleFleetOpen}
           home={shownProfile?.home ?? null}
           shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
           openShelterIds={openShelterIds}
