@@ -11,7 +11,9 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest", "ruff", "mypy"]
+dev = ["pytest", "ruff", "mypy", "gpiozero"]
+# Only the Pi reads the Breadboard; pi/README.md covers the lgpio backend it also needs.
+pi = ["gpiozero"]
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"
@@ -35,5 +37,5 @@ strict = true
 mypy_path = "../scripts"
 
 [[tool.mypy.overrides]]
-module = ["RNS", "RNS.*"]
+module = ["RNS", "RNS.*", "gpiozero", "gpiozero.*"]
 ignore_missing_imports = true

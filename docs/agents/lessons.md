@@ -264,6 +264,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
 - **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.
 
+## Breadboard (ticket 0016)
+
+- **A press is a wire from the Pi's 3.3 V pin to an input pin**, not a button. The Pi's internal pull-down (`pull_up=False`) keeps an empty pin low, and a press jumps the Scenario to that pin's step (`Scenario.go_to`); only reset goes back. Pin table: `pi/README.md`.
+- **`gpiozero`'s `MockFactory` stores `bounce_time` but does not simulate bounce**, so the 50 ms debounce is untested; it is the library's, set on each `Button`. Drive a mock pin with `factory.pin(17).drive_high()`; set `Device.pin_factory = MockFactory()` in a fixture and restore `None` after.
+- **`lgpio`, the backend `gpiozero` needs on a Pi, is source-only on PyPI and needs `swig`**, so `uv lock` fails if it is a dependency. The `pi` group holds only `gpiozero`; the README builds `lgpio` on the Pi. Not proven on a Pi yet.
+- **`claim.sh` compares the ticket's Owner with `git config user.name`**, so an Owner written as a handle (`amitathik7`) against the name "Amit Athi Kesavan" makes it refuse. The ticket was already claimed, so 0016 skipped the script.
+- `MeshedNodes` Nodes start with `gpio="off"` so a test run on a real Pi never reads its pins. `pi/setup-hotspot.sh up` was only exercised for its missing-setting and bad-argument paths here; the `nmcli` part never ran.
+
 ## Pi hardware check (ticket 0004)
 
 - **AutoInterface works between a Pi and a laptop over Ethernet and over an iPhone hotspot**: peers found each other in 10 to 18 s with nothing configured. The iPhone hotspot passes the IPv6 multicast discovery needs.

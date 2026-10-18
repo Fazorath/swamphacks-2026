@@ -45,6 +45,9 @@ class Scenario:
     def step(self) -> None:
         self._index = min(self._index + 1, len(SCENARIO_STEPS) - 1)
 
+    def go_to(self, step_name: str) -> None:
+        self._index = SCENARIO_STEPS.index(step_name)
+
     def reset(self) -> None:
         self._index = 0
 

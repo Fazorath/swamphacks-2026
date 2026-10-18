@@ -5,6 +5,7 @@ from typing import Any, Literal
 import httpx
 from fastapi.testclient import TestClient
 
+from storm_shield.breadboard import GpioMode
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.community_warning import CommunityWarning
@@ -55,11 +56,13 @@ class MeshedNodes:
         replay_track: str = "",
         publish_every_seconds: float = 0.02,
         sign_up_repeat_seconds: float = 10,
+        gpio: GpioMode = "off",
     ) -> None:
         """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
         settings = self._settings(
             name,
             hub_identity=HUB,
+            gpio=gpio,
             replay_track=replay_track,
             publish_every_seconds=publish_every_seconds,
             sign_up_repeat_seconds=sign_up_repeat_seconds,
@@ -104,6 +107,8 @@ class MeshedNodes:
 
     def _settings(self, name: str, **overrides: Any) -> Settings:
         own = self._directory / name
+        # Off unless a test asks, so a run on a real Pi never reads its pins.
+        overrides = {"gpio": "off", **overrides}
         return Settings(
             name=name,
             dashboard_dir=own / "no-dashboard",

@@ -12,9 +12,9 @@
 
 **Design:** `docs/design/ui.md` ("Node Panel"); canvas artboard `D-Node-Scenario`.
 
-- [ ] Digital GPIO buttons and switches map to Scenario steps and reset on the Pi
-- [ ] On a non-Pi machine the Node starts without GPIO and falls back to keyboard/HTTP steps
-- [ ] The Pi runs its own Wi-Fi hotspot with no internet; setup notes are kept next to the code
-- [ ] A wiring diagram or pin table is kept next to the code
+- [x] Four GPIO inputs (a wire from 3.3 V to a pin) jump the Scenario to pressure drop, rain and water rising, or reset it, on the Pi (tested with mock pins)
+- [x] On a non-Pi machine the Node starts without GPIO and falls back to keyboard/HTTP steps
+- [ ] The Pi runs its own Wi-Fi hotspot with no internet; setup notes are kept next to the code (`pi/setup-hotspot.sh` and `pi/README.md` are written; the script has not been run on a Pi)
+- [x] A wiring diagram or pin table is kept next to the code (`pi/README.md`)
 - [ ] Manual check: each button press changes the Pi's readings on a laptop dashboard joined to the hotspot
 - [ ] All **Commands** pass

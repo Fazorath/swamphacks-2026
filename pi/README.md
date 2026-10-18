@@ -1,0 +1,63 @@
+# The Pi: Breadboard and hotspot
+
+The Raspberry Pi 4 is the stage Node. A wire touched to a Breadboard pin jumps its Scenario, and its Wi-Fi is the hotspot every laptop and phone joins. Words follow `CONTEXT.md`. Neither part is needed to run a Node: on a laptop, or on the Pi with `NODE_GPIO=off`, the Scenario steps from the keyboard or `POST /api/scenario/step`.
+
+## Pin table
+
+Four inputs. Each pin uses the Pi's internal pull-down, so a pin with nothing plugged in reads "not pressed". A press is a wire from a **3.3 V** pin to the input pin; unplugging it does nothing.
+
+| Input | BCM pin | Physical pin | Effect |
+|---|---|---|---|
+| Pressure drop | 17 | 11 | Scenario jumps to `pressure_drop` |
+| Rain | 27 | 13 | Scenario jumps to `rain` |
+| Water rising | 22 | 15 | Scenario jumps to `water_rising` |
+| Reset | 23 | 16 | Scenario goes back to `normal_day` |
+| 3.3 V (the wire's source) | – | 1 or 17 | – |
+
+The table lives in `node/src/storm_shield/breadboard.py`; change both together.
+
+A press jumps straight to its step, so pressing out of order or twice is safe. It changes only this Node, so one Node going High cannot raise a Community Warning by itself. While this Node plays a Replay (its Sensor follows an Event clock that is playing or paused) a press changes nothing you can see; the Scenario moves underneath and shows when the Replay is stopped.
+
+## Wiring
+
+1. Do not use 5 V. A 5 V wire on a GPIO pin can damage the Pi. Use only physical pin 1 or 17 (3.3 V).
+2. With the Pi powered off, run a jumper from physical pin 1 to a breadboard power rail.
+3. Power the Pi on and measure the rail against a ground pin (for example physical pin 6) with a multimeter. It must read about 3.3 V, never 5 V. Fix the wiring before going on.
+4. Run one jumper from each input pin in the table to its own spot on the breadboard, so a loose end is easy to plug into the rail.
+5. A press is touching or plugging that wire into the rail. Pull it out to let go.
+
+## Running the Node with the Breadboard
+
+```
+sudo apt install -y swig python3-dev   # lgpio, the pin backend gpiozero uses, builds from source
+cd node && uv sync --group pi && uv pip install lgpio
+NODE_GPIO=on uv run storm-shield-node
+```
+
+`NODE_GPIO` is `auto` by default: on only when the machine says it is a Raspberry Pi, so a laptop never loads GPIO. `on` stops the Node with an error if the pins cannot be read; `off` never loads the library. With `auto`, a Pi that cannot start the Breadboard logs why and keeps running without it. Give every Node its own `NODE_LATITUDE` and `NODE_LONGITUDE`.
+
+## Hotspot
+
+Needs NetworkManager (Raspberry Pi OS Bookworm). Put `HOTSPOT_SSID` and `HOTSPOT_PASSWORD` (8 or more characters) in the repo's `.env`, which is never committed.
+
+```
+pi/setup-hotspot.sh up     # creates the connection and brings it up; safe to run again
+pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
+```
+
+- It never starts at boot. Run `up` yourself.
+- The Pi's Wi-Fi is the access point while it is up, so it cannot also join another Wi-Fi. Use Ethernet to SSH in.
+- There is no internet through it, which is the point: unplugging the Hub laptop's tether is "internet off".
+- The Pi is at `10.42.0.1`. Phones open `http://10.42.0.1:8000` or the Hub's address.
+- If it misbehaves, a phone's hotspot is the fallback: AutoInterface already worked over an iPhone hotspot (`docs/agents/lessons.md`, ticket 0004).
+
+## Manual check (not done until done on the real Pi)
+
+- [ ] Rail measured at 3.3 V.
+- [ ] `pi/setup-hotspot.sh up`; a laptop joins the hotspot and opens the Pi's dashboard.
+- [ ] Touching each of the three step wires changes the Scenario step and the readings on the laptop's dashboard.
+- [ ] The reset wire returns it to normal day.
+- [ ] Unplugging a wire changes nothing, and an unplugged pin never presses by itself.
+- [ ] `pi/setup-hotspot.sh down`; the Node still works on a normal network.
+
+Laptop rehearsal covers only the software path (mock pins in `node/tests/test_breadboard.py`). It proves nothing about the wiring, wire bounce, the hotspot or discovery over it.

@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from storm_shield.breadboard import open_breadboard
 from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
@@ -180,6 +181,18 @@ def create_app(
         own_measurements,
         keep_reading,
     )
+
+    def press_a_step(step_name: str) -> None:
+        with publisher.lock:
+            scenario.go_to(step_name)
+            publisher.share()
+
+    def press_reset() -> None:
+        with publisher.lock:
+            scenario.reset()
+            publisher.share()
+
+    breadboard = open_breadboard(settings.gpio, press_a_step, press_reset)
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
@@ -489,6 +502,8 @@ def create_app(
         yield
         for task in tasks:
             task.cancel()
+        if breadboard:
+            breadboard.close()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
