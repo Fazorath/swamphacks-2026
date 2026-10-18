@@ -88,6 +88,19 @@ export type WaveArrival =
   // Event time (Unix seconds) at which the wave reaches home.
   { kind: "expected"; at: number } | { kind: "not-near-river" };
 
+// The earliest Event time at which any warning's wave reaches this River km; null when every
+// origin is at or below it. The map's front and town stamps read it too, so they agree with the ETA.
+export function arrivalAtKm(
+  river: RiverLine,
+  warnings: CommunityWarning[],
+  riverKm: number,
+): number | null {
+  const arrivals = warnings
+    .filter((warning) => warning.origin_km < riverKm)
+    .map((warning) => arrivalAt(river, warning, riverKm));
+  return arrivals.length === 0 ? null : Math.min(...arrivals);
+}
+
 // The earliest arrival over all warnings whose origin is upstream of home; null when no warning
 // has an ETA for this home (none yet, or every origin is at or below it).
 export function waveArrival(
@@ -98,10 +111,8 @@ export function waveArrival(
   if (warnings.length === 0) return null;
   const homeKm = riverKmOfHome(river, home);
   if (homeKm === null) return { kind: "not-near-river" };
-  const arrivals = warnings
-    .filter((warning) => warning.origin_km < homeKm)
-    .map((warning) => arrivalAt(river, warning, homeKm));
-  return arrivals.length === 0 ? null : { kind: "expected", at: Math.min(...arrivals) };
+  const at = arrivalAtKm(river, warnings, homeKm);
+  return at === null ? null : { kind: "expected", at };
 }
 
 export function waveEtaLine(arrivalAt: number, eventT: number): string {

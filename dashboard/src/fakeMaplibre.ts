@@ -84,6 +84,9 @@ class FakeMap {
     };
   }
 
+  // The last layout and paint values the app set, keyed "layer:property".
+  readonly layerProperties = new Map<string, unknown>();
+
   getLayer(id: string) {
     return this.layerIds.includes(id) ? { id } : undefined;
   }
@@ -94,6 +97,14 @@ class FakeMap {
 
   removeSource(id: string) {
     this.sources.delete(id);
+  }
+
+  setLayoutProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
+  }
+
+  setPaintProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
   }
 
   project([lon, lat]: [number, number]) {

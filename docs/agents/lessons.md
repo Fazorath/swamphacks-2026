@@ -505,6 +505,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
 - **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.
 
+## Wave front and river flow (ticket 0065)
+
+- **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
+- **An effect that needs a layer added by another effect must be called after it in the same component**: child effects run before the parent's, so a `WaveLayers` child looked for the `river-flow` layer before `addNepalBasemap` had added it and never retried. `useRiverFlow` is a hook called below the basemap effect in `NodeMap`. `react-hooks/set-state-in-effect` rejects the "set a ready flag" alternative.
+- **The raw-colour test rejects the text `rgba(`**, even in a transparent gradient stop; build it as the expression `["rgba", r, g, b, 0]` from the theme colour.
+- **Not proven:** 60 fps with the comet and the `line-dasharray` cycle (every 160 ms over the whole rivers layer), the `line-gradient` look, and the dashes in a browser at all; no Chrome extension here. Check on the demo laptop; if the dashes cost frames, lengthen `FLOW_STEP_MS` or drop to the main rivers.
+- Known edges left: the trail starts at the earliest origin over all warnings, so with two Surges it can start behind the head's own; with reduced motion the front is a comet that steps once per clock answer, not a separate static marker.
+
 ## Readings card motion (ticket 0037)
 
 - **Arrows come from `readingTrends.ts`, which keeps a sample only when a value changes** and compares the newest with the last sample from 30 s ago. It takes the time of the Node's last answer (`lastAnswer.at`) instead of reading a clock, so it can derive state during render (ESLint `set-state-in-effect` rejects the effect version). The thresholds (2 cm, 0.5 mm/h, 0.5 hPa, 1 %) are guesses above the fixtures' jitter.

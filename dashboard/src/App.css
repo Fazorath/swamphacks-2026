@@ -782,6 +782,21 @@ section p {
   box-shadow: none;
 }
 
+/* The wave front just passed (D-18): wave-white whatever the Node's state, for about two event
+   minutes; then these rules stop applying and the dot follows its real state again. */
+.node-marker.wave-passed .node-dot {
+  background: var(--wave);
+  border-color: var(--wave);
+  color: var(--wave);
+  box-shadow: 0 0 14px var(--wave);
+}
+
+/* The wave reached this town (D-21): its name turns wave-white and keeps the arrival time. */
+.place-label.wave-reached {
+  color: var(--wave);
+  text-shadow: 0 0 8px var(--wave);
+}
+
 /* A pseudo-element, so Selected's cyan ring sits outside a REAL Node's white one. */
 .node-marker.selected .node-dot::after {
   content: "";
