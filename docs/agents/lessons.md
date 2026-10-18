@@ -489,3 +489,10 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
 
+
+## Flood alert email (ticket 0081)
+
+- **The Hub's email is separate from the Gmail connector in Claude Code.** The Hub sends over SMTP (`smtp.gmail.com:465`) with `ALERT_EMAIL_FROM`, `ALERT_EMAIL_APP_PASSWORD` and `ALERT_EMAIL_TO` from `.env` (all three, or nothing is sent). `scripts/run-demo.sh` loads `.env`, so a start from the demo script picks them up; a Node started any other way must export them.
+- **Create the app password once, on the team account:** turn on 2-step verification, then Google Account, Security, App passwords, make one called "Storm Shield Hub", and paste the 16 characters into `.env` (spaces are fine to drop). The normal password is rejected for SMTP. The password never goes in chat, a ticket or the repo.
+- **A send needs internet.** The first Community Warning (08:37 Surge) comes before the 09:20 internet cue, so it normally goes out; a failure is logged as `could not email the flood alert for <node>: <error type>` and nothing else changes. The log never carries the SMTP server's reply text, because it can echo the login.
+- **Not proven without the app password:** the tests replace `smtplib.SMTP_SSL`, so a real Gmail send, the 465 port and the app password itself have not been run.
