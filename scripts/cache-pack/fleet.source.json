@@ -1,0 +1,363 @@
+[
+ {
+  "id": "fleet-chisapani",
+  "name": "Chisapani",
+  "river": "Karnali",
+  "site": "town",
+  "lat": 28.644,
+  "lon": 81.276,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-surkhet",
+  "name": "Surkhet",
+  "river": "Bheri",
+  "site": "town",
+  "lat": 28.601,
+  "lon": 81.619,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-gulariya",
+  "name": "Gulariya",
+  "river": "Babai",
+  "site": "town",
+  "lat": 28.07,
+  "lon": 81.341,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-ghorahi",
+  "name": "Ghorahi",
+  "river": "Rapti",
+  "site": "town",
+  "lat": 28.041,
+  "lon": 82.484,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-tulsipur",
+  "name": "Tulsipur",
+  "river": "Rapti",
+  "site": "town",
+  "lat": 28.13,
+  "lon": 82.296,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-nepalgunj",
+  "name": "Nepalgunj",
+  "river": "Rapti",
+  "site": "town",
+  "lat": 28.05,
+  "lon": 81.617,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-mahendranagar",
+  "name": "Mahendranagar",
+  "river": "Mahakali",
+  "site": "town",
+  "lat": 28.964,
+  "lon": 80.18,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-dhangadhi",
+  "name": "Dhangadhi",
+  "river": "Mohana",
+  "site": "town",
+  "lat": 28.69,
+  "lon": 80.598,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-dipayal",
+  "name": "Dipayal",
+  "river": "Seti",
+  "site": "town",
+  "lat": 29.262,
+  "lon": 80.944,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)",
+  "silent_at": "09:40:00"
+ },
+ {
+  "id": "fleet-martadi",
+  "name": "Martadi",
+  "river": "Budhiganga",
+  "site": "town",
+  "lat": 29.45,
+  "lon": 81.48,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-jumla",
+  "name": "Jumla",
+  "river": "Tila",
+  "site": "town",
+  "lat": 29.275,
+  "lon": 82.183,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-dunai",
+  "name": "Dunai",
+  "river": "Bheri",
+  "site": "town",
+  "lat": 28.941,
+  "lon": 82.887,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-beni",
+  "name": "Beni",
+  "river": "Kali Gandaki",
+  "site": "town",
+  "lat": 28.346,
+  "lon": 83.569,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-pokhara",
+  "name": "Pokhara",
+  "river": "Seti Gandaki",
+  "site": "town",
+  "lat": 28.209,
+  "lon": 83.986,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-besisahar",
+  "name": "Besisahar",
+  "river": "Marsyangdi",
+  "site": "town",
+  "lat": 28.232,
+  "lon": 84.378,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-arughat",
+  "name": "Arughat",
+  "river": "Budhi Gandaki",
+  "site": "town",
+  "lat": 28.039,
+  "lon": 84.816,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-bharatpur",
+  "name": "Bharatpur",
+  "river": "Narayani",
+  "site": "town",
+  "lat": 27.683,
+  "lon": 84.435,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-butwal",
+  "name": "Butwal",
+  "river": "Tinau",
+  "site": "town",
+  "lat": 27.7,
+  "lon": 83.448,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-kathmandu",
+  "name": "Kathmandu",
+  "river": "Bagmati",
+  "site": "town",
+  "lat": 27.717,
+  "lon": 85.324,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-hetauda",
+  "name": "Hetauda",
+  "river": "Rapti (Makwanpur)",
+  "site": "town",
+  "lat": 27.429,
+  "lon": 85.032,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-dolalghat",
+  "name": "Dolalghat",
+  "river": "Sun Koshi",
+  "site": "town",
+  "lat": 27.642,
+  "lon": 85.709,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-manthali",
+  "name": "Manthali",
+  "river": "Tama Koshi",
+  "site": "town",
+  "lat": 27.433,
+  "lon": 86.061,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-phaplu",
+  "name": "Phaplu",
+  "river": "Dudh Koshi",
+  "site": "town",
+  "lat": 27.518,
+  "lon": 86.583,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-tumlingtar",
+  "name": "Tumlingtar",
+  "river": "Arun",
+  "site": "town",
+  "lat": 27.315,
+  "lon": 87.195,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-taplejung",
+  "name": "Taplejung",
+  "river": "Tamor",
+  "site": "town",
+  "lat": 27.352,
+  "lon": 87.67,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-dharan",
+  "name": "Dharan",
+  "river": "Koshi",
+  "site": "town",
+  "lat": 26.812,
+  "lon": 87.284,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-biratnagar",
+  "name": "Biratnagar",
+  "river": "Singhia",
+  "site": "town",
+  "lat": 26.455,
+  "lon": 87.27,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-kakarbhitta",
+  "name": "Kakarbhitta",
+  "river": "Mechi",
+  "site": "town",
+  "lat": 26.648,
+  "lon": 88.148,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-birgunj",
+  "name": "Birgunj",
+  "river": "Sirsiya",
+  "site": "town",
+  "lat": 27.01,
+  "lon": 84.877,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-janakpur",
+  "name": "Janakpur",
+  "river": "Kamala",
+  "site": "town",
+  "lat": 26.729,
+  "lon": 85.926,
+  "source": "Town centre, OpenStreetMap place node (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-tsho-rolpa",
+  "name": "Tsho Rolpa",
+  "river": "Rolwaling Khola",
+  "site": "headwater",
+  "lat": 27.85,
+  "lon": 86.47,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacial lake outlet (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-imja-tsho",
+  "name": "Imja Tsho",
+  "river": "Imja Khola",
+  "site": "headwater",
+  "lat": 27.9,
+  "lon": 86.93,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacial lake outlet (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-gokyo",
+  "name": "Gokyo",
+  "river": "Dudh Koshi",
+  "site": "headwater",
+  "lat": 27.96,
+  "lon": 86.69,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacial lake outlet (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-thulagi-lake",
+  "name": "Thulagi Lake",
+  "river": "Marsyangdi",
+  "site": "headwater",
+  "lat": 28.5,
+  "lon": 84.48,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacial lake outlet (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-gangapurna-lake",
+  "name": "Gangapurna Lake",
+  "river": "Marsyangdi",
+  "site": "headwater",
+  "lat": 28.66,
+  "lon": 84.01,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacier front (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-jomsom",
+  "name": "Jomsom",
+  "river": "Kali Gandaki",
+  "site": "headwater",
+  "lat": 28.78,
+  "lon": 83.72,
+  "source": "OpenStreetMap / Wikipedia coordinates of the upper valley (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-phoksundo-lake",
+  "name": "Phoksundo Lake",
+  "river": "Suli Gad",
+  "site": "headwater",
+  "lat": 29.2,
+  "lon": 82.95,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacial lake outlet (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-rara-lake",
+  "name": "Rara Lake",
+  "river": "Mugu Karnali",
+  "site": "headwater",
+  "lat": 29.52,
+  "lon": 82.09,
+  "source": "OpenStreetMap / Wikipedia coordinates of the upper valley (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-simikot",
+  "name": "Simikot",
+  "river": "Karnali",
+  "site": "headwater",
+  "lat": 29.97,
+  "lon": 81.82,
+  "source": "OpenStreetMap / Wikipedia coordinates of the upper valley (rounded to 3 decimals, not checked on a map)"
+ },
+ {
+  "id": "fleet-pangpema",
+  "name": "Pangpema",
+  "river": "Tamor",
+  "site": "headwater",
+  "lat": 27.87,
+  "lon": 88.15,
+  "source": "OpenStreetMap / Wikipedia coordinates of the glacier front (rounded to 3 decimals, not checked on a map)"
+ }
+]

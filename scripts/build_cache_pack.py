@@ -14,8 +14,10 @@ from pathlib import Path
 
 import httpx
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
+from pack_fleet import build_fleet
 from pack_weather import fetch_weather_replay
 
+from storm_shield.replay import load_timeline
 from storm_shield.weather_grid import VALLEY_BBOX
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
@@ -158,10 +160,13 @@ def build(output: Path, osm_extract: Path | None) -> None:
         files.update(route_files)
         manifest_extras["route_grid"] = route_grid.as_manifest_entry()
     tile_list = tiles_covering(BBOX)
-    print(f"fetching the recorded weather and {len(tile_list)} tiles", flush=True)
+    print(f"fetching the recorded weather, the Simulated Fleet and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
         weather = fetch_weather_replay(client, BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
+        files["fleet.json"] = build_fleet(
+            client, SOURCE_DIR / "fleet.source.json", load_timeline(), BBOX
+        )
         for zoom, x, y in tile_list:
             files[f"tiles/{zoom}/{x}/{y}.png"] = fetch_tile(client, zoom, x, y)
 

@@ -200,6 +200,7 @@ Decided in the 0064 grill on 2026-10-18; spec: `docs/specs/gods-eye-view.md`. Th
   "credit":  "Weather data by Open-Meteo.com (CC BY 4.0)",
   "water_model": "water level modelled from Open-Meteo rainfall: base_cm + gain * rain of the previous 24 h",
   "start_t": 1787712300, "step_s": 30,
+  "units": { "water_level": "cm", "rain_rate": "mm/h", "soil_moisture": "%", "pressure": "hPa" },
   "entries": [
     { "id": "fleet-chisapani", "name": "Chisapani", "river": "Karnali", "site": "town", "pos": [28.644, 81.276],
       "silent_at": null,
@@ -209,6 +210,6 @@ Decided in the 0064 grill on 2026-10-18; spec: `docs/specs/gods-eye-view.md`. Th
 ```
 
 - `start_t` is 08:30 NPT on 26 Aug 2026 in event time; point `i` of every track is at `start_t + i * step_s`, through 10:30. Units are those of `measurements` (cm, mm/h, %, hPa).
-- `site` is `town` or `headwater`. `silent_at` (event time) is set on one town site only; past it the entry keeps its last point and ages.
+- `site` is `town` or `headwater`. `silent_at` (event time) is set on one town site only; its track ends there, so past it the entry keeps its last point and ages.
 - A Node serves the reading at the last point at or before its Event clock; with no Replay heard, point 0. `age_s` is `(event_now − last_point_t) / rate`, frozen while the clock is paused or stopped.
 - Ids are `fleet-<slug>`, never shaped like a Node id. The manifest lists the file's checksum like any other.

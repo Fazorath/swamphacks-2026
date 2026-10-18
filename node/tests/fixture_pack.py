@@ -2,6 +2,7 @@ import hashlib
 import io
 import json
 import zipfile
+from typing import Any
 
 SHELTERS = [
     {
@@ -28,6 +29,7 @@ WEATHER_REPLAY = {"source": "fixture", "credit": "fixture credit", "times": ["20
 TILE = b"\x89PNG fixture tile"
 TILE_PATH = "tiles/10/754/429.png"
 WEATHER_PATH = "weather_replay.json"
+FLEET_PATH = "fleet.json"
 
 
 def build_fixture_pack(
@@ -36,6 +38,7 @@ def build_fixture_pack(
     leave_out_tile: bool = False,
     with_weather: bool = False,
     corrupt_weather: bool = False,
+    fleet: dict[str, Any] | None = None,
     shelters: list[dict[str, object]] = SHELTERS,
 ) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
@@ -47,6 +50,8 @@ def build_fixture_pack(
     }
     if with_weather:
         files[WEATHER_PATH] = json.dumps(WEATHER_REPLAY).encode()
+    if fleet is not None:
+        files[FLEET_PATH] = json.dumps(fleet).encode()
     manifest = {
         "v": 1,
         "built": "2026-10-16T00:00:00Z",

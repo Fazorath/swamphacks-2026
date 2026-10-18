@@ -361,3 +361,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Node left over from an earlier session held loopback port 4250** and made four `test_reticulum_nodes.py` tests error in `scripts/check.sh`. `scripts/stop-nodes.sh` cannot find it on Windows (`pkill` and `lsof` are missing); use `Get-NetTCPConnection` and `Stop-Process`.
 - **Example home**: with no saved profile and a valley pack, `exampleHousehold` (28.1654, 85.3398, Syabrubesi, 3.0 km by road to Komin school once the gompa lost its Route; a first pick at 28.0599, 85.2303 was 26 km by road from any Shelter, because the five Shelters sit up to 66 km apart, so choose a home by its road distance to a Shelter) feeds the plan, the Routes request and the map marker; the Cache Pack manifest's `bbox` now reaches the dashboard (`CachePackContents.bbox`) so other packs keep the prompt. Seen only through type, lint and unit checks, not yet in a browser.
 - Rehearsed on loopback: a Hub started on the new pack (served by `python -m http.server`) validated its checksums and served a Route file with the Gompa's Route. Not checked in a browser; software path only, no Pi.
+
+## Simulated Fleet (ticket 0064)
+
+- **The real build worked against Open-Meteo** (40 sites in one request, 2 days of 3 hourly variables, 185 KB of `fleet.json`). The archive's `soil_moisture_0_to_7cm` is m³/m³ (the file stores %), and several points come back as a list, one point as an object.
+- **Real rain makes the three rising towns rise only a little over the window**: the 24 h rain is a slow sum, so Taplejung sits at about 201 to 206 cm (calm base 80) the whole 08:30 to 10:30, Arughat at about 148 and Kakarbhitta at 128. They read as elevated, not as a ramp. Raise `GAIN_CM_PER_MM` only if the map needs a visible climb; the cap (200 cm) keeps every rise below the Surge size.
+- **The 15 km rule dropped Chatara** (13.9 km from Dharan). The source coordinates are typed from memory and unchecked on a map; 0035 verifies them.
+- **A track is cut at `silent_at`**, so the Node needs no silent logic: it reads the last point at or before the Event clock and ages from there.
+- The Node reads `fleet.json` through `SimulatedFleet`, which re-parses only when the file's modified time changes; it never touches the Mesh, `ReadingStore` or the registry, so a Surging entry cannot move Flood Risk.
