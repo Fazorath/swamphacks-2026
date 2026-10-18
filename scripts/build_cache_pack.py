@@ -8,11 +8,12 @@ import os
 import sys
 import time
 import zipfile
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-from pack_routes import Roads, build_road_graph
+from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
 from storm_shield.weather_grid import VALLEY_BBOX
@@ -21,6 +22,9 @@ SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 BBOX = VALLEY_BBOX
 # Few zoom levels on purpose: the box is large and the pack must stay small.
 ZOOMS = range(10, 15)
+# Pis pull the whole pack over the mesh, so routes stay small; the grid coarsens until they fit.
+ROUTE_SPACINGS_M = (100, 250, 500)
+ROUTES_BUDGET_BYTES = 5_000_000
 OSM_EXTRACT_URL = "https://download.geofabrik.de/asia/nepal-latest.osm.pbf"
 TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_DELAY_SECONDS = 0.15
@@ -102,13 +106,38 @@ def load_roads(osm_extract: Path) -> Roads:
         for node_id, lat, lon in zip(nodes["id"], nodes["lat"], nodes["lon"], strict=True)
     }
     # pyrosm cuts every way into one edge per pair of consecutive OSM nodes. The Road graph
-    # ignores one-way rules, and a driveway or parking aisle is no way to a Shelter.
-    segments = [
-        (int(start), int(end), False)
-        for start, end, kind in zip(edges["u"], edges["v"], edges["highway"], strict=True)
-        if start in coords and end in coords and kind != "service"
-    ]
+    # ignores one-way rules, but Routes honour them. A driveway or parking aisle is no way to a
+    # Shelter.
+    segments = []
+    for start, end, kind, oneway in zip(
+        edges["u"], edges["v"], edges["highway"], edges["oneway"], strict=True
+    ):
+        if start in coords and end in coords and kind != "service":
+            if str(oneway) == "-1":
+                segments.append((int(end), int(start), True))
+            else:
+                segments.append((int(start), int(end), str(oneway) == "yes"))
     return Roads(coords, segments)
+
+
+def build_route_files(
+    roads: Roads, shelters: list[dict[str, object]], avoid: FloodProneArea
+) -> tuple[RouteGrid, dict[str, bytes]]:
+    shelter_points = {str(shelter["id"]): tuple(shelter["pos"]) for shelter in shelters}
+    for spacing_m in ROUTE_SPACINGS_M:
+        grid = RouteGrid.spaced(BBOX, spacing_m)
+        routes = build_routes(roads, shelter_points, grid, BBOX, avoid)
+        files = {
+            path: json.dumps(by_shelter, separators=(",", ":")).encode()
+            for path, by_shelter in routes.items()
+        }
+        compressed = sum(len(zlib.compress(content)) for content in files.values())
+        print(f"{len(files)} route files at {spacing_m} m: {compressed / 1e6:.1f} MB", flush=True)
+        if compressed <= ROUTES_BUDGET_BYTES:
+            return grid, files
+    sys.exit(
+        f"routes stay over {ROUTES_BUDGET_BYTES / 1e6:.0f} MB even at {ROUTE_SPACINGS_M[-1]} m"
+    )
 
 
 def build(output: Path, osm_extract: Path | None) -> None:
@@ -117,11 +146,17 @@ def build(output: Path, osm_extract: Path | None) -> None:
         "flood_prone.geojson": (SOURCE_DIR / "flood_corridor.source.geojson").read_bytes(),
         "river.geojson": (SOURCE_DIR / "river.source.geojson").read_bytes(),
     }
+    manifest_extras: dict[str, object] = {}
     if osm_extract is not None:
-        shelter_points = [tuple(shelter["pos"]) for shelter in load_shelters()]
-        graph = build_road_graph(load_roads(osm_extract), shelter_points)
+        shelters = load_shelters()
+        roads = load_roads(osm_extract)
+        graph = build_road_graph(roads, [tuple(shelter["pos"]) for shelter in shelters])
         files["roads.json"] = json.dumps(graph, separators=(",", ":")).encode()
         print(f"road graph: {len(graph['nodes'])} junctions, {len(graph['edges'])} segments")
+        flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
+        route_grid, route_files = build_route_files(roads, shelters, flood_prone)
+        files.update(route_files)
+        manifest_extras["route_grid"] = route_grid.as_manifest_entry()
     tile_list = tiles_covering(BBOX)
     print(f"fetching the recorded weather and {len(tile_list)} tiles", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
@@ -134,6 +169,7 @@ def build(output: Path, osm_extract: Path | None) -> None:
         "v": 1,
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
         "bbox": list(BBOX),
+        **manifest_extras,
         "files": {
             path: hashlib.sha256(content).hexdigest() for path, content in files.items()
         },
@@ -152,7 +188,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--roads-pbf",
         type=Path,
-        help=f"OSM extract of Nepal ({OSM_EXTRACT_URL}); adds roads.json for rerouting on the phone",
+        help=(
+            f"OSM extract of Nepal ({OSM_EXTRACT_URL}); adds roads.json for rerouting on the phone"
+            " and the Routes to the Shelters"
+        ),
     )
     arguments = parser.parse_args()
     build(arguments.output, arguments.roads_pbf)

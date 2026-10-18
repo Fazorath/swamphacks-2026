@@ -1,5 +1,15 @@
 import pytest
-from pack_routes import BBox, Point, Roads, RouteGrid, build_road_graph, build_routes, simplify
+from pack_routes import (
+    BBox,
+    FloodProneArea,
+    Point,
+    Roads,
+    RouteGrid,
+    build_road_graph,
+    build_routes,
+    reenters_after_leaving,
+    simplify,
+)
 
 # An L-shaped street with a Shelter at the end of it, and an island nobody can drive to it from.
 #
@@ -36,6 +46,31 @@ def routes_over(
     segments: list[tuple[int, int, bool]], bbox: BBox = BBOX
 ) -> dict[str, dict[str, list[list[float]]]]:
     return build_routes(Roads(COORDS, segments), {"gym": SHELTER}, GRID, bbox)
+
+
+# A band across the street's long leg (node 3 lies in it), like the river corridor across a road.
+BAND = FloodProneArea.from_geojson(
+    {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-82.3205, 29.6505],
+                            [-82.3175, 29.6505],
+                            [-82.3175, 29.6515],
+                            [-82.3205, 29.6515],
+                            [-82.3205, 29.6505],
+                        ]
+                    ],
+                },
+            }
+        ],
+    }
+)
 
 
 def file_of(point: Point) -> str:
@@ -116,4 +151,43 @@ def test_the_road_graph_ignores_one_way_rules() -> None:
     one_way = [(5, 4, True) if segment[:2] == (4, 5) else segment for segment in SEGMENTS]
     assert build_road_graph(Roads(COORDS, one_way), []) == build_road_graph(
         Roads(COORDS, SEGMENTS), []
+    )
+
+
+def test_a_route_that_crosses_the_flood_prone_area_is_left_out() -> None:
+    assert file_of(SOUTH_WEST) in routes_over(SEGMENTS)
+    crossing = build_routes(Roads(COORDS, SEGMENTS), {"gym": SHELTER}, GRID, BBOX, avoid=BAND)
+    assert file_of(SOUTH_WEST) not in crossing
+
+
+def test_a_route_that_starts_inside_the_flood_prone_area_and_walks_out_is_kept() -> None:
+    inside = build_routes(Roads(COORDS, SEGMENTS), {"gym": SHELTER}, GRID, BBOX, avoid=BAND)
+    assert file_of(COORDS[3]) in inside
+    assert file_of(COORDS[5]) in inside  # never in the area at all
+
+
+def test_a_bridge_between_two_nodes_outside_the_area_still_crosses_it() -> None:
+    bridge_coords: dict[int, Point] = {1: (29.6490, -82.320), 2: (29.6530, -82.320)}
+    bridged = build_routes(
+        Roads(bridge_coords, [(1, 2, False)]), {"gym": (29.6530, -82.320)}, GRID, BBOX, avoid=BAND
+    )
+    assert file_of((29.6490, -82.320)) not in bridged
+
+
+def test_a_journey_reenters_when_it_goes_back_in_after_being_out() -> None:
+    assert not reenters_after_leaving([True, True, False, False])
+    assert not reenters_after_leaving([False, False])
+    assert reenters_after_leaving([False, True, False])
+    assert reenters_after_leaving([True, False, True])
+
+
+def test_the_last_leg_from_the_road_to_the_shelter_is_checked_too() -> None:
+    # The only road node lies south of the band and the Shelter north of it.
+    south_of_the_band: dict[int, Point] = {1: (29.6490, -82.320)}
+    found = build_routes(
+        Roads(south_of_the_band, []), {"gym": (29.6530, -82.320)}, GRID, BBOX, avoid=BAND
+    )
+    assert file_of((29.6490, -82.320)) not in found
+    assert file_of((29.6490, -82.320)) in build_routes(
+        Roads(south_of_the_band, []), {"gym": (29.6530, -82.320)}, GRID, BBOX
     )
