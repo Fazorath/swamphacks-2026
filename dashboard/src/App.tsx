@@ -32,6 +32,7 @@ import { useRoadGraph } from "./useRoadGraph";
 import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { waveArrival } from "./waveEta";
+import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
 function onThisNodesOwnMachine(): boolean {
@@ -282,6 +283,7 @@ export function App() {
           />
           <CamerasPanel tiles={cameras} panel={panel("cameras")} />
         </div>
+        <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
       </div>
       <StatusStrip
         nodes={nodes}
