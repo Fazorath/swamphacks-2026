@@ -80,4 +80,4 @@
 | [0077-cameras-panel-shows-every-camera](0077-cameras-panel-shows-every-camera.md) | ready-for-agent | unclaimed | Fazorath |
 | [0078-map-labels-do-not-overlap](0078-map-labels-do-not-overlap.md) | done | Fazorath | Fazorath |
 | [0079-right-panels-stay-on-screen](0079-right-panels-stay-on-screen.md) | in-progress | Fazorath | Fazorath |
-| [0081-flood-alert-email-from-the-hub](0081-flood-alert-email-from-the-hub.md) | ready-for-agent | unclaimed | leonardorofaDV |
+| [0081-flood-alert-email-from-the-hub](0081-flood-alert-email-from-the-hub.md) | in-progress | leonardorofaDV | leonardorofaDV |
