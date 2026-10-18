@@ -42,29 +42,29 @@ export function TopBar({
       </h1>
       {!phone && <EventClockTag clock={eventClock} />}
       <FloodRiskChip floodRisk={floodRisk} />
-      {!phone && showStormSignal && floodRisk?.storm_signal.on && (
-        <span className="storm-signal">{stormSignalSentence(floodRisk.storm_signal)}</span>
-      )}
       {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
       {!phone && (
         <>
+          {showStormSignal && floodRisk?.storm_signal.on && (
+            <span className="storm-signal">{stormSignalSentence(floodRisk.storm_signal)}</span>
+          )}
           <p className="household-status">
             {householdSaved ? "Household profile saved" : "Fill in your household profile"}
           </p>
           <button type="button" onClick={onOpenHousehold}>
             My household
           </button>
+          {onOpenNode && (
+            <button type="button" onClick={onOpenNode}>
+              Node
+            </button>
+          )}
+          {onOpenHub && (
+            <button type="button" onClick={onOpenHub}>
+              Hub
+            </button>
+          )}
         </>
-      )}
-      {onOpenNode && !phone && (
-        <button type="button" onClick={onOpenNode}>
-          Node
-        </button>
-      )}
-      {onOpenHub && !phone && (
-        <button type="button" onClick={onOpenHub}>
-          Hub
-        </button>
       )}
     </header>
   );

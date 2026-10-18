@@ -69,7 +69,7 @@ describe("the phone layout", () => {
     expect(comesBefore(profile, screen.getByRole("region", { name: "Evacuation Plan" }))).toBe(
       true,
     );
-    fireEvent.click(screen.getByRole("button", { name: "My household" }));
+    fireEvent.click(screen.getByRole("button", { name: "Set up your household" }));
     expect(screen.getByRole("dialog", { name: "My household" })).toBeInTheDocument();
   });
 

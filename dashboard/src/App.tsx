@@ -7,7 +7,7 @@ import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
-import { issuedUnix, officialTag } from "./officialAlerts";
+import { latestAlert, officialTag } from "./officialAlerts";
 import { MapLegend } from "./MapLegend";
 import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
@@ -206,10 +206,7 @@ export function App() {
     />
   );
   const camerasPanel = <CamerasPanel tiles={cameras} panel={panel("cameras")} />;
-  const latestOfficialAlert = officialAlerts.reduce<(typeof officialAlerts)[number] | null>(
-    (latest, alert) => (latest === null || issuedUnix(alert) > issuedUnix(latest) ? alert : latest),
-    null,
-  );
+  const latestOfficialAlert = latestAlert(officialAlerts);
   const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
     <main className={phone ? "phone" : undefined}>
@@ -292,13 +289,18 @@ export function App() {
         />
         {phone ? (
           <>
-            {phoneTab === "map" && latestOfficialAlert && (
-              <p role="status" className="pinned-alert">
-                <strong>{officialTag(latestOfficialAlert)}</strong> {latestOfficialAlert.headline}
-              </p>
-            )}
-            {phoneTab === "map" && selectedNode && (
-              <NodeSheet node={selectedNode} onClose={() => setSelectedId(null)} />
+            {phoneTab === "map" && (
+              <div className="phone-map-overlay">
+                {selectedNode && (
+                  <NodeSheet node={selectedNode} onClose={() => setSelectedId(null)} />
+                )}
+                {latestOfficialAlert && (
+                  <p role="status" className="pinned-alert">
+                    <strong>{officialTag(latestOfficialAlert)}</strong>{" "}
+                    {latestOfficialAlert.headline}
+                  </p>
+                )}
+              </div>
             )}
             {phoneTab !== "map" && (
               <div className="phone-pane">
@@ -316,11 +318,9 @@ export function App() {
                         <h2>Household Profile</h2>
                       </div>
                       <div className="panel-body">
-                        <p>
-                          {profile ? "Household profile saved" : "Fill in your household profile"}
-                        </p>
+                        <p>{profile ? "Household profile saved" : "No household profile yet"}</p>
                         <button type="button" onClick={openPanel}>
-                          My household
+                          {profile ? "My household" : "Set up your household"}
                         </button>
                       </div>
                     </section>

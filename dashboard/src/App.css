@@ -895,6 +895,19 @@ main.phone {
   min-height: 2.75rem;
 }
 
+.phone input[type="radio"],
+.phone input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.phone label {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .phone .top-bar {
   gap: 0.75rem;
 }
@@ -946,12 +959,18 @@ main.phone {
   color: var(--accent);
 }
 
-.pinned-alert {
+.phone-map-overlay {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  left: 0.75rem;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.5rem;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pinned-alert {
   margin: 0;
   padding: 0.5rem 0.75rem;
   background: var(--surface-solid);
@@ -960,11 +979,6 @@ main.phone {
 }
 
 .node-sheet {
-  position: absolute;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  z-index: 2;
   padding: 0.75rem 1rem;
   background: var(--surface-solid);
   border: 1px solid var(--border);
