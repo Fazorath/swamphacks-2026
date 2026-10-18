@@ -12,7 +12,7 @@
 
 **Spec:** `docs/specs/gods-eye-view.md`
 
-**Design:** `docs/design/ui.md` ("God's Eye View", "Layout", "Map"); decisions `docs/design/gods-eye-view-decisions.md` (D-01 to D-07, D-08, D-48 to D-51); canvas artboards `C-TopBar`, `C-StatusStrip`, `C-Panel`, `D-Normal`. Per `ui.md`, draw the God's Eye View artboard on the canvas first.
+**Design:** `docs/design/ui.md` ("God's Eye View", "Layout", "Map"); decisions `docs/design/gods-eye-view-decisions.md` (D-01 to D-07, D-08, D-48 to D-51); canvas artboards `G-National-Calm` (the whole screen), `G-Valley-3D`, `G-Warning-Acknowledged` (Panels on the right), with `C-TopBar`, `C-StatusStrip` and `C-Panel` for the parts.
 
 - [ ] The map is MapLibre GL, dark, drawn from layers in the theme's colour roles; it needs no run-time request to any host other than its own Node (a test fails on a CARTO or AWS request)
 - [ ] Basemap look: Osiris lifted one step (ground `navy-900`, outside `navy-925`, labels `ink-300`; D-07) with lifted land (rivers `river-300`, border `ink-400`; D-01); district hairlines only past the national zoom (D-02); at the national zoom the place labels are Kathmandu and the four valley towns only, cities on zoom (D-04); hillshade faint, about 10% (D-05)

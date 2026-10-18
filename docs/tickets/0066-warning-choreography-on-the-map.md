@@ -12,7 +12,7 @@
 
 **Spec:** `docs/specs/gods-eye-view.md`
 
-**Design:** `docs/design/ui.md` ("God's Eye View", "Warning Takeover"); canvas artboard to be drawn first.
+**Design:** `docs/design/ui.md` ("God's Eye View", "Warning Takeover"); canvas artboards `G-Warning-Moment` (band, comet, corner card, Alerts Panel with Acknowledge), `G-Warning-Acknowledged` (the chip, band gone) and `G-Wave-Arrival`.
 
 - [ ] A new Community Warning or Official Alert shows the band at the top under the top bar, 120 px tall (D-22), with its tag (`COMMUNITY WARNING · NOT OFFICIAL` or `OFFICIAL`), the warning sentence and the fixed "check official sources" line; a Community band has a 12% violet tint and the dashed violet edge (D-23); the map is never dimmed
 - [ ] The band carries no button: Acknowledge is the card in the Alerts Panel only, and the band stays until that card is acknowledged (D-27)

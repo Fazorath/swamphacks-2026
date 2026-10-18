@@ -60,7 +60,7 @@ Where the board's option text adds a detail the one-line choice leaves out, it f
 - **D-31** Terrain exaggeration? **1.5× (spec)**.
 - **D-32** How are the valley walls shaded in 3D? **Height bands (hypsometric tint)** (board: the ground lightens with elevation in two or three steps, so high ground is literally lighter).
 - **D-33** How does the national view hand over to the tilted valley? **Tilt only on the camera fly** (board: manual zooming stays flat; only the warning's fly, and a Valley button, tilts).
-- **D-34** The 2D / 3D switch: design and place? **Segmented 2D | 3D, bottom-left** (board: a small glass segmented control above the legend).
+- **D-34** The 2D / 3D switch: design and place? **Segmented 2D | 3D, bottom-left** (board: a small glass segmented control above the legend). *Owner, 2026-10-18: the switch goes inside the legend box, as its last row; this settles the D-34 / D-39 conflict.*
 - **D-35** What shows when terrain drops itself to 2D? **One line in the status strip** (board: "Terrain off · frame rate" in amber mono, nothing else moves).
 
 ## Readings Panel for a network (0070)
@@ -71,7 +71,7 @@ Where the board's option text adds a detail the one-line choice leaves out, it f
 
 ## Layer rail, Fleet toggle and legend
 
-- **D-39** Where does the legend live? **Bottom-left, above the 2D / 3D switch** (board: a small glass box beside the rail's foot).
+- **D-39** Where does the legend live? **Bottom-left, above the 2D / 3D switch** (board: a small glass box beside the rail's foot). *Owner, 2026-10-18: the 2D / 3D switch sits inside this box as its last row.*
 - **D-40** How does the Simulated badge read? **40 simulated Nodes · 6 real** (board: numbers instead of adjectives; updates with the registry).
 - **D-41** The Fleet toggle: rail button, legend switch, or both? **Rail button with count badge**.
 - **D-42** Where do the data sources show? **Hover tooltip on the badge** (board: geoBoundaries (CC BY), OpenStreetMap (ODbL), SRTM, Open-Meteo, with check dates).

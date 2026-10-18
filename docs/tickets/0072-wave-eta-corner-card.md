@@ -12,9 +12,9 @@
 
 **Spec:** `docs/specs/gods-eye-view.md`
 
-**Design:** `docs/design/ui.md` ("God's Eye View"); the card's artboard is drawn on the canvas first.
+**Design:** `docs/design/ui.md` ("God's Eye View"); canvas artboard `G-ETA-Corner-Card`; the card also shows in `G-Warning-Moment` and `G-Warning-Acknowledged`.
 
-- [ ] Two or three treatments of the card are drawn on the canvas, each making the card read as urgent, critical danger from the back of a room (owner's note on D-24); one is picked and noted here, with why
+- [ ] Treatment A "Beacon" is picked (owner, 2026-10-18; drawn in `G-ETA-Corner-Card` with B "Tinted hazard" and C "Depletion rail", which are not built); it reads as urgent, critical danger from the back of a room (owner's note on D-24); only `transform` and `opacity` pulse
 - [ ] The card is fixed bottom-right of the map, beside the right Panel stack and above the status strip, so the map and the home town's marker stay uncovered; it carries the Wave ETA number at 120 px in mono and the town as its label, for example `35` over `MIN · BETRAWATI`, inside the violet dashed Community edge (D-24)
 - [ ] The number is white, amber under 15 minutes, red under 5, and "wave expected now" in red at or past zero; it borrows only amber and red from the Flood Risk palette, never green (D-25, D-54)
 - [ ] The card shows while a Community Warning with a Wave ETA for this home is in effect and hides when there is none (a home upstream of the origin or more than 2 km from the river gets no card); acknowledging the warning (D-27) does not hide it

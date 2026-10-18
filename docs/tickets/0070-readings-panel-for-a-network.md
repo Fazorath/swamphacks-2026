@@ -12,7 +12,7 @@
 
 **Spec:** `docs/specs/gods-eye-view.md`
 
-**Design:** `docs/design/ui.md` ("Readings Panel", "God's Eye View"); the ladder artboard is drawn on the canvas first.
+**Design:** `docs/design/ui.md` ("Readings Panel", "God's Eye View"); canvas artboard `G-Readings-Ladder` (calm, wave passing, Stale; the Pi's card pinned).
 
 **Variant picked:** C, the river ladder by River km (D-36), chosen on the design board on 2026-10-18 over A (today's stacked cards: ten cards do not fit 666 px) and B (compact rows that expand on select: hides the hero number). Why C: the Panel becomes a second view of the same story, upstream to downstream with the wave between the Nodes, so River km and the wave's position are in the Panel itself and the order needs no explaining.
 

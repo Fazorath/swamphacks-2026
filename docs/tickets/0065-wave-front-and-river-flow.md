@@ -12,6 +12,8 @@
 
 **Spec:** `docs/specs/gods-eye-view.md`
 
+**Design:** `docs/design/gods-eye-view-decisions.md`; canvas artboards `G-Warning-Moment` (comet and 15 km trail) and `G-Wave-Arrival` (a town as the wave passes).
+
 - [ ] The wave front's position is computed from the river line, the Surge's origin and time and the per-reach speeds (the same functions as the Wave ETA in `waveEta.ts`), on the Event clock, so it reaches a town when that town's ETA reads zero
 - [ ] A test fixes the Event clock and checks the front's position at three times and its arrival at a town against the ETA
 - [ ] The front is a comet in white (`ink-50`): a bright head with a soft glow and a trail that fades over the last 15 km behind it (D-16, D-17, D-19); it never borrows a risk colour, the cyan Route or the violet Community colour
