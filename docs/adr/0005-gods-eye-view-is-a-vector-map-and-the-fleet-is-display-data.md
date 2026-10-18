@@ -20,3 +20,8 @@ The dashboard's map was a Leaflet raster map: tiles fetched live from CARTO thro
 - A `cache-pack-v4` carries the Nepal vector bundle, elevation and the fleet file. The raster tiles and the CARTO proxy leave the map's path.
 - Borders are drawn as the open dataset gives them, with the line "Boundaries are indicative". We make no political claim.
 - Audience Nodes (a prepared laptop handed to a volunteer) are real Nodes and show a contact-lost cue when they drop.
+
+## Addendum (2026-10-18, 0064 grill)
+
+- **Every Node that holds the pack serves the fleet, not only the Hub**, from its own copy and its own Event clock, so a Viewer on any Node sees the same map. Nothing about the fleet crosses the Mesh.
+- **Each fleet site's weather is fetched for its own position** at build time; the valley Weather Grid is not reused for sites outside the valley. Water levels are modelled from that rainfall and labelled so.

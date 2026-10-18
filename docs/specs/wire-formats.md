@@ -139,7 +139,7 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" a
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). It also carries `community_warnings` (the verified ones only). Open Shelter ids are not in the snapshot; they come from `GET /api/shelters`.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). It also carries `community_warnings` (the verified ones only), and `fleet`, the Simulated Fleet from this Node's Cache Pack (ticket 0064), sorted by `id`: `{id, name, river, site, position, age_s, stale, measurements}`, with `measurements` shaped as in `nodes`. `fleet` is `[]` when the pack has no fleet file; nothing reads it but the map. Open Shelter ids are not in the snapshot; they come from `GET /api/shelters`.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.
@@ -156,6 +156,7 @@ cache-pack.zip
 ├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
 ├── weather_replay.json   the recorded weather of 25 to 27 Aug 2026 as a Weather Grid (below); packs built before the Weather layers lack it
+├── fleet.json            the Simulated Fleet (below); packs before v4 lack it
 ├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map)
 ├── roads.json            the Road graph, only when built: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
 └── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
@@ -188,3 +189,26 @@ One file, the same shape for the recorded weather and the forecast. Fixed in tic
 - The values are reanalysis at model resolution: context for the valley, not a measurement at a village.
 - `GET /api/weather/replay` serves the file from the Cache Pack, or answers 404 with a message when this Node's pack has none. The manifest lists its checksum like any other file, so a wrong one discards the whole pack.
 - `GET /api/weather/forecast` serves the Hub's forecast in the same shape plus `fetched_at` (ISO 8601, when the Hub fetched it), or 404 when this Node has none. The Hub writes it to `weather_forecast.json` in `NODE_DATA_DIR` once an hour from `api.open-meteo.com/v1/forecast` (7 days, same grid), keeping the last good copy; a Sensor downloads it from `NODE_WEATHER_FORECAST_URL` (the Hub's route) and keeps its own copy. A damaged file counts as absent.
+
+### Simulated Fleet (`fleet.json`)
+
+Decided in the 0064 grill on 2026-10-18; spec: `docs/specs/gods-eye-view.md`. The builder may rename fields, keeping the meaning.
+
+```
+{
+  "source":  "positions: fleet.source.json (OpenStreetMap, checked 2026-10-..); weather: Open-Meteo archive",
+  "credit":  "Weather data by Open-Meteo.com (CC BY 4.0)",
+  "water_model": "water level modelled from Open-Meteo rainfall: base_cm + gain * rain of the previous 24 h",
+  "start_t": 1787712300, "step_s": 30,
+  "entries": [
+    { "id": "fleet-chisapani", "name": "Chisapani", "river": "Karnali", "site": "town", "pos": [28.644, 81.276],
+      "silent_at": null,
+      "track": { "water_level": [...], "rain_rate": [...], "soil_moisture": [...], "pressure": [...] } }
+  ]
+}
+```
+
+- `start_t` is 08:30 NPT on 26 Aug 2026 in event time; point `i` of every track is at `start_t + i * step_s`, through 10:30. Units are those of `measurements` (cm, mm/h, %, hPa).
+- `site` is `town` or `headwater`. `silent_at` (event time) is set on one town site only; past it the entry keeps its last point and ages.
+- A Node serves the reading at the last point at or before its Event clock; with no Replay heard, point 0. `age_s` is `(event_now − last_point_t) / rate`, frozen while the clock is paused or stopped.
+- Ids are `fleet-<slug>`, never shaped like a Node id. The manifest lists the file's checksum like any other.

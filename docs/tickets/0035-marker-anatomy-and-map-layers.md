@@ -16,7 +16,7 @@
 
 - [ ] Node markers follow the table in the spec: calm or Low green with glow (the word `LOW` stays on the chip and card), Elevated amber, High red, Unverified (hollow dashed, `NOT COUNTED`), Stale (muted grey, `STALE · age`), Selected (cyan ring), and a `REAL` ring on the Hub, the breadboard Node and any audience Node
 - [ ] Contact lost: a Node silent for about 5 s loses its glow and shows a ring counting down to 15 s, then Stale; a Node that speaks again fades back in over 300 ms; no Flood Risk or Surge rule changes
-- [ ] The simulated fleet (about 40) draws from the state snapshot with the same anatomy, stays readable (no overlap that hides a valley Node), and a Fleet toggle with a count on the Layer rail hides it
+- [ ] The simulated fleet (about 40) draws from the state snapshot with the same anatomy, stays readable (no overlap that hides a valley Node), and a Fleet toggle with a count on the Layer rail hides it; it draws from the snapshot's `fleet` array, and every fleet dot visibly sits on its river once 0063's rivers are drawn (fix an outlier in `scripts/cache-pack/fleet.source.json`, since 0064 does not snap)
 - [ ] The "Simulated network · weather from Open-Meteo" badge shows in the status strip and legend; a fleet Node's card carries `SIMULATED`
 - [ ] A marker updates in place on a poll and is never rebuilt; a Node pulses once when its Flood Risk rises
 - [ ] Selecting a marker highlights its Node card and the other way round; no popups

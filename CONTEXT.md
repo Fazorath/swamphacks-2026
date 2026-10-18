@@ -175,8 +175,12 @@ The desktop dashboard's map of the whole of Nepal, drawn from vector data in the
 _Avoid_: globe, surveillance map, overview
 
 **Simulated Fleet**:
-About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by the Hub with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible "Simulated network" badge.
+About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by every Node that holds it, with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible "Simulated network" badge.
 _Avoid_: fake nodes, mock nodes, virtual nodes
+
+**Headwater Node**:
+A Node placed where a flood starts (a glacial lake outlet, a glacier front, an upper valley), so its Surge is the earliest sign for the towns downstream. S0 is the Replay's Headwater Node; the Simulated Fleet shows where others would sit.
+_Avoid_: sentinel, upstream sensor, enthusiast node
 
 **Contact lost**:
 The cue on a Node's marker when it has been silent for about 5 seconds: its glow dies and a ring counts down to Stale at 15 seconds. Display only; it changes no Flood Risk or Surge rule.
