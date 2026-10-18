@@ -332,3 +332,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
 - **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
 - **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
+
+## Theme, bundled fonts and icons (ticket 0032)
+
+- **Vitest turns every imported stylesheet into an empty string, `?raw` and `import.meta.glob` included**, so a test that scans CSS that way passes with nothing checked. `theme.test.ts` reads the files with `node:fs` (hence `@types/node` and `"node"` in `tsconfig.json` types) and also asserts it saw `App.css` and `App.tsx`.
+- **The theme file is `dashboard/src/theme.css`**, loaded before `App.css` in `main.tsx`; `App.css` uses roles only (`--accent`, `--risk-low`, `--surface-panel`…), never a primitive. The old names (`--community`, `--low`, `--muted`, `--line`…) are gone. A new colour is a role in `theme.css` first.
+- **Fonts are the `latin-*.css` files** of `@fontsource/ibm-plex-sans` (400, 600, 700) and `-mono` (500, 600), so the build carries about 10 small woff/woff2 files and no Google request. Checked in Chrome from a Node on a private port: the three weights the first screen uses loaded from the Node's own origin and no resource came from another host.
+- **Text-glyph icons remain**: the `⌂` home markers in `NodeMap.tsx` are not `lucide-react`. They go with the marker anatomy in 0035.
+- `.tag.stale` was amber; the design says Stale is muted grey because amber means Elevated, so it is `--text-secondary` now.

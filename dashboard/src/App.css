@@ -1,31 +1,26 @@
-:root {
-  --bg: #0a111d;
-  --map-bg: radial-gradient(circle at 40% 40%, #12203a 0%, #0a111d 70%);
-  --surface: #111b2d;
-  --surface-glass: rgb(17 27 45 / 72%);
-  --surface-2: #17243a;
-  --line: #243450;
-  --text: #e8eef8;
-  --muted: #9fb0ca;
-  --community: #4cc9f0;
-  --low: #3dd68c;
-  --elevated: #f5a524;
-  --high: #ff9494;
-  --official: #f2f5fa;
-  --official-ink: #0b1f4d;
-  --official-blue: #1e40af;
-  --warning: #c0a8ff;
-}
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+code,
+.tag,
+.tab-badge,
+.official-tag,
+.applies-chip,
+.community-warning-tag,
+.flood-risk-chip,
+.connection-badge,
+.event-clock,
+section h2 {
+  font-family: var(--font-mono);
 }
 
 main {
@@ -39,7 +34,11 @@ main {
     "cameras map plan";
   gap: 0.75rem;
   padding: 0.75rem;
-  background: var(--map-bg);
+  background: radial-gradient(
+    circle at 40% 40%,
+    color-mix(in srgb, var(--map-ground) 60%, var(--surface-raised)) 0%,
+    var(--bg-page) 70%
+  );
 }
 
 header {
@@ -49,7 +48,7 @@ header {
   gap: 1rem;
   padding: 0.5rem 1rem;
   background: var(--surface-glass);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   backdrop-filter: blur(8px);
 }
@@ -57,12 +56,12 @@ header {
 h1 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--community);
+  color: var(--accent);
 }
 
 header p {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .household-status {
@@ -71,16 +70,16 @@ header p {
 
 button {
   padding: 0.3rem 0.7rem;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
   border-radius: 0.375rem;
   font: inherit;
   cursor: pointer;
 }
 
 button:disabled {
-  color: var(--muted);
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
@@ -88,10 +87,10 @@ button:disabled {
   grid-column: 1 / -1;
   margin: 0;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--elevated);
+  border: 1px solid var(--risk-elevated);
   border-radius: 0.5rem;
-  background: var(--surface);
-  color: var(--elevated);
+  background: var(--surface-panel);
+  color: var(--risk-elevated);
 }
 
 .slide-over {
@@ -106,8 +105,8 @@ button:disabled {
   gap: 0.75rem;
   padding: 1rem;
   overflow: auto;
-  background: var(--surface);
-  border-left: 1px solid var(--line);
+  background: var(--surface-panel);
+  border-left: 1px solid var(--border);
 }
 
 .slide-over[hidden] {
@@ -129,14 +128,14 @@ button:disabled {
 }
 
 .slide-over .privacy {
-  color: var(--low);
+  color: var(--risk-low);
 }
 
 .slide-over fieldset {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 0.375rem;
 }
 
@@ -157,8 +156,8 @@ button:disabled {
   gap: 0.75rem;
   padding: 0.4rem 0.75rem;
   transform: translateX(-50%);
-  background: var(--surface);
-  border: 1px solid var(--community);
+  background: var(--surface-panel);
+  border: 1px solid var(--accent);
   border-radius: 0.5rem;
 }
 
@@ -170,8 +169,8 @@ button:disabled {
 .home-draft-marker {
   display: grid;
   place-items: center;
-  background: var(--official);
-  border: 2px solid var(--official-blue);
+  background: var(--official-bg);
+  border: 2px solid var(--official-tag);
   border-radius: 50%;
   color: var(--official-ink);
   font-size: 1.1rem;
@@ -184,13 +183,13 @@ button:disabled {
 }
 
 .evacuation-route {
-  stroke: var(--low);
+  stroke: var(--risk-low);
   stroke-width: 5;
   stroke-opacity: 0.85;
 }
 
 .blocked-road {
-  stroke: var(--high);
+  stroke: var(--risk-high);
   stroke-width: 6;
   stroke-dasharray: 8 6;
 }
@@ -198,10 +197,10 @@ button:disabled {
 .shelter-marker {
   display: grid;
   place-items: center;
-  background: var(--low);
-  border: 2px solid var(--surface);
+  background: var(--risk-low);
+  border: 2px solid var(--surface-panel);
   border-radius: 0.25rem;
-  color: var(--surface);
+  color: var(--surface-panel);
   font-size: 1.3rem;
   font-weight: bold;
 }
@@ -217,15 +216,15 @@ button:disabled {
 }
 
 .plan-risk.low h3 {
-  color: var(--low);
+  color: var(--risk-low);
 }
 
 .plan-risk.elevated h3 {
-  color: var(--elevated);
+  color: var(--risk-elevated);
 }
 
 .plan-risk.high h3 {
-  color: var(--high);
+  color: var(--risk-high);
 }
 
 .official-line {
@@ -236,8 +235,8 @@ button:disabled {
 .official-alert {
   margin: 0 0 0.5rem;
   padding: 0.6rem 0.75rem;
-  background: var(--official);
-  border: 2px solid var(--official-blue);
+  background: var(--official-bg);
+  border: 2px solid var(--official-tag);
   border-radius: 0.5rem;
   color: var(--official-ink);
 }
@@ -271,12 +270,12 @@ section .official-alert p,
 }
 
 .official-tag {
-  background: var(--official-blue);
-  color: var(--official);
+  background: var(--official-tag);
+  color: var(--official-tag-ink);
 }
 
 .applies-chip {
-  border: 1px solid var(--official-blue);
+  border: 1px solid var(--official-tag);
 }
 
 .plan-official-alerts {
@@ -301,8 +300,8 @@ section .official-alert p,
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--muted);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
 }
 
 section .empty-panel p {
@@ -323,7 +322,7 @@ section .empty-panel p {
 
 section {
   background: var(--surface-glass);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 1rem;
   backdrop-filter: blur(8px);
@@ -335,12 +334,12 @@ section h2 {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 section p {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 section[aria-label="Map"] {
@@ -353,18 +352,18 @@ section[aria-label="Map"] {
 .node-map {
   height: 100%;
   min-height: 20rem;
-  background: var(--bg);
+  background: var(--bg-page);
 }
 
 .node-dot {
-  fill: var(--community);
+  fill: var(--accent);
   fill-opacity: 0.85;
-  stroke: var(--text);
+  stroke: var(--text-primary);
 }
 
 .node-dot.stale {
-  fill: var(--muted);
-  stroke: var(--muted);
+  fill: var(--text-secondary);
+  stroke: var(--text-secondary);
 }
 
 .node-dot.selected {
@@ -373,17 +372,17 @@ section[aria-label="Map"] {
 
 .leaflet-tooltip.node-label {
   cursor: pointer;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--text);
+  background: var(--surface-panel);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }
 
 .leaflet-tooltip.node-label.stale {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .leaflet-tooltip.node-label.selected {
-  border-color: var(--community);
+  border-color: var(--accent);
 }
 
 .tag {
@@ -398,28 +397,28 @@ section[aria-label="Map"] {
 }
 
 .tag.simulated {
-  color: var(--community);
+  color: var(--accent);
 }
 
 .tag.stale {
-  color: var(--elevated);
+  color: var(--text-secondary);
 }
 
 .node-card {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: var(--surface);
+  background: var(--surface-panel);
   cursor: pointer;
 }
 
 .node-card[aria-current="true"] {
-  border-color: var(--community);
+  border-color: var(--accent);
 }
 
 .node-card.stale {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .node-card h3 {
@@ -468,19 +467,19 @@ section[aria-label="Evacuation Plan"] {
 }
 
 .connection-badge.online {
-  color: var(--low);
+  color: var(--risk-low);
 }
 
 .connection-badge.mesh_only {
-  color: var(--elevated);
+  color: var(--risk-elevated);
 }
 
 .camera-tile {
   margin-bottom: 0.5rem;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: var(--surface);
+  background: var(--surface-panel);
 }
 
 .camera-tile img {
@@ -504,17 +503,17 @@ section[aria-label="Evacuation Plan"] {
 }
 
 .camera-tile.offline {
-  background: var(--bg);
-  color: var(--muted);
+  background: var(--bg-page);
+  color: var(--text-secondary);
 }
 
 .camera-tile.unavailable {
   border-style: dashed;
-  border-color: var(--elevated);
+  border-color: var(--risk-elevated);
 }
 
 .camera-tile.unavailable strong {
-  color: var(--elevated);
+  color: var(--risk-elevated);
 }
 
 .flood-risk-chip,
@@ -529,25 +528,25 @@ section[aria-label="Evacuation Plan"] {
   padding: 0 0.5rem;
   border: 1px solid currentcolor;
   border-radius: 0.25rem;
-  color: var(--elevated);
+  color: var(--risk-elevated);
   font-weight: bold;
 }
 
 .flood-risk-chip.low,
 .flood-risk-card.low h3 {
-  color: var(--low);
+  color: var(--risk-low);
 }
 
 .flood-risk-chip.elevated,
 .flood-risk-card.elevated h3,
 .tag.elevated {
-  color: var(--elevated);
+  color: var(--risk-elevated);
 }
 
 .flood-risk-chip.high,
 .flood-risk-card.high h3,
 .tag.high {
-  color: var(--high);
+  color: var(--risk-high);
 }
 
 .flood-risk-card {
@@ -555,7 +554,7 @@ section[aria-label="Evacuation Plan"] {
   padding: 0.5rem;
   border: 1px solid currentcolor;
   border-radius: 0.5rem;
-  background: var(--surface);
+  background: var(--surface-panel);
 }
 
 .flood-risk-card h3 {
@@ -578,19 +577,19 @@ section p.storm-signal {
   top: 0.75rem;
   left: 3.5rem;
   padding: 0.25rem 0.6rem;
-  border: 1px solid var(--elevated);
+  border: 1px solid var(--risk-elevated);
   border-radius: 0.25rem;
-  background: var(--surface);
-  color: var(--elevated);
+  background: var(--surface-panel);
+  color: var(--risk-elevated);
   font-weight: bold;
 }
 
 .node-dot.elevated {
-  fill: var(--elevated);
+  fill: var(--risk-elevated);
 }
 
 .node-dot.high {
-  fill: var(--high);
+  fill: var(--risk-high);
 }
 
 .shelter-list {
@@ -610,11 +609,11 @@ section p.storm-signal {
 }
 
 .shelter-status.open {
-  color: var(--low);
+  color: var(--risk-low);
 }
 
 .shelter-status.closed {
-  color: var(--high);
+  color: var(--risk-high);
 }
 
 .phase-list {
@@ -627,39 +626,39 @@ section p.storm-signal {
 }
 
 .phase-list button[aria-current="step"] {
-  border-color: var(--low);
+  border-color: var(--risk-low);
   font-weight: 700;
 }
 
 .internet-cue {
   font-weight: 700;
-  color: var(--high);
+  color: var(--risk-high);
 }
 
 /* Unverified Nodes: shown, but visibly not part of Flood Risk. */
 .node-dot.unverified {
   fill: none;
-  stroke: var(--muted);
+  stroke: var(--text-secondary);
   stroke-dasharray: 4 3;
 }
 
 .leaflet-tooltip.node-label.unverified {
-  color: var(--muted);
+  color: var(--text-secondary);
   border-style: dashed;
 }
 
 .tag.not-counted {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .node-card.unverified {
   border-style: dashed;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 .not-counted-divider {
   margin: 0.75rem 0 0.25rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -668,7 +667,7 @@ section p.storm-signal {
 .tabs {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
 }
 
 .tabs button {
@@ -678,16 +677,16 @@ section p.storm-signal {
 }
 
 .tabs button[aria-selected="true"] {
-  border-color: var(--community);
-  color: var(--community);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .tab-badge {
   min-width: 1.2rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--community);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--bg-page);
   font-size: 0.75rem;
   text-align: center;
 }
@@ -709,14 +708,14 @@ section p.storm-signal {
 }
 
 .registry-list code {
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 /* Community Warnings: violet dashed edge, never the Official style. */
 .community-warning {
   margin: 0 0 0.5rem;
   padding: 0.6rem 0.75rem;
-  border: 2px dashed var(--warning);
+  border: 2px dashed var(--community-warning);
   border-radius: 0.5rem;
 }
 
@@ -730,7 +729,7 @@ section p.storm-signal {
 }
 
 .community-warning-tag {
-  color: var(--warning);
+  color: var(--community-warning);
   font-size: 0.8rem;
   font-weight: bold;
 }
@@ -744,35 +743,35 @@ section p.flood-prone-caption {
   padding: 0.2rem 0.5rem;
   border-radius: 0.25rem;
   background: var(--surface-glass);
-  color: var(--muted);
+  color: var(--text-secondary);
   font-size: 0.8rem;
 }
 
 .flood-prone-area {
-  stroke: var(--community);
+  stroke: var(--accent);
   stroke-width: 2;
-  fill: var(--community);
+  fill: var(--accent);
   fill-opacity: 0.12;
 }
 
 .shelter-pin {
   display: grid;
   place-items: center;
-  background: var(--low);
-  border: 2px solid var(--surface);
+  background: var(--risk-low);
+  border: 2px solid var(--surface-panel);
   border-radius: 50%;
-  color: var(--surface);
+  color: var(--surface-panel);
   font-weight: bold;
 }
 
 .shelter-pin.closed {
-  background: var(--surface-2);
-  border-color: var(--muted);
-  color: var(--muted);
+  background: var(--surface-raised);
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .leaflet-tooltip.shelter-label {
   background: var(--surface-glass);
-  border-color: var(--line);
-  color: var(--text);
+  border-color: var(--border);
+  color: var(--text-primary);
 }
