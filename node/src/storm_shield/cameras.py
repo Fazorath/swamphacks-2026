@@ -14,23 +14,38 @@ logger = logging.getLogger(__name__)
 MANIFEST_FILE = "manifest.json"
 
 
-@dataclass(frozen=True)
-class Camera:
+CAMERAS_FILE = Path(__file__).with_name("cameras.json")
+
+
+class Camera(BaseModel):
     id: str
     label: str
-    # The clip's key in the manifest beside the clip files (scripts/make_camera_clips.py).
-    clip: str
+    # The Node this camera is placed at, by name, and where that is.
+    site: str
+    lat: float
+    lon: float
+    # The clip's key in the manifest beside the clip files (scripts/make_camera_clips.py). A camera
+    # without one is kept and shown Unavailable, so one bad entry never stops the Hub.
+    clip: str | None = None
 
 
-# No live Nepal camera or free API turned up (docs/research/nepal-cameras.md), so the Hub's camera
-# plays a recording. Tickets 0075 and 0077 grow this into a list.
-CAMERAS = (Camera("hub-betrawati", "Betrawati", "clip-1-calm-then-surge"),)
+def load_cameras() -> tuple[Camera, ...]:
+    """The camera list. No live Nepal camera qualified (docs/research/nepal-cameras.md), so every
+    camera plays a clip."""
+    try:
+        return tuple(Camera(**entry) for entry in json.loads(CAMERAS_FILE.read_text()))
+    except (OSError, TypeError, ValueError):
+        logger.exception("could not read the camera list %s; the Hub has no cameras", CAMERAS_FILE)
+        return ()
 
 
 class CameraTile(BaseModel):
     id: str
     label: str
-    # Every camera is a recording for now; a live source arrives with 0075.
+    site: str
+    lat: float
+    lon: float
+    # Every camera is a recording; a live source waits for a feed that qualifies.
     kind: Literal["replay"]
     # "live" means the camera is working, whatever its kind. Offline is the Node being Mesh-only;
     # Unavailable is anything else that stops this Viewer getting the clip.
@@ -65,23 +80,26 @@ class Cameras:
     """The Hub's recorded cameras. Only the Hub holds the clips; a Sensor Node has none to serve."""
 
     def __init__(self, clips_dir: Path, role: Role, event_start_t: int) -> None:
+        self._cameras = load_cameras()
         self._clips_dir = clips_dir
         self._role = role
         self._event_start_t = event_start_t
         if role == "hub":
-            for camera in CAMERAS:
+            for camera in self._cameras:
                 if self._playable(camera) is None:
-                    logger.warning("camera %s has no clip in %s", camera.id, clips_dir)
+                    logger.warning(
+                        "camera %s has no usable clip (%s) in %s", camera.id, camera.clip, clips_dir
+                    )
 
     def tiles(self, status: Status) -> list[CameraTile]:
-        return [self._tile(camera, status) for camera in CAMERAS]
+        return [self._tile(camera, status) for camera in self._cameras]
 
     def knows(self, camera_id: str) -> bool:
-        return any(camera.id == camera_id for camera in CAMERAS)
+        return any(camera.id == camera_id for camera in self._cameras)
 
     def clip_files(self, camera_id: str, status: Status) -> ClipFiles | None:
         """None when there is nothing to serve: a Sensor, a Mesh-only Node or a missing clip."""
-        camera = next((camera for camera in CAMERAS if camera.id == camera_id), None)
+        camera = next((camera for camera in self._cameras if camera.id == camera_id), None)
         if camera is None or status == "mesh_only":
             return None
         playable = self._playable(camera)
@@ -89,14 +107,17 @@ class Cameras:
 
     def _tile(self, camera: Camera, status: Status) -> CameraTile:
         if status == "mesh_only":
-            return CameraTile(id=camera.id, label=camera.label, kind="replay", state="offline")
+            return self._tile_of(camera, "offline")
         playable = self._playable(camera)
         if playable is None:
-            return CameraTile(id=camera.id, label=camera.label, kind="replay", state="unavailable")
+            return self._tile_of(camera, "unavailable")
         _, entry = playable
         return CameraTile(
             id=camera.id,
             label=camera.label,
+            site=camera.site,
+            lat=camera.lat,
+            lon=camera.lon,
             kind="replay",
             state="live",
             credit=entry.credit,
@@ -104,6 +125,18 @@ class Cameras:
             flood_onset_s=entry.flood_onset_s,
             length_s=entry.length_s,
             event_start_t=self._event_start_t,
+        )
+
+    @staticmethod
+    def _tile_of(camera: Camera, state: Literal["offline", "unavailable"]) -> CameraTile:
+        return CameraTile(
+            id=camera.id,
+            label=camera.label,
+            site=camera.site,
+            lat=camera.lat,
+            lon=camera.lon,
+            kind="replay",
+            state=state,
         )
 
     def _playable(self, camera: Camera) -> tuple[ClipFiles, ClipEntry] | None:
@@ -119,6 +152,8 @@ class Cameras:
     def _clip_entry(self, camera: Camera) -> ClipEntry | None:
         try:
             manifest = json.loads((self._clips_dir / MANIFEST_FILE).read_text())
+            if camera.clip is None:
+                return None
             clip = manifest["clips"][camera.clip]
             credits = sorted(
                 {clip["sources"][piece["source"]]["credit"] for piece in clip["pieces"]}

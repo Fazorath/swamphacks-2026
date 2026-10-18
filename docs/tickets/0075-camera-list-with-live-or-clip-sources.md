@@ -1,8 +1,8 @@
 # 0075: Camera list where each camera is live or a clip
 
-**What to build:** The Hub keeps one list of cameras. Each camera is at a Node site, and each has a live source, a recorded clip, or both. While the Hub is Online it uses the live source if it answers; otherwise, and always when there is no live source, it serves the camera's clip. The cameras API says which of the two a tile is, so the dashboard never presents a clip as live.
+**What to build:** The Hub keeps one list of cameras instead of the single hard-coded `hub-betrawati`. Each camera is at a Node site and plays one Camera Clip. The live-source path (fetch-once-and-share, fallback to the clip) is **deferred**: 0074 found no qualifying live feed, 0038 deleted the FL511 fetcher, and building it now would be speculative code. Decided in grilling on 2026-10-18.
 
-**Blocked by:** 0038, 0074
+**Blocked by:** 0038, 0074 (both done)
 
 **Status:** in-progress
 
@@ -12,15 +12,12 @@
 
 **Spec:** `docs/specs/flash-flood-replay.md` ("Cameras")
 
-- [ ] One file lists the cameras: id, label, Node site and position, an optional live source (what 0074 decided) and an optional clip name. A camera with neither is invalid and the Hub refuses to start naming it
-- [ ] The live path is the existing fetch-once-and-share one (at most one request per camera per minute, only while Online, one failed camera leaves the rest working); a live source that stops answering falls back to the camera's clip, and goes back to live when it answers again
-- [ ] `GET /api/cameras` gives each camera `kind` (`live` or `replay`), its Node site, and for a clip its credit line and `flood_onset_s` from the clip manifest (0076); the existing `live` / `offline` / `unavailable` state stays, and a Mesh-only Node still reports every camera `offline`
-- [ ] The Hub serves a clip from `GET /api/cameras/{id}/clip` with HTTP range requests, so a phone can start and seek; the clip comes from a gitignored folder on the demo laptop if present, otherwise from the committed fallback
-- [ ] A Sensor Node answers 404 for a clip, so a Viewer connected to a Sensor sees Unavailable, not a broken player
-- [ ] A camera whose clip file is missing is `unavailable`, never `offline`
-- [ ] No camera address, key or token is committed; a live source that needs a key reads it from `.env` and the key goes in `.env.example` (AGENTS.md "Secrets")
-- [ ] pytest: a live camera that answers, one that fails and falls back to its clip, one with only a clip, one with a missing clip, a Mesh-only Node, a range request, a Sensor's 404, and an invalid list
-- [ ] `docs/specs/online-status-and-cameras.md` and `docs/specs/wire-formats.md` show the new fields
+- [ ] `node/src/storm_shield/cameras.json` lists four cameras: `hub-betrawati` (Betrawati, clip 1), `syabrubesi` (clip 2, the extreme case), `timure` (clip 3) and `trishuli` (clip 1). Each has `id`, `label`, `site` (Node name), `lat`, `lon` and `clip`. Clips may be shared; the footage is illustrative
+- [ ] A camera whose entry has no clip, names a clip key the manifest lacks, or whose mp4 or poster is missing logs a warning naming the camera at startup, and shows `unavailable`, never `offline`; the Hub still starts and the other cameras keep working (decided 2026-10-18, over refusing to start)
+- [ ] `GET /api/cameras` gives each tile `site`, `lat` and `lon` beside the existing fields; `kind` stays `replay`; a Mesh-only Node still reports every camera `offline`
+- [ ] `GET /api/cameras/{id}/clip` and `/poster` work for every camera (range requests already done in 0038); a Sensor Node answers 404
+- [ ] pytest: four cameras listed with their sites, a camera with no clip or an unknown clip key (warning logged, tile `unavailable`, Hub starts), a missing clip file, a Mesh-only Node, a range request on a second camera, a Sensor's 404
+- [ ] `docs/specs/online-status-and-cameras.md` points at, and the spec's "Cameras" section shows, the new fields and the deferred live path; 0077's "live tile" wording is marked deferred (`wire-formats.md` covers Mesh messages only, so it has no camera section)
 - [ ] All **Commands** pass
 
-**Notes:** the FL511 code is removed by 0038; this ticket generalises the one Hub clip to a list. The story beat stays: at the internet cue every tile goes Offline.
+**Notes:** 0038 already built range requests, the poster, the Sensor 404 and the offline/unavailable states; this ticket generalises the one Hub clip to a list. A live source gets its own ticket when one qualifies. The story beat stays: at the internet cue every tile goes Offline.
