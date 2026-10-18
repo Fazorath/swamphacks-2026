@@ -35,6 +35,11 @@ CLIP_KEYS = (
 MANIFEST = {"clips": {key: CLIP_ENTRY for key in CLIP_KEYS}}
 
 
+def _camera_entry(camera_id: str, **overrides: Any) -> dict[str, Any]:
+    entry = {"id": camera_id, "label": camera_id, "site": "hub", "lat": 1, "lon": 2}
+    return {**entry, "clip": CLIP_KEYS[0], **overrides}
+
+
 def _clips_folder(folder: Path) -> Path:
     folder.mkdir()
     (folder / "story.mp4").write_bytes(VIDEO)
@@ -187,14 +192,15 @@ def test_a_manifest_entry_missing_a_field_makes_the_camera_unavailable(tmp_path:
 def test_the_hub_lists_a_camera_at_each_site_with_its_clip(tmp_path: Path) -> None:
     with _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
         _wait_until(lambda: _state_of_the_tile(client) == "live", "the camera to be live")
-        sites = {tile["id"]: tile["site"] for tile in client.get("/api/cameras").json()}
-        assert sites == {
-            "hub-betrawati": "hub",
-            "s1-timure": "s1",
-            "s2-syabrubesi": "s2",
-            "s3-trishuli": "s3",
+        tiles = client.get("/api/cameras").json()
+        places = {tile["id"]: (tile["site"], tile["lat"], tile["lon"]) for tile in tiles}
+        assert places == {
+            "hub-betrawati": ("hub", 27.9731, 85.186),
+            "s1-timure": ("s1", 28.2528, 85.3667),
+            "s2-syabrubesi": ("s2", 28.1632, 85.3391),
+            "s3-trishuli": ("s3", 27.9215, 85.146),
         }
-        assert all(_state_of_the_tile(client, camera_id) == "live" for camera_id in sites)
+        assert all(_state_of_the_tile(client, camera_id) == "live" for camera_id in places)
         part = client.get("/api/cameras/s2-syabrubesi/clip", headers={"Range": "bytes=10-19"})
         assert part.status_code == 206
         assert part.content == VIDEO[10:20]
@@ -204,28 +210,10 @@ def test_a_camera_with_no_clip_or_an_unknown_clip_warns_and_the_hub_still_starts
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     cameras = tmp_path / "cameras.json"
+    no_clip = _camera_entry("no-clip", site="s1")
+    del no_clip["clip"]
     cameras.write_text(
-        json.dumps(
-            [
-                {
-                    "id": "good",
-                    "label": "Good",
-                    "site": "hub",
-                    "lat": 1,
-                    "lon": 2,
-                    "clip": CLIP_KEYS[0],
-                },
-                {"id": "no-clip", "label": "No clip", "site": "s1", "lat": 1, "lon": 2},
-                {
-                    "id": "unknown",
-                    "label": "Unknown",
-                    "site": "s2",
-                    "lat": 1,
-                    "lon": 2,
-                    "clip": "nope",
-                },
-            ]
-        )
+        json.dumps([_camera_entry("good"), no_clip, _camera_entry("unknown", clip="nope")])
     )
     monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
     with caplog.at_level("WARNING"), _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
@@ -250,8 +238,7 @@ def test_a_malformed_camera_entry_is_skipped_and_the_others_still_work(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     cameras = tmp_path / "cameras.json"
-    good = {"id": "good", "label": "Good", "site": "hub", "lat": 1, "lon": 2, "clip": CLIP_KEYS[0]}
-    cameras.write_text(json.dumps([{"id": "no-position"}, good]))
+    cameras.write_text(json.dumps([{"id": "no-position"}, _camera_entry("good")]))
     monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
     with caplog.at_level("ERROR"), _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
         _wait_until(lambda: _state_of_the_tile(client, "good") == "live", "the good camera")
@@ -263,14 +250,7 @@ def test_a_repeated_camera_id_keeps_the_first_and_warns(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     cameras = tmp_path / "cameras.json"
-    first = {
-        "id": "same",
-        "label": "First",
-        "site": "hub",
-        "lat": 1,
-        "lon": 2,
-        "clip": CLIP_KEYS[0],
-    }
+    first = _camera_entry("same", label="First")
     cameras.write_text(json.dumps([first, {**first, "label": "Second"}]))
     monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", cameras)
     with caplog.at_level("ERROR"), _node(_clips_folder(tmp_path / "clips"), Internet()) as client:
@@ -289,14 +269,17 @@ def test_a_camera_list_that_is_not_a_list_leaves_no_cameras_and_the_hub_starts(
         assert client.get("/api/cameras").json() == []
 
 
-def test_a_missing_poster_makes_only_that_camera_unavailable(tmp_path: Path) -> None:
+def test_a_missing_poster_makes_only_that_camera_unavailable(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     clips = _clips_folder(tmp_path / "clips")
     manifest = json.loads((clips / "manifest.json").read_text())
     manifest["clips"][CLIP_KEYS[2]] = {**CLIP_ENTRY, "poster": "gone.jpg"}
     (clips / "manifest.json").write_text(json.dumps(manifest))
-    with _node(clips, Internet()) as client:
+    with caplog.at_level("WARNING"), _node(clips, Internet()) as client:
         _wait_until(lambda: _state_of_the_tile(client) == "live", "the camera to be live")
         assert _state_of_the_tile(client, "s1-timure") == "unavailable"
+    assert "s1-timure" in caplog.text
 
 
 def test_a_clip_file_missing_beside_a_manifest_makes_only_that_camera_unavailable(

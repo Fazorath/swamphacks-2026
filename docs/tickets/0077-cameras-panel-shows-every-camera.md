@@ -22,7 +22,7 @@
 - [ ] An Unavailable tile (clip missing, or the Viewer is on a Sensor Node) shows `UNAVAILABLE` and never looks like Offline
 - [ ] Playback is muted, `playsInline` and starts without a tap; a clip that cannot start shows its poster and `TAP TO PLAY`
 - [ ] The Cameras rail button counts cameras live or playing
-- [ ] Vitest tests: each state's label; a clip's time follows the fake Event clock, including a jump and a reset; the onset lines up with a given wave arrival; a Mesh-only Node requests no clip; a live tile and a clip tile differ
+- [ ] Vitest tests: each state's label; a clip's time follows the fake Event clock, including a jump and a reset; the onset lines up with a given wave arrival; a Mesh-only Node requests no clip; (a live tile and a clip tile differ: deferred with 0075's live path)
 - [ ] Checked by hand: the extreme-case clip (0076 clip 2) plays through a full Replay on the demo laptop (MacBook Pro, Apple M2, 8 GB, Chrome) with the 3D map open and two tiles playing; record dropped frames or CPU and note them here and in `docs/agents/lessons.md`. Also played once on a phone over Tailscale. Never reported as a check on a Pi
 - [ ] All **Commands** pass
 
