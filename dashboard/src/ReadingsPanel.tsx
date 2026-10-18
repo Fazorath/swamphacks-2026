@@ -4,8 +4,11 @@ import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
 import { Panel, type PanelControl } from "./Panel";
 import type { NodeOnMap } from "./nodesOnMap";
+import { ReadingSlot } from "./ReadingSlot";
 import { readingsLadder, rungBeforeWave } from "./readingsLadder";
+import { historyKey, type Trend } from "./readingTrends";
 import type { FloodRisk, ReadingKind } from "./nodeState";
+import { usePrefersReducedMotion } from "./useViewport";
 
 export const KIND_LABELS: Record<ReadingKind, string> = {
   pressure: "Pressure",
@@ -33,6 +36,8 @@ type Props = {
   selectedId: string | null;
   // How often each Node's Flood Risk has risen; a new count flashes that Node's card once.
   rises: Record<string, number>;
+  // The arrow of each reading, from the last 30 s of polls (`historyKey`).
+  trends: Record<string, Trend>;
   onSelect: (id: string) => void;
   onScenarioChanged: () => void;
   panel: PanelControl;
@@ -45,10 +50,12 @@ export function ReadingsPanel({
   waveKm,
   selectedId,
   rises,
+  trends,
   onSelect,
   onScenarioChanged,
   panel,
 }: Props) {
+  const reducedMotion = usePrefersReducedMotion();
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "n") post("/api/scenario/step", onScenarioChanged);
@@ -69,12 +76,19 @@ export function ReadingsPanel({
     <section
       aria-label={`Node ${node.label}`}
       aria-current={node.id === selectedId}
-      className={["node-card", node.stale && "stale", !node.registered && "unverified"]
+      className={[
+        "node-card",
+        node.stale && "stale",
+        !node.registered && "unverified",
+        !reducedMotion && "enters",
+      ]
         .filter(Boolean)
         .join(" ")}
       onClick={() => onSelect(node.id)}
     >
-      {(rises[node.id] ?? 0) > 0 && <span key={rises[node.id]} className="card-flash" />}
+      {(rises[node.id] ?? 0) > 0 && !reducedMotion && (
+        <span key={rises[node.id]} className="card-flash" />
+      )}
       <h3>
         {/* Clicks reach the card; the button only makes the card reachable by keyboard. */}
         <button>{node.label}</button>
@@ -82,16 +96,27 @@ export function ReadingsPanel({
         <NodeTags node={node} />
       </h3>
       {hero && node.waterLevelCm !== null && (
-        <p className={node.stale ? "hero-level water-level struck" : "hero-level"}>
-          {node.waterLevelCm} cm
+        <p className="hero-level">
+          <ReadingSlot
+            value={node.waterLevelCm}
+            trend={trends[historyKey(node.id, "water_level")]}
+            className={node.stale ? "water-level struck" : undefined}
+          >
+            {node.waterLevelCm} cm
+          </ReadingSlot>
         </p>
       )}
-      <ul>
+      <ul className="reading-row">
         {node.measurements
           .filter((measurement) => !(hero && measurement.kind === "water_level"))
           .map((measurement) => (
             <li key={measurement.kind}>
-              {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
+              <ReadingSlot
+                value={measurement.value}
+                trend={trends[historyKey(node.id, measurement.kind)]}
+              >
+                {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
+              </ReadingSlot>
             </li>
           ))}
       </ul>
