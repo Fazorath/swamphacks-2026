@@ -242,6 +242,11 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A full Replay from the start can skip S0's Surge**: its ramp (08:36:30 to 08:37:59, 89 event seconds, about 3 real seconds) is as short as the 3 s publish interval, so S0 can publish 0.7 m and then go silent without ever publishing a high reading. A jump to the Collapse phase did show the Surge. 0044 or 0049 should widen the ramp or publish faster during it.
 - **A Hub with no `registry.json` starts `ver` at the Unix time** (like `seq`), so deleting the file no longer leaves running Nodes ignoring it. In a `MeshedNodes` test the first Hub start also uses the clock, so `advance(...)` before a start-over or the new `ver` can equal the old one.
 
+## Replay speed toggle (2026-10-18)
+
+- **The Hub offers x5, x10 and x30 (`POST /api/replay/rate`); x1 is refused on purpose.** Replay readings carry the real clock as their timestamp, so a Surge (300 cm in under 60 s) is judged in real seconds: S0's 3.5 m rise takes 89 s at x1 and never counts, 18 s at x5 does. `test_the_collapse_surge_still_reaches_the_hub_at_a_slower_rate` covers x5 and x10.
+- **The chosen rate lives on the Hub and is used by Start, Resume, Reset and Jump**; changing it mid-replay re-announces the clock at the same `event_t`. Software path only, not seen in a browser.
+
 ## Replay weather in the Cache Pack (ticket 0052)
 
 - **Open-Meteo answers with its own model-cell coordinates** (asked 27.86, 85.08; got 27.873, 85.034), so `weather_replay.json` stores the grid we asked for, not the answer's `latitude`/`longitude`. A multi-point request returns a list, a single point a dict.
