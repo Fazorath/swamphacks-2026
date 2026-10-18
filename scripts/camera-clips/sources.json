@@ -1,0 +1,102 @@
+{
+  "_note": "Every source is credited and licensed. `distribution` is `committed` for sources whose licence page was checked (public domain, CC0 or CC BY) and `local` for footage we may not redistribute; a committed clip may only use committed sources. A piece's `start`/`end` are seconds of the source; `speed` below 1 slows it; `pingpong` plays it forward then backward; `repeat` plays the piece again after itself; `onset_in_piece_s` is the second of the piece (after speed) where the water visibly jumps.",
+  "sources": {
+    "wallowa-calm": {
+      "page": "https://commons.wikimedia.org/wiki/File:Wallowa_River_(35166286545).webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Wallowa_River_%2835166286545%29.webm",
+      "licence": "Public domain",
+      "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017); public domain as a US federal work (PD-USGov-BLM), also tagged CC BY 2.0 on Flickr",
+      "distribution": "committed",
+      "event": null
+    },
+    "bondo-debris-flow": {
+      "page": "https://commons.wikimedia.org/wiki/File:Bondo_Aug_2017.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Bondo_Aug_2017.webm",
+      "licence": "CC0",
+      "credit": "Debris flow in Bondo (Switzerland), Swiss Force One (Wikimedia Commons, CC0)",
+      "distribution": "committed",
+      "fit": "pad",
+      "event": "Bondo debris flow, Switzerland, 23 August 2017"
+    },
+    "bright-angel-debris": {
+      "page": "https://commons.wikimedia.org/wiki/File:Debris_Flows_Through_Bright_Angel_Creek_(55504603393).webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/94/Debris_Flows_Through_Bright_Angel_Creek_%2855504603393%29.webm",
+      "licence": "Public domain",
+      "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
+      "distribution": "committed",
+      "event": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
+    },
+    "bright-angel-flash": {
+      "page": "https://commons.wikimedia.org/wiki/File:Bright_Angel_Flash_Flood_(55504573056).webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Bright_Angel_Flash_Flood_%2855504573056%29.webm",
+      "licence": "Public domain",
+      "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
+      "distribution": "committed",
+      "event": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
+    },
+    "gyirong-cctv-1": {
+      "page": "https://commons.wikimedia.org/wiki/File:Mudslide_at_Gyirong_Port_1.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Mudslide_at_Gyirong_Port_1.webm",
+      "licence": "Tagged Pd-automated on Commons; author unknown, relayed by Resound News (X post). Unverified",
+      "credit": "CCTV at Gyirong Port, via Resound News (响亮新闻); Wikimedia Commons Mudslide_at_Gyirong_Port_1",
+      "distribution": "local",
+      "event": "Gyirong (Kyirong) Port avalanche flood, Tibet/Nepal border, 26 August 2026"
+    },
+    "gyirong-cctv-2": {
+      "page": "https://commons.wikimedia.org/wiki/File:Mudslide_at_Gyirong_Port_2.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Mudslide_at_Gyirong_Port_2.webm",
+      "licence": "Tagged Pd-automated on Commons; author unknown, relayed by Resound News (X post). Unverified",
+      "credit": "CCTV at Gyirong Port, via Resound News (响亮新闻); Wikimedia Commons Mudslide_at_Gyirong_Port_2",
+      "distribution": "local",
+      "event": "Gyirong (Kyirong) Port avalanche flood, Tibet/Nepal border, 26 August 2026"
+    }
+  },
+  "clips": [
+    {
+      "id": "clip-1-calm-then-surge",
+      "title": "Calm river, then a fast surge (the story clip)",
+      "distribution": "committed",
+      "pieces": [
+        {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 5},
+        {"source": "bright-angel-debris", "start": 0, "end": 22, "role": "rising"},
+        {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "flood"},
+        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.5},
+        {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "flood", "speed": 0.4}
+      ]
+    },
+    {
+      "id": "clip-2-extreme-debris-over-road",
+      "title": "Extreme case: debris and water over a road and bridge",
+      "distribution": "committed",
+      "pieces": [
+        {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 3},
+        {"source": "bright-angel-debris", "start": 0, "end": 22, "role": "rising", "speed": 0.4},
+        {"source": "bondo-debris-flow", "start": 0, "end": 83, "role": "extreme"},
+        {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "extreme"},
+        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.5}
+      ]
+    },
+    {
+      "id": "clip-3-rise-below-flooding",
+      "title": "A rise that stays below flooding",
+      "distribution": "committed",
+      "pieces": [
+        {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 4},
+        {"source": "bright-angel-debris", "start": 0, "end": 24, "role": "rising", "pingpong": true},
+        {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 4}
+      ]
+    },
+    {
+      "id": "clip-4-real-gyirong-then-surge",
+      "title": "Local only: the 26 August 2026 flood on a border CCTV camera",
+      "distribution": "local",
+      "pieces": [
+        {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 2},
+        {"source": "gyirong-cctv-1", "start": 0, "end": 65.5, "role": "flood", "onset_in_piece_s": 33},
+        {"source": "gyirong-cctv-2", "start": 0, "end": 69, "role": "extreme"},
+        {"source": "bright-angel-debris", "start": 0, "end": 43.4, "role": "flood"},
+        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.4}
+      ]
+    }
+  ]
+}
