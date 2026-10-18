@@ -35,7 +35,9 @@ import { useReadingTrends } from "./readingTrends";
 import { useContactNotes, useLevelRises } from "./useMarkerEvents";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
+import { PagerBanner } from "./PagerBanner";
 import { useNodeState } from "./useNodeState";
+import { usePager } from "./usePager";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
 import { waterReaches as waterReachesAt } from "./risingWater";
@@ -43,6 +45,8 @@ import { useRiverLine } from "./useRiverLine";
 import { useRoutes } from "./useRoutes";
 import { useIsPhone, useIsTablet } from "./useViewport";
 import { waveArrival, waveFrontKm } from "./waveEta";
+import { WarningBanners, WarningTakeover } from "./WarningTakeover";
+import { bannerWarnings, pendingWarnings, useAcknowledgedWarnings } from "./acknowledgedWarnings";
 import { WaveEtaCard } from "./WaveEtaCard";
 
 // Only the person at the Node's own machine may change that Node's registration; a phone cannot.
@@ -78,6 +82,7 @@ export function App() {
   const toggleFleetOpen = (id: string) => setFleetOpenId((current) => (current === id ? null : id));
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
+  const pager = usePager(nodes, profile?.home ?? null);
   const cachePack = useCachePack();
   const [openShelterIds, showOpenShelterIds] = useOpenShelterIds();
   // Until a resident saves their own profile, an example home keeps the plan and Route on screen.
@@ -236,6 +241,7 @@ export function App() {
     <EvacuationPlanPanel
       plan={plan}
       exampleHome={example !== null}
+      handOff={!phone && profile === null}
       waveArrival={arrival}
       eventT={eventT}
       shelterStatusConfirmedAt={unreachable ? (lastAnswer?.at ?? null) : null}
@@ -246,6 +252,10 @@ export function App() {
     <CamerasPanel tiles={cameras} clock={eventClock.clock} panel={panel("cameras")} />
   );
   const latestOfficialAlert = latestAlert(officialAlerts);
+  const [acknowledged, acknowledge] = useAcknowledgedWarnings();
+  const pending = pendingWarnings(officialAlerts, communityWarnings, acknowledged);
+  const allNodes = lastAnswer?.state.nodes ?? [];
+  const thisNodeId = lastAnswer?.state.id ?? "";
   const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
   return (
     <main className={phone ? "phone" : undefined}>
@@ -266,6 +276,11 @@ export function App() {
           your household profile are still here.
         </p>
       )}
+      <WarningBanners
+        shown={bannerWarnings(officialAlerts, communityWarnings, acknowledged)}
+        nodes={allNodes}
+        thisNodeId={thisNodeId}
+      />
       {storageProblem && (
         <p role="alert" className="banner">
           {STORAGE_PROBLEM_MESSAGES[storageProblem]}
@@ -298,6 +313,7 @@ export function App() {
           onClose={() => setNodePanelOpen(false)}
         />
       )}
+      {pager.alert && <PagerBanner alert={pager.alert} onDismiss={pager.dismiss} />}
       <div className="stage">
         <NodeMap
           nodes={shows("nodes") ? nodes : []}
@@ -319,6 +335,8 @@ export function App() {
           clock={eventClock.clock}
           ambientFlow={shows("fleet")}
           shelter={plan.shelter}
+          outOfReachShelter={plan.outOfReachShelter}
+          highGround={plan.highGround}
           route={shows("route") ? plan.route : null}
           panelRoom={panelRoom}
           draftHome={panelOpen ? draftHome : null}
@@ -440,6 +458,15 @@ export function App() {
         waterDrawn={waterReaches.length > 0}
       />
       {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
+      <WarningTakeover
+        pending={pending}
+        nodes={allNodes}
+        thisNodeId={thisNodeId}
+        waveArrival={arrival}
+        eventT={eventT}
+        online={state?.status === "online"}
+        onAcknowledge={acknowledge}
+      />
     </main>
   );
 }

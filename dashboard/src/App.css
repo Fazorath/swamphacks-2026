@@ -320,6 +320,38 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* Smaller than a Shelter pin so the two are never confused; cyan only on the one the plan names. */
+.high-ground-pin {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-primary);
+}
+
+/* The pin keeps its ink outline; the nearest point gains a cyan ring around it (D-43). */
+.high-ground-pin.nearest {
+  box-sizing: content-box;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.high-ground-label {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--surface-glass);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: normal;
+}
+
+.shelter-marker.out-of-reach {
+  background: transparent;
+  border: 2px dashed var(--risk-low);
+  color: var(--risk-low);
+}
+
 .plan-risk h3 {
   margin: 0 0 0.25rem;
   font-size: 0.95rem;
@@ -1606,6 +1638,27 @@ section p.flood-prone-caption {
   fill: none;
 }
 
+.pager-banner {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.6rem 1rem;
+  transform: translateX(-50%);
+  background: var(--surface-solid);
+  border: 2px solid var(--risk-high);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+}
+
+.pager-banner strong {
+  color: var(--risk-high);
+}
+
 .tag.live-sensors {
   color: var(--accent);
 }
@@ -1787,4 +1840,136 @@ section p.flood-prone-caption {
   .node-card {
     transition: none;
   }
+}
+
+/* Warning Takeover (ui.md): the only thing allowed to overpower the layout. The scrim dims the
+   live map to 40%; a phone gets the whole screen. */
+.takeover-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim);
+}
+
+.takeover {
+  box-sizing: border-box;
+  width: min(880px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  background: var(--surface-solid);
+  border: 2px solid var(--border-strong);
+  color: var(--text-primary);
+}
+
+.takeover h2 {
+  margin: 0.5rem 0 1rem;
+  font-size: 1.6rem;
+}
+
+.takeover-count {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.takeover.official {
+  background: var(--official-bg);
+  border-color: var(--official-tag);
+  color: var(--official-ink);
+}
+
+.takeover.official a,
+.takeover.official p {
+  color: var(--official-ink);
+}
+
+.takeover.community {
+  border: 3px dashed var(--community-warning);
+}
+
+.takeover-wave .wave-eta {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.takeover-acknowledge {
+  width: 100%;
+  height: 64px;
+  margin-top: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+/* Slow, and never a strobe; reduced motion gets no pulse at all. */
+@media (prefers-reduced-motion: no-preference) {
+  .takeover {
+    animation: takeover-pulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes takeover-pulse {
+  50% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--risk-high) 35%, transparent);
+  }
+}
+
+.phone .takeover {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  padding: 1rem;
+  border-radius: 0;
+  overflow-y: auto;
+}
+
+.warning-banner.official {
+  border-bottom-color: var(--official-tag);
+  color: var(--text-primary);
+}
+
+.warning-banner.community {
+  border-bottom: 2px dashed var(--community-warning);
+  color: var(--text-primary);
+}
+
+/* Join card: two codes a phone scans. */
+.join-card h3 {
+  margin: 0 0 0.5rem;
+}
+
+.join-codes {
+  display: flex;
+  gap: 1rem;
+}
+
+.join-codes figure {
+  flex: 1;
+  margin: 0;
+}
+
+.join-codes figcaption {
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.join-qr {
+  display: block;
+  width: 100%;
+  max-width: 9rem;
+}
+
+.join-qr-paper {
+  fill: var(--qr-paper);
+}
+
+.join-qr-ink {
+  fill: var(--qr-ink);
 }

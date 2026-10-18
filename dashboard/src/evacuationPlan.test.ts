@@ -1,7 +1,9 @@
 import {
   evacuationPlan,
   OFFICIAL_LINE,
+  highGroundLabel,
   type CachePackContents,
+  type HighGroundPoint,
   type Shelter,
 } from "./evacuationPlan";
 import type { HouseholdProfile } from "./householdProfile";
@@ -52,9 +54,24 @@ const HOLE: [number, number][] = [
   [-82.322, 29.648],
 ];
 
+function ridge(id: string, lat: number, climb: number): HighGroundPoint {
+  return {
+    id,
+    name: `Ridge ${id}`,
+    pos: [lat, -82.32],
+    town: "Home",
+    climb_m: climb,
+    walk_minutes: 9,
+  };
+}
+const NEAR_RIDGE = ridge("near", 29.66, 90);
+const FAR_RIDGE = ridge("far", 29.665, 140);
+const OUT_OF_RANGE_RIDGE = ridge("away", 29.68, 200);
+
 function pack(overrides: Partial<CachePackContents> = {}): CachePackContents {
   return {
     shelters: [NEAR_PLAIN, FAR_BOTH, NEAREST_FLAGGED],
+    highGround: [],
     floodProne: { features: [] },
     routeGrid: null,
     built: null,
@@ -383,6 +400,82 @@ describe("with a Wave ETA", () => {
       "No Shelter you can reach in time. Get to higher ground, away from the river, now.",
     );
     expect(plan({ wave: wave(29), openShelterIds: ["near-plain"] }).shelter).toBe(NEAR_PLAIN);
+  });
+
+  test("a Shelter out of reach in time is still given for the map, never as the chosen one", () => {
+    const tooLate = plan({ wave: wave(28), openShelterIds: ["near-plain"] });
+    expect(tooLate.shelter).toBeNull();
+    expect(tooLate.outOfReachShelter).toBe(NEAR_PLAIN);
+    expect(plan({ wave: wave(29), openShelterIds: ["near-plain"] }).outOfReachShelter).toBeNull();
+    expect(plan({ wave: null, openShelterIds: ["near-plain"] }).outOfReachShelter).toBeNull();
+  });
+
+  describe("High-ground points", () => {
+    const withRidges = pack({ highGround: [FAR_RIDGE, OUT_OF_RANGE_RIDGE, NEAR_RIDGE] });
+
+    test("the climb line comes from fixed numbers", () => {
+      expect(highGroundLabel(90, 11)).toBe("90 m up · 11 min walk");
+    });
+
+    test("with no Shelter reachable the plan names the nearest point and gives those within 2 km", () => {
+      const tooLate = plan({ wave: wave(28), openShelterIds: ["near-plain"], pack: withRidges });
+      expect(tooLate.highGround.map((pin) => [pin.point.id, pin.nearest])).toEqual([
+        ["near", true],
+        ["far", false],
+      ]);
+      // 0.01 degrees of latitude is 1.11 km: 24 minutes at the plan's walking speed, as for a Shelter.
+      expect(tooLate.highGround[0].walkMinutes).toBe(24);
+      expect(tooLate.lines).toContain("Nearest high ground: Ridge near, 90 m up · 24 min walk.");
+    });
+
+    test("they stay hidden while a Shelter can be reached, on a calm day and with no warning", () => {
+      const reachable = plan({ wave: wave(29), openShelterIds: ["near-plain"], pack: withRidges });
+      expect(reachable.highGround).toEqual([]);
+      expect(
+        plan({ wave: null, openShelterIds: ["near-plain"], pack: withRidges }).highGround,
+      ).toEqual([]);
+      expect(plan({ pack: withRidges }).highGround).toEqual([]);
+    });
+
+    test("a home with no point within 2 km keeps the generic higher-ground line", () => {
+      const awayFromRidges = pack({ highGround: [OUT_OF_RANGE_RIDGE] });
+      const tooLate = plan({
+        wave: wave(28),
+        openShelterIds: ["near-plain"],
+        pack: awayFromRidges,
+      });
+      expect(tooLate.highGround).toEqual([]);
+      expect(tooLate.lines.join(" ")).not.toContain("Nearest high ground");
+      expect(tooLate.lines.join(" ")).toContain("Get to higher ground");
+    });
+  });
+
+  test("the out-of-reach Shelter is the closest one outside the Flood-Prone Area", () => {
+    const ring: [number, number][] = [
+      [-82.321, 29.6505],
+      [-82.319, 29.6505],
+      [-82.319, 29.6515],
+      [-82.321, 29.6515],
+      [-82.321, 29.6505],
+    ];
+    const floodProne = {
+      features: [{ geometry: { type: "Polygon" as const, coordinates: [ring] } }],
+    };
+    const both = plan({
+      wave: wave(1),
+      pack: pack({ floodProne }),
+      openShelterIds: ["near-plain", "nearest-flagged"],
+    });
+    expect(both.outOfReachShelter).toBe(NEAR_PLAIN);
+    expect(both.lines).toContain("Nearest Shelter Near Plain: 24 min walk, wave in 1 min.");
+
+    const onlyFlagged = plan({
+      wave: wave(1),
+      pack: pack({ floodProne }),
+      openShelterIds: ["nearest-flagged"],
+    });
+    expect(onlyFlagged.outOfReachShelter).toBeNull();
+    expect(onlyFlagged.lines.join(" ")).toContain("Nearest Shelter");
   });
 
   test("at the arrival time it is always higher ground", () => {

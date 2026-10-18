@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     weather_forecast_url: str = ""
     # Secret: only this Node ever holds it; the dashboard asks the Node for tiles.
     carto_api_key: str = Field(default="", validation_alias="CARTO_API_KEY")
+    # The hotspot a phone joins, read from the same .env lines as pi/setup-hotspot.sh. Only the
+    # Node's own machine is told them (GET /api/join), for the Join card.
+    hotspot_ssid: str = Field(default="", validation_alias="HOTSPOT_SSID")
+    hotspot_password: str = Field(default="", validation_alias="HOTSPOT_PASSWORD")
+    # Where a phone on the hotspot opens the dashboard; blank means the hotspot address of
+    # pi/setup-hotspot.sh with this Node's port.
+    hotspot_dashboard_url: str = Field(default="", validation_alias="HOTSPOT_DASHBOARD_URL")
     # The Hub emails the team on a new Community Warning when all three are set. Unprefixed like
     # CARTO_API_KEY, which also makes them the same operator-facing .env lines.
     alert_email_from: str = Field(default="", validation_alias="ALERT_EMAIL_FROM")

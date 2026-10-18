@@ -348,6 +348,7 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 
 - **The plan takes a `wave` window (`arrivalAt`, `eventT`) from `App`**, null with no warning or no Wave ETA for the home, so an upstream or far-from-river home keeps the old nearest-Shelter plan. Reachability is judged on every render, so the choice flips on the Event clock without a new message.
 - **Walking minutes are rounded up from the straight line x 1.4 at 4 km/h**: 0.01 degrees of latitude is 24 min, not 23. Pick test distances from the arithmetic, not from round numbers.
+- **With a warning up and no Shelter reachable in time, the map used to show nothing** (found 2026-10-18 by placing a home at Syabrubesi: the gompa is a 12 min walk and the wave is 17 min away, so it fails the 5 min margin from the first second). The plan now also returns `outOfReachShelter`, the closest fitting Shelter outside the Flood-Prone Area, drawn as a dashed marker labelled "Can't reach in time: head uphill toward it", with no route and never as the chosen Shelter. A home far from every Shelter (Trishuli, 143 min) still gets a marker that is useless; real high-ground points are ticket 0068.
 - **A Node left running from another worktree (found on 8000 and 4250) fails the four `test_reticulum_nodes.py` tests with errors**; it was a teammate job, so it was not killed. `test_resume_at_the_end_is_refused` failed once in the full run and passed alone.
 
 ## Theme, bundled fonts and icons (ticket 0032)
@@ -457,6 +458,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
 - **Not seen in a browser**: the Chrome extension was not connected, so the valley zoom on `cache-pack-v5` was not checked by eye and the width estimate is unproven. If labels still touch, raise the 0.58 factor or `GAP`. A Hub on v5 ran fine on a private port with the main checkout's venv and `PYTHONPATH=<worktree>/node/src`.
 
+## High-warning pager and the out-of-reach Shelter (ticket 0080)
+
+- **A pager that waits for the closest Node to go quiet never fired in the Replay**: the Syabrubesi Sensor is silent only from 08:50, one minute after the "Surge reaches Syabrubesi" phase (08:49), and a jump keeps a paused clock paused. The pager now watches each Node's own High warning within 60 km of home (S0 is High about 3 s after a Collapse jump and S1 about 12 s later).
+- **Browsers play no sound until the page has been tapped once**, so `armPagerSound` makes the `AudioContext` on the first pointer or key event; before that `playPager` only logs. The tests mock the sound, so it has not been heard on real speakers or a phone.
+- **A Node already High when the page first lists Nodes is the baseline, not news**: the hook keeps `null` until the first non-empty list, or "Connecting…" and the first answer would page.
+- **On a Windows checkout every file has CRLF, and `layoutCss.test.ts` fails** ("no rule for .panel-column in App.css") because its regex needs `\n\n` between rules. Stripping the `\r` from `App.css` makes it pass; git stores LF, so it is a local quirk, not a repo bug. A Python script that rewrites a file in text mode also writes CRLF here; open with `newline=""` to keep the endings.
+- **A Shelter with no Route is not "unreachable"**: the valley pack has no Route to the Syabrubesi gompa (the corridor rule dropped them), so the out-of-reach Shelter gets a dashed straight line from home, labelled as a direction only. Real high-ground targets are ticket 0068.
+
 ## Labels declutter, second pass (after 0078)
 
 - **0078 was "done" but the owner's screenshot (replay, High) still showed overlapping labels**: it kept `must` labels (key places, real Nodes, the chosen Shelter) drawn even with no free side, named every town, and gave each Node label its SIMULATED and STALE tags, so the labels were very wide. Now no label is ever drawn over another (`must` is gone from `labelPlacement.ts`), only key places are named, only the plan's chosen Shelter is named (the others on hover), and a Node's map label is its name and level (tags show on hover or when selected, via `.node-label-extra`).
@@ -498,6 +507,8 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The Gmail connector belongs to a Claude account, not to the repo**, so it is linked once per person. To send as the team address from your own laptop: `/mcp`, choose "claude.ai Gmail", Disconnect if another account is linked, connect again, pick the team account on Google's screen and tick the send permission. Without the send permission a send fails with "Insufficient scope". Then ask the agent to send; the From line of a test to yourself shows which account it used.
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
+- **Check vitest's exit code and its "Errors" line, not only the test counts**: a click handler that throws in jsdom (`AudioContext is not defined`, hit by another file's click once `main` brought new tests) shows as "Uncaught Exception" and "Errors 2 errors" while every test still passes, and `scripts/check.sh` fails the run. `armPagerSound` now warns instead of throwing when the browser has no Web Audio.
+
 
 ## Temperature, cloud cover and rain on the terrain (ticket 0055)
 
@@ -557,3 +568,37 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Opened in Chrome (2026-10-18): the 3D valley shows relief and the gauge lines at Syabrubesi. The 60 fps check and a phone look are still open.
 - A full `vitest run` with the demo and Chrome open failed 17 unrelated tests once and passed the next run; `weatherLayersFlow` "no forecast" read the picture before it was drawn and now waits.
 
+## Camera list (ticket 0075)
+
+- **The live-source half of the ticket was dropped in grilling**: 0074 found no qualifying feed and 0038 had deleted the FL511 fetcher, so a live path would have been untested speculation. `kind` stays `replay`; a live source gets its own ticket when a feed qualifies.
+- **`cameras.json` has four cameras sharing the committed clips** (`hub-betrawati` and `s3-trishuli` use clip 1). An entry with no clip, an unknown clip key or a missing file warns at startup and shows `unavailable`; a malformed entry or a repeated id is skipped; a file that is unreadable or not a list leaves the Hub with no cameras (code-review found that `null` or `5` crashed startup). Tests swap the list with `monkeypatch.setattr("storm_shield.cameras.CAMERAS_FILE", path)`.
+- Tests that expected exactly one tile now pick a tile by id (`_tile(client, id)`). The dashboard still renders whatever tiles come back; the per-site timing shift is 0077.
+- `dashboard: vitest` failed once in a full `check.sh` run and passed in three reruns with no change near it; rerun before chasing it.
+
+
+## Warning Takeover and Join card (ticket 0039)
+
+- **Case-only file names collided again**: `joinCard.ts` beside `JoinCard.tsx` made tsc fail ("differs only in casing") on macOS. The logic files are `joinHotspot.ts` and `acknowledgedWarnings.ts`.
+- **The Join card needs the hotspot name and password, which are secrets**, so `GET /api/join` (HOTSPOT_SSID, HOTSPOT_PASSWORD, optional HOTSPOT_DASHBOARD_URL, default `http://10.88.0.1:<port>`) answers only requests from loopback (403 otherwise, 404 with no SSID). The projected Hub is localhost, so the card shows its codes there; a Node that sets nothing shows a one-line reason instead.
+- **A takeover duplicates the Alerts Panel text on purpose**, so older tests that did `getByText(headline)` had to scope to the Alerts region. A new flow test that reads a warning should `within(...)` the dialog or the Panel.
+- **The chime module remembers a tap for the whole test file** (`chime.ts` flag): put the "silent before a tap" test before any that fires `pointerDown`.
+- Seen only in jsdom: the 880 px card, 64 px button, dimming and slow pulse are CSS and were not looked at in a browser; the phone scan of the two codes was not done.
+- **Rehearsed in Chrome by the owner (2026-10-18)** on a lone Hub (port 8651, fake `HOTSPOT_SSID`): the takeover, acknowledgement, banner, reload and phone layout all worked, and the Join card showed both codes. A Hub alone is enough, since Official Alerts come from the Replay timeline; jump to "Authorities learn of the flood" in the Hub Panel's Replay tab. The Wi-Fi code for a network that does not exist makes a phone say "unable to join", which proves the phone read it as a Wi-Fi code and no more; a real join needs the Pi hotspot, still unproven.
+- **Open the rehearsal at `http://localhost:<port>`, not the Tailscale address**: `/api/join` and the Hub button both need loopback. A Hub started without `CACHE_PACK_URL` has no pack and the map is blank; serve `.demo/pack/cache-pack.zip` with `python3 -m http.server --directory <dir>` and export `CACHE_PACK_URL` (the pack unpacks within seconds).
+- A loopback group's slot can already be taken by a teammate's Node (4320 held a Node from another session): check `lsof -nP -iTCP -sTCP:LISTEN` and move to a free `NODE_LOOPBACK_SLOT` with a matching `NODE_LOOPBACK_FIRST_SLOT`; the failure is exit 255 with an empty log unless the Node's output is captured.
+
+## High-ground points (ticket 0068)
+
+- **Placeholder spots come from `scripts/cache-pack/high_ground.source.json`; the build reads each climb itself** from the Terrarium tiles (point minus the nearest river vertex) and refuses a point in or within 100 m of the corridor, under 50 m of climb, or with no key place within 2 km. Run on the real `cache-pack-v5` tiles the four points climb 90 to 126 m (96, 126, 90, 96). Nothing was visited; every `source` note says PLACEHOLDER.
+- **Scanning for candidates is slow unless the PNG decode is cached**: `pack_nepal.elevation_at` decodes a 256 by 256 tile on every call, and a 80 by 80 grid scan over three towns ran past 5 minutes before it was stopped. Wrapping `pack_nepal._decode_rgb` in `functools.lru_cache` made it finish in under two.
+- **The walk formula lives twice** (`pack_high_ground.py` and `evacuationPlan.ts`: straight line x 1.4 at 4 km/h, rounded up); the file's `walk_minutes` is from the town, the map and plan use the walk from home. Change both together.
+- **A pack without the file is handled by the manifest**: `useCachePack` asks for `high_ground.json` only when the manifest's `files` lists it, so an older pack gives no pins and no 404 in the console.
+- **Not done:** no `cache-pack-v6` Release and no `run-demo.sh` change, so the pins reach a demo laptop only after someone rebuilds with the full `build_cache_pack.py` (Overpass, minutes) and re-points the Hub. The pins, label and cyan outline are tested against the fake map only, not seen in a browser or on a phone; label overlap with Shelter labels at Syabrubesi is unchecked.
+- A worktree session refuses a command that mixes `cd` with a heredoc `python3 - <<E`; write the script to the scratchpad and run it as a plain command.
+- 0068 merge push: the pre-push `check.sh` reported `dashboard: vitest` FAIL on a tree whose own `check.sh` had passed minutes earlier; a rerun of the whole suite alone passed (51 files, 423 tests). Which test failed is unknown because the push output was piped through `tail`; run `git push` unpiped.
+
+## Hub reachable from WSL2 (2026-10-18)
+
+- **A Pi Hub and a WSL2 Sensor "recognised each other" yet the Sensor never counted**: WSL2 is behind NAT, so the Wi-Fi discovery multicast never crossed, and the Pi's `/api/state` listed only itself. A Hub started with `scripts/run-live.sh` had no TCP listener, so `nc -vz <pi> 4242` said "refused" while ping worked (something answered; nothing listened). `run-live.sh` now sets `NODE_ALSO_TCP_LISTEN=1` for a Hub; the WSL laptop runs `JOIN_MESH=tcp scripts/join-demo.sh <pi>:8000 <town>` (`pi/README.md`).
+- **A Hub's own readings count on the Hub with no sign-up** (it is always in its registry), so a breadboard press shows on the Pi alone until a Sensor holds the right `HUB_IDENTITY` and hears the registry.
+- Only `bash -n` was run on the `run-live.sh` change here; the Pi and WSL2 path was tested by the owner, not by an agent.

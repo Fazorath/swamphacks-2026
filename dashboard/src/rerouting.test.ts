@@ -87,6 +87,7 @@ function planFor({
 } = {}) {
   const pack: CachePackContents = {
     shelters: [SHELTER_A, SHELTER_B],
+    highGround: [],
     floodProne: { features: floodProne },
     routeGrid: null,
     built: null,
@@ -152,6 +153,7 @@ test("a pack with no Road graph keeps the precomputed Route", () => {
     profile: PROFILE,
     pack: {
       shelters: [SHELTER_A],
+      highGround: [],
       floodProne: { features: [] },
       routeGrid: null,
       built: null,
@@ -173,6 +175,7 @@ test("a home far from any road keeps the precomputed Route", () => {
     profile: { ...PROFILE, home: { lat: 29.7, lon: -82.4 } },
     pack: {
       shelters: [SHELTER_A],
+      highGround: [],
       floodProne: { features: [] },
       routeGrid: null,
       built: null,

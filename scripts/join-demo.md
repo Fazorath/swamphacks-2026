@@ -16,6 +16,9 @@ The Hub laptop must be running `scripts/run-demo.sh`. It listens on Wi-Fi discov
 | Linux, no setup | the Docker image with `--network host` and `-e JOIN_MESH=auto` | Wi-Fi discovery |
 | Windows (or anything with Docker Desktop) | the Docker image | dials the Hub's TCP port: Docker Desktop sits behind a VM's NAT, so Wi-Fi discovery cannot cross it |
 
+WSL2 sits behind NAT like Docker Desktop, so inside WSL2 run `JOIN_MESH=tcp scripts/join-demo.sh <hub address> <town>`.
+A Hub started with `scripts/run-live.sh` (the Pi) has the TCP listener on; see `pi/README.md`.
+
 macOS native and Windows without Docker are not supported.
 
 Towns (name and approximate position): `Dhunche`, `Trishuli`, `Kakani`, `Dhading`, `Kathmandu`.

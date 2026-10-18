@@ -112,7 +112,8 @@ test("while Mesh-only the source link is replaced by a note", async () => {
   stubNode("mesh_only", [NOTICE]);
   render(<App />);
 
-  expect(await screen.findByText("Source link opens when online")).toBeVisible();
+  const alertsPanel = await screen.findByRole("region", { name: "Alerts" });
+  expect(await within(alertsPanel).findByText("Source link opens when online")).toBeVisible();
   expect(screen.queryByRole("link", { name: "Read at the source" })).toBeNull();
 });
 

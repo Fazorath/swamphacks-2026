@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { sourceData } from "./fakeMaplibre";
 
 const PROFILE_KEY = "storm-shield.household-profile";
 const SURGE_T = 1_787_716_020;
@@ -98,6 +99,7 @@ function stubNode({
   warning = WARNING,
   shelters = [],
   town = null,
+  highGround = [],
 }: {
   eventT: number;
   river?: object | null;
@@ -105,6 +107,7 @@ function stubNode({
   shelters?: object[];
   // A place at the home, so the corner card has a town to name.
   town?: string | null;
+  highGround?: object[];
 }) {
   const answers: Record<string, unknown> = {
     "/api/state": fakeNodeState({
@@ -114,7 +117,17 @@ function stubNode({
       nodes: [fakeNodeSnapshot("porch", { river_km: 20, position: [KM_20.lat, KM_20.lon] })],
     }),
     "/api/replay": { v: 1, kind: "replay", state: "paused", event_t: eventT, rate: 30 },
-    "/api/cache-pack": { available: true, manifest: town ? NEPAL_MANIFEST : null },
+    "/api/cache-pack": {
+      available: true,
+      manifest:
+        town || highGround.length > 0
+          ? {
+              ...(town ? NEPAL_MANIFEST : {}),
+              files: highGround.length > 0 ? { "high_ground.json": "sha" } : {},
+            }
+          : null,
+    },
+    "/api/cache-pack/files/high_ground.json": highGround,
     "/api/cache-pack/files/nepal/places.geojson": {
       type: "FeatureCollection",
       features: [
@@ -242,6 +255,49 @@ test("a Shelter the resident cannot reach in time becomes higher ground", async 
       "No Shelter you can reach in time. Get to higher ground, away from the river, now.",
     ),
   ).toBeVisible();
+  await waitFor(() =>
+    expect(document.querySelectorAll(".shelter-marker.out-of-reach")).toHaveLength(1),
+  );
+  expect(sourceData("route").features).toHaveLength(0);
+  await waitFor(() => expect(sourceData("out-of-reach-line").features).toHaveLength(1));
+});
+
+function ridgeAt(id: string, lat: number) {
+  return { id, name: `Ridge ${id}`, pos: [lat, 85], town: "Home", climb_m: 90, walk_minutes: 11 };
+}
+
+test("with no Shelter in reach the nearest High-ground point is outlined and the rest are shown", async () => {
+  saveProfile(KM_20);
+  stubNode({
+    eventT: SURGE_T + 60,
+    shelters: [shelterAt(27.83)],
+    highGround: [ridgeAt("far", 27.835), ridgeAt("near", 27.825)],
+  });
+  render(<App />);
+
+  const plan = await screen.findByRole("region", { name: "Evacuation Plan" });
+  expect(
+    await within(plan).findByText(/Nearest high ground: Ridge near, 90 m up · \d+ min walk\./),
+  ).toBeVisible();
+  await waitFor(() => expect(document.querySelectorAll(".high-ground-pin")).toHaveLength(2));
+  expect(document.querySelectorAll(".high-ground-pin.nearest")).toHaveLength(1);
+  expect(document.querySelector(".high-ground-pin.nearest")).toHaveTextContent(
+    /90 m up · \d+ min walk/,
+  );
+});
+
+test("High-ground points stay off the map while a Shelter can be reached", async () => {
+  saveProfile(KM_20);
+  stubNode({
+    eventT: SURGE_T + 60,
+    shelters: [shelterAt(27.824)],
+    highGround: [ridgeAt("near", 27.825)],
+  });
+  render(<App />);
+
+  const plan = await screen.findByRole("region", { name: "Evacuation Plan" });
+  await within(plan).findByText("10 min walk, wave in 23 min.");
+  expect(document.querySelector(".high-ground-pin")).toBeNull();
 });
 
 test("the corner card names the town and shows the plan's minutes", async () => {

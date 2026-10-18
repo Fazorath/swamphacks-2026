@@ -55,6 +55,19 @@ pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
 - The Pi is at `10.88.0.1`. Phones open `http://10.88.0.1:8000` or the Hub's address. It is not NetworkManager's default `10.42.0.1` on purpose: a laptop sharing its connection over an Ethernet cable is also `10.42.0.1`, so `ssh 10.42.0.1` reached the laptop ("connection refused") instead of the Pi.
 - If it misbehaves, a phone's hotspot is the fallback: AutoInterface already worked over an iPhone hotspot (`docs/agents/lessons.md`, ticket 0004).
 
+## Laptops that cannot do Wi-Fi discovery (WSL2, Docker)
+
+`scripts/run-live.sh` starts a Hub with a TCP listener on port 4242 (`NODE_ALSO_TCP_LISTEN`, on by default for a Hub there; set it to `0` to turn it off) beside Wi-Fi discovery. A laptop behind NAT, such as WSL2 or Docker Desktop, never hears the discovery multicast, so it dials that port instead:
+
+```
+JOIN_MESH=tcp scripts/join-demo.sh 10.88.0.1:8000 <town>
+```
+
+- A Hub started any other way (`uv run`, a service) has no listener until `NODE_ALSO_TCP_LISTEN=1` is in its environment. Check on the Pi with `ss -ltn | grep 4242`; from the laptop, `nc -vz 10.88.0.1 4242` says "refused" when nothing listens (a working ping proves only that something answered).
+- Keep the Hub's `NODE_DATA_DIR`: the Hub's id lives there, and every Node's `HUB_IDENTITY` must match it. `join-demo.sh` reads the id from the Hub's `/api/state`.
+- Accept the laptop's Sign-up on the Hub Panel's Registry tab. Until it is accepted, the Hub lists its readings but does not count them.
+- The listener is open on every interface. Messages are signed, but do not leave a Hub running on a network you do not trust.
+
 ## Manual check (not done until done on the real Pi)
 
 - [ ] Rail measured at 3.3 V.
