@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   HATCH_IMAGE,
-  LAYER_IDS,
   NATIONAL_ZOOM,
   VALLEY_ZOOM,
   addNepalBasemap,
@@ -26,7 +25,6 @@ import {
   type Placement,
   type Side,
 } from "./labelPlacement";
-import type { MapLayers } from "./mapLayers";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -56,7 +54,8 @@ function viewOf(map: MapLibreMap): View {
 const TAG_WIDTH_PX = 70;
 
 function nodeTagCount(node: NodeOnMap): number {
-  return [node.simulated, !node.registered, node.level, node.stale].filter(Boolean).length;
+  return [node.simulated && !node.fleet, !node.registered, node.level, node.stale].filter(Boolean)
+    .length;
 }
 
 // Every label that competes for room on screen. The chosen Shelter, key places and the real Nodes
@@ -93,14 +92,14 @@ function labelsOnScreen(
   }
   const fleetShowing = zoomBlend(view.zoom) >= 0.5;
   for (const node of nodes) {
-    if (node.simulated && !fleetShowing) continue;
+    if (node.fleet && !fleetShowing) continue;
     const text = node.label + (node.waterLevelCm !== null ? ` · ${node.waterLevelCm} cm` : "");
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
       ...estimatedLabelSize(text, 13, nodeTagCount(node) * TAG_WIDTH_PX),
-      rank: node.id === selectedId ? 0 : node.simulated ? 5 : 2,
-      must: !node.simulated,
+      rank: node.id === selectedId ? 0 : node.fleet ? 5 : 2,
+      must: !node.fleet,
     });
   }
   return labels;
@@ -149,7 +148,6 @@ type Props = {
   nodes: NodeOnMap[];
   // The Simulated Fleet, drawn small beside the Nodes.
   fleet: NodeOnMap[];
-  layers: MapLayers;
   // How often each Node's Flood Risk has risen; a new count plays that Node's ring once.
   rises: Record<string, number>;
   stormSignalOn: boolean;
@@ -185,7 +183,6 @@ type Props = {
 export function NodeMap({
   nodes,
   fleet,
-  layers,
   rises,
   stormSignalOn,
   selectedId,
@@ -296,15 +293,6 @@ export function NodeMap({
   }, [map, styleReady, floodProneData, valleyRiverData, routeData, blockedData]);
 
   useEffect(() => {
-    if (!map || !styleReady) return;
-    for (const layer of ["floodProne", "route"] as const) {
-      for (const id of LAYER_IDS[layer]) {
-        map.setLayoutProperty(id, "visibility", layers[layer] ? "visible" : "none");
-      }
-    }
-  }, [map, styleReady, layers]);
-
-  useEffect(() => {
     if (!map) return;
     const onTap = picking
       ? (point: Home) => onPickHome(point)
@@ -323,22 +311,11 @@ export function NodeMap({
   // Derived during render, from the last placement so a label keeps its side until it must move.
   const labels =
     map && view
-      ? labelsOnScreen(
-          map,
-          view,
-          places,
-          layers.shelters ? shelters : [],
-          shelter?.id,
-          [...(layers.nodes ? nodes : []), ...(layers.fleet ? fleet : [])],
-          selectedId,
-        )
+      ? labelsOnScreen(map, view, places, shelters, shelter?.id, [...nodes, ...fleet], selectedId)
       : [];
   const nextPlacement = placeLabels(labels, placement);
   if (!samePlacement(nextPlacement, placement)) setPlacement(nextPlacement);
   const sideOf = (id: string): Side => placement.get(id) ?? "right";
-  // Before a label is placed it shows on the right; null means it lost its spot.
-  const sideOrHidden = (id: string): Side | null =>
-    placement.has(id) ? (placement.get(id) ?? null) : "right";
 
   return (
     <section aria-label="Map" className="map-area">
@@ -380,7 +357,6 @@ export function NodeMap({
             </MapMarker>
           ))}
       {map &&
-        layers.shelters &&
         shelters.map((each) => {
           const open = openShelterIds.includes(each.id);
           const chosen = each.id === shelter?.id;
@@ -414,7 +390,6 @@ export function NodeMap({
         </MapMarker>
       )}
       {map &&
-        layers.fleet &&
         fleet.map((node) => (
           <NodeMarker
             key={node.id}
@@ -422,12 +397,12 @@ export function NodeMap({
             node={node}
             selected={false}
             rises={rises[node.id] ?? 0}
-            labelSide={sideOrHidden(`node:${node.id}`)}
             onSelect={onSelect}
+            side={sideOf(`node:${node.id}`)}
+            labelHidden={placement.get(`node:${node.id}`) === null}
           />
         ))}
       {map &&
-        layers.nodes &&
         nodes.map((node) => (
           <NodeMarker
             key={node.id}
@@ -435,11 +410,12 @@ export function NodeMap({
             node={node}
             selected={node.id === selectedId}
             rises={rises[node.id] ?? 0}
-            labelSide={sideOrHidden(`node:${node.id}`)}
             onSelect={onSelect}
+            side={sideOf(`node:${node.id}`)}
+            labelHidden={placement.get(`node:${node.id}`) === null}
           />
         ))}
-      {layers.stormSignal && stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
+      {stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
     </section>
   );
 }

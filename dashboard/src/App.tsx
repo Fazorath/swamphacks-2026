@@ -8,9 +8,8 @@ import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
 import { HubPanel } from "./HubPanel";
 import { MapLegend } from "./MapLegend";
-import { useMapLayers } from "./mapLayers";
 import type { Home } from "./householdProfile";
-import { LayerRail } from "./LayerRail";
+import { LayerRail, type MapLayerName } from "./LayerRail";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
@@ -61,7 +60,6 @@ export function App() {
   const fleet = fleetOnMap(state);
   const rises = useLevelRises(nodes);
   const contactNotes = useContactNotes([...nodes, ...fleet]);
-  const [layers, toggleLayer] = useMapLayers();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
@@ -121,6 +119,12 @@ export function App() {
     open: panels.open.includes(name),
     onToggle: () => panels.toggle(name),
   });
+  const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
+  const toggleLayer = (layer: MapLayerName) =>
+    setHiddenLayers((hidden) =>
+      hidden.includes(layer) ? hidden.filter((each) => each !== layer) : [...hidden, layer],
+    );
+  const shows = (layer: MapLayerName) => !hiddenLayers.includes(layer);
   const openShelterCount = (cachePack?.shelters ?? []).filter((each) =>
     openShelterIds.includes(each.id),
   ).length;
@@ -160,7 +164,7 @@ export function App() {
       <TopBar
         eventClock={eventClock.clock}
         floodRisk={floodRisk}
-        showStormSignal={layers.stormSignal}
+        showStormSignal={shows("storm-signal")}
         status={state?.status ?? null}
         householdSaved={profile !== null}
         onOpenHousehold={openPanel}
@@ -207,22 +211,21 @@ export function App() {
       )}
       <div className="stage">
         <NodeMap
-          nodes={nodes}
-          fleet={fleet}
-          layers={layers}
+          nodes={shows("nodes") ? nodes : []}
+          fleet={shows("fleet") ? fleet : []}
           rises={rises}
-          stormSignalOn={floodRisk?.storm_signal.on ?? false}
+          stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
           selectedId={selectedId}
           onSelect={toggleSelected}
           home={shownProfile?.home ?? null}
-          shelters={cachePack?.shelters ?? []}
+          shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
           openShelterIds={openShelterIds}
-          floodProne={cachePack?.floodProne ?? null}
+          floodProne={shows("flood-prone") ? (cachePack?.floodProne ?? null) : null}
           nepal={cachePack?.nepal ?? null}
           places={places}
           river={river}
           shelter={plan.shelter}
-          route={plan.route}
+          route={shows("route") ? plan.route : null}
           panelRoom={panelRoom}
           draftHome={panelOpen ? draftHome : null}
           picking={picking}
@@ -235,11 +238,11 @@ export function App() {
           onTapRoad={tapRoad}
         />
         <LayerRail
-          layers={layers}
+          hiddenLayers={hiddenLayers}
           openPanels={panels.open}
           registeredNodes={nodes.filter((node) => node.registered).length}
-          simulatedNodes={fleet.length}
           openShelters={openShelterCount}
+          fleetNodes={fleet.length}
           liveCameras={cameras.filter((tile) => tile.state === "live").length}
           onToggleLayer={toggleLayer}
           onTogglePanel={panels.toggle}

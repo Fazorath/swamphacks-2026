@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { App } from "./App";
-import { lastMap, layerShown, sourceData } from "./fakeMaplibre";
+import { lastMap, sourceData } from "./fakeMaplibre";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import { defaultPanels, withPanelToggled } from "./openPanels";
 
@@ -114,13 +114,12 @@ describe("the rail's layer buttons", () => {
     stubNode();
     render(<App />);
     await waitFor(() => expect(sourceData("flood-prone").features).toHaveLength(1));
-    expect(layerShown("flood-prone-fill")).toBe(true);
 
     fireEvent.click(rail().getByRole("button", { name: "Flood-Prone Areas" }));
-    await waitFor(() => expect(layerShown("flood-prone-fill")).toBe(false));
+    await waitFor(() => expect(sourceData("flood-prone").features).toHaveLength(0));
 
     fireEvent.click(rail().getByRole("button", { name: "Flood-Prone Areas" }));
-    await waitFor(() => expect(layerShown("flood-prone-fill")).toBe(true));
+    await waitFor(() => expect(sourceData("flood-prone").features).toHaveLength(1));
   });
 
   it("hide the Node markers", async () => {

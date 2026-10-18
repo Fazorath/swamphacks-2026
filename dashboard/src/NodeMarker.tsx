@@ -17,14 +17,15 @@ type Props = {
   selected: boolean;
   // How many times this Node's Flood Risk has risen; a new count plays the ring once.
   rises: number;
-  // Where 0078 put the label beside the dot, or null when it lost its spot.
-  labelSide: Side | null;
   onSelect: (id: string) => void;
+  // Where the label sits, and whether it lost its spot to a more important one (0078).
+  side: Side;
+  labelHidden: boolean;
 };
 
 // One Node on the map. It updates in place on every poll: React changes the class and the text,
 // and MapMarker keeps the same element on the map until the Node's position changes.
-export function NodeMarker({ map, node, selected, rises, labelSide, onSelect }: Props) {
+export function NodeMarker({ map, node, selected, rises, onSelect, side, labelHidden }: Props) {
   const { appearance, glowPx, contactArc } = markerState(node);
   const real = !node.simulated;
   const classes = [
@@ -58,11 +59,7 @@ export function NodeMarker({ map, node, selected, rises, labelSide, onSelect }: 
           </svg>
         )}
       </span>
-      <span
-        className={`map-label node-label label-${labelSide ?? "right"}${
-          labelSide === null ? " label-hidden" : ""
-        }`}
-      >
+      <span className={`map-label node-label label-${side}${labelHidden ? " label-hidden" : ""}`}>
         <strong>{node.label}</strong>
         {node.waterLevelCm !== null && (
           <span className={node.stale ? "water-level struck" : "water-level"}>

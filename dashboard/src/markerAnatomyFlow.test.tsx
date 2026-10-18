@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { App } from "./App";
-import { layerShown } from "./fakeMaplibre";
 import { fakeFleetEntry, fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { NodeState } from "./nodeState";
 import { STATE_POLL_MS } from "./useNodeState";
@@ -83,8 +82,7 @@ describe("the Simulated Fleet", () => {
     render(<App />);
     await waitFor(() => expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(2));
 
-    const fleetButton = screen.getByRole("button", { name: /Fleet/ });
-    expect(within(fleetButton).getByText("2")).toBeInTheDocument();
+    const fleetButton = screen.getByRole("button", { name: "Fleet, 2" });
     fireEvent.click(fleetButton);
 
     expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(0);
@@ -262,32 +260,14 @@ describe("a Node's marker", () => {
 });
 
 describe("the layer buttons", () => {
-  it("hide and show the Flood-Prone Area and the Route on the map", async () => {
-    stubNode({}, MANIFEST);
-    render(<App />);
-    await waitFor(() => expect(layerShown("flood-prone-fill")).toBe(true));
-
-    fireEvent.click(screen.getByRole("button", { name: /Flood-Prone Areas/ }));
-    expect(layerShown("flood-prone-fill")).toBe(false);
-    expect(layerShown("flood-prone-line")).toBe(false);
-    expect(layerShown("route")).toBe(true);
-
-    fireEvent.click(screen.getByRole("button", { name: /^Route/ }));
-    expect(layerShown("route")).toBe(false);
-    expect(layerShown("route-casing")).toBe(false);
-
-    fireEvent.click(screen.getByRole("button", { name: /Flood-Prone Areas/ }));
-    expect(layerShown("flood-prone-fill")).toBe(true);
-  });
-
   it("hide and show the Nodes", async () => {
     stubNode({ nodes: [fakeNodeSnapshot("s0")] });
     render(<App />);
     await waitFor(() => expect(markers()).toHaveLength(1));
 
-    fireEvent.click(screen.getByRole("button", { name: /^Nodes/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Nodes, / }));
     expect(markers()).toHaveLength(0);
-    fireEvent.click(screen.getByRole("button", { name: /^Nodes/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Nodes, / }));
     expect(markers()).toHaveLength(1);
   });
 

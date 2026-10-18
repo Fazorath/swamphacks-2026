@@ -73,12 +73,6 @@ export function hatchImage(colour: string): { width: number; height: number; dat
   return { width: HATCH_SIZE, height: HATCH_SIZE, data };
 }
 
-// The layers each layer button shows and hides.
-export const LAYER_IDS = {
-  floodProne: ["flood-prone-fill", "flood-prone-line"],
-  route: ["route-casing", "route"],
-} as const;
-
 // The data drawn over the map; each is a GeoJSON source the app fills as its props change.
 export type OverlayName = "flood-prone" | "valley-river" | "route" | "blocked-roads";
 

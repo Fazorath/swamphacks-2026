@@ -722,6 +722,7 @@ section p {
 }
 
 .node-marker.fleet:hover .node-label {
+  display: block;
   opacity: 1;
 }
 
@@ -790,7 +791,7 @@ section p {
   position: absolute;
   z-index: 2;
   bottom: 0.75rem;
-  left: calc(0.75rem + 288px + 0.75rem);
+  left: calc(3.75rem + 288px + 0.75rem);
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
