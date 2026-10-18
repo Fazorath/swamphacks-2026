@@ -10,7 +10,7 @@
 
 **Assignee:** leonardorofaDV
 
-**Spec:** `docs/specs/gods-eye-view.md`
+**Spec:** `docs/specs/audience-node.md` (and `docs/specs/gods-eye-view.md`)
 
 - [ ] One command starts a Sensor Node that joins the Hub's Mesh (Hub identity, pack from the Hub, Replay followed), with a name and a Nepal position taken from arguments or a small list
 - [ ] The Hub-side step to accept the Node into the registry is one documented command or a Hub Panel click (the registry fits about 8 Nodes: the Hub, S0 to S3 and the Pi make 6)
@@ -19,3 +19,10 @@
 - [ ] A short runbook beside the script says how to prepare the laptop, how to hand it to a volunteer, and what to do if they close the lid instead (a teammate turns Wi-Fi off)
 - [ ] Rehearsed on loopback, with the result and what is still unproven on real Wi-Fi noted in `docs/agents/lessons.md`; never reported as a Pi or Wi-Fi check
 - [ ] `bash -n` and `scripts/check.sh` pass
+
+## Scope added in the grilling (2026-10-18)
+
+Folded into this ticket, not new tickets:
+
+- [ ] The Hub can run Wi-Fi discovery and listen for TCP clients beside its primary interface (off by default; `run-demo.sh` turns both on for the Hub), with config tests
+- [ ] One Docker image whose entrypoint is `join-demo.sh`, for Windows and any Docker host; on a non-host network it dials the Hub over TCP

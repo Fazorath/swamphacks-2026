@@ -162,6 +162,14 @@ _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
 
+**Real Node**:
+A Node that is actually on the Mesh (the Hub, the breadboard Pi, an Audience Node), as opposed to an entry of the Simulated Fleet. Shown with the `REAL` ring.
+_Avoid_: physical node, live node
+
+**Audience Node**:
+A Registered Node on a volunteer's laptop, started with `scripts/join-demo.sh`. It is a Real Node on the real Mesh, but its readings are the Scenario's, so they are simulated.
+_Avoid_: guest node, visitor node, demo laptop
+
 **God's Eye View**:
 The desktop dashboard's map of the whole of Nepal, drawn from vector data in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
 _Avoid_: globe, surveillance map, overview
