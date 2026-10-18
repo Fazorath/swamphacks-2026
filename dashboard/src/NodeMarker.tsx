@@ -16,6 +16,9 @@ type Props = {
   map: MapLibreMap;
   node: NodeOnMap;
   selected: boolean;
+  // The wave front passed this Node in the last two event minutes (D-18): wave-white, then its
+  // real state again.
+  wavePassed?: boolean;
   // A fleet Node's popover beside its dot (D-38); its click toggles it instead of selecting.
   popoverOpen?: boolean;
   // How many times this Node's Flood Risk has risen; a new count plays the ring once.
@@ -32,6 +35,7 @@ export function NodeMarker({
   map,
   node,
   selected,
+  wavePassed = false,
   popoverOpen = false,
   rises,
   onSelect,
@@ -47,6 +51,7 @@ export function NodeMarker({
     appearance,
     contactArc !== null && "contact-lost",
     selected && "selected",
+    wavePassed && "wave-passed",
   ]
     .filter(Boolean)
     .join(" ");
