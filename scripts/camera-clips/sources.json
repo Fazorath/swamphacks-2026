@@ -5,7 +5,7 @@
       "page": "https://commons.wikimedia.org/wiki/File:Wallowa_River_(35166286545).webm",
       "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Wallowa_River_%2835166286545%29.webm",
       "licence": "Public domain",
-      "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017)",
+      "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017); public domain as a US federal work (PD-USGov-BLM), also tagged CC BY 2.0 on Flickr",
       "distribution": "committed",
       "event": null
     },
@@ -22,7 +22,7 @@
       "page": "https://commons.wikimedia.org/wiki/File:Debris_Flows_Through_Bright_Angel_Creek_(55504603393).webm",
       "url": "https://upload.wikimedia.org/wikipedia/commons/9/94/Debris_Flows_Through_Bright_Angel_Creek_%2855504603393%29.webm",
       "licence": "Public domain",
-      "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026)",
+      "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
       "distribution": "committed",
       "event": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
     },
@@ -30,17 +30,9 @@
       "page": "https://commons.wikimedia.org/wiki/File:Bright_Angel_Flash_Flood_(55504573056).webm",
       "url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Bright_Angel_Flash_Flood_%2855504573056%29.webm",
       "licence": "Public domain",
-      "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026)",
+      "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
       "distribution": "committed",
       "event": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
-    },
-    "cabrils-flash-flood": {
-      "page": "https://commons.wikimedia.org/wiki/File:Riera_de_Cabrils_3.webm",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Riera_de_Cabrils_3.webm",
-      "licence": "Public domain",
-      "credit": "Riera de Cabrils 3, Feliuvilassar (Wikimedia Commons, own work, 27 August 2019)",
-      "distribution": "committed",
-      "event": "Riera de Cabrils flash flood after a summer storm, Catalonia, 27 August 2019"
     },
     "gyirong-cctv-1": {
       "page": "https://commons.wikimedia.org/wiki/File:Mudslide_at_Gyirong_Port_1.webm",
@@ -68,8 +60,8 @@
         {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 5},
         {"source": "bright-angel-debris", "start": 0, "end": 22, "role": "rising"},
         {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "flood"},
-        {"source": "cabrils-flash-flood", "start": 0, "end": 14.7, "role": "flood", "speed": 0.5, "pingpong": true},
-        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.5}
+        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.5},
+        {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "flood", "speed": 0.4}
       ]
     },
     {
@@ -78,9 +70,9 @@
       "distribution": "committed",
       "pieces": [
         {"source": "wallowa-calm", "start": 0, "end": 8.8, "role": "calm", "speed": 0.5, "pingpong": true, "repeat": 3},
+        {"source": "bright-angel-debris", "start": 0, "end": 22, "role": "rising", "speed": 0.4},
         {"source": "bondo-debris-flow", "start": 0, "end": 83, "role": "extreme"},
         {"source": "bright-angel-debris", "start": 22, "end": 43.4, "role": "extreme"},
-        {"source": "cabrils-flash-flood", "start": 0, "end": 14.7, "role": "flood", "speed": 0.5, "pingpong": true},
         {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.5}
       ]
     },
@@ -103,7 +95,7 @@
         {"source": "gyirong-cctv-1", "start": 0, "end": 65.5, "role": "flood", "onset_in_piece_s": 33},
         {"source": "gyirong-cctv-2", "start": 0, "end": 69, "role": "extreme"},
         {"source": "bright-angel-debris", "start": 0, "end": 43.4, "role": "flood"},
-        {"source": "cabrils-flash-flood", "start": 0, "end": 14.7, "role": "flood", "speed": 0.5, "pingpong": true}
+        {"source": "bright-angel-flash", "start": 0, "end": 22.8, "role": "flood", "speed": 0.4}
       ]
     }
   ]

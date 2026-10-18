@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Builds the demo's five-minute Camera Clips from short, credited source clips.
 
-    uv run --with imageio-ffmpeg python scripts/make_camera_clips.py            # committed fallback
-    uv run --with imageio-ffmpeg python scripts/make_camera_clips.py --local    # every clip, into .demo/clips/
-    python3 scripts/make_camera_clips.py --plan                                  # print timelines only
+    uv run --with imageio-ffmpeg python scripts/make_camera_clips.py          # committed fallback
+    uv run --with imageio-ffmpeg python scripts/make_camera_clips.py --local  # all, to .demo/clips/
+    python3 scripts/make_camera_clips.py --plan                               # timelines only
 
 Reads scripts/camera-clips/sources.json, downloads each source once into .demo/clip-sources/,
 trims, slows, joins with cross-fades and writes 854 x 480 H.264 MP4s with no audio, a poster
@@ -253,14 +253,18 @@ def render(
 
 
 def manifest_entry(
-    clip: Record, sources: dict[str, Record], rows: list[Record], files: dict[str, Path], ffmpeg: str
+    clip: Record,
+    sources: dict[str, Record],
+    rows: list[Record],
+    files: dict[str, Path],
+    length_s: float,
 ) -> Record:
     used = {row["source"] for row in rows}
     return {
         "file": files["video"].name,
         "poster": files["poster"].name,
         "title": clip["title"],
-        "length_s": round(probe_seconds(ffmpeg, files["video"]), 1),
+        "length_s": round(length_s, 1),
         "size_bytes": files["video"].stat().st_size,
         "distribution": clip["distribution"],
         "illustrative": ILLUSTRATIVE_NOTE,
@@ -305,13 +309,16 @@ def main() -> None:
     if not args.local:
         clips = [clip for clip in clips if clip["distribution"] == "committed"]
     for clip in clips:
-        rows = timeline(expand(clip["pieces"]))
-        length = total_seconds(expand(clip["pieces"]))
-        print(f"{clip['id']}: {length:.1f} s planned, flood onset {onset(rows, ('flood', 'extreme'))}")
+        pieces = expand(clip["pieces"])
+        rows = timeline(pieces)
+        length = total_seconds(pieces)
+        flood_onset = onset(rows, ("flood", "extreme"))
+        print(f"{clip['id']}: {length:.1f} s planned, flood onset {flood_onset}")
         for row in rows:
-            print(f"    {row['starts_s']:6.1f}  {row['seconds']:5.1f} s  {row['role']:8} {row['source']}")
+            print(f"    {row['starts_s']:6.1f}  {row['seconds']:5.1f} s  {row['role']:8}"
+                  f" {row['source']}")
         if length < CLIP_SECONDS:
-            raise SystemExit(f"{clip['id']} plans {length:.1f} s, under the {CLIP_SECONDS} s needed")
+            raise SystemExit(f"{clip['id']} plans {length:.1f} s, under {CLIP_SECONDS} s")
     if args.plan:
         return
 
@@ -327,15 +334,20 @@ def main() -> None:
         for piece in clip["pieces"]:
             have = probe_seconds(ffmpeg, paths[piece["source"]])
             if piece["end"] > have + 0.05:
-                raise SystemExit(f"{clip['id']}: {piece['source']} is {have:.1f} s, piece ends later")
+                raise SystemExit(f"{clip['id']}: {piece['source']} is {have:.1f} s, too short")
 
     entries = {}
     for clip in clips:
         clip_started = time.monotonic()
-        rows = timeline(expand(clip["pieces"]))
         files = render(ffmpeg, clip, sources, paths, out_dir)
-        entries[clip["id"]] = manifest_entry(clip, sources, rows, files, ffmpeg)
-        entry = entries[clip["id"]]
+        entry = manifest_entry(
+            clip,
+            sources,
+            timeline(expand(clip["pieces"])),
+            files,
+            probe_seconds(ffmpeg, files["video"]),
+        )
+        entries[clip["id"]] = entry
         print(
             f"{clip['id']}: {entry['length_s']} s, {entry['size_bytes'] / 1e6:.1f} MB, "
             f"{time.monotonic() - clip_started:.0f} s to build",
@@ -343,7 +355,8 @@ def main() -> None:
         )
     shutil.rmtree(SOURCE_CACHE / "prepared", ignore_errors=True)
     manifest = {"clip_seconds": CLIP_SECONDS, "size": f"{WIDTH}x{HEIGHT}", "clips": entries}
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+    text = json.dumps(manifest, indent=2, ensure_ascii=False)
+    (out_dir / "manifest.json").write_text(text + "\n")
     total_mb = sum(e["size_bytes"] for e in entries.values()) / 1e6
     print(f"wrote {out_dir}: {total_mb:.1f} MB in {time.monotonic() - started:.0f} s")
 

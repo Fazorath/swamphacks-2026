@@ -7,7 +7,7 @@
       "poster": "clip-1-calm-then-surge-poster.jpg",
       "title": "Calm river, then a fast surge (the story clip)",
       "length_s": 300.0,
-      "size_bytes": 6037229,
+      "size_bytes": 5972521,
       "distribution": "committed",
       "illustrative": "Illustrative footage composed from the credited sources. It was not filmed at the site of the Node it plays for.",
       "rise_onset_s": 172.0,
@@ -105,22 +105,9 @@
           "real_footage_of": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
         },
         {
-          "source": "cabrils-flash-flood",
-          "role": "flood",
-          "starts_s": 213.4,
-          "seconds": 58.8,
-          "source_range_s": [
-            0,
-            14.7
-          ],
-          "speed": 0.5,
-          "pingpong": true,
-          "real_footage_of": "Riera de Cabrils flash flood after a summer storm, Catalonia, 27 August 2019"
-        },
-        {
           "source": "bright-angel-flash",
           "role": "flood",
-          "starts_s": 271.2,
+          "starts_s": 213.4,
           "seconds": 45.6,
           "source_range_s": [
             0,
@@ -129,29 +116,36 @@
           "speed": 0.5,
           "pingpong": false,
           "real_footage_of": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
+        },
+        {
+          "source": "bright-angel-debris",
+          "role": "flood",
+          "starts_s": 258.0,
+          "seconds": 53.5,
+          "source_range_s": [
+            22,
+            43.4
+          ],
+          "speed": 0.4,
+          "pingpong": false,
+          "real_footage_of": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
         }
       ],
       "sources": {
         "bright-angel-debris": {
-          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026)",
+          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Debris_Flows_Through_Bright_Angel_Creek_(55504603393).webm",
           "distribution": "committed"
         },
         "bright-angel-flash": {
-          "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026)",
+          "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Bright_Angel_Flash_Flood_(55504573056).webm",
           "distribution": "committed"
         },
-        "cabrils-flash-flood": {
-          "credit": "Riera de Cabrils 3, Feliuvilassar (Wikimedia Commons, own work, 27 August 2019)",
-          "licence": "Public domain",
-          "page": "https://commons.wikimedia.org/wiki/File:Riera_de_Cabrils_3.webm",
-          "distribution": "committed"
-        },
         "wallowa-calm": {
-          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017)",
+          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017); public domain as a US federal work (PD-USGov-BLM), also tagged CC BY 2.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Wallowa_River_(35166286545).webm",
           "distribution": "committed"
@@ -163,11 +157,11 @@
       "poster": "clip-2-extreme-debris-over-road-poster.jpg",
       "title": "Extreme case: debris and water over a road and bridge",
       "length_s": 300.0,
-      "size_bytes": 6060008,
+      "size_bytes": 5930167,
       "distribution": "committed",
       "illustrative": "Illustrative footage composed from the credited sources. It was not filmed at the site of the Node it plays for.",
-      "rise_onset_s": null,
-      "flood_onset_s": 103.6,
+      "rise_onset_s": 103.6,
+      "flood_onset_s": 157.6,
       "pieces": [
         {
           "source": "wallowa-calm",
@@ -209,9 +203,22 @@
           "real_footage_of": null
         },
         {
+          "source": "bright-angel-debris",
+          "role": "rising",
+          "starts_s": 103.6,
+          "seconds": 55.0,
+          "source_range_s": [
+            0,
+            22
+          ],
+          "speed": 0.4,
+          "pingpong": false,
+          "real_footage_of": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
+        },
+        {
           "source": "bondo-debris-flow",
           "role": "extreme",
-          "starts_s": 103.6,
+          "starts_s": 157.6,
           "seconds": 83.0,
           "source_range_s": [
             0,
@@ -224,7 +231,7 @@
         {
           "source": "bright-angel-debris",
           "role": "extreme",
-          "starts_s": 185.6,
+          "starts_s": 239.6,
           "seconds": 21.4,
           "source_range_s": [
             22,
@@ -235,22 +242,9 @@
           "real_footage_of": "Bright Angel Creek flash flood, Grand Canyon, Arizona, 29 August to 2 September 2026"
         },
         {
-          "source": "cabrils-flash-flood",
-          "role": "flood",
-          "starts_s": 206.0,
-          "seconds": 58.8,
-          "source_range_s": [
-            0,
-            14.7
-          ],
-          "speed": 0.5,
-          "pingpong": true,
-          "real_footage_of": "Riera de Cabrils flash flood after a summer storm, Catalonia, 27 August 2019"
-        },
-        {
           "source": "bright-angel-flash",
           "role": "flood",
-          "starts_s": 263.8,
+          "starts_s": 260.0,
           "seconds": 45.6,
           "source_range_s": [
             0,
@@ -269,25 +263,19 @@
           "distribution": "committed"
         },
         "bright-angel-debris": {
-          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026)",
+          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Debris_Flows_Through_Bright_Angel_Creek_(55504603393).webm",
           "distribution": "committed"
         },
         "bright-angel-flash": {
-          "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026)",
+          "credit": "Bright Angel Flash Flood, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 29 August 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Bright_Angel_Flash_Flood_(55504573056).webm",
           "distribution": "committed"
         },
-        "cabrils-flash-flood": {
-          "credit": "Riera de Cabrils 3, Feliuvilassar (Wikimedia Commons, own work, 27 August 2019)",
-          "licence": "Public domain",
-          "page": "https://commons.wikimedia.org/wiki/File:Riera_de_Cabrils_3.webm",
-          "distribution": "committed"
-        },
         "wallowa-calm": {
-          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017)",
+          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017); public domain as a US federal work (PD-USGov-BLM), also tagged CC BY 2.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Wallowa_River_(35166286545).webm",
           "distribution": "committed"
@@ -299,7 +287,7 @@
       "poster": "clip-3-rise-below-flooding-poster.jpg",
       "title": "A rise that stays below flooding",
       "length_s": 300.0,
-      "size_bytes": 6037089,
+      "size_bytes": 6042054,
       "distribution": "committed",
       "illustrative": "Illustrative footage composed from the credited sources. It was not filmed at the site of the Node it plays for.",
       "rise_onset_s": 137.8,
@@ -425,13 +413,13 @@
       ],
       "sources": {
         "bright-angel-debris": {
-          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026)",
+          "credit": "Debris Flows Through Bright Angel Creek, NPS/K. Hensel, Grand Canyon NPS (Wikimedia Commons, taken 2 September 2026); public domain as a US federal work (PD-USGov-NPS), also tagged CC BY 4.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Debris_Flows_Through_Bright_Angel_Creek_(55504603393).webm",
           "distribution": "committed"
         },
         "wallowa-calm": {
-          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017)",
+          "credit": "Wallowa River, BLM Oregon & Washington (Wikimedia Commons, taken 7 June 2017); public domain as a US federal work (PD-USGov-BLM), also tagged CC BY 2.0 on Flickr",
           "licence": "Public domain",
           "page": "https://commons.wikimedia.org/wiki/File:Wallowa_River_(35166286545).webm",
           "distribution": "committed"
