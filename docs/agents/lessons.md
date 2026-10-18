@@ -499,6 +499,12 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **One sender is enough for a one-off message.** Only the laptop that has it linked needs to send; the demo itself never sends email.
 - **A send goes out at once under that address.** Show the text and recipients first, and use a "[Rehearsal copy]" subject when the real recipients are not known yet.
 
+## Temperature, cloud cover and rain on the terrain (ticket 0055)
+
+- **The weather picture is a MapLibre `image` source made from a canvas data address**, rows spaced in Mercator so places stay where the data puts them. jsdom has no canvas, so `setup.ts` mocks `weatherImageUrl` with a pixel checksum; tests tell pictures apart by that address, and `paintWeatherField` is tested on its raw pixels.
+- **`theme.test.ts` bans `rgb(`/`rgba(`/hex anywhere outside `theme.css`, comments included.** The ramps are data, so the legend gradient is built as `color(srgb …)`.
+- **Not done:** the 60 fps check in 2D and 3D with each layer on, on the laptop and a phone (no browser here). The picture is repainted on every Event-clock change, about once a second, 320 x 180 `valueAt` calls plus a PNG encode on the main thread; if panning stutters on a phone, lower `FIELD_WIDTH`/`FIELD_HEIGHT`.
+
 ## Wave front and river flow (ticket 0065)
 
 - **The comet is two GeoJSON sources updated from `requestAnimationFrame` (`WaveFrontLayer`), not React state**, gliding between the 1 Hz clock answers by the clock's rate (capped at 2.5 s). Node flashes and town stamps use the raw 1 Hz clock, so at ×30 the comet can reach a town up to a second of real time before its label lights.
@@ -530,3 +536,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **`state: "live"` on a replay tile means "working"**, not a live feed; `kind` says live or replay (0075 keeps that split). The rail counts working tiles while the Event clock is playing, so it reads 0 before Start and while paused.
 - **Not seen in a real browser**: playback, seeking by range request on Safari/iOS, and frame rate with the 3D map open (0077's hand check). Backend range requests are tested with a tiny fake file only.
 - **A scripted splice of `App.css` duplicated 1,300 lines** because the end marker (`.flood-risk-chip,\n.connection-badge`) also occurs near the top of the file, and `check.sh` stayed green. Code-review caught it. After editing a stylesheet by script, run `git diff --stat` and look at the deleted/added counts.
+
+## Peer Mesh in Docker grilling (2026-10-18)
+
+- **A TCP Node that dials only the Hub loses every other Node when the Hub stops.** Three Nodes in `tcp` mode on one laptop: with B and C listing only A (the Hub), B never heard C at all; with every Node listing every other, B and C kept hearing each other 30 s after A stopped. Transport is off, so nobody relays; `docs/specs/peer-mesh-in-docker.md` makes the full mesh the default.
+- **A Docker published port passed firewalld with no rule**: a container on `-p 4299:8000` on an Arch laptop (firewalld on, `wlan0` in `public`) answered a phone on the same Wi-Fi. Docker adds its own forwarding rules. Laptop to laptop on the Pi's hotspot is still unproven.
+- **Reticulum 1.5.7 adds an interface at run time only through the private `Reticulum._synthesize_interface`**; prove it before relying on it.

@@ -13,6 +13,7 @@ import type { Home } from "./householdProfile";
 import { LayerRail, type MapLayerName } from "./LayerRail";
 import { useWeatherLayer } from "./weatherLayer";
 import { WeatherLegend } from "./WeatherLegend";
+import { useWeatherReplay } from "./useWeatherReplay";
 import { NodeMap } from "./NodeMap";
 import { NodePanel } from "./NodePanel";
 import { NodeSheet } from "./NodeSheet";
@@ -136,6 +137,7 @@ export function App() {
       ? { open: true, onToggle: () => {} }
       : { open: panels.open.includes(name), onToggle: () => panels.toggle(name) };
   const weather = useWeatherLayer();
+  const weatherReplay = useWeatherReplay(weather.layer !== "off");
   const [hiddenLayers, setHiddenLayers] = useState<MapLayerName[]>([]);
   const toggleLayer = (layer: MapLayerName) =>
     setHiddenLayers((hidden) =>
@@ -319,6 +321,8 @@ export function App() {
           terrain={terrainShown}
           onTerrainSlow={() => setTerrainDropped(true)}
           valleyFlights={valleyFlights}
+          weatherLayer={weather.layer}
+          weather={weatherReplay}
         />
         {phone ? (
           <>
@@ -381,7 +385,7 @@ export function App() {
               weatherLayer={weather.layer}
               onChooseWeather={weather.choose}
             />
-            <WeatherLegend layer={weather.layer} />
+            <WeatherLegend layer={weather.layer} weather={weatherReplay} />
             <MapLegend
               simulated={fleet.length}
               real={nodes.length}

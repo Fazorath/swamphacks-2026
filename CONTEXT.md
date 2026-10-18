@@ -44,6 +44,14 @@ _Avoid_: allowlist, roster, trust list
 The one Node that collects every Community Reading, issues Community Warnings and hosts the central dashboard; when it has internet it also brings Official Alerts and the Cache Pack into the Mesh.
 _Avoid_: gateway, central server, cloud, backend
 
+**Dial address**:
+The `host:port` another Node can dial to reach this Node over TCP; Nodes share the ones they know in their announces, so one known address is enough to find the rest.
+_Avoid_: peer address, endpoint, IP
+
+**Hub takeover**:
+Starting a standby Node as the Hub with a copy of the Hub's key, after the Hub has stopped; it carries on from the last Node registry and Shelter status the Mesh heard.
+_Avoid_: failover, election, backup hub
+
 **Mesh-only**:
 A Node that currently has no internet and still takes part in the Mesh. Each Node reports only its own state: Online or Mesh-only. Online-only features (camera tiles, live feeds) stop while a Node is Mesh-only; everything carried over the Mesh keeps working.
 _Avoid_: offline node
