@@ -199,7 +199,6 @@ export function App() {
           nodes={nodes}
           selectedId={selectedId}
           onSelect={toggleSelected}
-          stormSignal={floodRisk?.storm_signal ?? null}
           home={shownProfile?.home ?? null}
           shelters={cachePack?.shelters ?? []}
           openShelterIds={openShelterIds}

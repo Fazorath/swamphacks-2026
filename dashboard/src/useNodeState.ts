@@ -30,12 +30,19 @@ export function useNodeState(): NodeStateFeed {
     let polling = false;
     let askedWhilePolling = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // An answer identical to the last one changes nothing on screen, so it is not stored: that
+    // keeps a quiet poll from re-rendering the page. Only the time of the answer moves, in a ref.
+    let lastBody = "";
+    let lastAt = 0;
     // Its own timer rather than a check when a poll fails, so a Node that hangs from the start is
     // caught at 5 s like any other, not at the end of whichever 2 s request is in flight.
     let unreachableTimer: ReturnType<typeof setTimeout> | undefined;
     const startUnreachableWait = () => {
       clearTimeout(unreachableTimer);
-      unreachableTimer = setTimeout(() => setConnection("unreachable"), UNREACHABLE_AFTER_MS);
+      unreachableTimer = setTimeout(() => {
+        setLastAnswer((current) => current && { ...current, at: lastAt });
+        setConnection("unreachable");
+      }, UNREACHABLE_AFTER_MS);
     };
     startUnreachableWait();
 
@@ -48,10 +55,14 @@ export function useNodeState(): NodeStateFeed {
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         if (!response.ok) throw new Error(`Node API returned ${response.status}`);
-        const answer: NodeState = await response.json();
+        const body = await response.text();
         if (!stopped) {
           startUnreachableWait();
-          setLastAnswer({ state: answer, at: Date.now() });
+          lastAt = Date.now();
+          if (body !== lastBody) {
+            lastBody = body;
+            setLastAnswer({ state: JSON.parse(body) as NodeState, at: lastAt });
+          }
           setConnection("connected");
         }
       } catch (error) {

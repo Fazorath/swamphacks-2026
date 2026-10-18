@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { Profiler } from "react";
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
@@ -65,6 +66,7 @@ function stubNode(state: Partial<NodeState> = {}, manifest: unknown = null) {
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
     "/api/cache-pack/files/nepal/places.geojson": PLACES,
     "/api/shelters": { open: [] },
+    "/api/replay": { state: "paused", event_t: 1_787_700_000, rate: 30 },
   };
   vi.stubGlobal(
     "fetch",
@@ -104,6 +106,18 @@ describe("the map", () => {
     expect(addresses.length).toBeGreaterThan(0);
     for (const address of addresses) {
       expect(address.startsWith(window.location.origin + "/api/cache-pack/files/")).toBe(true);
+    }
+  });
+
+  it("makes no request to any host but its own Node, from the page or the map", async () => {
+    stubNode({}, NEPAL_MANIFEST);
+    render(<App />);
+    await screen.findByText("Kathmandu");
+
+    const requested = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(requested.length).toBeGreaterThan(0);
+    for (const url of [...requested, ...addressesTheMapWouldFetch()]) {
+      expect(new URL(url, window.location.origin).origin).toBe(window.location.origin);
     }
   });
 
@@ -223,5 +237,29 @@ describe("the Panels", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Collapse Alerts" }));
 
     expect(screen.getByRole("button", { name: "Expand Alerts" })).toBeInTheDocument();
+  });
+});
+
+describe("polling", () => {
+  it("re-renders nothing when a poll brings the same answer", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      stubNode({ nodes: [fakeNodeSnapshot("porch")] });
+      let commits = 0;
+      render(
+        <Profiler id="app" onRender={() => commits++}>
+          <App />
+        </Profiler>,
+      );
+      await screen.findByText(/Pressure: 1015 hPa/);
+      // Let the first round of polls and effects settle, then watch several more polls go by.
+      await act(() => vi.advanceTimersByTimeAsync(7000));
+      const settled = commits;
+      await act(() => vi.advanceTimersByTimeAsync(7000));
+
+      expect(commits).toBe(settled);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

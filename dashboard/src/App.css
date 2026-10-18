@@ -738,16 +738,11 @@ section p {
   padding-left: 1.1rem;
 }
 
-section p.storm-signal {
-  position: absolute;
-  z-index: 2;
-  top: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.25rem 0.6rem;
+/* A pill beside the Flood Risk chip in the top bar. */
+.storm-signal {
+  padding: 0.1rem 0.6rem;
   border: 1px solid var(--risk-elevated);
   border-radius: 0.25rem;
-  background: var(--surface-panel);
   color: var(--risk-elevated);
   font-weight: bold;
 }

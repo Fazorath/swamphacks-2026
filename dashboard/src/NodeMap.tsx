@@ -17,13 +17,11 @@ import { MapMarker } from "./MapMarker";
 import { NodeTags } from "./NodeTags";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
-import { stormSignalSentence } from "./floodRiskSentences";
 import type { NepalMap, Shelter } from "./evacuationPlan";
 import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
-import type { FloodRisk } from "./nodeState";
 import type { RiverLine } from "./waveEta";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
@@ -85,7 +83,6 @@ type Props = {
   nodes: NodeOnMap[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  stormSignal: FloodRisk["storm_signal"] | null;
   home: Home | null;
   // From the Cache Pack; empty until a Node holds one.
   shelters: Shelter[];
@@ -115,7 +112,6 @@ export function NodeMap({
   nodes,
   selectedId,
   onSelect,
-  stormSignal,
   home,
   shelters,
   openShelterIds,
@@ -220,7 +216,6 @@ export function NodeMap({
 
   return (
     <section aria-label="Map" className="map-area">
-      {stormSignal?.on && <p className="storm-signal">{stormSignalSentence(stormSignal)}</p>}
       {floodProne && floodProne.features.length > 0 && (
         <p className="flood-prone-caption">{FLOOD_PRONE_CAPTION}</p>
       )}

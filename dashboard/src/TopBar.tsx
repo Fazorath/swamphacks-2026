@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 
 import { EventClockTag } from "./EventClockTag";
 import { FloodRiskChip } from "./FloodRiskPanel";
+import { stormSignalSentence } from "./floodRiskSentences";
 import type { FloodRisk, NodeState } from "./nodeState";
 import type { EventClock } from "./useEventClock";
 
@@ -36,6 +37,9 @@ export function TopBar({
       </h1>
       <EventClockTag clock={eventClock} />
       <FloodRiskChip floodRisk={floodRisk} />
+      {floodRisk?.storm_signal.on && (
+        <span className="storm-signal">{stormSignalSentence(floodRisk.storm_signal)}</span>
+      )}
       {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
       <p className="household-status">
         {householdSaved ? "Household profile saved" : "Fill in your household profile"}
