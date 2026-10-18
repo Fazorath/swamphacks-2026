@@ -57,7 +57,7 @@ A source qualifies only if all three hold: it needs no key we cannot keep secret
 
 ## Outreach
 
-Draft, to be sent from the team address stormshieldteam.uf@gmail.com to the Centre for Hydrology and Water Resources Research and to the Water and Energy Commission Secretariat, Ministry of Energy, Water Resources and Irrigation. **Date sent: not yet sent. Answer: none.**
+Draft, to be sent from the team address stormshieldteam.uf@gmail.com to the Centre for Hydrology and Water Resources Research and to the Water and Energy Commission Secretariat, Ministry of Energy, Water Resources and Irrigation. **Sent to the agencies: no (we have no verified address for either). A rehearsal copy marked "[Rehearsal copy]" went from this address to the four team members on 2026-10-18, to check the wording and that sending works. Answer: none.**
 
 > Subject: May a hackathon demo show the Timure / border river cameras?
 >
@@ -87,8 +87,10 @@ Draft, to be sent from the team address stormshieldteam.uf@gmail.com to the Cent
 
 The river km values are the spec's (Region and Nodes table in `docs/specs/flash-flood-replay.md`).
 
-## Still open
+## Follow-ups
 
-- **Second check at least two days later.** The ticket asks for each candidate to be opened over two days or more. Today's check is the first; the verdict above cannot change from a second one for the embed-only and no-address rows, but if Timure or a border camera publishes an address, repeat the checks here before changing "clip".
-- **Outreach not sent.** If a reply names a public feed, read its terms first, then add a row and re-run the qualifying test.
+Ticket 0074 was closed on 2026-10-18 with these items still open, by decision of leonardorofaDV; they have no ticket of their own.
+
+- **Send the outreach to the agencies** once someone finds the addresses of the Centre for Hydrology and Water Resources Research and the Water and Energy Commission Secretariat. Send it from `stormshieldteam.uf@gmail.com` (how to connect it: "Sending email from Claude Code" in `docs/agents/lessons.md`), then put the date sent here. If a reply names a public feed, read its terms first, then add a row and re-run the qualifying test.
+- **Second check on or after 2026-10-20** (owner: leonardorofaDV). Reopen the Webcam Nepal Live channel and the iplivecams Bagmati page, search again for a public Timure or border feed, and write the date and result here. The verdict cannot change for the embed-only and no-address rows unless a new public feed appears.
 - Findings are from public pages and news reports; no camera's picture age was measured, because none could be opened.

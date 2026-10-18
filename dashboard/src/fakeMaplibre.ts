@@ -85,8 +85,32 @@ class FakeMap {
     return { x: lon * 10, y: -lat * 10 };
   }
 
+  zoom = 6;
+  pitch = 0;
+  terrain: { source: string; exaggeration: number } | null = null;
+  readonly flights: { zoom?: number; pitch?: number }[] = [];
+
   getZoom() {
-    return 6;
+    return this.zoom;
+  }
+
+  getPitch() {
+    return this.pitch;
+  }
+
+  getTerrain() {
+    return this.terrain;
+  }
+
+  setTerrain(terrain: { source: string; exaggeration: number } | null) {
+    this.terrain = terrain;
+  }
+
+  flyTo(options: { zoom?: number; pitch?: number }) {
+    this.flights.push(options);
+    this.zoom = options.zoom ?? this.zoom;
+    this.pitch = options.pitch ?? this.pitch;
+    this.emit("zoomend", {});
   }
 
   getBounds() {
@@ -97,8 +121,9 @@ class FakeMap {
     this.fitted.push(bounds);
   }
 
-  easeTo(options: unknown) {
+  easeTo(options: { pitch?: number }) {
     this.eased.push(options);
+    this.pitch = options.pitch ?? this.pitch;
   }
 
   remove() {
@@ -138,6 +163,12 @@ class FakeMarker {
 
 const maps: FakeMap[] = [];
 
+export const protocols: string[] = [];
+
+export function addProtocol(name: string) {
+  protocols.push(name);
+}
+
 export { FakeLngLatBounds as LngLatBounds, FakeMap as Map, FakeMarker as Marker };
 
 export function lastMap(): FakeMap {
@@ -162,7 +193,8 @@ export function addressesTheMapWouldFetch(): string[] {
   const map = lastMap();
   const addresses = [...map.sources.values()].flatMap((spec) => [
     ...(typeof spec.data === "string" ? [spec.data] : []),
-    ...(spec.tiles ?? []),
+    // A custom protocol's address wraps the real one; the real one is where the request goes.
+    ...(spec.tiles ?? []).map((tile) => tile.replace(/^[a-z-]+:\/\/(?=https?:)/, "")),
   ]);
   return [map.glyphs, map.sprite, ...addresses].filter(
     (address): address is string => address !== undefined,

@@ -1,13 +1,12 @@
 import { placeLabels, type MapLabel } from "./labelPlacement";
 
-const label = (id: string, rank: number, x = 100, y = 100, must = false): MapLabel => ({
+const label = (id: string, rank: number, x = 100, y = 100): MapLabel => ({
   id,
   x,
   y,
   width: 80,
   height: 20,
   rank,
-  must,
 });
 
 it("moves a label that would sit on a better one to a free side", () => {
@@ -23,18 +22,20 @@ it("hides the worse label when every side is taken", () => {
   expect(placement.get("e")).toBeNull();
 });
 
-it("never hides a key place or the chosen Shelter, even when the spot is crowded", () => {
+it("never draws two labels over each other, whatever their rank", () => {
   const crowd = [
     label("fleet", 1),
     label("fleet 2", 1),
     label("fleet 3", 1),
     label("fleet 4", 1),
-    label("Syabrubesi", 0, 100, 100, true),
-    label("chosen", 0, 100, 100, true),
+    label("Syabrubesi", 0),
+    label("chosen", 0),
   ];
   const placement = placeLabels(crowd);
+  expect([...placement.values()].filter((side) => side !== null)).toHaveLength(4);
   expect(placement.get("Syabrubesi")).not.toBeNull();
   expect(placement.get("chosen")).not.toBeNull();
+  expect(placement.get("fleet 4")).toBeNull();
 });
 
 it("leaves labels that do not collide on the right", () => {

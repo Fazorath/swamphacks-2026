@@ -30,6 +30,10 @@ let audio: AudioContext | null = null;
 // Browsers refuse sound until the page has been touched, so the first touch makes the context.
 export function armPagerSound(): () => void {
   const create = () => {
+    if (typeof AudioContext === "undefined") {
+      console.warn("pager: this browser has no Web Audio, so the pager can only show its banner");
+      return;
+    }
     audio ??= new AudioContext();
     void audio.resume();
   };

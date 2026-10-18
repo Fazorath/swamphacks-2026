@@ -20,13 +20,9 @@ const PLACES = [
 const names = (zoom: number, bounds = WHOLE_NEPAL) =>
   visiblePlaces(PLACES, { zoom, bounds }).map(({ name }) => name);
 
-it("shows only the key places at the national zoom", () => {
+it("names only the key places, at every zoom", () => {
   expect(names(6)).toEqual(["Kathmandu", "Syabrubesi"]);
-});
-
-it("brings the cities in on zoom and the villages in over the valley", () => {
-  expect(names(8)).toEqual(["Kathmandu", "Syabrubesi", "Pokhara"]);
-  expect(names(11)).toEqual(["Kathmandu", "Syabrubesi", "Pokhara", "Tiny village"]);
+  expect(names(11)).toEqual(["Kathmandu", "Syabrubesi"]);
 });
 
 it("leaves out a place outside what the map shows", () => {

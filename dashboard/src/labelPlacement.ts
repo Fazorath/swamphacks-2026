@@ -1,7 +1,7 @@
 export type Side = "right" | "left" | "above" | "below";
 
 // `x` and `y` are the screen point the label belongs to. `rank` decides who wins a collision
-// (lower wins); a `must` label is drawn even when no side is free.
+// (lower wins). A label with no free side is left out, never drawn over another.
 export type MapLabel = {
   id: string;
   x: number;
@@ -9,7 +9,6 @@ export type MapLabel = {
   width: number;
   height: number;
   rank: number;
-  must?: boolean;
 };
 
 export type Placement = Map<string, Side | null>;
@@ -49,7 +48,7 @@ export function placeLabels(labels: MapLabel[], previous: Placement = new Map())
     const last = previous.get(label.id);
     const order = last ? [last, ...SIDES.filter((side) => side !== last)] : SIDES;
     const free = order.find((side) => !placed.some((rect) => overlap(rectOn(label, side), rect)));
-    const side = free ?? (label.must ? order[0] : null);
+    const side = free ?? null;
     result.set(label.id, side);
     if (side) placed.push(rectOn(label, side));
   }

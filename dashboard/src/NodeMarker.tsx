@@ -79,7 +79,9 @@ export function NodeMarker({
             {node.waterLevelCm} cm
           </span>
         )}
-        <NodeTags node={node} />
+        <span className="node-label-extra">
+          <NodeTags node={node} />
+        </span>
         {contactArc !== null && <span className="tag contact-lost">CONTACT LOST</span>}
         {real && <span className="tag real">REAL</span>}
       </span>

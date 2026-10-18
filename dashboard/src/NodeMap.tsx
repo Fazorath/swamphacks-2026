@@ -25,6 +25,15 @@ import {
   type Placement,
   type Side,
 } from "./labelPlacement";
+import {
+  TERRAIN_EXAGGERATION,
+  TERRAIN_FROM_ZOOM,
+  TERRAIN_PITCH,
+  VALLEY_VIEW,
+  createFrameWatch,
+  type TerrainChoice,
+} from "./terrain";
+import { markerState } from "./markerState";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
@@ -51,15 +60,17 @@ function viewOf(map: MapLibreMap): View {
   };
 }
 
+// Only these tags stay on a Node's map label; the rest show on hover and in the Readings Panel.
 const TAG_WIDTH_PX = 70;
 
-function nodeTagCount(node: NodeOnMap): number {
-  return [node.simulated && !node.fleet, !node.registered, node.level, node.stale].filter(Boolean)
-    .length;
+function mapTagCount(node: NodeOnMap): number {
+  const contactLost = markerState(node).contactArc !== null;
+  return [contactLost, !node.simulated].filter(Boolean).length;
 }
 
-// Every label that competes for room on screen. The chosen Shelter, key places and the real Nodes
-// are never left out; the rest give way to them (0078).
+// Every label that competes for room on screen. None is ever drawn over another: the chosen
+// Shelter, the selected Node, key places and real Nodes win, and a label that loses is hidden until
+// its marker is hovered. Shelters other than the plan's choice are named only on hover (0078).
 function labelsOnScreen(
   map: MapLibreMap,
   view: View,
@@ -76,18 +87,16 @@ function labelsOnScreen(
       id: `place:${place.name}`,
       ...at(place.lat, place.lon),
       ...estimatedLabelSize(place.name, 12),
-      rank: place.key ? 1 : 4,
-      must: place.key,
+      rank: 1,
     });
   }
-  for (const each of shelters) {
-    const chosen = each.id === chosenShelterId;
+  const chosen = shelters.find((each) => each.id === chosenShelterId);
+  if (chosen) {
     labels.push({
-      id: `shelter:${each.id}`,
-      ...at(each.pos[0], each.pos[1]),
-      ...estimatedLabelSize(shelterLabel(each, true), 12),
-      rank: chosen ? 0 : 3,
-      must: chosen,
+      id: `shelter:${chosen.id}`,
+      ...at(chosen.pos[0], chosen.pos[1]),
+      ...estimatedLabelSize(shelterLabel(chosen, true), 12),
+      rank: 0,
     });
   }
   const fleetShowing = zoomBlend(view.zoom) >= 0.5;
@@ -97,12 +106,18 @@ function labelsOnScreen(
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
-      ...estimatedLabelSize(text, 13, nodeTagCount(node) * TAG_WIDTH_PX),
+      ...estimatedLabelSize(text, 13, mapTagCount(node) * TAG_WIDTH_PX),
       rank: node.id === selectedId ? 0 : node.fleet ? 5 : 2,
-      must: !node.fleet,
     });
   }
   return labels;
+}
+
+function setTerrainDrawn(map: MapLibreMap, drawn: boolean) {
+  if (!map.getSource("elevation")) return;
+  if (drawn === (map.getTerrain() !== null)) return;
+  map.setTerrain(drawn ? { source: "elevation", exaggeration: TERRAIN_EXAGGERATION } : null);
+  if (!drawn && map.getPitch() > 0) map.easeTo({ pitch: 0 });
 }
 
 function floodProneCollection(areas: FloodProneAreas | null): GeoJSON.FeatureCollection {
@@ -183,6 +198,11 @@ type Props = {
   blocking: boolean;
   onToggleBlocking: () => void;
   onTapRoad: (point: Home) => void;
+  // What the resident (and the frame-rate watch) left terrain at; `onTerrainSlow` is that watch.
+  terrain: TerrainChoice;
+  onTerrainSlow: () => void;
+  // Counts presses of the Valley button; each one flies the camera to the valley.
+  valleyFlights: number;
 };
 
 export function NodeMap({
@@ -214,12 +234,21 @@ export function NodeMap({
   blocking,
   onToggleBlocking,
   onTapRoad,
+  terrain,
+  onTerrainSlow,
+  valleyFlights,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
   const [view, setView] = useState<View | null>(null);
   const colors = useRef<MapColors | null>(null);
   const moved = useRef(false);
+  const terrainChoice = useRef(terrain);
+  const onTerrainSlowRef = useRef(onTerrainSlow);
+  useEffect(() => {
+    terrainChoice.current = terrain;
+    onTerrainSlowRef.current = onTerrainSlow;
+  });
   const [placement, setPlacement] = useState<Placement>(new Map());
   const nodeIds = nodes.map((node) => node.id).join();
 
@@ -234,6 +263,8 @@ export function NodeMap({
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
+      // The demo laptop has 8 GB: keep few decoded tiles, elevation ones included.
+      maxTileCacheSize: 40,
     });
     const markMoved = () => (moved.current = true);
     container.addEventListener("pointerdown", markMoved);
@@ -246,7 +277,26 @@ export function NodeMap({
         created.addImage(id, hatchImage(colors.current!.floodProne));
       }
     });
-    created.on("moveend", () => setView(viewOf(created)));
+    // The frame-rate watch listens only while the camera moves and terrain is drawn.
+    const frameWatch = createFrameWatch(() => onTerrainSlowRef.current());
+    let moving = false;
+    created.on("movestart", () => {
+      moving = true;
+      frameWatch.restart();
+    });
+    created.on("render", () => {
+      if (moving && created.getTerrain()) frameWatch.frame();
+    });
+    created.on("moveend", () => {
+      moving = false;
+      setView(viewOf(created));
+    });
+    // Terrain exists only over the valley; zooming out to the country releases it and flattens
+    // the map. Zooming in never tilts it (D-33): only a fly or the Valley button does.
+    created.on("zoomend", () => {
+      const wanted = terrainChoice.current === "3d" && created.getZoom() >= TERRAIN_FROM_ZOOM;
+      setTerrainDrawn(created, wanted);
+    });
     created.on("load", () => {
       blendWithZoom();
       setView(viewOf(created));
@@ -266,6 +316,22 @@ export function NodeMap({
     if (!map || !styleReady || !nepal || map.getSource("border")) return;
     addNepalBasemap(map, nepal, colors.current!);
   }, [map, styleReady, nepal]);
+
+  // The resident's 2D | 3D choice (and a frame-rate drop) applies at once, tilting or flattening.
+  useEffect(() => {
+    if (!map || !styleReady || !nepal) return;
+    const over = map.getZoom() >= TERRAIN_FROM_ZOOM;
+    setTerrainDrawn(map, terrain === "3d" && over);
+    if (over) map.easeTo({ pitch: terrain === "3d" ? TERRAIN_PITCH : 0 });
+  }, [map, styleReady, nepal, terrain]);
+
+  useEffect(() => {
+    if (!map || !styleReady || valleyFlights === 0) return;
+    moved.current = true;
+    map.flyTo({ ...VALLEY_VIEW, pitch: terrain === "3d" && nepal ? TERRAIN_PITCH : 0 });
+    // A flight answers a press of the button; changing 2D | 3D later must not fly again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, styleReady, valleyFlights]);
 
   useEffect(() => {
     if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
@@ -404,7 +470,7 @@ export function NodeMap({
               <MapPin size={18} aria-hidden="true" />
               <span
                 className={`map-label shelter-label label-${sideOf(`shelter:${each.id}`)}${
-                  placement.get(`shelter:${each.id}`) === null ? " label-hidden" : ""
+                  placement.get(`shelter:${each.id}`) == null ? " label-hidden" : ""
                 }`}
               >
                 {shelterLabel(each, open, outOfReach)}
