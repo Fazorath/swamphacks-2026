@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 Role = Literal["sensor", "hub"]
 MeshKind = Literal["reticulum", "memory"]
 ReticulumInterface = Literal["auto", "loopback", "tcp"]
+GpioMode = Literal["auto", "on", "off"]
 
 
 class Settings(BaseSettings):
@@ -65,6 +66,9 @@ class Settings(BaseSettings):
     alert_check_seconds: float = 1
     # How often a Node shares its readings.
     publish_every_seconds: float = 3
+    # Whether this Node reads the Pi's Breadboard. "auto" turns it on only on a Raspberry Pi; "on"
+    # stops the Node if the Breadboard cannot start; "off" never loads the GPIO library.
+    gpio: GpioMode = "auto"
     # Which Sensor track of the replay timeline this Node plays (S0 to S3). Blank keeps the Scenario.
     replay_track: str = ""
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.

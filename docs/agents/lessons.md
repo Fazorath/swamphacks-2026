@@ -264,6 +264,17 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - Not rehearsed on loopback Reticulum or in a browser; the signature path is covered by `verify` tests only.
 - **The Hub repeats every warning it sent** each `warning_repeat_seconds` (found in review: sent once, a late or restarted Node never saw it). A Hub restart forgets its log, so a Surge still holding then warns again under a new id.
 
+## Breadboard (ticket 0016)
+
+- **A press is a wire from the Pi's 3.3 V pin to an input pin**, not a button. The Pi's internal pull-down (`pull_up=False`) keeps an empty pin low, and a press jumps the Scenario to that pin's step (`Scenario.go_to`); only reset goes back. Pin table: `pi/README.md`.
+- **`gpiozero`'s `MockFactory` stores `bounce_time` but does not simulate bounce**, so the 50 ms debounce is untested; it is the library's, set on each `Button`. Drive a mock pin with `factory.pin(17).drive_high()`; set `Device.pin_factory = MockFactory()` in a fixture and restore `None` after.
+- **`lgpio`, the backend `gpiozero` needs on a Pi, is source-only on PyPI and needs `swig`**, so `uv lock` failed on a laptop when it was a dependency (uv builds the sdist to read its metadata). `[tool.uv] dependency-metadata` in `node/pyproject.toml` declares it, so the lock works anywhere and only `uv sync --group pi` builds it. On the team's Pi (Python 3.13, so Debian 13 Trixie rather than Bookworm) the build first failed with `cannot find -llgpio` until `sudo apt install liblgpio-dev`; `swig` and `python3-dev` alone are not enough. `pi/install.sh` installs all of them.
+- **`claim.sh` compares the ticket's Owner with `git config user.name`**, so an Owner written as a handle (`amitathik7`) against the name "Amit Athi Kesavan" makes it refuse. The ticket was already claimed, so 0016 skipped the script.
+- **A plain `uv sync` on the Pi uninstalls `lgpio`** (it is in the `pi` group, which a plain sync leaves out; it was first installed by hand), and the Node then stops with `Falling back from lgpio: No module named 'lgpio'` followed by `OSError: [Errno 22]` from gpiozero's sysfs `NativeFactory` fallback, which modern Pi kernels no longer support. Run `pi/install.sh` or `uv sync --group pi`. `scripts/run-live.sh` runs a plain `uv sync`, so don't use it on the Pi.
+- **Real Pi (2026-10-18):** the hotspot came up, a laptop joined it, and each Breadboard wire changed the Pi's readings on the laptop's dashboard. With the laptop's `firewalld` stopped, the laptop Hub and the Pi's Node found each other over AutoInterface on the Pi's own hotspot. With `firewalld` on, opening UDP 29716 and 42671 on the zone did not fix it ("No multicast echoes received on wlan0"); the missing rule was not found. Trusting the hotspot connection's zone was suggested but not confirmed. A peer shows under its id, not its name, until the Hub's registry reaches it. Unexplained: the laptop terminal froze and both Nodes stopped once, with no Pi log kept.
+- **`ssh appu@10.42.0.1` said "connection refused" while ping worked, because 10.42.0.1 was the laptop.** NetworkManager's shared mode defaults to `10.42.0.1/24` on both the laptop's Ethernet cable to the Pi and the Pi's hotspot, so the laptop answered itself. The Pi's `sshd` was fine (`Accepted publickey ... from 10.42.0.1` in its log is the laptop). The hotspot now uses `10.88.0.1`. The tell: "refused" with a working ping means a machine answered that has no listener; check `ip -4 addr | grep <address>` on the machine you are typing on.
+- `MeshedNodes` Nodes start with `gpio="off"` so a test run on a real Pi never reads its pins. `pi/setup-hotspot.sh up` was only exercised for its missing-setting and bad-argument paths here; the `nmcli` part never ran.
+
 ## Pi hardware check (ticket 0004)
 
 - **AutoInterface works between a Pi and a laptop over Ethernet and over an iPhone hotspot**: peers found each other in 10 to 18 s with nothing configured. The iPhone hotspot passes the IPv6 multicast discovery needs.
@@ -427,6 +438,14 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **The pre-push check warned once on the 0069 merge to `main` ("main is getting code that fails the Commands") and the same commit passed `check.sh` three times** (before the merge, on the merged tree, and after the push). Which Command failed is unknown: the push was piped through `tail -3`, which kept only the last lines of the hook's output. Run `git push` unpiped so the hook's `check.sh` summary stays visible; the known flake is `test_reticulum_nodes.py` (see the entries above).
 - `scripts/run-demo.sh` now downloads `cache-pack-v5` (Nepal vectors and elevation, no raster tiles). A laptop that already ran the demo keeps the old pack in `.demo/pack/`, and a Node never replaces a valid pack: delete `.demo/pack/` (and the Hub's saved `shelter_status.json`) once to pick up v5. Only `bash -n` was run on the script, not the download.
 
+## Layer rail (ticket 0034)
+
+- **Open Panels are remembered in `localStorage` (`storm-shield.open-panels`), so tests leaked state into each other** (a test that expanded Cameras left it open for the next). `setup.ts` now clears storage after every test.
+- **A warning that arrives after a resident opened a third right-side Panel pushes the oldest one out** (two per side). Tests that expand Cameras must wait for the state first; `nodeUnreachableFlow.test.tsx` swaps Cameras for Alerts for that reason.
+- **Defaults follow `ui.md` D-50, not the ticket's "calm: Readings and Evacuation Plan"**: calm is Readings alone; Elevated/High adds the Plan; a warning adds the Alerts too. Readings stay open (other side).
+- **The Storm Signal button only hides the top-bar pill**; there is no edge-darkening layer yet. The Alerts button has no badge because nothing acknowledges warnings yet.
+- Panel re-centring (`easeTo` with padding) and the rail look are tested only against the fake map; not seen in a real browser.
+
 ## Map labels do not overlap (ticket 0078)
 
 - **Label placement is `labelPlacement.ts`, a pure function of screen points and estimated sizes** (text length x font x 0.58, not measured, so it is jsdom-testable). `NodeMap` projects with `map.project` and keeps the last placement in state, derived during render, so a label keeps its side until something sits on it. The chosen Shelter, key places and real Nodes are `must` and are never hidden; a hidden Shelter label shows on hover.
@@ -444,3 +463,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - The webm sources log "File ended prematurely" while being trimmed; the clips decode and play to 300.0 s, so it is only a truncated final packet.
 - **Not proven:** playback in Safari and iOS Safari (the clips are H.264 Main, yuv420p, `+faststart`, no audio, which is what they accept, but no Apple device was used) and in a browser at all; the Hub does not read `CAMERA_CLIPS_DIR` until 0075.
 - A `git pull` in the main checkout aborted with "local changes would be overwritten" while another process moved `HEAD`; `git status` was clean a moment later. Check `git status` before reaching for `reset`.
+
+## Phone layout (ticket 0036)
+
+- **The phone layout is `useIsPhone()` (under 900 px, `useViewport.ts`); jsdom has no `matchMedia`**, so `setup.ts` installs `fakeViewport.ts` (desktop by default) and a test calls `setViewport(390)`. Tablets (under 1200 px) keep the desktop Panels with one open per side.
+- **The map stays mounted under the other tabs**: a Plan/Readings/Alerts pane covers it (`.phone-pane`), because remounting MapLibre on every tab change would reload it.
+- **Not done:** the manual check on a phone over Tailscale (no browser or phone in this session), so 44 px targets, the sheet and the pinned alert are unseen outside jsdom. The bottom sheet is a card, not a draggable peek; the Hub and Node buttons have no phone entry; a tapped home pick has no on-screen cancel on the phone.

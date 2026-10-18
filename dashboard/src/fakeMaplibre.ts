@@ -13,6 +13,7 @@ class FakeMap {
   readonly glyphs: string | undefined;
   readonly sprite: string | undefined;
   readonly fitted: unknown[] = [];
+  readonly eased: unknown[] = [];
   private readonly handlers = new Map<string, Handler[]>();
 
   constructor(options: {
@@ -60,6 +61,16 @@ class FakeMap {
     else this.layerIds.splice(at, 0, layer.id);
   }
 
+  readonly images = new Set<string>();
+
+  addImage(id: string) {
+    this.images.add(id);
+  }
+
+  hasImage(id: string) {
+    return this.images.has(id);
+  }
+
   getSource(id: string) {
     const spec = this.sources.get(id);
     if (!spec) return undefined;
@@ -84,6 +95,10 @@ class FakeMap {
 
   fitBounds(bounds: unknown) {
     this.fitted.push(bounds);
+  }
+
+  easeTo(options: unknown) {
+    this.eased.push(options);
   }
 
   remove() {
