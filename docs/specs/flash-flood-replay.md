@@ -125,6 +125,11 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 - **Live NWS and NHC feeds are dropped** (ticket 0017 removed).
 - **The lead-time line** in the Alerts Panel compares the first Community Warning with the first Official Alert on the event clock.
 
+### Flood alert email
+
+- **The Hub emails the team when it issues a new Community Warning (ticket 0081, decided 2026-10-18).** The subject is "ALERT OF FLOOD INCOMING!"; the body names the Node and its River km, the Event clock time, and says it is a Community Warning, not an official alert, so it keeps the rule that Storm Shield never orders an evacuation. Recipients are the four team members, set in `ALERT_EMAIL_TO`; the sender is the team Gmail account over SMTP with an app password kept in `.env`.
+- It is optional and never blocks anything: with a blank setting nothing is sent, and a failed send is logged and ignored. It needs internet, so it is a bonus beside the Mesh warning, not part of the offline path; the 08:37 Surge's warning comes before the 09:20 internet cue.
+
 ### Cameras
 
 - **The FL511 cameras are removed.** The Hub's camera plays a recorded clip of the flood synced to the event clock, labelled "CAMERA · REPLAY 09:18 NPT". The stage clip lives in a gitignored folder on the demo laptop, because we do not hold its rights. A credited Creative Commons clip is committed as the fallback, so a fresh clone still works. The Offline and Unavailable states stay.
