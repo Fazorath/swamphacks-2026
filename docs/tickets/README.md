@@ -36,8 +36,8 @@
 | [0031-hub-panel-shelters-tab](0031-hub-panel-shelters-tab.md) | done | Fazorath | - |
 | [0032-theme-fonts-and-icons](0032-theme-fonts-and-icons.md) | done | Fazorath | - |
 | [0033-full-bleed-map-shell](0033-full-bleed-map-shell.md) | done | Fazorath | Fazorath |
-| [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | ready-for-agent | unclaimed | Fazorath |
-| [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | ready-for-agent | unclaimed | Fazorath |
+| [0034-layer-rail-with-live-counts](0034-layer-rail-with-live-counts.md) | in-progress | Fazorath | Fazorath |
+| [0035-marker-anatomy-and-map-layers](0035-marker-anatomy-and-map-layers.md) | in-progress | Fazorath | Fazorath |
 | [0036-phone-layout](0036-phone-layout.md) | ready-for-agent | unclaimed | Fazorath |
 | [0037-reactive-motion-and-readings-cards](0037-reactive-motion-and-readings-cards.md) | ready-for-agent | unclaimed | Fazorath |
 | [0038-cameras-panel-states](0038-cameras-panel-states.md) | ready-for-agent | unclaimed | Fazorath |
@@ -79,4 +79,4 @@
 | [0076-demo-camera-clips-with-real-flood-footage](0076-demo-camera-clips-with-real-flood-footage.md) | ready-for-agent | unclaimed | leonardorofaDV |
 | [0077-cameras-panel-shows-every-camera](0077-cameras-panel-shows-every-camera.md) | ready-for-agent | unclaimed | Fazorath |
 | [0078-map-labels-do-not-overlap](0078-map-labels-do-not-overlap.md) | done | Fazorath | Fazorath |
-| [0079-right-panels-stay-on-screen](0079-right-panels-stay-on-screen.md) | ready-for-agent | unclaimed | Fazorath |
+| [0079-right-panels-stay-on-screen](0079-right-panels-stay-on-screen.md) | in-progress | Fazorath | Fazorath |
