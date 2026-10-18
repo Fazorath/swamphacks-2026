@@ -1,0 +1,395 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storm Shield Demo Runbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: one narrow runbook column, sticky progress bar, checklist steps grouped by when they happen. */
+:root {
+  --bg: #f3f6f8;
+  --surface: #ffffff;
+  --fg: #14212b;
+  --muted: #55677a;
+  --line: #d3dde5;
+  --accent: #0b6e8f;
+  --accent-soft: #dcf0f6;
+  --code-bg: #0f1c26;
+  --code-fg: #d7e8f0;
+  --warn: #8a5a00;
+  --warn-soft: #fbefd2;
+  --crit: #a3322b;
+  --crit-soft: #fbe3e0;
+  --ok: #17703f;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1319; --surface: #131d26; --fg: #e3edf3; --muted: #93a8b8; --line: #263644;
+    --accent: #5cc3e2; --accent-soft: #12303b; --code-bg: #070d12; --code-fg: #d7e8f0;
+    --warn: #f0c36a; --warn-soft: #33290f; --crit: #f08b83; --crit-soft: #3a1815; --ok: #6bd49b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1319; --surface: #131d26; --fg: #e3edf3; --muted: #93a8b8; --line: #263644;
+  --accent: #5cc3e2; --accent-soft: #12303b; --code-bg: #070d12; --code-fg: #d7e8f0;
+  --warn: #f0c36a; --warn-soft: #33290f; --crit: #f08b83; --crit-soft: #3a1815; --ok: #6bd49b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-sans); font-size: 16px; line-height: 1.55;
+  padding-block: 0 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+header { padding-block: 32px 8px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 0 0 12px; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; max-width: 62ch; }
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  padding-block: 12px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--line);
+}
+.bar-track { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; min-width: 0; }
+.bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.bar-count { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+button { font: inherit; cursor: pointer; }
+.reset { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+nav { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 16px 0; }
+nav a { font-size: 14px; color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: var(--surface); }
+nav a:hover { border-color: var(--accent); color: var(--accent); }
+section { padding-block: 32px 0; }
+h2 { font-size: 22px; margin: 0 0 4px; text-wrap: balance; }
+.when { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; }
+.step input[type=checkbox] { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--accent); }
+.step.done { opacity: .6; }
+.step.done h3 { text-decoration: line-through; }
+h3 { font-size: 16px; margin: 0 0 4px; }
+.step p { margin: 4px 0; }
+.body { min-width: 0; }
+.note { margin: 8px 0 0; padding: 8px 12px; border-radius: 6px; font-size: 14px; background: var(--accent-soft); }
+.note.warn { background: var(--warn-soft); color: var(--warn); }
+.note.crit { background: var(--crit-soft); color: var(--crit); }
+.code { position: relative; margin: 8px 0; }
+pre { margin: 0; background: var(--code-bg); color: var(--code-fg); font-family: var(--font-mono); font-size: 13.5px; line-height: 1.5; padding: 12px 70px 12px 14px; border-radius: 6px; overflow-x: auto; }
+.copy { position: absolute; top: 8px; right: 8px; font-size: 12px; background: #24394a; color: #d7e8f0; border: 0; border-radius: 4px; padding: 3px 9px; }
+code { font-family: var(--font-mono); font-size: .9em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.t { font-family: var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+tr.cue td { background: var(--crit-soft); }
+.ports { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+.ports div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; font-size: 14px; }
+.ports b { font-family: var(--font-mono); display: block; color: var(--accent); }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; margin-bottom: 8px; }
+summary { cursor: pointer; font-weight: 600; }
+details p, details ul { margin: 8px 0 0; }
+.unproven { border: 1px solid var(--warn); background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 12px 16px; }
+.unproven ul { margin: 6px 0 0; padding-left: 20px; }
+@media (prefers-reduced-motion: reduce) { .bar-fill { transition: none; } }
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Storm Shield · SwampHacks 2026</p>
+  <h1>Demo runbook</h1>
+  <p class="lede">Everything to get the Bhote Koshi replay running on one laptop, from a clean checkout to cutting the internet on stage. The steps come from <code>scripts/run-demo.sh</code>, <code>scripts/demo-setup.md</code> and <code>scripts/join-demo.md</code>. Tick them off as you go; your ticks stay in this browser.</p>
+</header>
+
+<div class="bar" role="status">
+  <div class="bar-track"><div class="bar-fill" id="fill"></div></div>
+  <span class="bar-count" id="count">0 / 0</span>
+  <button class="reset" id="reset" type="button">Clear ticks</button>
+</div>
+
+<nav aria-label="Sections">
+  <a href="#prep">1 · Prep at home</a>
+  <a href="#start">2 · Start</a>
+  <a href="#stage">3 · Stage setup</a>
+  <a href="#show">4 · Run of show</a>
+  <a href="#audience">5 · Audience laptop</a>
+  <a href="#after">6 · Stop</a>
+  <a href="#fix">If it breaks</a>
+</nav>
+
+<section id="prep">
+  <h2>1 · Prep at home</h2>
+  <p class="when">Once, with internet, the day before. The pack download took about 6 minutes last time.</p>
+
+  <label class="step"><input type="checkbox" data-id="stop-stray">
+    <div class="body"><h3>Stop stray Nodes</h3>
+    <p>A Node left running blocks the ports the demo needs and can serve old code. The session start check found one running.</p>
+    <div class="code"><pre>scripts/stop-nodes.sh</pre><button class="copy" type="button">Copy</button></div>
+    <p class="note warn">Check <code>ss -ltnp</code> first if a teammate runs Nodes on the same machine; the script kills them too.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="tools">
+    <div class="body"><h3>Check the tools</h3>
+    <p>Needs <code>gh</code> (logged in), <code>uv</code>, <code>pnpm</code>, <code>lsof</code>, <code>python3</code> and <code>ifconfig</code>. The doctor script lists what is missing.</p>
+    <div class="code"><pre>scripts/doctor.sh</pre><button class="copy" type="button">Copy</button></div></div></label>
+
+  <label class="step"><input type="checkbox" data-id="gh">
+    <div class="body"><h3>Log in to GitHub</h3>
+    <p>The repo is private, so the Cache Pack Release link needs a login. <code>gh</code> has one.</p>
+    <div class="code"><pre>gh auth login</pre><button class="copy" type="button">Copy</button></div></div></label>
+
+  <label class="step"><input type="checkbox" data-id="env">
+    <div class="body"><h3>Fill in <code>.env</code> (optional)</h3>
+    <p><code>run-demo.sh</code> loads it. Everything here is optional for the demo itself.</p>
+    <ul>
+      <li><code>CARTO_API_KEY</code> for live map tiles. The v5 pack has no raster tiles, so the current map may need it.</li>
+      <li><code>ALERT_EMAIL_FROM</code>, <code>ALERT_EMAIL_APP_PASSWORD</code>, <code>ALERT_EMAIL_TO</code> to email the team when the first Community Warning fires.</li>
+    </ul>
+    <p class="note crit">A value with spaces must be quoted, or bash fails and prints the first word of the password into the log. Never paste these into chat.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="first-run">
+    <div class="body"><h3>Do one full first start, then stop it</h3>
+    <p>The first start downloads <code>cache-pack-v5</code> into <code>.demo/pack/</code>, runs <code>pnpm install</code> and <code>pnpm build</code>, and runs <code>uv sync</code>. Later starts need no internet.</p>
+    <div class="code"><pre>scripts/run-demo.sh</pre><button class="copy" type="button">Copy</button></div>
+    <p>Press Ctrl-C when it prints the addresses.</p>
+    <p class="note">If you ran the demo before the v5 pack, delete <code>.demo/pack/</code> and <code>.demo/hub/data/shelter_status.json</code> once. A Node never replaces a valid pack.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="clips">
+    <div class="body"><h3>Camera clips (optional stage set)</h3>
+    <p>With no <code>.demo/clips/manifest.json</code> the Hub uses the committed clips in <code>camera-clips/</code>. The script says which it picked. To build the stage set, see <code>camera-clips/README.md</code>.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="network">
+    <div class="body"><h3>Decide the network</h3>
+    <p>Put the laptop and both phones on one network the laptop controls. macOS Internet Sharing cannot share Wi-Fi back out over Wi-Fi, so a Wi-Fi-only MacBook needs a wired or USB upstream, or all three devices on one phone's hotspot. Not yet tried on the demo laptop, so test it the day before.</p></div></label>
+</section>
+
+<section id="start">
+  <h2>2 · Start the demo</h2>
+  <p class="when">On the day. One command starts everything.</p>
+
+  <label class="step"><input type="checkbox" data-id="run">
+    <div class="body"><h3>Run the demo script</h3>
+    <div class="code"><pre>scripts/run-demo.sh</pre><button class="copy" type="button">Copy</button></div>
+    <p>It refuses to start if any of its ports is taken, then starts these, in order:</p>
+    <div class="ports">
+      <div><b>:8900</b>Cache Pack server</div>
+      <div><b>:8000</b>Hub at Betrawati</div>
+      <div><b>:8001 to :8004</b>Sensors S0 to S3</div>
+      <div><b>:4242</b>Hub TCP, for audience laptops</div>
+    </div>
+    <p>It then registers S0 to S3 with the Hub, since unregistered Sensors do not count toward Flood Risk. Ctrl-C stops all of it.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="addresses">
+    <div class="body"><h3>Copy the addresses it prints</h3>
+    <p>Look for these lines and note them:</p>
+    <ul>
+      <li><code>Projector (Hub Panel): http://localhost:8000</code></li>
+      <li><code>Phones on this laptop's networks: http://&lt;ip&gt;:8000</code> (one per network)</li>
+      <li><code>Phones on Tailscale: http://&lt;tailscale ip&gt;:8000</code></li>
+      <li><code>Hub identity: &lt;id&gt;</code>, which audience laptops pick up on their own</li>
+    </ul></div></label>
+
+  <label class="step"><input type="checkbox" data-id="busy">
+    <div class="body"><h3>If it says "ports already in use"</h3>
+    <p>Run <code>scripts/stop-nodes.sh</code>, or move the demo with <code>DEMO_BASE_PORT</code> and <code>DEMO_SLOT_BASE</code>. Logs for every Node are in <code>.demo/logs/</code>.</p>
+    <div class="code"><pre>DEMO_BASE_PORT=8100 DEMO_SLOT_BASE=20 scripts/run-demo.sh</pre><button class="copy" type="button">Copy</button></div></div></label>
+</section>
+
+<section id="stage">
+  <h2>3 · Stage setup</h2>
+  <p class="when">Projector, then two phones.</p>
+
+  <label class="step"><input type="checkbox" data-id="projector">
+    <div class="body"><h3>Projector</h3>
+    <p>Mirror or extend the display and open <code>http://localhost:8000</code> full screen. Use <code>localhost</code>, not the Tailscale address: the Hub button and the Join card (hotspot codes) only appear on loopback.</p>
+    <p>The Hub Panel has tabs: <b>Registry</b>, <b>Replay</b> (Start, Pause, Reset, speed, phase jumps) and <b>Shelters</b>.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="registry">
+    <div class="body"><h3>Confirm all four Sensors are registered</h3>
+    <p>Hub Panel, Registry tab. S0 to S3 should read registered. If one says waiting, click <b>Accept</b>.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="phone1">
+    <div class="body"><h3>Phone 1: Syabrubesi</h3>
+    <p>Open the laptop's address and set a Household Profile at <b>28.1632 N, 85.3391 E</b> (higher ground). The profile never leaves the phone.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="phone2">
+    <div class="body"><h3>Phone 2: Betrawati</h3>
+    <p>Household Profile at <b>27.9731 N, 85.1860 E</b> (a Shelter).</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="sound">
+    <div class="body"><h3>Tap each screen once</h3>
+    <p>Browsers play no warning chime or pager sound until the page has been tapped. Do it on the projector and both phones before you start.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="reset-start">
+    <div class="body"><h3>Reset, then Start</h3>
+    <p>Replay tab: <b>Reset</b> (paused at 08:30, no warning showing), pick a speed, then <b>Start</b>.</p>
+    <p class="note">Speeds are ×5, ×10 and ×30. ×30 plays 2 hours in 4 minutes. Slower speeds keep S0's Surge visible in real seconds.</p></div></label>
+</section>
+
+<section id="show">
+  <h2>4 · Run of show</h2>
+  <p class="when">Event time, NPT, 26 August 2026. At ×30 one real second is 30 event seconds.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Event</th><th>Phase</th><th>What to say</th></tr></thead>
+    <tbody>
+      <tr><td class="t">08:30</td><td>Calm</td><td>Readings are steady. Nobody is warned.</td></tr>
+      <tr><td class="t">08:37</td><td>Collapse above the Lhende Khola</td><td>S0 surges. The Hub raises a Community Warning, the band and chime fire, and the wave ETA starts counting down on the phones.</td></tr>
+      <tr><td class="t">08:40</td><td>Surge reaches the border</td><td>Watch the wave front run down the river.</td></tr>
+      <tr><td class="t">08:49</td><td>Surge reaches Syabrubesi</td><td>Phone 1 is nearest. It shows the high-ground point.</td></tr>
+      <tr><td class="t">09:05</td><td>Authorities learn of the flood</td><td>First Official Alert. The lead-time line compares it with our 08:37 warning.</td></tr>
+      <tr><td class="t">09:15</td><td>Official SMS alerts go out</td><td>Official Alerts replayed from the timeline.</td></tr>
+      <tr class="cue"><td class="t">09:20</td><td><b>Betrawati station stops transmitting</b></td><td><b>Cut the internet now</b> (next section). The Hub Panel shows a cue at this point.</td></tr>
+      <tr><td class="t">10:30</td><td>End of the replay</td><td>The Hub pauses and refuses Resume until a Reset or jump.</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="when" style="margin-top:16px">Jump straight to any phase from the Replay tab if you are short on time. A jump keeps the clock's state.</p>
+
+  <label class="step"><input type="checkbox" data-id="cut-a">
+    <div class="body"><h3>Cut the internet, half 1: stop the pack server</h3>
+    <p>In a second terminal, at the 09:20 cue:</p>
+    <div class="code"><pre>kill $(cat .demo/pack-server.pid)</pre><button class="copy" type="button">Copy</button></div></div></label>
+
+  <label class="step"><input type="checkbox" data-id="cut-b">
+    <div class="body"><h3>Cut the internet, half 2: remove the laptop's upstream</h3>
+    <p>Unplug the Ethernet cable or stop the USB tether. Nodes decide online or Mesh-only by probing the internet themselves, so the Hub shows Mesh-only only once the upstream is really gone. Readings keep flowing over the Mesh.</p>
+    <p class="note crit">There is no switch. If the upstream stays up, the dashboard will keep saying online.</p></div></label>
+</section>
+
+<section id="audience">
+  <h2>5 · Audience laptop</h2>
+  <p class="when">Optional. Shows a real Node joining the Mesh, and losing and regaining contact when its Wi-Fi goes off and on.</p>
+
+  <label class="step"><input type="checkbox" data-id="aud-pick">
+    <div class="body"><h3>Pick the audience laptop's route</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Laptop</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Linux with the repo</td><td><code>scripts/join-demo.sh &lt;hub address&gt; &lt;town&gt;</code></td></tr>
+        <tr><td>Linux, no setup</td><td>Docker with <code>--network host -e JOIN_MESH=auto</code></td></tr>
+        <tr><td>Windows or Docker Desktop</td><td>Docker image; it dials the Hub's TCP port 4242</td></tr>
+        <tr><td>WSL2</td><td><code>JOIN_MESH=tcp scripts/join-demo.sh ...</code></td></tr>
+      </tbody>
+    </table></div>
+    <p>macOS native and Windows without Docker are not supported. Towns: Dhunche, Trishuli, Kakani, Dhading, Kathmandu.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="aud-run">
+    <div class="body"><h3>Run it and accept it on the Hub</h3>
+    <div class="code"><pre>scripts/join-demo.sh 192.168.1.20 Dhunche</pre><button class="copy" type="button">Copy</button></div>
+    <p>Use the Hub laptop's address that <code>run-demo.sh</code> printed. The script prints a Node id and an accept <code>curl</code> line. Click <b>Accept</b> in the Registry tab instead if you prefer. Do this before the show.</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="aud-wifi">
+    <div class="body"><h3>Hand it to a volunteer</h3>
+    <p>Say "Turn your Wi-Fi off." After about 5 s the dot loses its glow; after 15 s it goes grey. Then "Turn it back on", and it returns without a restart. Keep the lid open. Say out loud that the readings are simulated; the Node and the Mesh are real.</p>
+    <p class="note">The registry holds about 8 Nodes with short names: the Hub, S0 to S3, the Pi and an audience laptop make 7. A ninth is refused.</p></div></label>
+</section>
+
+<section id="after">
+  <h2>6 · Stop and reset</h2>
+  <p class="when">Between runs.</p>
+
+  <label class="step"><input type="checkbox" data-id="between">
+    <div class="body"><h3>Run it again</h3>
+    <p>Hub Panel, Replay tab: <b>Reset</b> and <b>Start</b>. No restart needed. Restart <code>run-demo.sh</code> only if you stopped the pack server and want the Hub to fetch a pack again (it keeps a valid pack on disk).</p></div></label>
+
+  <label class="step"><input type="checkbox" data-id="stop">
+    <div class="body"><h3>Stop everything</h3>
+    <p>Ctrl-C in the <code>run-demo.sh</code> terminal. Or, from another terminal, <code>scripts/stop-nodes.sh</code>. To start from nothing, delete <code>.demo/</code>.</p>
+    <p class="note warn">Start with Ctrl-C in a real terminal. A script started with <code>nohup ... &amp;</code> ignores it; use <code>kill -TERM</code>.</p></div></label>
+</section>
+
+<section id="fix">
+  <h2>If it breaks</h2>
+  <p class="when">Most common causes first.</p>
+
+  <details><summary>The projector shows an old dashboard or old data</summary>
+    <p>A stale Node is still on port 8000. Run <code>scripts/stop-nodes.sh</code>, then start again. The Hub logs "is up" before it binds its port, so the log line alone does not prove it is serving.</p></details>
+  <details><summary>The map is blank</summary>
+    <p>The Hub has no Cache Pack. Check <code>.demo/pack/cache-pack.zip</code> exists and <code>.demo/logs/hub.log</code> for checksum errors. If shelters look like Gainesville ones and are all Closed, it holds an old pack: stop, delete <code>.demo/pack/</code> and the Hub's <code>shelter_status.json</code>, and restart.</p></details>
+  <details><summary>A Sensor does not move with the Replay</summary>
+    <p>It needs the Hub's identity (<code>HUB_IDENTITY</code>). The script sets it after the Hub starts. If the Hub restarted with a wiped <code>.demo/hub/data</code>, its id changed, so restart the whole demo.</p></details>
+  <details><summary>Flood Risk or warnings never react</summary>
+    <p>A Sensor is probably not registered. Check the Registry tab, and look for "could not register" in the script output. Also confirm the Replay is running, not paused.</p></details>
+  <details><summary>No phone can reach the dashboard</summary>
+    <p>Confirm the phone is on the same network, use the exact address the script printed, and check the laptop firewall. On Tailscale, run <code>tailscale status</code>; it may be stopped.</p></details>
+  <details><summary>An audience laptop never hears the Hub</summary>
+    <ul>
+      <li>firewalld: <code>sudo firewall-cmd --zone=&lt;zone&gt; --add-port=29716/udp --add-port=42671/udp</code></li>
+      <li>Docker on the Hub laptop blocking sharing: <code>sudo iptables -I DOCKER-USER -i &lt;cable&gt; -o &lt;wifi&gt; -j ACCEPT</code></li>
+      <li>macOS firewall: allow incoming for Python, or switch it off for the demo</li>
+      <li>Guest or hotel Wi-Fi that isolates clients</li>
+      <li>In Docker without host networking, check that the Hub's TCP port 4242 is reachable</li>
+    </ul></details>
+  <details><summary>No warning email arrives</summary>
+    <p>It needs internet and all three <code>ALERT_EMAIL_*</code> values. A failure logs "could not email the flood alert" in <code>.demo/logs/hub.log</code>. The first warning comes before the 09:20 cue, so it normally goes out.</p></details>
+</section>
+
+<section>
+  <h2>Not proven yet</h2>
+  <p class="when">Say so if asked.</p>
+  <div class="unproven">
+    Everything here has been rehearsed on one machine over loopback, plus separate tests of pieces on a Pi and in Chrome.
+    <ul>
+      <li>Wi-Fi discovery between two real laptops, and a Windows laptop other than the Hub's machine</li>
+      <li>The full two-phone replay end to end, and the lid-closed case</li>
+      <li>The upstream cut on the real demo laptop, and a Wi-Fi-only MacBook sharing setup</li>
+      <li>Chime and pager sound on real phone speakers; clip playback on iOS Safari</li>
+    </ul>
+  </div>
+  <p class="when" style="margin-top:16px">Two repo docs are out of date: <code>scripts/demo-setup.md</code> still says the first start downloads <code>cache-pack-v4</code> (the script downloads <code>cache-pack-v5</code>) and that registering Sensors waits for ticket 0012 (the script registers them now).</p>
+</section>
+</div>
+
+<script>
+(function () {
+  var KEY = "storm-shield-runbook";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("input[data-id]"));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+
+  function paint() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.closest(".step").classList.toggle("done", b.checked);
+      if (b.checked) done++;
+    });
+    document.getElementById("count").textContent = done + " / " + boxes.length;
+    document.getElementById("fill").style.width = (boxes.length ? (100 * done / boxes.length) : 0) + "%";
+  }
+  function store() {
+    var o = {};
+    boxes.forEach(function (b) { if (b.checked) o[b.dataset.id] = 1; });
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { /* storage unavailable; ticks last for this visit */ }
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.dataset.id];
+    b.addEventListener("change", function () { paint(); store(); });
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    boxes.forEach(function (b) { b.checked = false; });
+    paint(); store();
+  });
+
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var pre = btn.parentNode.querySelector("pre");
+      var text = pre.textContent;
+      function ok() { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1500); }
+      function fallback() {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = "Selected";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok, fallback);
+      } else { fallback(); }
+    });
+  });
+  paint();
+})();
+</script>

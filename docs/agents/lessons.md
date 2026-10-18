@@ -610,3 +610,9 @@ There are no Pis or sensors (see **No Pis or sensors** in `AGENTS.md`); a phone 
 - **A Pi Hub and a WSL2 Sensor "recognised each other" yet the Sensor never counted**: WSL2 is behind NAT, so the Wi-Fi discovery multicast never crossed, and the Pi's `/api/state` listed only itself. A Hub started with `scripts/run-live.sh` had no TCP listener, so `nc -vz <pi> 4242` said "refused" while ping worked (something answered; nothing listened). `run-live.sh` now sets `NODE_ALSO_TCP_LISTEN=1` for a Hub; the WSL laptop runs `JOIN_MESH=tcp scripts/join-demo.sh <pi>:8000 <town>` (`pi/README.md`).
 - **A Hub's own readings count on the Hub with no sign-up** (it is always in its registry), so a breadboard press shows on the Pi alone until a Sensor holds the right `HUB_IDENTITY` and hears the registry.
 - Only `bash -n` was run on the `run-live.sh` change here; the Pi and WSL2 path was tested by the owner, not by an agent.
+
+## Demo runbook check (2026-10-18)
+
+- **`scripts/run-demo.sh` prints no phone address on a Linux or WSL laptop without `ifconfig`**: line 176's `ifconfig` fails ("command not found") but the script keeps going, because a failing command inside a `for` list does not trip `set -e`. Get the address with `hostname -I` until the script also tries `ip`.
+- **Old demo pieces block a fresh start**: a `join-demo.sh` audience Node held 8000 and 4242, and a `run-demo.sh` from over an hour earlier had lost its Nodes but kept its pack server on 8900. `scripts/stop-nodes.sh` cleared all of it. Port 8900 is hard-coded, so `DEMO_BASE_PORT` cannot get around it.
+- `scripts/check_demo.py` runs 28 checks over HTTP against a running demo (all passed, 2026-10-18) and stops the pack server as its last check. Restart the demo, or the pack server, after running it. `docs/demo-runbook.html` is the step-by-step checklist for the day.
