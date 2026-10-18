@@ -81,6 +81,9 @@ function mapTagCount(node: NodeOnMap): number {
 }
 
 // A town the wave reached keeps the time it arrived beside its name (D-21).
+// How long the pitch takes to ease to the valley angle once the fly has landed (D-26).
+const TILT_MS = 1500;
+
 function placeLabelText(name: string, waveStamps: Map<string, number>): string {
   const arrivedAt = waveStamps.get(name);
   return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
@@ -201,6 +204,8 @@ type Props = {
   river: RiverLine | null;
   // What the wave front needs: the Surges that started it and the Event clock it runs on.
   warnings: CommunityWarning[];
+  // The Node a new Community Warning started at: it rings and the camera goes to it, once per key.
+  warningFocus: { key: string; nodeId: string } | null;
   clock: EventClock | null;
   // False with the Fleet toggle off: the slow dashes on the rivers stop with the fleet.
   ambientFlow: boolean;
@@ -251,6 +256,7 @@ export function NodeMap({
   places,
   river,
   warnings,
+  warningFocus,
   clock,
   ambientFlow,
   shelter,
@@ -371,6 +377,33 @@ export function NodeMap({
     // A flight answers a press of the button; changing 2D | 3D later must not fly again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, valleyFlights]);
+
+  // D-26: fly flat to the Surging Node, then ease the pitch to the valley angle. The tilt waits for
+  // the flight's own end, so a resident who grabs the map mid-flight is not tilted against.
+  const focusKey = warningFocus?.key;
+  const focusNode = [...nodes, ...fleet].find((node) => node.id === warningFocus?.nodeId);
+  const focusLat = focusNode?.position[0];
+  const focusLon = focusNode?.position[1];
+  const focusFound = focusNode !== undefined;
+  useEffect(() => {
+    if (!map || !styleReady || focusLat === undefined || focusLon === undefined) return;
+    moved.current = true;
+    const tilted = terrainChoice.current === "3d" && nepal !== null;
+    const view = { center: [focusLon, focusLat] as [number, number], zoom: VALLEY_VIEW.zoom };
+    if (reducedMotion) {
+      map.jumpTo({ ...view, pitch: tilted ? TERRAIN_PITCH : 0 });
+      return;
+    }
+    map.flyTo({ ...view, pitch: 0 });
+    if (tilted) {
+      map.once("moveend", (event: { originalEvent?: unknown }) => {
+        if (!event.originalEvent) map.easeTo({ pitch: TERRAIN_PITCH, duration: TILT_MS });
+      });
+    }
+    // One camera move per warning: the Node's position, the terrain choice and the Nepal map
+    // settling later must not fly again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, styleReady, focusKey, focusFound]);
 
   useEffect(() => {
     if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
@@ -578,6 +611,7 @@ export function NodeMap({
             selected={false}
             popoverOpen={node.id === fleetOpenId}
             rises={rises[node.id] ?? 0}
+            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
             onSelect={onToggleFleet}
             side={sideOf(`node:${node.id}`)}
             labelHidden={placement.get(`node:${node.id}`) === null}
@@ -592,6 +626,7 @@ export function NodeMap({
             selected={node.id === selectedId}
             wavePassed={wavePassedIds.has(node.id)}
             rises={rises[node.id] ?? 0}
+            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
             onSelect={onSelect}
             side={sideOf(`node:${node.id}`)}
             labelHidden={placement.get(`node:${node.id}`) === null}

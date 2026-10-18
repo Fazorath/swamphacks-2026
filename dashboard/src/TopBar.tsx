@@ -5,6 +5,7 @@ import { FloodRiskChip } from "./FloodRiskPanel";
 import { stormSignalSentence } from "./floodRiskSentences";
 import type { FloodRisk, NodeState } from "./nodeState";
 import type { EventClock } from "./useEventClock";
+import { WarningChip } from "./WarningBand";
 
 const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
 
@@ -12,6 +13,8 @@ type Props = {
   eventClock: EventClock | null;
   floodRisk: FloodRisk | null;
   showStormSignal: boolean;
+  // Set once a warning is acknowledged on this desktop; null otherwise (D-29).
+  warningChip: { minutesLeft: number | null; community: boolean; onOpen: () => void } | null;
   status: NodeState["status"] | null;
   // The phone keeps only the logo, the Flood Risk chip and the connection pill.
   phone: boolean;
@@ -27,6 +30,7 @@ export function TopBar({
   eventClock,
   floodRisk,
   showStormSignal,
+  warningChip,
   status,
   phone,
   householdSaved,
@@ -42,6 +46,7 @@ export function TopBar({
       </h1>
       {!phone && <EventClockTag clock={eventClock} />}
       <FloodRiskChip floodRisk={floodRisk} />
+      {!phone && warningChip && <WarningChip {...warningChip} />}
       {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
       {!phone && (
         <>
