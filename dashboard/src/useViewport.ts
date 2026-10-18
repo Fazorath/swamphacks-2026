@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 // has the desktop's Panels but only one open per side.
 const PHONE_QUERY = "(width < 900px)";
 const TABLET_QUERY = "(width < 1200px)";
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 function matches(query: string): boolean {
   return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
@@ -23,3 +24,4 @@ function useMedia(query: string): boolean {
 
 export const useIsPhone = () => useMedia(PHONE_QUERY);
 export const useIsTablet = () => useMedia(TABLET_QUERY);
+export const useReducedMotion = () => useMedia(REDUCED_MOTION_QUERY);

@@ -296,6 +296,9 @@ export function App() {
           nepal={cachePack?.nepal ?? null}
           places={places}
           river={river}
+          warnings={communityWarnings}
+          clock={eventClock.clock}
+          ambientFlow={shows("fleet")}
           shelter={plan.shelter}
           route={shows("route") ? plan.route : null}
           panelRoom={panelRoom}

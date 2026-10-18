@@ -30,7 +30,8 @@ export type MapColors = Record<
   | "floodProne"
   | "route"
   | "routeCasing"
-  | "blocked",
+  | "blocked"
+  | "wave",
   string
 >;
 
@@ -48,6 +49,7 @@ const ROLES: Record<keyof MapColors, string> = {
   route: "--accent",
   routeCasing: "--map-shadow",
   blocked: "--risk-high",
+  wave: "--wave",
 };
 
 export function readMapColors(): MapColors {
@@ -66,6 +68,7 @@ const HATCH_SIZE = 8;
 const HATCH_THICKNESS = 2;
 const FALLBACK_HATCH_RGB = [107, 134, 168];
 const FALLBACK_BAND_RGB: Rgb = [51, 71, 107];
+const FALLBACK_WAVE_RGB: Rgb = [232, 238, 248];
 
 export function hatchImage(colour: string): { width: number; height: number; data: Uint8Array } {
   const [red, green, blue] = /^#[0-9a-f]{6}$/i.test(colour)
@@ -82,7 +85,8 @@ export function hatchImage(colour: string): { width: number; height: number; dat
 }
 
 // The data drawn over the map; each is a GeoJSON source the app fills as its props change.
-export type OverlayName = "flood-prone" | "valley-river" | "route" | "blocked-roads";
+export type OverlayName =
+  "flood-prone" | "valley-river" | "route" | "blocked-roads" | "wave-trail" | "wave-head";
 
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -95,6 +99,9 @@ export function baseStyle(colors: MapColors): StyleSpecification {
       "valley-river": { type: "geojson", data: EMPTY },
       route: { type: "geojson", data: EMPTY },
       "blocked-roads": { type: "geojson", data: EMPTY },
+      // The gradient along the trail needs the line's own length (lineMetrics).
+      "wave-trail": { type: "geojson", data: EMPTY, lineMetrics: true },
+      "wave-head": { type: "geojson", data: EMPTY },
     },
     layers: [
       { id: "outside", type: "background", paint: { "background-color": colors.outside } },
@@ -136,8 +143,60 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         source: "blocked-roads",
         paint: { "line-color": colors.blocked, "line-width": 6, "line-dasharray": [1.3, 1] },
       },
+      // The wave front (D-16, D-17, D-19): white only, fading from the head back to the tail.
+      {
+        id: "wave-trail",
+        type: "line",
+        source: "wave-trail",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": colors.wave,
+          "line-width": 5,
+          "line-gradient": [
+            "interpolate",
+            ["linear"],
+            ["line-progress"],
+            0,
+            ["rgba", ...(parseHex(colors.wave) ?? FALLBACK_WAVE_RGB), 0],
+            1,
+            colors.wave,
+          ],
+        },
+      },
+      {
+        id: "wave-glow",
+        type: "circle",
+        source: "wave-head",
+        paint: {
+          "circle-color": colors.wave,
+          "circle-radius": 16,
+          "circle-opacity": 0.25,
+          "circle-blur": 1,
+        },
+      },
+      {
+        id: "wave-head",
+        type: "circle",
+        source: "wave-head",
+        paint: { "circle-color": colors.wave, "circle-radius": 5 },
+      },
     ],
   };
+}
+
+export const RIVER_FLOW_LAYER = "river-flow";
+
+// Dash and gap, in line widths. MapLibre cannot slide a dash pattern, so the drift is a short
+// cycle of arrays, each one the pattern moved a little further along the line.
+const FLOW_DASH = 2;
+const FLOW_GAP = 5;
+export const FLOW_STEPS = 14;
+
+export function flowDashes(step: number): number[] {
+  const shift = ((step % FLOW_STEPS) / FLOW_STEPS) * (FLOW_DASH + FLOW_GAP);
+  return shift <= FLOW_GAP
+    ? [0, shift, FLOW_DASH, FLOW_GAP - shift]
+    : [shift - FLOW_GAP, FLOW_GAP, FLOW_DASH - (shift - FLOW_GAP), 0];
 }
 
 // Under the first overlay, so a river never hides the Route.
@@ -209,6 +268,21 @@ export function addNepalBasemap(map: MapLibreMap, nepal: NepalMap, colors: MapCo
     },
     FIRST_OVERLAY,
   );
+  // Slow dim dashes drifting down every river (D-20); `RiverFlow` moves them.
+  map.addLayer(
+    {
+      id: RIVER_FLOW_LAYER,
+      type: "line",
+      source: "rivers",
+      paint: {
+        "line-color": colors.wave,
+        "line-opacity": 0.3,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 10, 1.6],
+        "line-dasharray": flowDashes(0),
+      },
+    },
+    FIRST_OVERLAY,
+  );
   map.addLayer(
     {
       id: "border",
@@ -231,6 +305,17 @@ export function lineCollection(lines: LatLon[][]): GeoJSON.FeatureCollection {
       type: "Feature",
       properties: {},
       geometry: { type: "LineString", coordinates: line.map(lonLat) },
+    })),
+  };
+}
+
+export function pointCollection(points: LatLon[]): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: points.map((point) => ({
+      type: "Feature",
+      properties: {},
+      geometry: { type: "Point", coordinates: lonLat(point) },
     })),
   };
 }

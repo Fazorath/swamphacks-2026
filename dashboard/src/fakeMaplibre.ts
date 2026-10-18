@@ -81,6 +81,21 @@ class FakeMap {
     };
   }
 
+  // The river-flow layer's last visibility and dash pattern, as the app set them.
+  readonly layerProperties = new Map<string, unknown>();
+
+  getLayer(id: string) {
+    return this.layerIds.includes(id) ? { id } : undefined;
+  }
+
+  setLayoutProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
+  }
+
+  setPaintProperty(layer: string, name: string, value: unknown) {
+    this.layerProperties.set(`${layer}:${name}`, value);
+  }
+
   project([lon, lat]: [number, number]) {
     return { x: lon * 10, y: -lat * 10 };
   }

@@ -16,6 +16,7 @@ import {
   setOverlay,
   type MapColors,
 } from "./basemap";
+import { nepalClockTime } from "./EventClockTag";
 import { MapMarker } from "./MapMarker";
 import {
   estimatedLabelSize,
@@ -42,7 +43,13 @@ import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
 import type { NodeOnMap } from "./nodesOnMap";
+import type { CommunityWarning } from "./communityWarnings";
+import type { EventClock } from "./useEventClock";
+import { useReducedMotion } from "./useViewport";
 import type { RiverLine } from "./waveEta";
+import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
+import { useRiverFlow } from "./useRiverFlow";
+import { WaveFrontLayer } from "./WaveFrontLayer";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
 const NEPAL_SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
@@ -68,6 +75,12 @@ function mapTagCount(node: NodeOnMap): number {
   return [contactLost, !node.simulated].filter(Boolean).length;
 }
 
+// A town the wave reached keeps the time it arrived beside its name (D-21).
+function placeLabelText(name: string, waveStamps: Map<string, number>): string {
+  const arrivedAt = waveStamps.get(name);
+  return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
+}
+
 // Every label that competes for room on screen. None is ever drawn over another: the chosen
 // Shelter, the selected Node, key places and real Nodes win, and a label that loses is hidden until
 // its marker is hovered. Shelters other than the plan's choice are named only on hover (0078).
@@ -79,6 +92,7 @@ function labelsOnScreen(
   chosenShelterId: string | undefined,
   nodes: NodeOnMap[],
   selectedId: string | null,
+  waveStamps: Map<string, number>,
 ): MapLabel[] {
   const at = (lat: number, lon: number) => map.project([lon, lat]);
   const labels: MapLabel[] = [];
@@ -86,7 +100,7 @@ function labelsOnScreen(
     labels.push({
       id: `place:${place.name}`,
       ...at(place.lat, place.lon),
-      ...estimatedLabelSize(place.name, 12),
+      ...estimatedLabelSize(placeLabelText(place.name, waveStamps), 12),
       rank: 1,
     });
   }
@@ -180,6 +194,11 @@ type Props = {
   places: Place[];
   // The valley's own river line, drawn only when the pack has no Nepal rivers.
   river: RiverLine | null;
+  // What the wave front needs: the Surges that started it and the Event clock it runs on.
+  warnings: CommunityWarning[];
+  clock: EventClock | null;
+  // False with the Fleet toggle off: the slow dashes on the rivers stop with the fleet.
+  ambientFlow: boolean;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   route: LatLon[] | null;
@@ -219,6 +238,9 @@ export function NodeMap({
   nepal,
   places,
   river,
+  warnings,
+  clock,
+  ambientFlow,
   shelter,
   route,
   panelRoom,
@@ -240,6 +262,7 @@ export function NodeMap({
   const [view, setView] = useState<View | null>(null);
   const colors = useRef<MapColors | null>(null);
   const moved = useRef(false);
+  const reducedMotion = useReducedMotion();
   const terrainChoice = useRef(terrain);
   const onTerrainSlowRef = useRef(onTerrainSlow);
   useEffect(() => {
@@ -314,6 +337,9 @@ export function NodeMap({
     addNepalBasemap(map, nepal, colors.current!);
   }, [map, styleReady, nepal]);
 
+  // After the basemap effect above, so the river-flow layer exists when it first looks.
+  useRiverFlow(map, styleReady && nepal !== null, ambientFlow && !reducedMotion);
+
   // The resident's 2D | 3D choice (and a frame-rate drop) applies at once, tilting or flattening.
   useEffect(() => {
     if (!map || !styleReady || !nepal) return;
@@ -379,10 +405,31 @@ export function NodeMap({
     };
   }, [map, picking, blocking, onPickHome, onTapRoad]);
 
+  const eventT = clock?.event_t ?? null;
+  const waving = river !== null && eventT !== null && warnings.length > 0;
+  const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
+  const waveStamps = waving
+    ? townsTheWaveReached(
+        river,
+        warnings,
+        places.filter((place) => place.key),
+        eventT,
+      )
+    : new Map<string, number>();
+
   // Derived during render, from the last placement so a label keeps its side until it must move.
   const labels =
     map && view
-      ? labelsOnScreen(map, view, places, shelters, shelter?.id, [...nodes, ...fleet], selectedId)
+      ? labelsOnScreen(
+          map,
+          view,
+          places,
+          shelters,
+          shelter?.id,
+          [...nodes, ...fleet],
+          selectedId,
+          waveStamps,
+        )
       : [];
   const nextPlacement = placeLabels(labels, placement);
   if (!samePlacement(nextPlacement, placement)) setPlacement(nextPlacement);
@@ -410,6 +457,15 @@ export function NodeMap({
         </div>
       )}
       <div ref={attach} className={picking || blocking ? "node-map picking" : "node-map"} />
+      {map && styleReady && (
+        <WaveFrontLayer
+          map={map}
+          river={river}
+          warnings={warnings}
+          clock={clock}
+          reducedMotion={reducedMotion}
+        />
+      )}
       {map &&
         view &&
         visiblePlaces(places, view)
@@ -420,10 +476,16 @@ export function NodeMap({
               map={map}
               lat={place.lat}
               lon={place.lon}
-              className={place.key ? "place-label key" : "place-label"}
+              className={
+                waveStamps.has(place.name)
+                  ? "place-label key wave-reached"
+                  : place.key
+                    ? "place-label key"
+                    : "place-label"
+              }
             >
               <span className={`map-label label-${sideOf(`place:${place.name}`)}`}>
-                {place.name}
+                {placeLabelText(place.name, waveStamps)}
               </span>
             </MapMarker>
           ))}
@@ -481,6 +543,7 @@ export function NodeMap({
             map={map}
             node={node}
             selected={node.id === selectedId}
+            wavePassed={wavePassedIds.has(node.id)}
             rises={rises[node.id] ?? 0}
             onSelect={onSelect}
             side={sideOf(`node:${node.id}`)}
