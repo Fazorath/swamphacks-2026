@@ -23,4 +23,4 @@
 
 **Notes:** Gmail needs 2-step verification on, then an app password (Google Account → Security → App passwords); the normal password does not work for SMTP. The password lives only in `.env`. A real send was not testable without it: say so in the report and never claim it was.
 
-**Built (2026-10-18):** `node/src/storm_shield/flood_email.py`, wired into the Hub's `warn_about_new_surges`. The tests replace `smtplib.SMTP_SSL`; **a real Gmail send was not run** because it needs the team account's app password in `.env`. After creating it (see `docs/agents/lessons.md`, "Flood alert email"), start the demo and press Start on the Hub Panel: the email should arrive within seconds of the Surge warning.
+**Built (2026-10-18):** `node/src/storm_shield/flood_email.py`, wired into the Hub's `warn_about_new_surges`. The tests replace `smtplib.SMTP_SSL`. **A real send was run the same day:** the owner started the demo with the team account's app password in `.env` and pressed Start on the Hub Panel, and the team received the email.
