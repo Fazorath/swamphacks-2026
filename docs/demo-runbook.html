@@ -157,10 +157,6 @@ details p, details ul { margin: 8px 0 0; }
     <p>Press Ctrl-C when it prints the addresses.</p>
     <p class="note">If you ran the demo before the v6 pack, delete <code>.demo/pack/</code> and <code>.demo/hub/data/shelter_status.json</code> once. A Node never replaces a valid pack.</p></div></label>
 
-  <label class="step"><input type="checkbox" data-id="clips">
-    <div class="body"><h3>Camera clips (optional stage set)</h3>
-    <p>With no <code>.demo/clips/manifest.json</code> the Hub uses the committed clips in <code>camera-clips/</code>. The script says which it picked. To build the stage set, see <code>camera-clips/README.md</code>.</p></div></label>
-
   <label class="step"><input type="checkbox" data-id="network">
     <div class="body"><h3>Decide the network</h3>
     <p>Put the laptop and both phones on one network the laptop controls. macOS Internet Sharing cannot share Wi-Fi back out over Wi-Fi, so a Wi-Fi-only MacBook needs a wired or USB upstream, or all three devices on one phone's hotspot. Not yet tried on the demo laptop, so test it the day before.</p></div></label>
@@ -337,7 +333,7 @@ details p, details ul { margin: 8px 0 0; }
       <li>Wi-Fi discovery between two real laptops, and a Windows laptop other than the Hub's machine</li>
       <li>The full two-phone replay end to end, and the lid-closed case</li>
       <li>The upstream cut on the real demo laptop, and a Wi-Fi-only MacBook sharing setup</li>
-      <li>Chime and pager sound on real phone speakers; clip playback on iOS Safari</li>
+      <li>Chime and pager sound on real phone speakers</li>
     </ul>
   </div>
   <p class="when" style="margin-top:16px">A repo doc is out of date: <code>scripts/demo-setup.md</code> still says that registering Sensors waits for ticket 0012 (the script registers them now).</p>

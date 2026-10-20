@@ -61,7 +61,6 @@ function stubFloodRisk(floodRisk: FloodRisk) {
   });
   vi.stubGlobal("fetch", async (path: string) => {
     if (path === "/api/state") return Response.json(state);
-    if (path === "/api/cameras") return Response.json([]);
     return new Response(null, { status: 404 });
   });
 }

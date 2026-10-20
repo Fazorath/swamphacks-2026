@@ -1,7 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 
 import { App } from "./App";
-import { expandPanel } from "./expandPanel";
 import { fakeNodeState } from "./fakeNodeState";
 import { POLL_EVERY_MS } from "./usePolledJson";
 
@@ -13,7 +12,6 @@ beforeEach(() => {
   nodeReachable = true;
   vi.stubGlobal("fetch", async (path: string) => {
     if (!nodeReachable) throw new TypeError("Failed to fetch");
-    if (path === "/api/cameras") return Response.json([]);
     if (path === "/api/state") return Response.json(fakeNodeState({ status: nodeStatus }));
     return new Response(null, { status: 404 });
   });
@@ -32,7 +30,6 @@ async function nextPoll() {
 
 test("the header says the Node is Online", async () => {
   render(<App />);
-  expandPanel("Cameras");
   expect(await screen.findByText("Online")).toBeInTheDocument();
   expect(screen.queryByText("Mesh-only")).not.toBeInTheDocument();
 });
@@ -40,7 +37,6 @@ test("the header says the Node is Online", async () => {
 test("the header says Mesh-only when the Node has no internet", async () => {
   nodeStatus = "mesh_only";
   render(<App />);
-  expandPanel("Cameras");
   expect(await screen.findByText("Mesh-only")).toBeInTheDocument();
   expect(screen.queryByText("Online")).not.toBeInTheDocument();
 });

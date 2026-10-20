@@ -32,7 +32,7 @@ On desktop, the projector and judges' laptops, the map is a Nepal-only God's Eye
 - **Wave (D-16 to D-21):** a white comet with a trail fading over the last 15 km, on the Event clock at the reach speeds. A passed Node flashes white for about 2 event minutes, then follows its real state; a town's label turns wave-white with the arrival time beside it, kept. Other rivers: slow drifting dashes.
 - **Warning on the God's Eye View (D-22 to D-29, D-55):** the origin Node flashes with its ring, the band slides in and the chime plays. The band is at the top, 120 px, 12% violet tint with the dashed edge, no button; its border pulses twice over 3 s with the two notes. The camera flies flat to the Surging Node, then tilts over 1.5 s. The Wave ETA is a corner card bottom-right beside the Panels, number at 120 px, the town as its label, made to read as critical danger; white, amber under 15 min, red under 5 and "wave expected now" in red. Acknowledge is in the Alerts Panel only; afterwards a violet dashed chip "WARNING · 35 MIN" sits beside the Flood Risk chip and reopens the card, and no banner is shown. The map is never dimmed.
 - **Top bar (D-48):** logo, Event clock, Flood Risk chip, Online / Mesh-only pill, Hub button; the Node name moves to the status strip. **Status strip (D-49):** simulated-and-real count first, then freshness and the Node name, credit at the right.
-- **Panels (D-50, D-51):** Readings left; Alerts and the Evacuation Plan right, Cameras third on the right. Calm: Readings only, the Evacuation Plan Panel hidden. Warning: Alerts and the Plan open.
+- **Panels (D-50, D-51):** Readings left; Alerts and the Evacuation Plan right. Calm: Readings only, the Evacuation Plan Panel hidden. Warning: Alerts and the Plan open.
 - **Readings Panel (D-36, D-37, ticket 0070):** variant C, a river ladder by River km: valley Nodes in river order on a vertical river line with the wave's position marked between them, real Nodes off the river listed under it, the breadboard Pi's card pinned at the top with a cyan `LIVE SENSORS` tag.
 - **High ground (D-43 to D-45):** a chevron-up pin, smaller than a Shelter pin, "90 m up · 11 min walk", shown only when the plan says higher ground, the nearest one with a cyan outline.
 - **Rising water, stretch (D-46, D-47):** a dashed `river-300` height line either side of the river with a tick every metre; `RECONSTRUCTION` on the water and as a status-strip line.
@@ -43,7 +43,7 @@ On desktop, the projector and judges' laptops, the map is a Nepal-only God's Eye
 |---|---|
 | **Must build (on stage)** | Resident Normal day, Raining, Elevated, Storm, Mesh-only; Warning Takeover; Phone Map, Readings, Alerts and Plan tabs; Phone Route |
 | **Simple but real** | Loading, empty and error states; Phone Household Profile; Hub Panel (Registry, Warnings, Shelters, Feeds); Node Panel (Scenario, registration); Join card |
-| **Stretch** | "Mark road blocked" / "Find another route" (0018), enlarging a camera tile |
+| **Stretch** | "Mark road blocked" / "Find another route" (0018) |
 
 The breadboard drives the Scenario on stage; the Node Panel's stepper is for laptops and rehearsal.
 
@@ -64,7 +64,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
 │▣2│             │                                  │ Plan           │
 │▣ │             │                                  │                │
 ├──┴─────────────┴──────────────────────────────────┴────────────────┤
-│ readings 1 s · alerts 40 s · Cache Pack v3 · cameras live          │  status strip
+│ readings 1 s · alerts 40 s · Cache Pack v3                                   │  status strip
 └────────────────────────────────────────────────────────────────────┘
   ▲ Layer rail
 ```
@@ -81,14 +81,13 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
   | Route | map layer | none |
   | Storm Signal | map layer | none |
   | Weather | map layer, one of Temperature / Cloud cover / Rain / Off, draped on the terrain (`docs/specs/weather-layers.md`) | none |
-  | Cameras | Panel | live cameras |
   | Alerts | Panel | unacknowledged warnings |
 
   The Evacuation Plan Panel opens from the Household button in the top bar.
-- **Panels** float over the map: Readings docks on the left next to the rail (288 px); Alerts, Evacuation Plan and Cameras stack on the right (336 px). At most two Panels are open per side; opening a third collapses the oldest. Each Panel has a collapse chevron, and which Panels are open is remembered per device. Opening a Panel re-centers the map so the selected Node is never hidden.
+- **Panels** float over the map: Readings docks on the left next to the rail (288 px); Alerts and Evacuation Plan stack on the right (336 px). At most two Panels are open per side; opening a third collapses the oldest. Each Panel has a collapse chevron, and which Panels are open is remembered per device. Opening a Panel re-centers the map so the selected Node is never hidden.
 - **Default open Panels:** on a calm day, Readings and Evacuation Plan; once there is a Flood Risk of Elevated or High or any Alert, Alerts and Evacuation Plan. On the desktop God's Eye View the calm default is Readings alone and the Plan stays hidden until a warning (D-51, see above).
 - **Top bar:** left, logo then Node name and role (`porch · Hub`); center, the mesh-wide Flood Risk chip and, when on, the Storm Signal pill; right, the Online / Mesh-only pill, the Household icon button, the Node button (only on the Node's own screen) and the Hub button (only when the role is Hub).
-- **Status strip:** freshness per source: readings age, Official Alerts last fetch, Cache Pack version, cameras live or offline. Mesh-only says so here too.
+- **Status strip:** freshness per source: readings age, Official Alerts last fetch, Cache Pack version. Mesh-only says so here too.
 - Tablets get the desktop layout with one Panel open per side.
 
 ### Phone (under 900 px)
@@ -96,7 +95,7 @@ The breadboard drives the Scenario on stage; the Node Panel's stepper is for lap
 - Four bottom tabs: **Map** (default), **Readings**, **Alerts**, **Plan**; 44 px minimum touch targets everywhere.
 - Top bar keeps only the logo, the Flood Risk chip and the connection pill.
 - **Map tab:** the map, the risk chip, the most recent Alert pinned above the tab bar, and a bottom sheet that peeks at the selected Node.
-- **Readings tab:** the Node cards, then the Cameras. **Alerts tab:** Official cards, then Community cards. **Plan tab:** Household Profile, then the Evacuation Plan, then the Route.
+- **Readings tab:** the Node cards. **Alerts tab:** Official cards, then Community cards. **Plan tab:** Household Profile, then the Evacuation Plan, then the Route.
 
 ## Map
 
@@ -155,15 +154,6 @@ The top-bar risk chip opens a popover with the level and every reason. Nothing f
 | No Cache Pack | "Shelters and routes arrive once this Node has the Cache Pack" |
 
 Every state ends with "Evacuation decisions come from official sources."
-
-## Cameras Panel
-
-A 2×2 grid of 16:9 tiles.
-
-- **Replay** (every camera until a live source exists, tickets 0038 and 0075): the clip in step with the Event clock, tagged `CAMERA · REPLAY 09:18 NPT`, with its "illustrative footage" line and a Footage credit. Never styled like Live.
-- **Live:** the picture, a LIVE dot and "updated 40 s ago"; a new picture cross-fades in over 300 ms.
-- **Offline** (the Node is Mesh-only): dashed muted frame, camera-off icon, `OFFLINE · internet down`, no picture.
-- **Unavailable** (one camera failed while Online): solid frame, alert icon, `UNAVAILABLE`. Never mistaken for Offline.
 
 ## Hub Panel
 
@@ -236,7 +226,7 @@ Never blank out data we already have; mark it stale instead.
 | A Node's Flood Risk rises | Its chip cross-fades, its marker pulses once, its card flashes once |
 | A Node appears | Marker and card fade in over 300 ms |
 | A Node goes Stale | Desaturates over 300 ms; the label changes in place |
-| Online to Mesh-only | Camera tiles dim and relabel in place; the pill cross-fades |
+| Online to Mesh-only | The pill cross-fades |
 | A Panel opens | Slides 8 px and un-blurs over 180 ms |
 | Colors change | Ease over 300 ms |
 | A fresh Alert | Pulse ring on the Alerts rail button |

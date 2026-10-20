@@ -40,7 +40,6 @@ beforeEach(() => {
         }),
       );
     }
-    if (path === "/api/cameras") return Response.json([]);
     return new Response(null, { status: 404 });
   });
   vi.spyOn(console, "error").mockImplementation(() => {});

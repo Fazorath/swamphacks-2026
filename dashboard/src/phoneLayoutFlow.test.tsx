@@ -49,15 +49,14 @@ describe("the phone layout", () => {
     expect(tab("Map")).toHaveAttribute("aria-selected", "true");
   });
 
-  it("shows each tab's content: Readings then Cameras, Alerts, and the Plan with the profile first", async () => {
+  it("shows each tab's content: Readings, Alerts, and the Plan with the profile first", async () => {
     stubNode();
     setViewport(390);
     render(<App />);
     await screen.findByText("Online");
 
     fireEvent.click(tab("Readings"));
-    const readings = screen.getByRole("region", { name: "Readings" });
-    expect(comesBefore(readings, screen.getByRole("region", { name: "Cameras" }))).toBe(true);
+    expect(screen.getByRole("region", { name: "Readings" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Alerts" })).not.toBeInTheDocument();
 
     fireEvent.click(tab("Alerts"));
@@ -126,8 +125,8 @@ describe("the phone layout", () => {
     await screen.findByText("Online");
 
     fireEvent.click(screen.getByRole("button", { name: "Alerts" }));
-    fireEvent.click(screen.getByRole("button", { name: /^Cameras/ }));
-    expect(screen.getByRole("button", { name: "Collapse Cameras" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Expand Evacuation Plan" }));
+    expect(screen.getByRole("button", { name: "Collapse Evacuation Plan" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Expand Alerts" })).toBeInTheDocument();
   });
 });

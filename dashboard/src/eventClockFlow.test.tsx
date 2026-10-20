@@ -12,7 +12,6 @@ beforeEach(() => {
   replay = { v: 1, kind: "replay", state: "stopped", event_t: 0, rate: 1 };
   vi.stubGlobal("fetch", async (path: string) => {
     if (path === "/api/replay") return Response.json(replay);
-    if (path === "/api/cameras") return Response.json([]);
     if (path === "/api/state") return Response.json(fakeNodeState({ role: "sensor" }));
     return new Response(null, { status: 404 });
   });

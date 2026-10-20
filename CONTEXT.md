@@ -53,7 +53,7 @@ Starting a standby Node as the Hub with a copy of the Hub's key, after the Hub h
 _Avoid_: failover, election, backup hub
 
 **Mesh-only**:
-A Node that currently has no internet and still takes part in the Mesh. Each Node reports only its own state: Online or Mesh-only. Online-only features (camera tiles, live feeds) stop while a Node is Mesh-only; everything carried over the Mesh keeps working.
+A Node that currently has no internet and still takes part in the Mesh. Each Node reports only its own state: Online or Mesh-only. Online-only features (live feeds) stop while a Node is Mesh-only; everything carried over the Mesh keeps working.
 _Avoid_: offline node
 
 **Viewer**:
@@ -101,14 +101,6 @@ _Avoid_: event type, threat, disaster
 **Replay**:
 How an Event is played: a file describing the water surface and weather over time, played on the Event clock. Each Sensor Node reads its Simulated Readings from that surface at its own position, so a Node on high ground stays dry; a real Event's Replay is rebuilt from recorded gauges and reports, and its Official Alerts appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
-
-**Camera**:
-One entry in the Hub's camera list: an id, a label, the Node site it is placed at (name and position) and the Camera Clip it plays. Today every Camera is a Replay camera; a live source is deferred until one qualifies (`docs/research/nepal-cameras.md`). The list is one file. A Camera that names no clip, or a clip the manifest lacks, is logged as a warning at startup and shows `unavailable`; the Hub still starts. A Camera is `live` (working), `offline` (its Node is Mesh-only) or `unavailable` (no usable clip, or the Viewer is on a Sensor Node).
-_Avoid_: feed, webcam
-
-**Camera Clip**:
-A five-minute illustrative video a demo camera plays in place of a live feed, composed from short credited sources and lined up with the Event clock; it never claims to show the Node's own site. A manifest beside the clips credits every source and gives `flood_onset_s`, the second the water visibly jumps. Unlicensed footage lives only in the gitignored `.demo/clips/`.
-_Avoid_: recording, live feed, camera footage
 
 **Event clock**:
 The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
@@ -255,7 +247,7 @@ Hourly temperature, cloud cover and rain on a coarse grid of points (about 0.5°
 _Avoid_: weather data, forecast feed
 
 **Panel**:
-A translucent box floating over the map that holds one kind of information (Readings, Alerts, Evacuation Plan, Cameras) and can be collapsed without leaving the map.
+A translucent box floating over the map that holds one kind of information (Readings, Alerts, Evacuation Plan) and can be collapsed without leaving the map.
 _Avoid_: widget, sidebar, column
 
 **Node card**:

@@ -19,7 +19,6 @@ from storm_shield.cache_pack import (
     RETRY_EVERY_SECONDS,
     CachePack,
 )
-from storm_shield.cameras import Cameras, CameraTile, ClipFiles
 from storm_shield.community_reading import CommunityReading, Reading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_email import FloodEmail
@@ -162,7 +161,6 @@ def create_app(
             f"NODE_REPLAY_TRACK {settings.replay_track!r} is not in the replay timeline "
             f"({', '.join(timeline.tracks)})"
         )
-    cameras = Cameras(settings.camera_clips_dir, settings.role, timeline.start_unix)
     event_clock = EventClock()
 
     measured_kinds = {kind.strip() for kind in settings.measures.split(",") if kind.strip()}
@@ -543,30 +541,6 @@ def create_app(
             sign_up_pressed.set()
             send_sign_up()
         return {"registration": registration()}
-
-    @app.get("/api/cameras")
-    def camera_tiles() -> list[CameraTile]:
-        return cameras.tiles(internet.status)
-
-    def files_to_serve(camera_id: str) -> ClipFiles:
-        if not cameras.knows(camera_id):
-            raise HTTPException(status_code=404, detail="no such camera")
-        files = cameras.clip_files(camera_id, internet.status)
-        if files is None:
-            raise HTTPException(
-                status_code=404,
-                detail="no clip: this Node is a Sensor or Mesh-only, or the clip is missing",
-            )
-        return files
-
-    # FileResponse answers range requests, which is what lets a phone start and seek the clip.
-    @app.get("/api/cameras/{camera_id}/clip")
-    def camera_clip(camera_id: str) -> FileResponse:
-        return FileResponse(files_to_serve(camera_id).video, media_type="video/mp4")
-
-    @app.get("/api/cameras/{camera_id}/poster")
-    def camera_poster(camera_id: str) -> FileResponse:
-        return FileResponse(files_to_serve(camera_id).poster, media_type="image/jpeg")
 
     @app.post("/api/scenario/step")
     def step_scenario() -> ScenarioState:

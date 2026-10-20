@@ -1,12 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { App } from "./App";
-import { expandPanel } from "./expandPanel";
-import { fakeCameraTile } from "./fakeCameraTile";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { OfficialAlert } from "./officialAlerts";
-
-const TILE = fakeCameraTile({ label: "Betrawati bridge" });
 
 const NOTICE: OfficialAlert = {
   id: "dhm-notice",
@@ -91,7 +87,6 @@ beforeEach(() => {
         }),
       );
     }
-    if (path === "/api/cameras") return Response.json([TILE]);
     if (path === "/api/replay") {
       if (eventClockDown) throw new TypeError("Failed to fetch");
       return Response.json({ state: "playing", event_t: 1787715660, rate: 30 });
@@ -121,9 +116,6 @@ function banner() {
 async function showLiveData() {
   render(<App />);
   expect(await screen.findByText(/Pressure: 1015 hPa/)).toBeInTheDocument();
-  // The Official Alert has opened the Alerts and the Plan; a third Panel pushes the Alerts out.
-  expandPanel("Cameras");
-  await screen.findByLabelText(TILE.label);
   await screen.findByText(/NPT · REPLAY/);
   await screen.findByText(/Nearest open Shelter: Test Gym/);
 }
@@ -187,16 +179,12 @@ test("failures broken by a good answer never add up to the warning", async () =>
 
 test("while unreachable, everything live goes and what helps the resident plan stays", async () => {
   await showLiveData();
-  // Two Panels fit on the right: trade the Cameras for the Alerts, whose Official Alert must stay.
-  fireEvent.click(screen.getByRole("button", { name: "Collapse Cameras" }));
-  expandPanel("Alerts");
   nodeAnswer = "down";
   await seconds(5);
 
   expect(screen.queryByText(/Pressure: 1015 hPa/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Elevated/)).not.toBeInTheDocument();
   expect(screen.queryByText("Online")).not.toBeInTheDocument();
-  expect(screen.queryByLabelText(TILE.label)).not.toBeInTheDocument();
   expect(screen.queryByText(/NPT · REPLAY/)).not.toBeInTheDocument();
 
   expect(document.querySelector(".node-map")).toBeInTheDocument();
@@ -208,20 +196,17 @@ test("while unreachable, everything live goes and what helps the resident plan s
   expect(screen.getByText(/Nearest open Shelter: Test Gym/)).toBeInTheDocument();
 });
 
-test("camera and Event clock polling stop while unreachable and resume after", async () => {
+test("Event clock polling stops while unreachable and resume after", async () => {
   await showLiveData();
   nodeAnswer = "down";
   await seconds(5);
   await seconds(1);
-  const cameraRequests = requestsTo("/api/cameras");
   const clockRequests = requestsTo("/api/replay");
   await seconds(10);
-  expect(requestsTo("/api/cameras")).toBe(cameraRequests);
   expect(requestsTo("/api/replay")).toBe(clockRequests);
 
   nodeAnswer = "ok";
   await seconds(1);
-  expect(await screen.findByLabelText(TILE.label)).toBeInTheDocument();
   expect(await screen.findByText(/NPT · REPLAY/)).toBeInTheDocument();
 });
 
