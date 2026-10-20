@@ -45,7 +45,6 @@ export function NodeMarker({
   const real = !node.simulated;
   const classes = [
     "node-marker",
-    "valley",
     real ? "real" : "simulated",
     appearance,
     contactArc !== null && "contact-lost",

@@ -6,7 +6,6 @@ import type { LatLon } from "./routeGrid";
 
 // Past this zoom the district hairlines appear (D-02); below it the map is the national view.
 export const NATIONAL_ZOOM = 6;
-export const VALLEY_ZOOM = 11;
 const DISTRICT_LINES_FROM_ZOOM = NATIONAL_ZOOM + 1;
 
 const PACK_FILES = "/api/cache-pack/files/";

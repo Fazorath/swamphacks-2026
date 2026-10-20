@@ -21,11 +21,7 @@ export function MapMarker({ map, lat, lon, className, onClick, children }: Props
   });
 
   useEffect(() => {
-    // Content marked data-marker-ignore (a popover) handles its own clicks.
-    const listener = (event: Event) => {
-      if ((event.target as Element).closest("[data-marker-ignore]")) return;
-      clicked.current?.();
-    };
+    const listener = () => clicked.current?.();
     element.addEventListener("click", listener);
     return () => element.removeEventListener("click", listener);
   }, [element]);
