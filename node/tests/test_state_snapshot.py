@@ -166,6 +166,7 @@ def test_the_state_holds_exactly_these_keys(
         "status",
         "registration",
         "scenario",
+        "sandbox",
         "flood_risk",
         "nodes",
         "official_alerts",

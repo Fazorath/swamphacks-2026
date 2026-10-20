@@ -23,6 +23,7 @@ dependency-metadata = [{ name = "lgpio", version = "0.2.2.0", requires-dist = []
 
 [project.scripts]
 storm-shield-node = "storm_shield.main:run"
+storm-shield-sandbox = "storm_shield.sandbox:run"
 
 [build-system]
 requires = ["hatchling"]
