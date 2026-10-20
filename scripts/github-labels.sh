@@ -50,7 +50,8 @@ for entry in "${milestones[@]}"; do
     gh api -X PATCH "repos/$GH_REPO/milestones/$number" --input - <<<"$body" >/dev/null
     echo "updated milestone $title"
   else
-    gh api -X POST "repos/$GH_REPO/milestones" --input - <<<"$body" >/dev/null
+    # Creating accepts no null due date (an update needs one to clear it), so leave it out.
+    gh api -X POST "repos/$GH_REPO/milestones" --input - <<<"$(jq 'del(.due_on | nulls)' <<<"$body")" >/dev/null
     echo "created milestone $title"
   fi
 done
