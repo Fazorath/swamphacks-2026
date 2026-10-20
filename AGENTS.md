@@ -23,6 +23,7 @@ Run these before calling any issue done. An agent must not claim "done" without 
 | Install on a Raspberry Pi | `pi/install.sh` (system libraries for the pin backend, then `uv sync --group pi`; always sync with `--group pi` on the Pi) |
 | Build dashboard | `cd dashboard && pnpm build` |
 | Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
+| Try the app with no setup | `cd node && uv run storm-shield-sandbox` (a Hub and four registered simulated Sensors in one process; `--port`, `--pack`; opens the built dashboard; needs the pack: `gh release download cache-pack-v6 --pattern cache-pack.zip --dir .demo/pack`) |
 | Keep the Pi's Hub on your checkout | `scripts/run-live.sh` (a Hub by default; rebuilds whenever `HEAD` moves, e.g. after `git pull`, and swaps the Node only when the build worked) |
 | Dashboard dev server | `cd dashboard && pnpm dev` (proxies `/api` to port 8000) |
 | Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |

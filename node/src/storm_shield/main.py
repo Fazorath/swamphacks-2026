@@ -75,6 +75,12 @@ class NodeEntry(NodeSnapshot):
     name: str | None
 
 
+class SandboxState(BaseModel):
+    """Present in `/api/state` only in the Sandbox, where nothing is a real reading."""
+
+    label: Literal["SIMULATED"] = "SIMULATED"
+
+
 class NodeState(BaseModel):
     id: str
     name: str
@@ -82,6 +88,7 @@ class NodeState(BaseModel):
     status: Status
     registration: RegistrationState
     scenario: ScenarioState
+    sandbox: SandboxState | None
     flood_risk: FloodRisk
     nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
@@ -138,6 +145,7 @@ def create_app(
     tile_source: httpx.Client | None = None,
     internet_source: httpx.Client | None = None,
     weather_source: httpx.Client | None = None,
+    sandbox: bool = False,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
     weather_forecast = WeatherForecast(settings.data_dir)
@@ -521,6 +529,7 @@ def create_app(
             status=internet.status,
             registration=registration(),
             scenario=ScenarioState(step=scenario.step_name),
+            sandbox=SandboxState() if sandbox else None,
             flood_risk=flood_risk(snapshot.recent, registered_ids),
             nodes=[
                 NodeEntry(
