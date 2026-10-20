@@ -420,6 +420,11 @@ def create_app(
                         await asyncio.to_thread(
                             weather_forecast.download, settings.weather_forecast_url, weather_source
                         )
+                except httpx.HTTPError as error:
+                    # Offline or rate-limited is routine, and the error text carries the URL.
+                    logger.warning(
+                        "could not refresh the weather forecast: %s", type(error).__name__
+                    )
                 except Exception:
                     # The copy on disk stays; the layers say how old it is.
                     logger.exception("could not refresh the weather forecast")
