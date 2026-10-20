@@ -34,7 +34,7 @@ beforeEach(() => {
         fakeNodeState({
           nodes: [
             fakeNodeSnapshot("porch", {
-              measurements: { pressure: { value: pressure, unit: "hPa" } },
+              measurements: { air_pressure: { value: pressure, unit: "hPa" } },
             }),
           ],
         }),

@@ -21,7 +21,7 @@ import { NodeSheet } from "./NodeSheet";
 import { PhoneTabs, type PhoneTab } from "./PhoneTabs";
 import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
 import { usePlaces } from "./placeLabels";
-import { fleetOnMap, nodesOnMap } from "./nodesOnMap";
+import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
 import { StatusStrip } from "./StatusStrip";
 import { readTerrainChoice, saveTerrainChoice, type TerrainChoice } from "./terrain";
@@ -74,13 +74,10 @@ export function App() {
   const eventClock = useEventClock(!unreachable);
   const cameras = useCameras(!unreachable);
   const nodes = nodesOnMap(state);
-  const fleet = fleetOnMap(state);
   const rises = useLevelRises(nodes);
   const trends = useReadingTrends(nodes, lastAnswer?.at ?? 0);
-  const contactNotes = useContactNotes([...nodes, ...fleet]);
+  const contactNotes = useContactNotes(nodes);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [fleetOpenId, setFleetOpenId] = useState<string | null>(null);
-  const toggleFleetOpen = (id: string) => setFleetOpenId((current) => (current === id ? null : id));
   const toggleSelected = (id: string) => setSelectedId((current) => (current === id ? null : id));
   const { profile, storageProblem, save, remove } = useHouseholdProfile();
   const pager = usePager(nodes, profile?.home ?? null);
@@ -277,7 +274,7 @@ export function App() {
           onOpen: () => panels.show("alerts"),
         }
       : null;
-  const selectedNode = [...nodes, ...fleet].find((node) => node.id === selectedId);
+  const selectedNode = nodes.find((node) => node.id === selectedId);
   return (
     <main className={phone ? "phone" : undefined}>
       <TopBar
@@ -338,13 +335,10 @@ export function App() {
         {!phone && <WarningBand pending={pending} nodes={allNodes} thisNodeId={thisNodeId} />}
         <NodeMap
           nodes={shows("nodes") ? nodes : []}
-          fleet={shows("fleet") ? fleet : []}
           rises={rises}
           stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
           selectedId={selectedId}
           onSelect={toggleSelected}
-          fleetOpenId={fleetOpenId}
-          onToggleFleet={toggleFleetOpen}
           home={shownProfile?.home ?? null}
           shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
           openShelterIds={openShelterIds}
@@ -355,7 +349,6 @@ export function App() {
           warnings={communityWarnings}
           warningFocus={warningFocus}
           clock={eventClock.clock}
-          ambientFlow={shows("fleet")}
           shelter={plan.shelter}
           outOfReachShelter={plan.outOfReachShelter}
           highGround={plan.highGround}
@@ -428,7 +421,6 @@ export function App() {
               openPanels={panels.open}
               registeredNodes={nodes.filter((node) => node.registered).length}
               openShelters={openShelterCount}
-              fleetNodes={fleet.length}
               playingCameras={
                 eventClock.clock?.state === "playing"
                   ? cameras.filter((tile) => tile.state === "live").length
@@ -448,8 +440,6 @@ export function App() {
               onForecastHours={forecastTime.setHours}
             />
             <MapLegend
-              simulated={fleet.length}
-              real={nodes.length}
               nepal={cachePack?.nepal ?? null}
               terrain={terrainShown}
               onChooseTerrain={chooseTerrain}
@@ -467,7 +457,6 @@ export function App() {
       </div>
       <StatusStrip
         nodes={nodes}
-        fleetCount={fleet.length}
         contactNotes={contactNotes}
         identity={identity}
         connecting={connection === "connecting"}

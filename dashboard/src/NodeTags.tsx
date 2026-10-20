@@ -9,7 +9,7 @@ function formatAge(seconds: number): string {
 export function NodeTags({ node }: { node: NodeOnMap }) {
   return (
     <>
-      {node.simulated && !node.fleet && <span className="tag simulated">SIMULATED</span>}
+      {node.simulated && <span className="tag simulated">SIMULATED</span>}
       {!node.registered && <span className="tag not-counted">NOT COUNTED</span>}
       {node.level && <span className={`tag ${node.level}`}>{node.level.toUpperCase()}</span>}
       {node.stale && <span className="tag stale">STALE · {formatAge(node.ageSeconds)}</span>}

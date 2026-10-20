@@ -24,10 +24,10 @@ it("hides the worse label when every side is taken", () => {
 
 it("never draws two labels over each other, whatever their rank", () => {
   const crowd = [
-    label("fleet", 1),
-    label("fleet 2", 1),
-    label("fleet 3", 1),
-    label("fleet 4", 1),
+    label("crowd", 1),
+    label("crowd 2", 1),
+    label("crowd 3", 1),
+    label("crowd 4", 1),
     label("Syabrubesi", 0),
     label("chosen", 0),
   ];
@@ -35,7 +35,7 @@ it("never draws two labels over each other, whatever their rank", () => {
   expect([...placement.values()].filter((side) => side !== null)).toHaveLength(4);
   expect(placement.get("Syabrubesi")).not.toBeNull();
   expect(placement.get("chosen")).not.toBeNull();
-  expect(placement.get("fleet 4")).toBeNull();
+  expect(placement.get("crowd 4")).toBeNull();
 });
 
 it("leaves labels that do not collide on the right", () => {

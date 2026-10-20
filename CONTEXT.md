@@ -71,7 +71,7 @@ One timestamped set of Measurements from a Sensor Node.
 _Avoid_: data point, sample, telemetry
 
 **Measurement**:
-One value in a Community Reading with its kind and unit, such as water level in cm or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
+One value in a Community Reading with its kind and unit, such as water level in m or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
 _Avoid_: field, metric, value
 
 **Rule set**:
@@ -211,7 +211,7 @@ _Avoid_: evacuation zone, surge zone
 ## Dashboard
 
 **Real Node**:
-A Node that is actually on the Mesh (the Hub, the breadboard Pi, an Audience Node), as opposed to an entry of the Simulated Fleet. Shown with the `REAL` ring.
+A Node that is actually on the Mesh (the Hub, the breadboard Pi, an Audience Node), as opposed to a simulated one. Shown with the `REAL` ring.
 _Avoid_: physical node, live node
 
 **Audience Node**:
@@ -222,12 +222,8 @@ _Avoid_: guest node, visitor node, demo laptop
 The desktop dashboard's map of the whole of Nepal, drawn from vector data in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
 _Avoid_: globe, surveillance map, overview
 
-**Simulated Fleet**:
-About 40 display-only Nodes along Nepal's rivers, read from a file in the Cache Pack and served by every Node that holds it, with tracks derived from real Open-Meteo weather. They never join the Mesh, are never Registered, and never count toward Flood Risk or a Community Warning. Shown under one always-visible badge that counts them against the real Nodes ("40 simulated Nodes · 6 real").
-_Avoid_: fake nodes, mock nodes, virtual nodes
-
 **Headwater Node**:
-A Node placed where a flood starts (a glacial lake outlet, a glacier front, an upper valley), so its Surge is the earliest sign for the towns downstream. S0 is the Replay's Headwater Node; the Simulated Fleet shows where others would sit.
+A Node placed where a flood starts (a glacial lake outlet, a glacier front, an upper valley), so its Surge is the earliest sign for the towns downstream. S0 is the Replay's Headwater Node.
 _Avoid_: sentinel, upstream sensor, enthusiast node
 
 **Contact lost**:

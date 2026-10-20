@@ -23,13 +23,15 @@ NEPAL_BBOX: BBox = (26.3, 80.0, 30.5, 88.3)
 
 
 def grid_points(bbox: BBox) -> tuple[int, int, list[tuple[float, float]]]:
-    """Rows, columns and (lat, lon) of a grid that starts at the box's south-west corner and stays inside it.
+    """Rows, columns and (lat, lon) of a grid that starts at the box's south-west corner and covers the box.
+
+    The last row and column may lie past the north and east edges, so those edges have a point.
 
     Points run south to north, then west to east: the order the file stores its values in.
     """
     south, west, north, east = bbox
-    rows = math.floor(round((north - south) / GRID_STEP_DEGREES, 6)) + 1
-    cols = math.floor(round((east - west) / GRID_STEP_DEGREES, 6)) + 1
+    rows = math.ceil(round((north - south) / GRID_STEP_DEGREES, 6)) + 1
+    cols = math.ceil(round((east - west) / GRID_STEP_DEGREES, 6)) + 1
     points = [
         (
             round(south + row * GRID_STEP_DEGREES, COORDINATE_DECIMALS),

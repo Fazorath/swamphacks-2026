@@ -51,14 +51,14 @@ def _wait_until(condition: Callable[[], bool]) -> None:
         time.sleep(0.02)
 
 
-def test_grid_runs_south_to_north_then_west_to_east_and_stays_in_the_box() -> None:
+def test_grid_runs_south_to_north_then_west_to_east_and_covers_the_box() -> None:
     rows, cols, points = grid_points(NEPAL_BBOX)
-    assert (rows, cols) == (9, 17)
-    assert len(points) == 153
+    assert (rows, cols) == (10, 18)
+    assert len(points) == 180
     assert points[0] == (26.3, 80.0)
     assert points[1] == (26.3, 80.5)
     assert points[cols] == (26.8, 80.0)
-    assert points[-1] == (30.3, 88.0)
+    assert points[-1] == (30.8, 88.5)
 
 
 def test_the_variables_are_temperature_cloud_and_rain_with_no_wind() -> None:

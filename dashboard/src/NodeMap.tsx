@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HATCH_IMAGE,
   NATIONAL_ZOOM,
-  VALLEY_ZOOM,
   addNepalBasemap,
   baseStyle,
   hatchImage,
@@ -61,11 +60,6 @@ import { WaveFrontLayer } from "./WaveFrontLayer";
 
 const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
 const NEPAL_SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
-
-// 0 at the national zoom and 1 over the valley: the fleet's dots and labels grow with it.
-function zoomBlend(zoom: number): number {
-  return Math.min(1, Math.max(0, (zoom - NATIONAL_ZOOM) / (VALLEY_ZOOM - NATIONAL_ZOOM)));
-}
 
 function viewOf(map: MapLibreMap): View {
   const bounds = map.getBounds();
@@ -124,15 +118,13 @@ function labelsOnScreen(
       rank: 0,
     });
   }
-  const fleetShowing = zoomBlend(view.zoom) >= 0.5;
   for (const node of nodes) {
-    if (node.fleet && !fleetShowing) continue;
     const text = node.label + (node.waterLevelCm !== null ? ` · ${node.waterLevelCm} cm` : "");
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
       ...estimatedLabelSize(text, 13, mapTagCount(node) * TAG_WIDTH_PX),
-      rank: node.id === selectedId ? 0 : node.fleet ? 5 : 2,
+      rank: node.id === selectedId ? 0 : 2,
     });
   }
   return labels;
@@ -186,16 +178,11 @@ function frameUntilMoved(
 
 type Props = {
   nodes: NodeOnMap[];
-  // The Simulated Fleet, drawn small beside the Nodes.
-  fleet: NodeOnMap[];
   // How often each Node's Flood Risk has risen; a new count plays that Node's ring once.
   rises: Record<string, number>;
   stormSignalOn: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  // The fleet Node whose popover is open (D-38); opening it never touches the Readings Panel.
-  fleetOpenId: string | null;
-  onToggleFleet: (id: string) => void;
   home: Home | null;
   // From the Cache Pack; empty until a Node holds one.
   shelters: Shelter[];
@@ -210,8 +197,6 @@ type Props = {
   // The Node a new Community Warning started at: it rings and the camera goes to it, once per key.
   warningFocus: { key: string; nodeId: string } | null;
   clock: EventClock | null;
-  // False with the Fleet toggle off: the slow dashes on the rivers stop with the fleet.
-  ambientFlow: boolean;
   // The Shelter the Evacuation Plan chose.
   shelter: Shelter | null;
   // The closest Shelter when none can be reached before the wave; drawn dashed, with a line from home.
@@ -248,13 +233,10 @@ type Props = {
 
 export function NodeMap({
   nodes,
-  fleet,
   rises,
   stormSignalOn,
   selectedId,
   onSelect,
-  fleetOpenId,
-  onToggleFleet,
   home,
   shelters,
   openShelterIds,
@@ -265,7 +247,6 @@ export function NodeMap({
   warnings,
   warningFocus,
   clock,
-  ambientFlow,
   shelter,
   outOfReachShelter,
   highGround,
@@ -320,9 +301,6 @@ export function NodeMap({
     const markMoved = () => (moved.current = true);
     container.addEventListener("pointerdown", markMoved);
     container.addEventListener("wheel", markMoved);
-    const blendWithZoom = () =>
-      container.style.setProperty("--zoom-blend", String(zoomBlend(created.getZoom())));
-    created.on("zoom", blendWithZoom);
     created.on("styleimagemissing", ({ id }: { id: string }) => {
       if (id === HATCH_IMAGE && !created.hasImage(id)) {
         created.addImage(id, hatchImage(colors.current!.floodProne));
@@ -349,7 +327,6 @@ export function NodeMap({
       setTerrainDrawn(created, wanted);
     });
     created.on("load", () => {
-      blendWithZoom();
       setView(viewOf(created));
       setStyleReady(true);
     });
@@ -369,7 +346,7 @@ export function NodeMap({
   }, [map, styleReady, nepal]);
 
   // After the basemap effect above, so the river-flow layer exists when it first looks.
-  useRiverFlow(map, styleReady && nepal !== null, ambientFlow && !reducedMotion);
+  useRiverFlow(map, styleReady && nepal !== null, !reducedMotion);
 
   // The resident's 2D | 3D choice (and a frame-rate drop) applies at once, tilting or flattening.
   useEffect(() => {
@@ -390,7 +367,7 @@ export function NodeMap({
   // D-26: fly flat to the Surging Node, then ease the pitch to the valley angle. The tilt waits for
   // the flight's own end, so a resident who grabs the map mid-flight is not tilted against.
   const focusKey = warningFocus?.key;
-  const focusNode = [...nodes, ...fleet].find((node) => node.id === warningFocus?.nodeId);
+  const focusNode = nodes.find((node) => node.id === warningFocus?.nodeId);
   const focusLat = focusNode?.position[0];
   const focusLon = focusNode?.position[1];
   const focusFound = focusNode !== undefined;
@@ -518,7 +495,7 @@ export function NodeMap({
           places,
           shelters,
           (shelter ?? outOfReachShelter)?.id,
-          [...nodes, ...fleet],
+          nodes,
           selectedId,
           waveStamps,
         )
@@ -658,21 +635,6 @@ export function NodeMap({
           <House size={16} aria-hidden="true" />
         </MapMarker>
       )}
-      {map &&
-        fleet.map((node) => (
-          <NodeMarker
-            key={node.id}
-            map={map}
-            node={node}
-            selected={false}
-            popoverOpen={node.id === fleetOpenId}
-            rises={rises[node.id] ?? 0}
-            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
-            onSelect={onToggleFleet}
-            side={sideOf(`node:${node.id}`)}
-            labelHidden={placement.get(`node:${node.id}`) === null}
-          />
-        ))}
       {map &&
         nodes.map((node) => (
           <NodeMarker

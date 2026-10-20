@@ -3,6 +3,8 @@ from typing import Any
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
+from storm_shield.community_reading import Measurement
+
 
 def _state(client: TestClient) -> dict[str, Any]:
     response = client.get("/api/state")
@@ -42,9 +44,34 @@ def test_the_state_groups_each_nodes_readings_with_its_own_and_its_peers(
     assert garage["stale"] is False
     assert garage["age_s"] == 0
     assert len(garage["position"]) == 2
-    assert garage["measurements"]["water_level"] == {"value": 44, "unit": "cm"}
-    assert set(garage["measurements"]) == {"pressure", "rain_rate", "water_level", "soil_moisture"}
-    assert _entry(state, "porch")["measurements"]["pressure"]["unit"] == "hPa"
+    assert garage["measurements"]["water_level"] == {"value": 0.44, "unit": "m"}
+    assert set(garage["measurements"]) == {
+        "air_pressure",
+        "rain_rate",
+        "water_level",
+        "soil_moisture",
+    }
+    assert _entry(state, "porch")["measurements"]["air_pressure"]["unit"] == "hPa"
+
+
+def test_a_node_entry_holds_exactly_the_kinds_its_sensor_declared(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch", measures="water_level,soil_moisture")
+    meshed_nodes.hear_from(
+        "garage",
+        leaving_out={"rain_rate", "air_pressure"},
+        also=[Measurement("wind_speed", 7, "km/h")],
+    )
+    meshed_nodes["porch"].post("/api/scenario/step")
+    state = _state(meshed_nodes["porch"])
+
+    assert set(_entry(state, "porch")["measurements"]) == {"water_level", "soil_moisture"}
+    assert _entry(state, "garage")["measurements"] == {
+        "water_level": {"value": 0.2, "unit": "m"},
+        "soil_moisture": {"value": 30, "unit": "%"},
+        "wind_speed": {"value": 7, "unit": "km/h"},
+    }
 
 
 def test_a_node_that_stops_publishing_turns_stale_after_15_seconds(
@@ -84,7 +111,7 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
         meshed_nodes["porch"].post("/api/scenario/step")
     state = _state(meshed_nodes["porch"])
 
-    assert _entry(state, "porch")["measurements"]["water_level"]["value"] > 30
+    assert _entry(state, "porch")["measurements"]["water_level"]["value"] > 0.3
     assert state["flood_risk"]["level"] == "elevated"
     assert state["flood_risk"]["nodes"] == {"porch": "elevated"}
 
@@ -95,7 +122,7 @@ def test_flood_risk_and_the_node_entries_list_the_same_nodes(meshed_nodes: Meshe
     meshed_nodes.hear_from("garage", rain_mmh=30, water_cm=650)
     state = _state(meshed_nodes["porch"])
 
-    assert _entry(state, "garage")["measurements"]["water_level"]["value"] == 650
+    assert _entry(state, "garage")["measurements"]["water_level"]["value"] == 6.5
     assert set(state["flood_risk"]["nodes"]) == {entry["id"] for entry in state["nodes"]}
     assert state["flood_risk"]["nodes"]["garage"] == "high"
 
@@ -127,12 +154,11 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
     }
 
 
-def test_the_state_lists_the_simulated_fleet_apart_from_the_nodes(
+def test_the_state_holds_exactly_these_keys(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
     state = _state(meshed_nodes["porch"])
-    assert state["fleet"] == []
     assert set(state) == {
         "id",
         "name",
@@ -144,7 +170,6 @@ def test_the_state_lists_the_simulated_fleet_apart_from_the_nodes(
         "nodes",
         "official_alerts",
         "community_warnings",
-        "fleet",
     }
 
 

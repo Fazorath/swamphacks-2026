@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -6,7 +7,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack
-from storm_shield.community_reading import CommunityReading, Position
+from storm_shield.community_reading import CommunityReading, Measurement, Position
 from storm_shield.community_warning import CommunityWarning
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
@@ -37,11 +38,16 @@ class MeshedNodes:
         self._running: list[TestClient] = []
         self._registry_ver = 0
 
-    def start(self, *names: str, cache_pack: tuple[Path, bytes] | None = None) -> None:
+    def start(
+        self,
+        *names: str,
+        cache_pack: tuple[Path, bytes] | None = None,
+        **overrides: Any,
+    ) -> None:
         """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
         for name in names:
             mesh = self._network.join(name, HUB)
-            settings = self._settings(name, hub_identity=HUB)
+            settings = self._settings(name, hub_identity=HUB, **overrides)
             if cache_pack:
                 directory, pack = cache_pack
                 settings = settings.model_copy(update={"cache_pack_dir": directory / name})
@@ -222,11 +228,14 @@ class MeshedNodes:
         water_cm: float = 20,
         soil_pct: float = 30,
         river_km: float | None = None,
+        leaving_out: Collection[str] = (),
+        also: Collection[Measurement] = (),
     ) -> None:
         """Have a Node that is not running an app publish one reading with exactly these values.
 
         The Scenario cannot make soil moisture rise while the water stays low, so this reaches
-        the rules it cannot.
+        the rules it cannot. `leaving_out` drops kinds the Node does not measure; `also` adds
+        Measurements, such as a kind the rules do not know or a known kind in another unit.
         """
         mesh, seq = self._hand_fed.get(sender) or (self._network.join(sender), 0)
         self._hand_fed[sender] = (mesh, seq + 1)
@@ -238,10 +247,17 @@ class MeshedNodes:
                 sim=True,
                 pos=Position(29.652, -82.324),
                 river_km=river_km,
-                pressure_hpa=pressure_hpa,
-                water_m=water_cm / 100,
-                rain_mmh=rain_mmh,
-                soil_pct=soil_pct,
+                m=[
+                    measurement
+                    for measurement in [
+                        Measurement("air_pressure", pressure_hpa, "hPa"),
+                        Measurement("water_level", water_cm / 100, "m"),
+                        Measurement("rain_rate", rain_mmh, "mm/h"),
+                        Measurement("soil_moisture", soil_pct, "%"),
+                    ]
+                    if measurement.kind not in leaving_out
+                ]
+                + list(also),
             )
         )
 

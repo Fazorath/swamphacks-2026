@@ -20,7 +20,7 @@ from storm_shield.cache_pack import (
     CachePack,
 )
 from storm_shield.cameras import Cameras, CameraTile, ClipFiles
-from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.community_reading import CommunityReading, Reading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_email import FloodEmail
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
@@ -47,7 +47,7 @@ from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
-from storm_shield.scenario import Reading, Scenario
+from storm_shield.scenario import Scenario, ScenarioStep
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
     HeardShelterStatus,
@@ -55,12 +55,9 @@ from storm_shield.shelter_status import (
     ShelterStatus,
     UnknownShelter,
 )
-from storm_shield.simulated_fleet import FLEET_FILE, FleetEntry, SimulatedFleet
 from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
 from storm_shield.weather_forecast import FORECAST_TIMEOUT_SECONDS, WeatherForecast
 
-# The address pi/setup-hotspot.sh gives the machine that hosts the hotspot.
-HOTSPOT_ADDRESS = "10.88.0.1"
 LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
 TILE_TIMEOUT_SECONDS = 10
@@ -90,7 +87,6 @@ class NodeState(BaseModel):
     nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
     community_warnings: list[CommunityWarning]
-    fleet: list[FleetEntry]
 
 
 class OpenShelters(BaseModel):
@@ -168,14 +164,16 @@ def create_app(
         )
     cameras = Cameras(settings.camera_clips_dir, settings.role, timeline.start_unix)
     event_clock = EventClock()
-    simulated_fleet = SimulatedFleet()
+
+    measured_kinds = {kind.strip() for kind in settings.measures.split(",") if kind.strip()}
 
     def own_measurements() -> list[Reading] | None:
         """None once this Node's replay track has ended: it goes silent and turns Stale."""
         event = event_clock.current(clock())
-        if not settings.replay_track or event.state == "stopped":
-            return scenario.readings()
-        return timeline.readings_at(settings.replay_track, event.event_t, clock())
+        readings: list[Reading] | None = scenario.readings()
+        if settings.replay_track and event.state != "stopped":
+            readings = timeline.readings_at(settings.replay_track, event.event_t, clock())
+        return [r for r in readings or [] if r.kind in measured_kinds] or None
 
     def keep_reading(sender: str, reading: CommunityReading) -> None:
         store.record(sender, reading, clock())
@@ -193,7 +191,7 @@ def create_app(
         keep_reading,
     )
 
-    def press_a_step(step_name: str) -> None:
+    def press_a_step(step_name: ScenarioStep) -> None:
         with publisher.lock:
             scenario.go_to(step_name)
             publisher.share()
@@ -234,7 +232,7 @@ def create_app(
             heard_warnings.hear(warning)
             # A measured speed updates a warning the team was already emailed about.
             if flood_email and warning.measured is None:
-                flood_email.send_for(warning)
+                flood_email.send_for(warning, rehearsal=event.state != "stopped")
             try:
                 mesh.publish(warning)
             except Exception:
@@ -536,7 +534,6 @@ def create_app(
             ],
             official_alerts=official_alerts.shown_at(event_clock.current(clock())),
             community_warnings=heard_warnings.shown_at(event_clock.current(clock())),
-            fleet=simulated_fleet.at(cache_pack.file(FLEET_FILE), event_clock.current(clock())),
         )
 
     @app.post("/api/registry/signup")
@@ -696,19 +693,26 @@ def create_app(
 
     if settings.role == "hub":
         chosen_rate = timeline.rate
+        # These endpoints run on the threadpool: a rate change racing a Start must not announce
+        # the old rate.
+        replay_lock = threading.RLock()
 
         def set_replay(state: Literal["playing", "paused"], event_t: int) -> ReplayClockMessage:
-            announce_event_clock(ReplayClockMessage(state=state, event_t=event_t, rate=chosen_rate))
-            return event_clock.current(clock())
+            with replay_lock:
+                announce_event_clock(
+                    ReplayClockMessage(state=state, event_t=event_t, rate=chosen_rate)
+                )
+                return event_clock.current(clock())
 
         @app.post("/api/replay/rate")
         def set_replay_rate(change: ReplayRate) -> ReplayClockMessage:
             nonlocal chosen_rate
-            chosen_rate = change.rate
-            heard = event_clock.current(clock())
-            if heard.state == "stopped":
-                return heard
-            return set_replay(heard.state, heard.event_t)
+            with replay_lock:
+                chosen_rate = change.rate
+                heard = event_clock.current(clock())
+                if heard.state == "stopped":
+                    return heard
+                return set_replay(heard.state, heard.event_t)
 
         @app.post("/api/replay/start")
         def start_replay() -> ReplayClockMessage:
@@ -757,7 +761,7 @@ def create_app(
         return {
             "ssid": settings.hotspot_ssid,
             "password": settings.hotspot_password,
-            "url": settings.hotspot_dashboard_url or f"http://{HOTSPOT_ADDRESS}:{settings.port}",
+            "url": settings.dashboard_url,
         }
 
     @app.get("/api/tiles/{z}/{x}/{y}.png")

@@ -19,7 +19,9 @@ export type FloodRisk = {
   surged: string[];
 };
 
-export type ReadingKind = "pressure" | "rain_rate" | "water_level" | "soil_moisture";
+// The flood-warning kinds are water_level (m), rain_rate (mm/h), soil_moisture (%) and air_pressure
+// (hPa); a Node may send any other kind, and it is shown with the unit it came with.
+export type ReadingKind = string;
 
 export type Measurement = { value: number; unit: string };
 
@@ -40,19 +42,6 @@ export type NodeSnapshot = {
   name: string | null;
 };
 
-// One Node of the Simulated Fleet, served from this Node's Cache Pack. It never travels the Mesh and
-// never counts toward Flood Risk; it exists for the map.
-export type FleetEntry = {
-  id: string;
-  name: string;
-  river: string;
-  site: "town" | "headwater";
-  position: [number, number];
-  age_s: number;
-  stale: boolean;
-  measurements: Partial<Record<ReadingKind, Measurement>>;
-};
-
 type NodeStatus = "online" | "mesh_only";
 
 // Where this Node stands with the Hub; the Hub itself is always registered.
@@ -68,7 +57,6 @@ export type NodeState = {
   scenario: { step: string };
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
-  fleet: FleetEntry[];
   official_alerts: OfficialAlert[];
   // Only warnings whose Hub signature this Node verified.
   community_warnings: CommunityWarning[];

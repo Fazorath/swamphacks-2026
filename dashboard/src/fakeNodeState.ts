@@ -1,4 +1,4 @@
-import type { FleetEntry, NodeSnapshot, NodeState } from "./nodeState";
+import type { NodeSnapshot, NodeState } from "./nodeState";
 
 // What a Node answers at /api/state on a calm day with no Node heard yet; tests override the rest.
 export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
@@ -17,7 +17,6 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
       surged: [],
     },
     nodes: [],
-    fleet: [],
     official_alerts: [],
     community_warnings: [],
     ...overrides,
@@ -33,23 +32,9 @@ export function fakeNodeSnapshot(id: string, overrides: Partial<NodeSnapshot> = 
     age_s: 2,
     stale: false,
     counts: true,
-    measurements: { pressure: { value: 1015, unit: "hPa" } },
+    measurements: { air_pressure: { value: 1015, unit: "hPa" } },
     registered: true,
     name: id,
-    ...overrides,
-  };
-}
-
-export function fakeFleetEntry(id: string, overrides: Partial<FleetEntry> = {}): FleetEntry {
-  return {
-    id: `fleet-${id}`,
-    name: id,
-    river: "Karnali",
-    site: "town",
-    position: [28.644, 81.276],
-    age_s: 2,
-    stale: false,
-    measurements: { water_level: { value: 80, unit: "cm" } },
     ...overrides,
   };
 }

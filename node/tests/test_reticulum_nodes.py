@@ -67,7 +67,7 @@ class RunningNode:
 
     def pressure_from(self, node: str) -> float:
         entry = next(entry for entry in self._get("/api/state")["nodes"] if entry["id"] == node)
-        return float(entry["measurements"]["pressure"]["value"])
+        return float(entry["measurements"]["air_pressure"]["value"])
 
     def step_scenario(self) -> None:
         httpx.post(f"{self.url}/api/scenario/step").raise_for_status()

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
-import { fakeFleetEntry, fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 
 const SURGE_T = 1_787_716_020;
 
@@ -49,7 +49,6 @@ function stubNode(nodes: ReturnType<typeof fakeNodeSnapshot>[], eventT = SURGE_T
       name: "hub",
       role: "hub",
       nodes,
-      fleet: [fakeFleetEntry("Chisapani")],
       community_warnings: [WARNING],
     }),
     "/api/replay": { v: 1, kind: "replay", state: "paused", event_t: eventT, rate: 30 },
@@ -67,7 +66,7 @@ function stubNode(nodes: ReturnType<typeof fakeNodeSnapshot>[], eventT = SURGE_T
   );
 }
 
-const water = (value: number) => ({ water_level: { value, unit: "cm" } });
+const water = (cm: number) => ({ water_level: { value: cm / 100, unit: "m" } });
 const NODES = [
   fakeNodeSnapshot("s2", { name: "S2 Betrawati", river_km: 20, measurements: water(210) }),
   fakeNodeSnapshot("hub", { name: "hub", simulated: false }),
@@ -75,7 +74,7 @@ const NODES = [
   fakeNodeSnapshot("pi", {
     name: "pi-table",
     simulated: false,
-    measurements: { ...water(40), pressure: { value: 1009, unit: "hPa" } },
+    measurements: { ...water(40), air_pressure: { value: 1009, unit: "hPa" } },
   }),
   fakeNodeSnapshot("s1", { name: "S1 Timure", river_km: 0, measurements: water(120) }),
 ];
@@ -149,21 +148,4 @@ test("selecting a valley Node on the map highlights its rung, and a rung highlig
   fireEvent.click(screen.getByRole("region", { name: "Node S2 Betrawati" }));
   expect(markerOf("S2 Betrawati")).toHaveClass("selected");
   expect(markerOf("S1 Timure")).not.toHaveClass("selected");
-});
-
-test("a fleet Node opens a SIMULATED popover and leaves the Panel alone", async () => {
-  stubNode(NODES);
-  render(<App />);
-  await waitFor(() => expect(markerOf("Chisapani")).toBeDefined());
-  const cardsBefore = cardLabels();
-
-  fireEvent.click(markerOf("Chisapani")!);
-  const popover = screen.getByRole("dialog", { name: "Fleet Node Chisapani" });
-  expect(within(popover).getByText("SIMULATED")).toBeVisible();
-  expect(within(popover).getByText("Water level: 80 cm")).toBeVisible();
-  expect(cardLabels()).toEqual(cardsBefore);
-  expect(document.querySelector("[aria-current='true']")).toBeNull();
-
-  fireEvent.click(within(popover).getByRole("button", { name: "Close" }));
-  expect(screen.queryByRole("dialog", { name: "Fleet Node Chisapani" })).toBeNull();
 });

@@ -10,10 +10,11 @@ const WINDOW_MS = 30_000;
 
 // The smallest move that counts as a trend, so sensor noise leaves the arrow steady. Chosen just
 // above the jitter of the Scenario and replay readings (about 1 cm, 0.2 hPa).
-const SMALLEST_MOVE: Record<ReadingKind, number> = {
+// A kind not listed here has no known noise, so any move counts.
+const SMALLEST_MOVE: Partial<Record<ReadingKind, number>> = {
   water_level: 2,
   rain_rate: 0.5,
-  pressure: 0.5,
+  air_pressure: 0.5,
   soil_moisture: 1,
 };
 
@@ -31,7 +32,7 @@ export function trendOf(samples: Sample[], kind: ReadingKind, now: number): Tren
   if (samples.length < 2) return "steady";
   const newest = samples[samples.length - 1].value;
   const move = newest - (baselineOf(samples, now) ?? samples[0]).value;
-  if (Math.abs(move) < SMALLEST_MOVE[kind]) return "steady";
+  if (move === 0 || Math.abs(move) < (SMALLEST_MOVE[kind] ?? 0)) return "steady";
   return move > 0 ? "rising" : "falling";
 }
 

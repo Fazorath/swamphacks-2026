@@ -32,7 +32,7 @@ def _readings_by_kind(client: TestClient) -> dict[str, float]:
 def test_readings_are_aged_and_labeled_simulated() -> None:
     client = _client(Settings())
     [own] = client.get("/api/state").json()["nodes"]
-    assert set(own["measurements"]) == {"pressure", "rain_rate", "water_level", "soil_moisture"}
+    assert set(own["measurements"]) == {"air_pressure", "rain_rate", "water_level", "soil_moisture"}
     assert own["simulated"]
     assert 0 <= own["age_s"] < 5
 
@@ -41,11 +41,11 @@ def test_stepping_the_scenario_changes_the_readings() -> None:
     client = _client(Settings())
     normal_day = _readings_by_kind(client)
     assert client.post("/api/scenario/step").json() == {"step": "pressure_drop"}
-    assert _readings_by_kind(client)["pressure"] < normal_day["pressure"] - 5
+    assert _readings_by_kind(client)["air_pressure"] < normal_day["air_pressure"] - 5
     client.post("/api/scenario/step")
     assert _readings_by_kind(client)["rain_rate"] > 5
     client.post("/api/scenario/step")
-    assert _readings_by_kind(client)["water_level"] > normal_day["water_level"] + 50
+    assert _readings_by_kind(client)["water_level"] > normal_day["water_level"] + 0.5
 
 
 def test_stepping_past_water_rising_stays_there() -> None:

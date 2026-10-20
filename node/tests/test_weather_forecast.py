@@ -88,7 +88,7 @@ def test_the_hub_fetches_the_national_grid_and_serves_it_with_its_fetch_time(
     assert query["forecast_days"] == "7"
     assert forecast["times"] == [f"{hour}Z" for hour in HOURS]
     assert set(forecast["variables"]) == {"temperature_2m", "cloud_cover", "precipitation"}
-    assert forecast["grid"]["rows"] * forecast["grid"]["cols"] == 153
+    assert forecast["grid"]["rows"] * forecast["grid"]["cols"] == 180
     assert "wind_speed_unit" not in query
     assert forecast["fetched_at"]
     assert (tmp_path / FILE_NAME).is_file()

@@ -1,42 +1,17 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { App } from "./App";
-import { fakeFleetEntry, fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import type { NodeState } from "./nodeState";
 import { STATE_POLL_MS } from "./useNodeState";
 
-const MANIFEST = {
-  built: "2026-10-18T12:00:00+00:00",
-  bbox: [27.86, 85.08, 28.46, 85.47],
-  nepal: {
-    bbox: [26.3, 80.0, 30.5, 88.3],
-    elevation: {
-      encoding: "terrarium",
-      approximate: true,
-      national_zooms: [5, 8],
-      detail_zooms: [9, 12],
-      detail_areas: [],
-    },
-    boundaries_note: "Boundaries are indicative",
-    sources: [
-      {
-        layer: "borders",
-        name: "geoBoundaries",
-        licence: "CC BY 4.0",
-        url: "https://example.org",
-        checked: "2026-10-18",
-      },
-    ],
-  },
-};
-
 let current: NodeState;
 
-function stubNode(state: Partial<NodeState>, manifest: unknown = null) {
+function stubNode(state: Partial<NodeState>) {
   current = fakeNodeState(state);
   const answers: Record<string, () => unknown> = {
     "/api/state": () => current,
-    "/api/cache-pack": () => ({ available: manifest !== null, manifest }),
+    "/api/cache-pack": () => ({ available: false, manifest: null }),
     "/api/cache-pack/files/shelters.json": () => [],
     "/api/cache-pack/files/flood_prone.geojson": () => ({
       type: "FeatureCollection",
@@ -74,56 +49,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("the Simulated Fleet", () => {
-  it("draws a small marker for each fleet entry, and a Fleet button with the count hides them", async () => {
-    stubNode({
-      fleet: [fakeFleetEntry("Chisapani"), fakeFleetEntry("Dhangadhi", { position: [28.7, 80.5] })],
-    });
-    render(<App />);
-    await waitFor(() => expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(2));
-
-    const fleetButton = screen.getByRole("button", { name: "Fleet, 2" });
-    fireEvent.click(fleetButton);
-
-    expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(0);
-    expect(fleetButton).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(fleetButton);
-    expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(2);
-  });
-
-  it("gives the fleet no card in the Readings and no select action", async () => {
-    stubNode({ fleet: [fakeFleetEntry("Chisapani")] });
-    render(<App />);
-    await waitFor(() => expect(document.querySelectorAll(".node-marker.fleet")).toHaveLength(1));
-
-    expect(screen.queryByRole("region", { name: "Node Chisapani" })).toBeNull();
-  });
-
-  it("reads '40 simulated Nodes · 6 real' with live counts, and lists the sources in its tooltip", async () => {
-    stubNode(
-      {
-        nodes: [
-          fakeNodeSnapshot("porch", { simulated: false }),
-          fakeNodeSnapshot("s0"),
-          fakeNodeSnapshot("s1"),
-        ],
-        fleet: [fakeFleetEntry("Chisapani"), fakeFleetEntry("Dhangadhi")],
-      },
-      MANIFEST,
-    );
-    render(<App />);
-
-    const strip = await screen.findByRole("contentinfo", { name: "Status" });
-    const badge = await within(strip).findByText("2 simulated Nodes · 3 real");
-    expect(badge).toHaveAttribute("title", expect.stringContaining("geoBoundaries (CC BY 4.0)"));
-    expect(badge).toHaveAttribute("title", expect.stringContaining("checked 2026-10-18"));
-    expect(badge).toHaveAttribute("title", expect.stringContaining("Open-Meteo"));
-    expect(strip.firstElementChild).toBe(badge);
-    const legend = screen.getByRole("complementary", { name: "Legend" });
-    expect(within(legend).getByText("2 simulated Nodes · 3 real")).toBeInTheDocument();
-  });
-});
-
 describe("a Node's marker", () => {
   it("rings and tags a real Node REAL, and no simulated one", async () => {
     stubNode({
@@ -143,7 +68,7 @@ describe("a Node's marker", () => {
         fakeNodeSnapshot("s0", {
           stale: true,
           age_s: 20,
-          measurements: { water_level: { value: 420, unit: "cm" } },
+          measurements: { water_level: { value: 4.2, unit: "m" } },
         }),
       ],
     });
@@ -231,10 +156,9 @@ describe("a Node's marker", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     stubNode({
       nodes: [fakeNodeSnapshot("s0"), fakeNodeSnapshot("s1")],
-      fleet: [fakeFleetEntry("a")],
     });
     render(<App />);
-    await waitFor(() => expect(markers()).toHaveLength(3));
+    await waitFor(() => expect(markers()).toHaveLength(2));
     const before = markers();
 
     await nextPoll();

@@ -60,8 +60,8 @@ def _node(settings: Settings) -> TestClient:
 def _water_cm(client: TestClient) -> float:
     state = client.get("/api/state").json()
     own = next(node for node in state["nodes"] if node["id"] == state["id"])
-    water_cm: float = own["measurements"]["water_level"]["value"]
-    return water_cm
+    water_m: float = own["measurements"]["water_level"]["value"]
+    return round(water_m * 100, 1)
 
 
 @pytest.mark.parametrize(
@@ -181,4 +181,4 @@ def test_every_pin_jumps_to_a_step_the_scenario_has() -> None:
 
 def test_jumping_to_a_step_the_scenario_lacks_is_an_error() -> None:
     with pytest.raises(ValueError):
-        Scenario().go_to("no_such_step")
+        Scenario().go_to("no_such_step")  # type: ignore[arg-type]
