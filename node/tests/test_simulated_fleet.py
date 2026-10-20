@@ -154,7 +154,8 @@ def test_a_surging_fleet_site_changes_nothing_in_flood_risk_warnings_or_the_regi
     assert hub["fleet"][0]["measurements"]["water_level"]["value"] == 5.0
     assert hub["flood_risk"]["surged"] == []
     assert "water_surge" not in [reason["code"] for reason in hub["flood_risk"]["reasons"]]
-    assert hub["flood_risk"]["level"] is None
+    # Strict counting: a fleet site is no registered Node, so Flood Risk never lists it.
+    assert "fleet-alpha" not in hub["flood_risk"]["nodes"]
     assert hub["community_warnings"] == []
     assert meshed_nodes["hub"].get("/api/warnings").json() == {"warnings": []}
     # Nothing reached the Mesh: a peer lists neither the fleet nor a Node for it.
