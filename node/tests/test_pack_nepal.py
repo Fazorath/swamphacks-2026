@@ -11,10 +11,10 @@ from pack_nepal import (
     build_nepal_bundle,
     check_key_place_elevations,
     elevation_at,
-    elevation_tiles,
     places_from_nodes,
     rivers_from_ways,
     simplify_line,
+    tiles_covering,
     with_key_places,
 )
 
@@ -159,8 +159,8 @@ def test_places_keep_latin_names_inside_nepal() -> None:
     assert feature["geometry"]["coordinates"] == [5.0, 5.0]
 
 
-def test_elevation_tiles_cover_the_box_at_each_zoom() -> None:
-    paths = elevation_tiles(VALLEY_BBOX, range(9, 11))
+def test_tiles_covering_cover_the_box_at_each_zoom() -> None:
+    paths = tiles_covering(VALLEY_BBOX, range(9, 11))
     assert {zoom for zoom, _, _ in paths} == {9, 10}
     assert (10, 754, 428) in paths
 
@@ -188,8 +188,8 @@ def test_the_png_reader_undoes_the_sub_and_up_filters() -> None:
 
 
 def test_elevation_is_read_from_the_finest_tile_holding_the_point() -> None:
-    x, y = pack_nepal._tile_position(1.5, 1.5, 5)
-    fine_x, fine_y = pack_nepal._tile_position(1.5, 1.5, 9)
+    x, y = pack_nepal.tile_position(1.5, 1.5, 5)
+    fine_x, fine_y = pack_nepal.tile_position(1.5, 1.5, 9)
     tiles = {
         f"elevation/5/{int(x)}/{int(y)}.png": _terrarium_png(100),
         f"elevation/9/{int(fine_x)}/{int(fine_y)}.png": _terrarium_png(1400),
@@ -202,7 +202,7 @@ def test_elevation_is_read_from_the_finest_tile_holding_the_point() -> None:
 def test_a_key_place_far_from_its_published_height_is_reported(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    x, y = pack_nepal._tile_position(1.5, 1.5, 9)
+    x, y = pack_nepal.tile_position(1.5, 1.5, 9)
     tiles = {f"elevation/9/{int(x)}/{int(y)}.png": _terrarium_png(1550)}
     assert check_key_place_elevations(tiles, [KEY_PLACE]) == ["Hilltop"]
     assert "Hilltop: 1550 m in the pack, 1400 m published" in capsys.readouterr().out
@@ -271,7 +271,7 @@ def test_the_bundle_has_every_layer_the_elevation_and_each_source_with_its_licen
         "nepal/places.geojson",
     }
     assert any(path.startswith("elevation/5/") for path in files)
-    fine_x, fine_y = pack_nepal._tile_position(1.3, 1.3, 9)
+    fine_x, fine_y = pack_nepal.tile_position(1.3, 1.3, 9)
     assert f"elevation/9/{int(fine_x)}/{int(fine_y)}.png" in files
     places = json.loads(files["nepal/places.geojson"])["features"]
     assert places[-1]["properties"] == {"name": "Hilltop", "kind": "valley town", "key": True}
@@ -292,7 +292,7 @@ def test_the_bundle_has_every_layer_the_elevation_and_each_source_with_its_licen
     assert all(source["checked"] for source in entry["sources"])
 
 
-def test_the_build_fails_when_the_elevation_tiles_go_over_budget(
+def test_the_build_fails_when_the_tiles_covering_go_over_budget(
     small_pack: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(pack_nepal, "ELEVATION_BUDGET_BYTES", 10)

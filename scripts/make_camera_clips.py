@@ -30,10 +30,11 @@ LOCAL_DIR = ROOT / ".demo" / "clips"
 SOURCE_CACHE = ROOT / ".demo" / "clip-sources"
 
 CLIP_SECONDS = 300
+DOWNLOAD_ATTEMPTS = 6
 WIDTH, HEIGHT, FPS = 854, 480, 24
 CROSS_FADE_SECONDS = 1.0
 POSTER_AT_SECONDS = 3
-# 170 kbps over 300 s is 6.4 MB a clip, so three committed clips stay under the 20 MB budget.
+# 160 kbps over 300 s is 6.0 MB a clip, so three committed clips stay under the 20 MB budget.
 VIDEO_MAX_KBPS = 160
 USER_AGENT = "storm-shield-hackathon/1.0 (https://github.com/StormShields/Stormshield)"
 # No share-alike or non-commercial terms: the clips are re-encoded and joined, then committed.
@@ -139,21 +140,33 @@ def download(source_id: str, source: Record) -> Path:
         return target
     SOURCE_CACHE.mkdir(parents=True, exist_ok=True)
     request = urllib.request.Request(source["url"], headers={"User-Agent": USER_AGENT})
-    for attempt in range(1, 7):
+    partial = target.with_suffix(target.suffix + ".part")
+    for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
         try:
             with urllib.request.urlopen(request, timeout=600) as response:
-                partial = target.with_suffix(target.suffix + ".part")
                 partial.write_bytes(response.read())
-                partial.rename(target)
+            partial.rename(target)
             time.sleep(3)  # Wikimedia throttles bursts with HTTP 429
             return target
         except urllib.error.HTTPError as error:
-            if error.code != 429 or attempt == 6:
+            # 429 and 5xx pass; a 404 or 403 will not get better.
+            if error.code != 429 and error.code < 500:
                 raise SourceListError(f"{source_id}: download failed, HTTP {error.code}") from error
-            wait = int(error.headers.get("Retry-After", 0)) or 60 * attempt
-            print(f"  {source_id}: rate limited, waiting {wait} s", flush=True)
-            time.sleep(wait)
+            reason = f"HTTP {error.code}"
+            wait = retry_after_seconds(error.headers.get("Retry-After")) or 60 * attempt
+        except (urllib.error.URLError, TimeoutError) as error:
+            reason = type(error).__name__
+            wait = 60 * attempt
+        if attempt == DOWNLOAD_ATTEMPTS:
+            raise SourceListError(f"{source_id}: download failed, {reason}")
+        print(f"  {source_id}: {reason}, waiting {wait} s", flush=True)
+        time.sleep(wait)
     raise AssertionError("unreachable")
+
+
+def retry_after_seconds(header: str | None) -> int:
+    """Seconds a `Retry-After` header asks for, 0 when it is missing or an HTTP date."""
+    return int(header) if header and header.strip().isdigit() else 0
 
 
 def probe_seconds(ffmpeg: str, path: Path) -> float:
@@ -195,14 +208,17 @@ def prepare(ffmpeg: str, piece: Record, source: Record, source_path: Path, work_
     name = "-".join(str(piece.get(field, "")) for field in fields).replace(".", "_")
     target = work_dir / f"{name}.mp4"
     if not target.exists():
+        # Rendered beside the target, so a killed run never leaves a half-written file at its name.
+        unfinished = target.with_suffix(".part.mp4")
         subprocess.run(
             [ffmpeg, "-y", "-loglevel", "error", "-ss", str(piece["start"]),
              "-t", str(piece["end"] - piece["start"]), "-i", str(source_path),
              "-filter_complex", prepare_filter(piece, source), "-map", "[out]", "-an",
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "14", "-pix_fmt", "yuv420p",
-             str(target)],
+             str(unfinished)],
             check=True,
         )
+        unfinished.rename(target)
     return target
 
 

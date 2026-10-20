@@ -8,3 +8,4 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **`pack_nepal.elevation_at` decodes a whole tile per call**; cache `_decode_rgb` for any scan.
 - **Before committing footage, read the file's wikitext licence**, not only the API's short name. CC BY-SA and NC are out.
 - **Walking time is straight line x 1.4 at 4 km/h, rounded up, in two places** (`pack_high_ground.py`, `evacuationPlan.ts`); change both.
+- **Every builder fetches through `http_retry.get_with_retries`.** It prints only the error type and status, never `str(error)`: an httpx message holds the URL, which can carry a key.

@@ -46,7 +46,7 @@ class FloodProneArea:
         for rings, (south, west, north, east) in self._polygons:
             if south <= point[0] <= north and west <= point[1] <= east:
                 # Even-odd over the outline and its holes.
-                if sum(_ring_contains(ring, point) for ring in rings) % 2 == 1:
+                if sum(ring_contains(ring, point) for ring in rings) % 2 == 1:
                     return True
         return False
 
@@ -74,7 +74,7 @@ def _bounds_of(ring: list[Point]) -> BBox:
     return min(lats), min(lons), max(lats), max(lons)
 
 
-def _ring_contains(ring: list[Point], point: Point) -> bool:
+def ring_contains(ring: list[Point], point: Point) -> bool:
     lat, lon = point
     inside = False
     for (lat_a, lon_a), (lat_b, lon_b) in pairwise(ring):

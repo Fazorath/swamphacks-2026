@@ -118,3 +118,10 @@ def test_a_missing_ffmpeg_says_how_to_install_it(
 
     assert "apt install ffmpeg" in str(stopped.value)
     assert "imageio-ffmpeg" in str(stopped.value)
+
+
+@pytest.mark.parametrize(
+    ("header", "seconds"), [("30", 30), (" 7 ", 7), ("Wed, 21 Oct 2026 07:28:00 GMT", 0), (None, 0)]
+)
+def test_retry_after_reads_seconds_and_ignores_dates(header: str | None, seconds: int) -> None:
+    assert camera_clips.retry_after_seconds(header) == seconds
