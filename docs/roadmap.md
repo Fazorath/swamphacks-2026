@@ -1,42 +1,43 @@
 # Roadmap after SwampHacks
 
-Storm Shield started as a hackathon demo: a flood warning dashboard replaying the 26 August 2026 Bhote Koshi flood, with Community Readings that keep flowing over a local Mesh when the internet goes down. Where it goes next: an open-source, local-first sensor network you run yourself (a farm, remote land, a village), where no outside service holds your cameras, sensors or data.
+Storm Shield started as a hackathon demo: a flood warning dashboard replaying the 26 August 2026 Bhote Koshi flood in Nepal, with Community Readings that keep flowing over a local Mesh when the internet goes down. The submitted demo is tagged `v0-swamphacks` and stays runnable from that tag.
 
-Before new features, the repo has to be easy for four part-time people and their agents to work in, and the code rushed in on the last day has to be checked. This file says what comes in which order and why. Progress is tracked in the GitHub milestones of the same names; the dates are targets, not deadlines.
+Where it goes next: an open-source, local-first sensor network you run yourself (a farm, remote land, a stretch of river), where no outside service holds your cameras, sensors or data. The app becomes **modular**: load a region (a section of Florida, say), place a few test sensors, and play an event such as a flood wave arriving, instead of the hard-wired Nepal valley.
 
-**Pace:** one issue per person per week, about four a week for the team.
+Progress is tracked in the GitHub milestones of the same names. Pace: one issue per person per week, about four a week for the team.
 
-## M0 Setup (week of 20 Oct)
+## How we get there
 
-The hackathon tracker was markdown files on `main` and everyone pushed to `main` directly; the last day has 113 merge commits, many of them `merge main into X` a few minutes apart. From now on:
+- **Reshape in place, don't rewrite.** The core (Node service, Mesh, readings, registry, signing, the MapLibre shell) is sound and tested. The Nepal-specific parts move behind a Region module one area at a time, with CI green throughout. What doesn't fit is deleted together with its tests.
+- **Trying the app must not need a terminal.** Today a manual check means stopping Nodes, starting a pack server, a Hub and each Sensor with its own port and slot, and copying `HUB_IDENTITY`. The Sandbox (M3) replaces all of that with one command, or one button.
+- **Tests during the redesign.** CI keeps running the tests that exist. A feature removed takes its tests with it in the same PR. New code is tested through one seam: load a scenario, run the Sandbox, check what the API or dashboard shows. No time goes into flaky tests or fixes for features that are about to go.
 
-- **GitHub Issues** replace `docs/tickets/` (now a frozen archive). Labels, templates, milestones and the "who picks up what" table: `docs/agents/issue-tracker.md`.
-- **Pull requests only.** `main` is protected; a PR needs CI green and the branch up to date with `main`, then it is squash-merged. No human approval is required for now; `/code-review` is the reviewer.
-- **CI** (GitHub Actions) runs `scripts/check.sh` on every PR. The real-Reticulum tests run only on demand ("Mesh integration" workflow), so **a green PR says nothing about the real Mesh path**.
-- **Agents:** `/implement <issue>` assigns you, works in its own worktree, opens a draft PR at once and merges `main` before every push; the pre-push hook refuses a push to `main` or from a branch behind it.
-- The owner's GitHub clicks (org, transfer, branch protection, Project board): `docs/agents/github-setup.md`.
+## M0 Setup (done)
 
-## M1 Review (week of 20 Oct)
+GitHub Issues instead of `docs/tickets/` (a frozen archive), pull requests only, CI running `scripts/check.sh` on every PR, the real-Reticulum tests on demand in "Mesh integration" (so **a green PR says nothing about the real Mesh path**), and `/implement <N>` working from an issue in its own worktree with a draft PR. Owner settings: `docs/agents/github-setup.md`.
 
-The `/code-review` skill on everything that reached `main` since 18 Oct 00:00 (about 10,000 non-test lines, built in one rush without review), in three runs: `node/`, `dashboard/`, `scripts/` with `pi/`. Each run reports its token use before the next starts. False positives are dropped and findings are grouped by root cause into small `review-finding` issues in M2, after the owner has seen the list. The older, reviewed code gets one issue, "review core modules", for later.
+## M1 Review (done)
 
-## M2 Cleanup (weeks 2 to 4, target 16 Nov)
+`/code-review` of the backend code rushed in on 18 Oct produced issues #7 to #19 (milestone "Hackathon findings"). They are a record, not a work queue: whoever reshapes an area checks its issues and closes the ones the change makes moot. Only problems that hurt day-to-day work get fixed for their own sake (`run-live.sh`, #11). The dashboard review was stopped halfway, because the region work replaces most of the map code it covered.
 
-- The review findings.
-- Dashboard test flakes (`evacuationFlow`, the timing failures in full parallel runs): `priority: high`, fixed, never skipped.
-- **Demo isolated from the core.** The Nepal replay, Hub replay controls, Camera Clips, valley Cache Pack and Shelters stay, but behind a clear demo/replay boundary, so the core (Node, Mesh, readings, dashboard) stands on its own.
-- `docs/agents/lessons.md` trimmed to gotchas that are still true (done in M0; keep it short).
+## M2 Direction
 
-How long M2 takes depends on what M1 finds; the target is revised when M1 ends.
+A grilling session, then a spec: what a Region is (map area, rivers and terrain, sensor sites, time zone, official sources), where its data comes from (a prebuilt pack, or fetched once and cached), what a scenario or event is, what the Sandbox does and how someone who doesn't use a terminal starts it, and what stays from the flood logic. Mock-ups of the new screens are shown for a yes or no before anything is built.
 
-## M3 Direction (week 4, target 23 Nov)
+## M3 Sandbox
 
-A grilling session and a spec for the local-first sensor direction: what a Node reads outside a flood, who runs a Hub, what stays from the flood product. Plus the spec for the simulated-range mesh below.
+One command (or button) starts a Hub and N simulated sensors in one process on the in-memory Mesh, from a scenario file: no ports per Node, no pack server, no identity copying. It is also the base for the automated tests and for the simulated radio range (a message reaches only Nodes in range).
 
-## M4 Simulated mesh (weeks 5 and 6, target 7 Dec)
+## M4 Regions
 
-There are no real sensors or radios yet (one Raspberry Pi), and the Reticulum path was the least reliable part of the demo. So: a run mode that starts placeholder Nodes on the map, each with a radio range (for example 200 ft), where a message reaches only Nodes in range; drag a Node out of range and watch it go Stale. Details (multi-hop relay, terrain, units) are decided in M3.
+The Nepal valley moves behind the Region module, and a section of Florida is added as the second region, which proves the modularity.
+
+## M5 Wave on any region
+
+The event plays on whichever region is loaded: the wave front, Surges, warnings.
+
+Dates for M3 to M5 are set when M2 ends.
 
 ## Not planned yet
 
-Real sensors and radios, LoRa, renaming the domain words away from floods, a hosted anything. Ideas go in as issues with no milestone.
+Real sensors and radios, LoRa, a hosted anything. Ideas go in as issues with no milestone.

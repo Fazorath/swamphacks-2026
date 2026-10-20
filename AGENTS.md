@@ -23,7 +23,7 @@ Run these before calling any issue done. An agent must not claim "done" without 
 | Install on a Raspberry Pi | `pi/install.sh` (system libraries for the pin backend, then `uv sync --group pi`; always sync with `--group pi` on the Pi) |
 | Build dashboard | `cd dashboard && pnpm build` |
 | Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
-| Keep a Node on your checkout | `scripts/run-live.sh` (rebuilds and restarts whenever `HEAD` moves, e.g. after `git pull`) |
+| Keep the Pi's Hub on your checkout | `scripts/run-live.sh` (a Hub by default; rebuilds whenever `HEAD` moves, e.g. after `git pull`, and swaps the Node only when the build worked) |
 | Dashboard dev server | `cd dashboard && pnpm dev` (proxies `/api` to port 8000) |
 | Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |
 | Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |

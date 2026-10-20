@@ -35,15 +35,28 @@ stop_node() {
 }
 trap 'stop_node; exit 0' INT TERM
 
-start_node() {
-  stop_node
-  (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build >/dev/null)
+build() {
+  (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build >/dev/null) || return 1
   # A plain sync removes lgpio, which only the pi group installs, so the Pi needs the group.
   if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
-    (cd node && uv sync --quiet --group pi)
+    (cd node && uv sync --quiet --group pi) || return 1
   else
-    (cd node && uv sync --quiet)
+    (cd node && uv sync --quiet) || return 1
   fi
+}
+
+# Builds first and swaps the Node only when the build worked, so a bad pull never
+# leaves the Hub down.
+start_node() {
+  if ! build; then
+    if [ -n "$node_pid" ]; then
+      echo "build of $(git rev-parse --short HEAD) failed; still running the previous Node" >&2
+    else
+      echo "build of $(git rev-parse --short HEAD) failed; no Node started" >&2
+    fi
+    return 1
+  fi
+  stop_node
   # Run the venv binary directly: under `uv run` the Node is a child of uv, and
   # stopping uv would leave the Node running and holding its ports.
   (cd node && exec .venv/bin/storm-shield-node) &
@@ -51,11 +64,11 @@ start_node() {
   echo "running $(git rev-parse --short HEAD) as $NODE_NAME ($NODE_ROLE)"
 }
 
-start_node
+start_node || exit 1
 running_commit="$(git rev-parse HEAD)"
 while sleep "$interval"; do
   if [ "$(git rev-parse HEAD)" != "$running_commit" ]; then
     running_commit="$(git rev-parse HEAD)"
-    start_node
+    start_node || true
   fi
 done

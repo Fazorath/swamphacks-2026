@@ -23,26 +23,34 @@ label "review-finding" fbca04 "Found by code-review; grouped by root cause"
 label "priority: high" e11d21 "Do this before anything else in its milestone"
 label "good first issue" 7057ff "Small and self-contained; good for a new contributor"
 
-# Title, due date, description. Due dates are targets, not deadlines.
+# Title | due date (empty for none) | open or closed | description | earlier title to rename.
+# Due dates are targets, not deadlines.
 milestones=(
-  "M0 Setup|2026-10-26|GitHub Issues, CI, branch protection, Claude workflow"
-  "M1 Review|2026-10-26|code-review of the rushed final-day code; findings filed as issues"
-  "M2 Cleanup|2026-11-16|Review findings, test flakes, demo code isolated from the core"
-  "M3 Direction|2026-11-23|Grill and spec the local-first sensor direction and the simulated-range mesh"
-  "M4 Simulated mesh|2026-12-07|Placeholder Nodes with a radio range, visible on the map"
+  "M0 Setup|2026-10-26|closed|GitHub Issues, CI, branch protection, Claude workflow|"
+  "M1 Review|2026-10-26|closed|code-review of the rushed final-day code; findings filed as issues|"
+  "Hackathon findings||open|Review findings in the hackathon code; close each when a change fixes it or makes it moot|M2 Cleanup"
+  "M2 Direction|2026-11-02|open|Grill and spec modular Regions, scenarios and the Sandbox|M3 Direction"
+  "M3 Sandbox||open|One command or button: Hub and simulated sensors in one process from a scenario file|M4 Simulated mesh"
+  "M4 Regions||open|Nepal behind the Region module; a section of Florida as the second region|"
+  "M5 Wave on any region||open|The event plays on whichever region is loaded|"
 )
 
 existing="$(gh api "repos/$GH_REPO/milestones?state=all&per_page=100" --jq '.[] | "\(.number)|\(.title)"')"
+number_of() { awk -F'|' -v t="$1" '$2 == t { print $1 }' <<<"$existing"; }
+
 for entry in "${milestones[@]}"; do
-  IFS='|' read -r title due description <<<"$entry"
-  number="$(awk -F'|' -v t="$title" '$2 == t { print $1 }' <<<"$existing")"
+  IFS='|' read -r title due state description was <<<"$entry"
+  due_on=null
+  [ -n "$due" ] && due_on="\"${due}T23:59:59Z\""
+  body="$(jq -n --arg title "$title" --arg state "$state" --arg description "$description" \
+    --argjson due_on "$due_on" '{title: $title, state: $state, description: $description, due_on: $due_on}')"
+  number="$(number_of "$title")"
+  [ -z "$number" ] && [ -n "$was" ] && number="$(number_of "$was")"
   if [ -n "$number" ]; then
-    gh api -X PATCH "repos/$GH_REPO/milestones/$number" \
-      -f description="$description" -f due_on="${due}T23:59:59Z" >/dev/null
+    gh api -X PATCH "repos/$GH_REPO/milestones/$number" --input - <<<"$body" >/dev/null
     echo "updated milestone $title"
   else
-    gh api -X POST "repos/$GH_REPO/milestones" \
-      -f title="$title" -f description="$description" -f due_on="${due}T23:59:59Z" >/dev/null
+    gh api -X POST "repos/$GH_REPO/milestones" --input - <<<"$body" >/dev/null
     echo "created milestone $title"
   fi
 done
