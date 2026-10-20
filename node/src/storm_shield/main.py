@@ -44,7 +44,7 @@ from storm_shield.node_registry import (
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
-from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
+from storm_shield.replay import EventClock, ReplayClockMessage, load_event
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.scenario import Scenario, ScenarioStep
 from storm_shield.settings import Role, Settings
@@ -163,23 +163,22 @@ def create_app(
     logging.getLogger("httpx").setLevel(logging.WARNING)
     scenario = Scenario()
     store = ReadingStore(HISTORY_WINDOW_SECONDS)
-    timeline = load_timeline()
-    if settings.replay_track and settings.replay_track not in timeline.tracks:
-        raise ValueError(
-            f"NODE_REPLAY_TRACK {settings.replay_track!r} is not in the replay timeline "
-            f"({', '.join(timeline.tracks)})"
-        )
-    event_clock = EventClock()
+    loaded_event = load_event()
+    event_clock = EventClock(loaded_event.id)
 
     measured_kinds = {kind.strip() for kind in settings.measures.split(",") if kind.strip()}
 
     def own_measurements() -> list[Reading] | None:
-        """None once this Node's replay track has ended: it goes silent and turns Stale."""
-        event = event_clock.current(clock())
-        readings: list[Reading] | None = scenario.readings()
-        if settings.replay_track and event.state != "stopped":
-            readings = timeline.readings_at(settings.replay_track, event.event_t, clock())
-        return [r for r in readings or [] if r.kind in measured_kinds] or None
+        """What this Node reads from the Event's surface at its own position.
+
+        Until the Scenario is deleted, a stopped Event clock leaves the Scenario's readings in place.
+        """
+        heard = event_clock.current(clock())
+        if heard.state == "stopped" or heard.event != loaded_event.id:
+            readings = scenario.readings()
+        else:
+            readings = loaded_event.readings_at(settings.river_km, heard.event_t, clock())
+        return [r for r in readings if r.kind in measured_kinds] or None
 
     def keep_reading(sender: str, reading: CommunityReading) -> None:
         store.record(sender, reading, clock())
@@ -344,7 +343,7 @@ def create_app(
 
     def due_official_alerts() -> list[OfficialAlert]:
         event = event_clock.current(clock())
-        return [] if event.state == "stopped" else timeline.official_alerts_due(event.event_t)
+        return [] if event.state == "stopped" else loaded_event.official_alerts_due(event.event_t)
 
     def forward_official_alert(alert: OfficialAlert) -> None:
         # The Hub does not hear its own broadcasts, so it keeps the alert itself.
@@ -362,11 +361,16 @@ def create_app(
                 forward_official_alert(alert)
 
     def pause_at_the_end() -> None:
-        """Hold the clock at the replay's end instead of letting it play on past the timeline."""
+        """Hold the clock at the replay's end instead of letting it play on past the loaded_event."""
         event = event_clock.current(clock())
-        if event.state == "playing" and event.event_t >= timeline.end_unix:
+        if event.state == "playing" and event.event_t >= loaded_event.end_unix:
             announce_event_clock(
-                ReplayClockMessage(state="paused", event_t=timeline.end_unix, rate=event.rate)
+                ReplayClockMessage(
+                    event=loaded_event.id,
+                    state="paused",
+                    event_t=loaded_event.end_unix,
+                    rate=event.rate,
+                )
             )
 
     def repeat_due_official_alerts() -> None:
@@ -387,9 +391,7 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        publish_every_seconds = settings.publish_every_seconds
-        if settings.replay_track:
-            publish_every_seconds = min(publish_every_seconds, REPLAY_PUBLISH_EVERY_SECONDS)
+        publish_every_seconds = min(settings.publish_every_seconds, REPLAY_PUBLISH_EVERY_SECONDS)
 
         async def keep_sharing() -> None:
             while True:
@@ -495,7 +497,7 @@ def create_app(
                     forward_newly_due_official_alerts()
                     pause_at_the_end()
                 except Exception:
-                    logger.exception("could not follow the replay timeline")
+                    logger.exception("could not follow the Event")
 
         tasks = [
             asyncio.create_task(keep_sharing()),
@@ -579,10 +581,10 @@ def create_app(
     def replay_phases() -> ReplayPhases:
         return ReplayPhases(
             phases=[
-                ReplayPhase(id=phase.id, label=phase.label, event_t=timeline.event_t_at(phase.at))
-                for phase in timeline.phases
+                ReplayPhase(id=phase.id, label=phase.label, event_t=loaded_event.event_t_at(phase.at))
+                for phase in loaded_event.phases
             ],
-            internet_cue_event_t=timeline.event_t_at(timeline.internet_cue.at),
+            internet_cue_event_t=loaded_event.event_t_at(loaded_event.internet_cue.at),
         )
 
     @app.get("/api/cache-pack")
@@ -680,7 +682,7 @@ def create_app(
             return registry_summary()
 
     if settings.role == "hub":
-        chosen_rate = timeline.rate
+        chosen_rate = loaded_event.rate
         # These endpoints run on the threadpool: a rate change racing a Start must not announce
         # the old rate.
         replay_lock = threading.RLock()
@@ -688,7 +690,9 @@ def create_app(
         def set_replay(state: Literal["playing", "paused"], event_t: int) -> ReplayClockMessage:
             with replay_lock:
                 announce_event_clock(
-                    ReplayClockMessage(state=state, event_t=event_t, rate=chosen_rate)
+                    ReplayClockMessage(
+                        event=loaded_event.id, state=state, event_t=event_t, rate=chosen_rate
+                    )
                 )
                 return event_clock.current(clock())
 
@@ -704,7 +708,7 @@ def create_app(
 
         @app.post("/api/replay/start")
         def start_replay() -> ReplayClockMessage:
-            return set_replay("playing", timeline.start_unix)
+            return set_replay("playing", loaded_event.start_unix)
 
         @app.post("/api/replay/pause")
         def pause_replay() -> ReplayClockMessage:
@@ -718,7 +722,7 @@ def create_app(
             heard = event_clock.current(clock())
             if heard.state != "paused":
                 raise HTTPException(status_code=409, detail="the replay is not paused")
-            if heard.event_t >= timeline.end_unix:
+            if heard.event_t >= loaded_event.end_unix:
                 raise HTTPException(
                     status_code=409, detail="the replay has ended; Reset or jump to a phase"
                 )
@@ -726,17 +730,16 @@ def create_app(
 
         @app.post("/api/replay/reset")
         def reset_replay() -> ReplayClockMessage:
-            # Paused at 08:30 rather than stopped: a stopped Sensor falls back to the Scenario.
-            return set_replay("paused", timeline.start_unix)
+            return set_replay("paused", loaded_event.start_unix)
 
         @app.post("/api/replay/jump")
         def jump_replay(jump: ReplayJump) -> ReplayClockMessage:
-            phase = next((p for p in timeline.phases if p.id == jump.phase), None)
+            phase = next((p for p in loaded_event.phases if p.id == jump.phase), None)
             if phase is None:
                 raise HTTPException(status_code=422, detail=f"unknown phase {jump.phase!r}")
             keeps_paused = event_clock.current(clock()).state == "paused"
             return set_replay(
-                "paused" if keeps_paused else "playing", timeline.event_t_at(phase.at)
+                "paused" if keeps_paused else "playing", loaded_event.event_t_at(phase.at)
             )
 
     @app.get("/api/join")

@@ -1,7 +1,5 @@
-import json
 import logging
 import time
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -10,6 +8,7 @@ from meshed_nodes import MeshedNodes
 
 from storm_shield.community_reading import Measurement
 from storm_shield.flood_risk import STORM_PRESSURE_HPA
+from storm_shield.replay import load_event
 
 
 def _step(client: TestClient, times: int = 1) -> None:
@@ -293,10 +292,10 @@ def test_the_surge_ends_once_the_jump_leaves_the_window_but_the_high_water_stays
 
 
 def test_the_replays_calm_phase_is_low_with_no_storm_signal(meshed_nodes: MeshedNodes) -> None:
-    tracks = ["S0", "S1", "S2", "S3"]
+    tracks = {"S0": -12.2, "S1": 3.4, "S2": 14.6, "S3": 54.0}
     meshed_nodes.start_hub()
-    for track in tracks:
-        meshed_nodes.start_sensor(track.lower(), replay_track=track)
+    for track, river_km in tracks.items():
+        meshed_nodes.start_sensor(track.lower(), river_km=river_km)
     assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
     # 12 s is 08:36 on the Event clock, a minute before S0's Surge.
     meshed_nodes.advance(12)
@@ -315,15 +314,8 @@ def test_the_replays_calm_phase_is_low_with_no_storm_signal(meshed_nodes: Meshed
     assert set(flood_risk["nodes"].values()) == {None}
 
 
-def test_no_replay_keyframe_is_below_the_storm_signal_pressure() -> None:
-    timeline = json.loads(
-        (Path(__file__).parents[1] / "src/storm_shield/replay_timeline.json").read_text()
-    )
-    lowest = min(
-        keyframe["pressure_hpa"]
-        for track in timeline["tracks"].values()
-        for keyframe in track["keyframes"]
-    )
+def test_no_weather_keyframe_is_below_the_storm_signal_pressure() -> None:
+    lowest = min(keyframe.pressure_hpa for keyframe in load_event().weather)
     assert lowest >= STORM_PRESSURE_HPA
 
 

@@ -75,8 +75,6 @@ class Settings(BaseSettings):
     # Whether this Node reads the Pi's Breadboard. "auto" turns it on only on a Raspberry Pi; "on"
     # stops the Node if the Breadboard cannot start; "off" never loads the GPIO library.
     gpio: GpioMode = "auto"
-    # Which Sensor track of the replay timeline this Node plays (S0 to S3). Blank keeps the Scenario.
-    replay_track: str = ""
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")

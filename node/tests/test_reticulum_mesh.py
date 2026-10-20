@@ -139,7 +139,9 @@ def test_the_event_clock_signed_by_the_hub_verifies_and_one_signed_by_another_no
 ):
     hub, rogue = RNS.Identity(), RNS.Identity()
     known = {node_id(hub): hub, node_id(rogue): rogue}
-    clock = ReplayClockMessage(state="playing", event_t=1_787_712_300, rate=30)
+    clock = ReplayClockMessage(
+        event="bhote-koshi-2026", state="playing", event_t=1_787_712_300, rate=30
+    )
     assert verify(sign(hub, clock), known, node_id(hub)) == (node_id(hub), clock)
     assert verify(sign(rogue, clock), known, node_id(hub)) is None
     assert len(sign(hub, clock)) <= RNS.Packet.PLAIN_MDU

@@ -5,7 +5,7 @@ import RNS
 from meshed_nodes import MeshedNodes
 
 from storm_shield.official_alert import OfficialAlert
-from storm_shield.replay import load_timeline
+from storm_shield.replay import load_event
 from storm_shield.reticulum_mesh import SIGNATURE_LENGTH
 
 # 08:30 NPT on 26 Aug 2026, the first moment of the replay timeline; 1 s of real time is 30 s.
@@ -40,7 +40,7 @@ def _wait_for_alert_ids(meshed_nodes: MeshedNodes, name: str, ids: list[str]) ->
 
 def _start_valley(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s2", replay_track="S2")
+    meshed_nodes.start_sensor("s2", river_km=14.6)
     meshed_nodes.start("porch")
     assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
 
@@ -90,14 +90,14 @@ def test_a_node_that_joins_late_gets_the_alerts_already_sent(meshed_nodes: Meshe
     assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
     meshed_nodes.advance(TO_DHM_NOTICE + 1)
     _wait_for_alert_ids(meshed_nodes, "hub", ["dhm-notice"])
-    meshed_nodes.start_sensor("late", replay_track="S3")
+    meshed_nodes.start_sensor("late", river_km=54.0)
     _wait_for_alert_ids(meshed_nodes, "late", ["dhm-notice"])
 
 
 def test_an_official_alert_not_from_the_hub_is_ignored(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
     meshed_nodes.announce_replay("playing", REPLAY_START + 3 * 3600)
-    forged = load_timeline().official_alerts_due(REPLAY_START + 3 * 3600)[0]
+    forged = load_event().official_alerts_due(REPLAY_START + 3 * 3600)[0]
     meshed_nodes.announce_official_alert(forged, sender="intruder")
     assert _alerts(meshed_nodes, "porch") == []
     meshed_nodes.announce_official_alert(forged)
@@ -105,7 +105,7 @@ def test_an_official_alert_not_from_the_hub_is_ignored(meshed_nodes: MeshedNodes
 
 
 def test_the_replayed_alerts_keep_their_real_times_and_source_links() -> None:
-    alerts = load_timeline().official_alerts_due(REPLAY_START + 3 * 3600)
+    alerts = load_event().official_alerts_due(REPLAY_START + 3 * 3600)
     assert [(alert.issued[11:16], alert.source) for alert in alerts] == [
         ("09:05", "dhm"),
         ("09:15", "dhm"),
@@ -115,7 +115,7 @@ def test_the_replayed_alerts_keep_their_real_times_and_source_links() -> None:
 
 
 def test_every_replayed_alert_fits_one_reticulum_packet() -> None:
-    alerts: list[OfficialAlert] = load_timeline().official_alerts_due(REPLAY_START + 3 * 3600)
+    alerts: list[OfficialAlert] = load_event().official_alerts_due(REPLAY_START + 3 * 3600)
     for alert in alerts:
         signed_bytes = SIGNATURE_LENGTH + len(alert.model_dump_json().encode())
         assert signed_bytes <= RNS.Packet.PLAIN_MDU, alert.id

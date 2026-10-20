@@ -128,7 +128,7 @@ def test_a_sensor_playing_the_replay_shows_no_change_from_a_press(
     meshed_nodes: MeshedNodes, pins: MockFactory
 ) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0", gpio="on")
+    meshed_nodes.start_sensor("s0", river_km=-12.2, gpio="on")
     assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
     scenario_water_rising_cm = 390
     _press(pins, WATER_RISING_PIN)

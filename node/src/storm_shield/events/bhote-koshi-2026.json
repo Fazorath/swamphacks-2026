@@ -1,0 +1,246 @@
+{
+  "id": "bhote-koshi-2026",
+  "label": "Bhote Koshi flash flood, 26 August 2026",
+  "hazard": "flash_flood",
+  "real": true,
+  "note": "A reconstruction from reported times, not the official record. Sensor water levels, and every rain, soil and pressure value, are invented to fit the reported timeline unless a keyframe says basis 'reported'. Arrival times at Rasuwagadhi, Timure and Syabrubesi are inferred from gauges going silent.",
+  "date": "2026-08-26",
+  "utc_offset": "+05:45",
+  "start": "08:30:00",
+  "end": "10:30:00",
+  "start_unix": 1787712300,
+  "rate": 30,
+  "sources": {
+    "kathmandu-post-unfolded": "https://kathmandupost.com/national/2026/08/27/how-the-bhotekoshi-flood-unfolded-over-10-hours",
+    "nepali-times": "https://nepalitimes.com/more-clues-about-the-nepal-china-flood"
+  },
+  "phases": [
+    {
+      "id": "calm",
+      "at": "08:30:00",
+      "label": "Calm",
+      "basis": "reconstructed"
+    },
+    {
+      "id": "collapse",
+      "at": "08:37:00",
+      "label": "Collapse above the Lhende Khola",
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "border",
+      "at": "08:40:00",
+      "label": "Surge reaches the border",
+      "basis": "reconstructed",
+      "source": "nepali-times"
+    },
+    {
+      "id": "syabrubesi",
+      "at": "08:49:00",
+      "label": "Surge reaches Syabrubesi",
+      "basis": "reconstructed",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "dhm-notice",
+      "at": "09:05:00",
+      "label": "Authorities learn of the flood",
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "dhm-sms",
+      "at": "09:15:00",
+      "label": "Official SMS alerts go out",
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "betrawati",
+      "at": "09:20:00",
+      "label": "Betrawati station stops transmitting",
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "end",
+      "at": "10:30:00",
+      "label": "End of the replay",
+      "basis": "reconstructed",
+      "note": "Just after the 10:28 district warning, so the last Official Alert shows; decided 2026-10-17."
+    }
+  ],
+  "internet_cue": {
+    "at": "09:20:00",
+    "basis": "reported",
+    "source": "kathmandu-post-unfolded",
+    "note": "When the Betrawati station stopped transmitting: the cue to cut the internet on stage."
+  },
+  "official_alerts_note": "Times and recipients as reported. The report credits 'authorities' and the Flood Forecasting Division, not DHM by name; `issuer` follows the spec's tagging. Headlines paraphrase the report: it gives no alert wording. 10:28 is the last alert; the replay ends at 10:30 so it shows.",
+  "official_alerts": [
+    {
+      "id": "dhm-notice",
+      "at": "09:05:00",
+      "issuer": "dhm",
+      "headline": "Authorities learn that a major flood has entered the Bhote Koshi",
+      "applies_to": [],
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "dhm-sms",
+      "at": "09:15:00",
+      "issuer": "dhm",
+      "headline": "SMS to riverbank residents of Rasuwa, Nuwakot, Dhading and Chitwan: remain on high alert",
+      "applies_to": [
+        "flood_prone_area"
+      ],
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    },
+    {
+      "id": "district-galchhi-muglin",
+      "at": "10:28:00",
+      "issuer": "district",
+      "headline": "Flood expected at Galchhi and Muglin within hours: Prithvi Highway and Trishuli riverside warned",
+      "applies_to": [
+        "flood_prone_area"
+      ],
+      "basis": "reported",
+      "source": "kathmandu-post-unfolded"
+    }
+  ],
+  "surface": {
+    "unit": "m",
+    "stations": [
+      {
+        "id": "s0",
+        "label": "Lhende-Kyirong confluence gauge",
+        "river_km": -12.2,
+        "series": [
+          [
+            0,
+            0.6
+          ],
+          [
+            390,
+            0.7
+          ],
+          [
+            450,
+            4.2
+          ],
+          [
+            479,
+            7.5
+          ]
+        ]
+      },
+      {
+        "id": "s1",
+        "label": "Rasuwagadhi gauge",
+        "river_km": 3.4,
+        "series": [
+          [
+            0,
+            0.8
+          ],
+          [
+            690,
+            0.9
+          ],
+          [
+            810,
+            4.5
+          ],
+          [
+            899,
+            8.0
+          ]
+        ]
+      },
+      {
+        "id": "s2",
+        "label": "Syabrubesi gauge",
+        "river_km": 14.6,
+        "series": [
+          [
+            0,
+            1.5
+          ],
+          [
+            600,
+            1.62
+          ],
+          [
+            1050,
+            1.8
+          ],
+          [
+            1140,
+            5.0
+          ],
+          [
+            1199,
+            9.6
+          ]
+        ]
+      },
+      {
+        "id": "s3",
+        "label": "Betrawati gauge",
+        "river_km": 54.0,
+        "series": [
+          [
+            0,
+            2.1
+          ],
+          [
+            3600,
+            2.4
+          ],
+          [
+            4560,
+            2.6
+          ],
+          [
+            4710,
+            6.0
+          ],
+          [
+            4799,
+            8.8
+          ]
+        ]
+      }
+    ]
+  },
+  "weather_note": "Invented to fit the reported timeline: one weather for the whole corridor, joined by straight lines. A Sensor reads rain, soil moisture and pressure from it wherever it stands.",
+  "weather": [
+    {
+      "t": 0,
+      "rain_mmh": 3,
+      "soil_pct": 80,
+      "pressure_hpa": 1005
+    },
+    {
+      "t": 420,
+      "rain_mmh": 5,
+      "soil_pct": 82,
+      "pressure_hpa": 1003
+    },
+    {
+      "t": 3600,
+      "rain_mmh": 3,
+      "soil_pct": 78,
+      "pressure_hpa": 1006
+    },
+    {
+      "t": 7200,
+      "rain_mmh": 2,
+      "soil_pct": 76,
+      "pressure_hpa": 1007
+    }
+  ]
+}
