@@ -1,12 +1,12 @@
-# swamphacks-2026
+# Storm Shield
 
-Our SwampHacks 2026 project. The idea gets picked at kickoff and this README gets rewritten for judges before submission.
+A local-first community sensor network: Nodes share readings over a local Mesh that keeps working when the internet goes down, and no outside service holds your data. Built at SwampHacks 2026 as a flood warning dashboard, demonstrated on a replay of the 26 August 2026 Bhote Koshi flood in Nepal; where it goes next is in `docs/roadmap.md`.
 
 ## Teammate setup (2 minutes)
 
 ```bash
-git clone git@github.com:Fazorath/swamphacks-2026.git
-cd swamphacks-2026
+git clone git@github.com:StormShields/Stormshield.git
+cd Stormshield
 git config core.hooksPath .githooks   # turns on secret scan + attribution strip (Claude Code does this for you)
 cp .env.example .env                  # then fill in keys; .env never gets committed
 ```

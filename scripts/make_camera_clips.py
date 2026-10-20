@@ -35,7 +35,7 @@ CROSS_FADE_SECONDS = 1.0
 POSTER_AT_SECONDS = 3
 # 170 kbps over 300 s is 6.4 MB a clip, so three committed clips stay under the 20 MB budget.
 VIDEO_MAX_KBPS = 160
-USER_AGENT = "storm-shield-hackathon/1.0 (https://github.com/Fazorath/swamphacks-2026)"
+USER_AGENT = "storm-shield-hackathon/1.0 (https://github.com/StormShields/Stormshield)"
 # No share-alike or non-commercial terms: the clips are re-encoded and joined, then committed.
 COMMITTED_LICENCE = re.compile(r"Public domain|CC0|CC BY \d\.\d")
 ILLUSTRATIVE_NOTE = (
