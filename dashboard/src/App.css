@@ -782,15 +782,9 @@ section p {
   font-weight: 600;
 }
 
-/* A Node is a dot with its label beside it. The fleet's dots and labels grow with the zoom
-   (--zoom-blend runs from 0 at the national view to 1 over the valley), so nothing pops. Only
-   transform and opacity move; the glow is a static shadow set by the Node's level. */
+/* A Node is a dot with its label beside it. The glow is a static shadow set by the Node's level. */
 .node-marker {
   cursor: pointer;
-}
-
-.node-marker.fleet {
-  cursor: default;
 }
 
 .node-dot {
@@ -822,12 +816,6 @@ section p {
 .node-marker.real .node-dot {
   outline: 1.5px solid var(--text-primary);
   outline-offset: 1.5px;
-}
-
-.node-marker.fleet .node-dot {
-  width: calc(5px + 5px * var(--zoom-blend, 0));
-  height: calc(5px + 5px * var(--zoom-blend, 0));
-  border-width: calc(1.5px * var(--zoom-blend, 0));
 }
 
 .node-marker.stale .node-dot {
@@ -943,15 +931,6 @@ section p {
 .node-marker:hover .node-label-extra,
 .node-marker.selected .node-label-extra {
   display: inline;
-}
-
-.node-marker.fleet .node-label {
-  opacity: var(--zoom-blend, 0);
-}
-
-.node-marker.fleet:hover .node-label {
-  display: block;
-  opacity: 1;
 }
 
 .node-marker.stale .node-label {
@@ -1716,31 +1695,6 @@ section p.flood-prone-caption {
   font-family: var(--font-mono);
   font-size: 1.5rem;
   font-weight: 600;
-}
-
-.fleet-popover {
-  position: absolute;
-  z-index: 3;
-  top: -0.5rem;
-  left: 1.25rem;
-  min-width: 11rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--surface-panel);
-  color: var(--text-primary);
-  cursor: default;
-}
-
-.fleet-popover h3 {
-  margin: 0 0 0.25rem;
-  font-size: 0.9rem;
-}
-
-.fleet-popover ul {
-  margin: 0 0 0.4rem;
-  padding-left: 1rem;
-  font-size: 0.8rem;
 }
 
 /* Readings Panel motion (ui.md, "Motion"): only opacity animates, and every change is a swap

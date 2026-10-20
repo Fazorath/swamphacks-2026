@@ -4,7 +4,7 @@ import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
 import { nepalClockTime } from "./EventClockTag";
 import { lastMap, sourceData } from "./fakeMaplibre";
-import { fakeFleetEntry, fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import { setReducedMotion } from "./fakeViewport";
 
 const SURGE_T = 1_787_716_020;
@@ -78,7 +78,6 @@ function stubNode({
       role: "sensor",
       community_warnings: warnings,
       nodes: [fakeNodeSnapshot("porch", { river_km: 20, position: [27.82, 85] })],
-      fleet: [fakeFleetEntry("Chisapani")],
     }),
     "/api/replay": { v: 1, kind: "replay", state, event_t: eventT, rate: 30 },
     "/api/cache-pack": { available: true, manifest: MANIFEST },
@@ -170,12 +169,10 @@ describe("the wave front on the map", () => {
 describe("ambient river flow", () => {
   const visibility = () => lastMap().layerProperties.get("river-flow:visibility");
 
-  it("drifts along the rivers, and stops with the Fleet toggle", async () => {
+  it("drifts along the rivers", async () => {
     stubNode({ eventT: SURGE_T + 60 });
     render(<App />);
     await waitFor(() => expect(visibility()).toBe("visible"));
-    fireEvent.click(screen.getByRole("button", { name: "Fleet, 1" }));
-    await waitFor(() => expect(visibility()).toBe("none"));
   });
 
   it("is off with reduced motion, and the front stops animating", async () => {

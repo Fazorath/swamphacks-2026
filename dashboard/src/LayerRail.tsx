@@ -3,7 +3,6 @@ import {
   CloudRain,
   Gauge,
   Home,
-  Network,
   Radio,
   Route,
   TriangleAlert,
@@ -16,7 +15,7 @@ import type { WeatherLayer } from "./weatherLayer";
 import { WeatherPicker } from "./WeatherPicker";
 
 export type MapLayerName =
-  "nodes" | "fleet" | "flood-prone" | "shelters" | "route" | "storm-signal";
+  "nodes" | "flood-prone" | "shelters" | "route" | "storm-signal";
 
 type Button = {
   label: string;
@@ -31,7 +30,6 @@ type Props = {
   openPanels: PanelName[];
   registeredNodes: number;
   openShelters: number;
-  fleetNodes: number;
   playingCameras: number;
   onToggleLayer: (layer: MapLayerName) => void;
   onTogglePanel: (panel: PanelName) => void;
@@ -44,7 +42,6 @@ export function LayerRail({
   openPanels,
   registeredNodes,
   openShelters,
-  fleetNodes,
   playingCameras,
   onToggleLayer,
   onTogglePanel,
@@ -77,7 +74,6 @@ export function LayerRail({
   });
   const buttons = [
     layer("Nodes", Radio, "nodes", registeredNodes),
-    layer("Fleet", Network, "fleet", fleetNodes),
     panel("Readings", Gauge, "readings", null),
     layer("Flood-Prone Areas", Waves, "flood-prone", null),
     layer("Shelters", Home, "shelters", openShelters),

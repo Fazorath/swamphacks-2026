@@ -1,10 +1,7 @@
 import type { NepalMap } from "./evacuationPlan";
-import { SimulatedBadge } from "./SimulatedBadge";
 import type { TerrainChoice } from "./terrain";
 
 type Props = {
-  simulated: number;
-  real: number;
   nepal: NepalMap | null;
   // What the map shows now; a frame-rate drop makes it "2d" without changing the saved choice.
   terrain: TerrainChoice;
@@ -15,8 +12,6 @@ type Props = {
 // A key to the markers, small enough to stay out of the way. Its last row is the 2D | 3D switch
 // (D-34) and the Valley button, which flies the camera to the valley.
 export function MapLegend({
-  simulated,
-  real,
   nepal,
   terrain,
   onChooseTerrain,
@@ -39,7 +34,6 @@ export function MapLegend({
           <span className="legend-dot wave" /> Wave passing
         </li>
       </ul>
-      {simulated > 0 && <SimulatedBadge simulated={simulated} real={real} nepal={nepal} />}
       <div className="terrain-row">
         <div className="terrain-switch" role="group" aria-label="Terrain">
           {(["2d", "3d"] as const).map((choice) => (

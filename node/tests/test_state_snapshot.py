@@ -154,12 +154,11 @@ def test_only_nodes_that_have_spoken_are_listed_and_none_is_flagged_as_this_node
     }
 
 
-def test_the_state_lists_the_simulated_fleet_apart_from_the_nodes(
+def test_the_state_holds_exactly_these_keys(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
     state = _state(meshed_nodes["porch"])
-    assert state["fleet"] == []
     assert set(state) == {
         "id",
         "name",
@@ -171,7 +170,6 @@ def test_the_state_lists_the_simulated_fleet_apart_from_the_nodes(
         "nodes",
         "official_alerts",
         "community_warnings",
-        "fleet",
     }
 
 
