@@ -104,7 +104,10 @@ if [ -z "$hub_identity" ]; then
   exit 1
 fi
 
-if [ "$mesh" = tcp ] && ! (exec 3<>"/dev/tcp/$hub_host/$hub_tcp_port") 2>/dev/null; then
+# A firewall that drops packets would hang the probe for minutes; macOS has no timeout without coreutils.
+probe_timeout=""
+command -v timeout >/dev/null && probe_timeout="timeout 3"
+if [ "$mesh" = tcp ] && ! $probe_timeout bash -c 'exec 3<>"/dev/tcp/$0/$1"' "$hub_host" "$hub_tcp_port" 2>/dev/null; then
   echo "warning: the Hub's TCP port $hub_host:$hub_tcp_port does not accept connections; is the Hub" >&2
   echo "  started with scripts/run-demo.sh (it listens there), and is that port open on the Hub laptop?" >&2
 fi
@@ -196,7 +199,9 @@ if [ -z "$node_id" ]; then
   exit 1
 fi
 
-curl -fsS -X POST "$own/api/registry/signup" >/dev/null || true
+if ! curl -fsS -X POST "$own/api/registry/signup" >/dev/null; then
+  echo "warning: the Node could not send its Sign-up; ask the Hub's operator to check, or rerun this script" >&2
+fi
 
 echo "Audience Node '$name' ($node_id) at $lat, $lon is up and joining the Hub ($hub_identity)."
 echo "Dashboard on this laptop: $own   Logs: $join_dir/logs/node.log"
