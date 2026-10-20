@@ -93,7 +93,7 @@ Where the board's option text adds a detail the one-line choice leaves out, it f
 
 - **D-48** Top bar contents and order? **Logo · Event clock · [Flood Risk] · Online · Hub** (board: the Event clock replaces the Node name on the left; the Node name moves to the status strip).
 - **D-49** Status strip contents and order? **Badge first, then freshness, credit right**.
-- **D-50** Where do the Evacuation Plan, Cameras and Alerts Panels go? **Readings left; Alerts + Plan right; Cameras third on the right**.
+- **D-50** Where do the Evacuation Plan and Alerts Panels go? **Readings left; Alerts + Plan right** (Cameras were the third on the right until they were deleted).
   Owner: "I want readings on the left, Alerts on the right, and plan hidden until an alert is triggered and then we can go with the suggested layout"
 - **D-51** How many Panels are open by default, calm vs warning? **Calm: Readings only · Warning: Alerts + Plan**.
 
