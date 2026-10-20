@@ -6,8 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from storm_shield.community_reading import Reading
 from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
-from storm_shield.scenario import Reading, ReadingKind
 
 TIMELINE_FILE = Path(__file__).with_name("replay_timeline.json")
 
@@ -139,15 +139,15 @@ class ReplayTimeline(BaseModel):
         def between(first: float, second: float) -> float:
             return first + (second - first) * progress
 
-        measurements: list[tuple[ReadingKind, float, str]] = [
-            ("pressure", between(before.pressure_hpa, after.pressure_hpa), "hPa"),
-            ("rain_rate", between(before.rain_mmh, after.rain_mmh), "mm/h"),
-            ("water_level", between(before.water_m, after.water_m) * 100, "cm"),
-            ("soil_moisture", between(before.soil_pct, after.soil_pct), "%"),
+        measurements: list[tuple[str, float, str, int]] = [
+            ("air_pressure", between(before.pressure_hpa, after.pressure_hpa), "hPa", 1),
+            ("rain_rate", between(before.rain_mmh, after.rain_mmh), "mm/h", 1),
+            ("water_level", between(before.water_m, after.water_m), "m", 3),
+            ("soil_moisture", between(before.soil_pct, after.soil_pct), "%", 1),
         ]
         return [
-            Reading(kind=kind, value=round(value, 1), unit=unit, timestamp=timestamp)
-            for kind, value, unit in measurements
+            Reading(kind=kind, value=round(value, decimals), unit=unit, timestamp=timestamp)
+            for kind, value, unit, decimals in measurements
         ]
 
     def _keyframes_around(self, track: Track, elapsed: int) -> tuple[Keyframe, Keyframe]:

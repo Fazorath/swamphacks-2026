@@ -1,4 +1,4 @@
-from storm_shield.community_reading import CommunityReading, Position
+from storm_shield.community_reading import CommunityReading, Measurement, Position
 from storm_shield.mesh import InMemoryNetwork, Message
 from storm_shield.shelter_status import ShelterStatus
 
@@ -16,10 +16,12 @@ def _reading(node: str) -> CommunityReading:
         t=1_760_650_928,
         sim=True,
         pos=Position(29.652, -82.324),
-        pressure_hpa=1015,
-        water_m=0.2,
-        rain_mmh=0,
-        soil_pct=30,
+        m=[
+            Measurement("air_pressure", 1015, "hPa"),
+            Measurement("water_level", 0.2, "m"),
+            Measurement("rain_rate", 0, "mm/h"),
+            Measurement("soil_moisture", 30, "%"),
+        ],
     )
 
 

@@ -120,5 +120,5 @@ def test_readings_and_flood_risk_keep_updating_while_the_node_is_mesh_only() -> 
         for _ in range(3):
             client.post("/api/scenario/step")
         after = _own_values(client)
-        assert after["pressure"] < before["pressure"] - 5
+        assert after["air_pressure"] < before["air_pressure"] - 5
         assert client.get("/api/state").json()["flood_risk"]["level"] is not None

@@ -33,10 +33,8 @@ def _heard_from(meshed_nodes: MeshedNodes, viewer: str, node: str) -> dict[str, 
 
 
 def _water_cm(meshed_nodes: MeshedNodes, viewer: str, node: str) -> float:
-    water_level: float = _heard_from(meshed_nodes, viewer, node)["measurements"]["water_level"][
-        "value"
-    ]
-    return water_level
+    water_m: float = _heard_from(meshed_nodes, viewer, node)["measurements"]["water_level"]["value"]
+    return round(water_m * 100, 1)
 
 
 def _start_replay(meshed_nodes: MeshedNodes) -> None:

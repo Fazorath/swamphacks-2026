@@ -20,7 +20,7 @@ from storm_shield.cache_pack import (
     CachePack,
 )
 from storm_shield.cameras import Cameras, CameraTile, ClipFiles
-from storm_shield.community_reading import CommunityReading, fuzz_position
+from storm_shield.community_reading import CommunityReading, Reading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_email import FloodEmail
 from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
@@ -47,7 +47,7 @@ from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_timeline
 from storm_shield.reticulum_mesh import ReticulumMesh
-from storm_shield.scenario import Reading, Scenario
+from storm_shield.scenario import Scenario
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
     HeardShelterStatus,
@@ -170,12 +170,15 @@ def create_app(
     event_clock = EventClock()
     simulated_fleet = SimulatedFleet()
 
+    measured_kinds = {kind.strip() for kind in settings.measures.split(",") if kind.strip()}
+
     def own_measurements() -> list[Reading] | None:
         """None once this Node's replay track has ended: it goes silent and turns Stale."""
         event = event_clock.current(clock())
-        if not settings.replay_track or event.state == "stopped":
-            return scenario.readings()
-        return timeline.readings_at(settings.replay_track, event.event_t, clock())
+        readings: list[Reading] | None = scenario.readings()
+        if settings.replay_track and event.state != "stopped":
+            readings = timeline.readings_at(settings.replay_track, event.event_t, clock())
+        return [r for r in readings or [] if r.kind in measured_kinds] or None
 
     def keep_reading(sender: str, reading: CommunityReading) -> None:
         store.record(sender, reading, clock())

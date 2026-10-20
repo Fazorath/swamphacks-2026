@@ -26,13 +26,14 @@ Message = (
 # The sender is whatever the Mesh verified, never something the message claims about itself.
 MessageListener = Callable[[str, Message], None]
 
-# The `v` every message class declares; decode_message checks it before the classes see the body.
-FORMAT_VERSION = 1
-
 logger = logging.getLogger(__name__)
 
 _MESSAGE: TypeAdapter[Message] = TypeAdapter(Annotated[Message, Field(discriminator="kind")])
-_KNOWN_KINDS = {message_type.model_fields["kind"].default for message_type in get_args(Message)}
+# The `v` each message class declares; decode_message checks it before the classes see the body.
+_FORMAT_VERSIONS: dict[str, int] = {
+    message_type.model_fields["kind"].default: message_type.model_fields["v"].default
+    for message_type in get_args(Message)
+}
 
 
 def decode_message(body: bytes) -> Message | None:
@@ -42,7 +43,7 @@ def decode_message(body: bytes) -> Message | None:
     quietly; anything else that does not parse is logged. Extra fields are ignored.
     """
     fields = _fields_with_kind_and_version(body)
-    if fields is not None and (fields["kind"] not in _KNOWN_KINDS or fields["v"] != FORMAT_VERSION):
+    if fields is not None and _FORMAT_VERSIONS.get(fields["kind"]) != fields["v"]:
         return None
     try:
         return _MESSAGE.validate_python(fields)

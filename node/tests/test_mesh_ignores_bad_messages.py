@@ -5,7 +5,7 @@ import pytest
 from fixture_pack import SHELTERS, build_fixture_pack
 from meshed_nodes import MeshedNodes
 
-from storm_shield.community_reading import CommunityReading, Position
+from storm_shield.community_reading import CommunityReading, Measurement, Position
 from storm_shield.mesh import Message, decode_message, deliver_to_listeners
 from storm_shield.shelter_status import ShelterStatus
 
@@ -105,10 +105,12 @@ def test_decoding_drops_an_unknown_kind_or_version_and_ignores_extra_fields() ->
         t=1,
         sim=True,
         pos=Position(29.652, -82.324),
-        pressure_hpa=1015,
-        water_m=0.2,
-        rain_mmh=0,
-        soil_pct=30,
+        m=[
+            Measurement("air_pressure", 1015, "hPa"),
+            Measurement("water_level", 0.2, "m"),
+            Measurement("rain_rate", 0, "mm/h"),
+            Measurement("soil_moisture", 30, "%"),
+        ],
     )
     with_extra = reading.model_dump_json()[:-1] + ', "extra": true}'
     assert decode_message(with_extra.encode()) == reading

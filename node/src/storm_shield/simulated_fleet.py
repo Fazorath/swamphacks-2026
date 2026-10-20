@@ -5,9 +5,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 from storm_shield.community_reading import Position
-from storm_shield.reading_store import Measurement
+from storm_shield.reading_store import MeasuredValue
 from storm_shield.replay import ReplayClockMessage
-from storm_shield.scenario import ReadingKind
 from storm_shield.timing import STALE_AFTER_SECONDS
 
 FLEET_FILE = "fleet.json"
@@ -23,7 +22,7 @@ class FleetEntry(BaseModel):
     position: Position
     age_s: float
     stale: bool
-    measurements: dict[ReadingKind, Measurement]
+    measurements: dict[str, MeasuredValue]
 
 
 class _FleetSite(BaseModel):
@@ -33,13 +32,13 @@ class _FleetSite(BaseModel):
     site: Literal["town", "headwater"]
     pos: Position
     # Already cut at the site's `silent_at`, so its last point is the last thing it ever said.
-    track: dict[ReadingKind, list[float]]
+    track: dict[str, list[float]]
 
 
 class _FleetFile(BaseModel):
     start_t: int
     step_s: int
-    units: dict[ReadingKind, str]
+    units: dict[str, str]
     entries: list[_FleetSite]
 
 
@@ -75,7 +74,7 @@ class SimulatedFleet:
                     age_s=age_s,
                     stale=age_s > STALE_AFTER_SECONDS,
                     measurements={
-                        kind: Measurement(value=values[point], unit=fleet.units[kind])
+                        kind: MeasuredValue(value=values[point], unit=fleet.units[kind])
                         for kind, values in site.track.items()
                     },
                 )
