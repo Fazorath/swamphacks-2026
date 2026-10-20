@@ -13,14 +13,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-from pack_fleet import build_fleet
 from pack_high_ground import build_high_ground, load_high_ground
 from pack_nepal import build_nepal_bundle, elevation_at, load_key_places
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
-from storm_shield.replay import load_timeline
-from storm_shield.simulated_fleet import FLEET_FILE
 from storm_shield.weather_grid import NEPAL_BBOX
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
@@ -165,13 +162,10 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
         manifest_extras["route_grid"] = route_grid.as_manifest_entry()
     tile_list = tiles_covering(VALLEY_BBOX) if raster_tiles else []
     tiles_note = f" and {len(tile_list)} tiles" if tile_list else ""
-    print(f"fetching Nepal, the weather, the Simulated Fleet{tiles_note}", flush=True)
+    print(f"fetching Nepal, the weather{tiles_note}", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
         weather = fetch_weather_replay(client, NEPAL_BBOX, WEATHER_FIRST_DAY, WEATHER_LAST_DAY)
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
-        files[FLEET_FILE] = build_fleet(
-            client, SOURCE_DIR / "fleet.source.json", load_timeline(), VALLEY_BBOX
-        )
         key_places = load_key_places(SOURCE_DIR / "key_places.source.json")
         nepal_files, manifest_extras["nepal"] = build_nepal_bundle(client, VALLEY_BBOX, key_places)
         files.update(nepal_files)

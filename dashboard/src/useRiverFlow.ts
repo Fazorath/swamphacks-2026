@@ -6,8 +6,8 @@ import { RIVER_FLOW_LAYER, flowDashes } from "./basemap";
 const FLOW_STEP_MS = 160;
 
 // The slow dim dashes drifting down the pack's rivers (D-20): decorative, so `drifting` is false
-// with the Fleet toggle off and with reduced motion, and the layer is hidden then. `layerExists`
-// is true once the pack's map has been added to the style, which is when the layer joins it.
+// with reduced motion, and the layer is hidden then. `layerExists` is true once the pack's map has
+// been added to the style, which is when the layer joins it.
 export function useRiverFlow(map: MapLibreMap | null, layerExists: boolean, drifting: boolean) {
   useEffect(() => {
     if (!map || !layerExists || !map.getLayer(RIVER_FLOW_LAYER)) return;

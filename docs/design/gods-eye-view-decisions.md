@@ -2,6 +2,8 @@
 
 The visual decisions for the desktop God's Eye View, taken on the design board on 2026-10-18 by the product owner (shared board, final calls by the owner; 55 decided, 0 open). Tickets cite them as `D-NN`. They are final: do not reopen one in a ticket or a review; ask the owner.
 
+The Simulated Fleet decisions (the fleet's dot size, labels and national-zoom shrink, D-08 to D-11 in part, D-38, D-40 to D-42 and the Fleet toggle) are history: the fleet was deleted in issue #29.
+
 Board: https://claude.ai/artifact/4GRPCNjD3JTMvMbKeGVhyg (private; the board's drawing was schematic, not survey data). Spec: `docs/specs/gods-eye-view.md`. Look: `docs/design/ui.md` ("God's Eye View"). The owner's free-text notes, quoted after each decision, are binding requirements.
 
 Where the board's option text adds a detail the one-line choice leaves out, it follows in brackets as "board: …".

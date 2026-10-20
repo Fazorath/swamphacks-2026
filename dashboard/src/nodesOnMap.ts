@@ -6,12 +6,10 @@ export type NodeOnMap = {
   isThisNode: boolean;
   label: string;
   position: [number, number];
-  // Where the Node sits along the river; null off the river (and for every fleet entry).
+  // Where the Node sits along the river; null off the river.
   riverKm: number | null;
   waterLevelCm: number | null;
   simulated: boolean;
-  // A Simulated Fleet entry: drawn small, with no card, no registry entry and no Flood Risk level.
-  fleet: boolean;
   stale: boolean;
   // False for an Unverified Node: shown, but not counted toward Flood Risk.
   registered: boolean;
@@ -58,7 +56,6 @@ export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
     riverKm: node.river_km,
     waterLevelCm: waterLevelCm(node.measurements),
     simulated: node.simulated,
-    fleet: false,
     stale: node.stale,
     registered: node.registered,
     level: state.flood_risk.nodes[node.id] ?? null,
@@ -67,23 +64,4 @@ export function nodesOnMap(state: NodeState | null): NodeOnMap[] {
   }));
   const rank = (node: NodeOnMap) => (node.isThisNode ? 0 : node.registered ? 1 : 2);
   return nodes.sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label));
-}
-
-// The Simulated Fleet as map markers, in the order the Node sent them.
-export function fleetOnMap(state: NodeState | null): NodeOnMap[] {
-  return (state?.fleet ?? []).map((entry) => ({
-    id: entry.id,
-    isThisNode: false,
-    label: entry.name,
-    position: entry.position,
-    riverKm: null,
-    waterLevelCm: waterLevelCm(entry.measurements),
-    simulated: true,
-    fleet: true,
-    stale: entry.stale,
-    registered: true,
-    level: null,
-    ageSeconds: entry.age_s,
-    measurements: displayedMeasurements(entry.measurements),
-  }));
 }
