@@ -54,7 +54,7 @@ function stubFloodRisk(floodRisk: FloodRisk) {
         position: [29.654, -82.322],
         age_s: GARAGE_AGE_SECONDS,
         stale: true,
-        measurements: { pressure: { value: 1002, unit: "hPa" } },
+        measurements: { air_pressure: { value: 1002, unit: "hPa" } },
       }),
       fakeNodeSnapshot("porch"),
     ],

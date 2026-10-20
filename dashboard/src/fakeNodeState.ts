@@ -33,7 +33,7 @@ export function fakeNodeSnapshot(id: string, overrides: Partial<NodeSnapshot> = 
     age_s: 2,
     stale: false,
     counts: true,
-    measurements: { pressure: { value: 1015, unit: "hPa" } },
+    measurements: { air_pressure: { value: 1015, unit: "hPa" } },
     registered: true,
     name: id,
     ...overrides,
@@ -49,7 +49,7 @@ export function fakeFleetEntry(id: string, overrides: Partial<FleetEntry> = {}):
     position: [28.644, 81.276],
     age_s: 2,
     stale: false,
-    measurements: { water_level: { value: 80, unit: "cm" } },
+    measurements: { water_level: { value: 0.8, unit: "m" } },
     ...overrides,
   };
 }

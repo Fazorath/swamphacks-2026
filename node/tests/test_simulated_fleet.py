@@ -9,7 +9,7 @@ from meshed_nodes import MeshedNodes
 REPLAY_START = 1787712300
 STEP = 30
 RATE = 30
-UNITS = {"water_level": "cm", "rain_rate": "mm/h", "soil_moisture": "%", "pressure": "hPa"}
+UNITS = {"water_level": "m", "rain_rate": "mm/h", "soil_moisture": "%", "air_pressure": "hPa"}
 
 
 def _track(water: list[float]) -> dict[str, list[float]]:
@@ -17,7 +17,7 @@ def _track(water: list[float]) -> dict[str, list[float]]:
         "water_level": water,
         "rain_rate": [0.5] * len(water),
         "soil_moisture": [40.0] * len(water),
-        "pressure": [1012.0] * len(water),
+        "air_pressure": [1012.0] * len(water),
     }
 
 
@@ -36,7 +36,7 @@ FLEET = {
             "site": "headwater",
             "pos": [29.5, 82.1],
             "silent_at": None,
-            "track": _track([80, 80, 80, 80, 80]),
+            "track": _track([0.8, 0.8, 0.8, 0.8, 0.8]),
         },
         {
             "id": "fleet-alpha",
@@ -44,9 +44,9 @@ FLEET = {
             "river": "Koshi",
             "site": "town",
             "pos": [26.8, 87.3],
-            # A rise of 400 cm in a minute: a Surge, if anything counted it.
+            # A rise of 4 m in a minute: a Surge, if anything counted it.
             "silent_at": REPLAY_START + 2 * STEP,
-            "track": _track([100, 300, 500]),
+            "track": _track([1.0, 3.0, 5.0]),
         },
     ],
 }
@@ -77,10 +77,10 @@ def test_the_fleet_is_listed_by_id_at_its_calm_start_when_no_replay_is_heard(
     assert alpha["age_s"] == 0
     assert alpha["stale"] is False
     assert alpha["measurements"] == {
-        "water_level": {"value": 100, "unit": "cm"},
+        "water_level": {"value": 1.0, "unit": "m"},
         "rain_rate": {"value": 0.5, "unit": "mm/h"},
         "soil_moisture": {"value": 40, "unit": "%"},
-        "pressure": {"value": 1012, "unit": "hPa"},
+        "air_pressure": {"value": 1012, "unit": "hPa"},
     }
 
 
@@ -93,7 +93,7 @@ def test_every_node_that_holds_the_pack_serves_the_fleet_at_its_event_clock(
 
     alpha = _state(meshed_nodes["porch"])["fleet"][0]
 
-    assert alpha["measurements"]["water_level"]["value"] == 300
+    assert alpha["measurements"]["water_level"]["value"] == 3.0
     assert alpha["age_s"] == 10 / RATE
 
 
@@ -111,7 +111,7 @@ def test_the_silent_site_keeps_its_last_point_and_turns_stale_15_seconds_after_i
     meshed_nodes.announce_replay("playing", silent_at + 16 * RATE)
     alpha = _state(meshed_nodes["porch"])["fleet"][0]
     assert alpha["stale"] is True
-    assert alpha["measurements"]["water_level"]["value"] == 500
+    assert alpha["measurements"]["water_level"]["value"] == 5.0
 
 
 def test_a_paused_event_clock_freezes_the_fleets_age(
@@ -151,7 +151,7 @@ def test_a_surging_fleet_site_changes_nothing_in_flood_risk_warnings_or_the_regi
     assert meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "end"}).status_code == 200
     hub = _state(meshed_nodes["hub"])
 
-    assert hub["fleet"][0]["measurements"]["water_level"]["value"] == 500
+    assert hub["fleet"][0]["measurements"]["water_level"]["value"] == 5.0
     assert hub["flood_risk"]["surged"] == []
     assert "water_surge" not in [reason["code"] for reason in hub["flood_risk"]["reasons"]]
     # Strict counting: a fleet site is no registered Node, so Flood Risk never lists it.

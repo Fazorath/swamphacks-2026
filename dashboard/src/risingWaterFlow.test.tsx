@@ -95,7 +95,7 @@ function stubNode(eventT: number) {
         fakeNodeSnapshot("porch", {
           river_km: 20,
           position: [27.82, 85],
-          measurements: { water_level: { value: 450, unit: "cm" } },
+          measurements: { water_level: { value: 4.5, unit: "m" } },
         }),
       ],
     }),

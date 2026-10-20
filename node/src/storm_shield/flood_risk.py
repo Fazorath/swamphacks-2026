@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from typing import Literal
@@ -20,6 +21,17 @@ RAIN_ELEVATED_MMH = 10
 RAIN_HIGH_MMH = 25  # High only while water is also rising
 SOIL_RISING_POINTS = 3  # gained across the history window
 STORM_PRESSURE_HPA = 1000  # the replay never goes below 1002; the 2026 flood was not a storm
+
+# The unit each kind this Rule set reads is sent in. Any other kind is ignored; a known kind in
+# another unit is ignored too, since reading its number as if it were in this unit would be wrong.
+WATER_LEVEL, WATER_UNIT = "water_level", "m"
+RAIN_RATE, RAIN_UNIT = "rain_rate", "mm/h"
+SOIL_MOISTURE, SOIL_UNIT = "soil_moisture", "%"
+AIR_PRESSURE, AIR_PRESSURE_UNIT = "air_pressure", "hPa"
+
+logger = logging.getLogger(__name__)
+# So a Node that keeps sending the wrong unit fills the log once, not every few seconds.
+_logged_unit_mismatches: set[tuple[str, str, str]] = set()
 
 NodeLevel = Literal["elevated", "high"]
 FloodRiskLevel = Literal["low", "elevated", "high"]
@@ -51,32 +63,39 @@ class FloodRisk(BaseModel):
 
 @dataclass
 class _NodeView:
-    """What one Node's recent readings say, before comparing it with the other Nodes."""
+    """What one Node's recent readings say, before comparing it with the other Nodes.
 
-    water_cm: float
+    A kind the Node never sent is None (or no gain), so it takes no part in any rule.
+    """
+
+    water_cm: float | None
     water_gain_cm: float
     surge_rise_cm: float
     surge_seconds: int
-    rain_mmh: float
+    rain_mmh: float | None
     soil_gain_points: float
-    pressure_hpa: float
+    pressure_hpa: float | None
 
     @classmethod
-    def of(cls, readings: list[CommunityReading]) -> "_NodeView":
-        newest, oldest = readings[-1], readings[0]
+    def of(cls, node: str, readings: list[CommunityReading]) -> "_NodeView":
+        water = _series(node, readings, WATER_LEVEL, WATER_UNIT)
+        rain = _series(node, readings, RAIN_RATE, RAIN_UNIT)
+        soil = _series(node, readings, SOIL_MOISTURE, SOIL_UNIT)
+        pressure = _series(node, readings, AIR_PRESSURE, AIR_PRESSURE_UNIT)
+        newest_water_t, newest_water = water[-1] if water else (0, 0.0)
         # The Surge window counts in the sender's own timestamps, so a slow rise cannot pass for
         # one just because its readings arrived together.
-        in_surge_window = [r for r in readings if newest.t - r.t <= SURGE_WINDOW_SECONDS]
-        lowest = min(in_surge_window, key=lambda r: r.water_m)
+        in_surge_window = [w for w in water if newest_water_t - w[0] <= SURGE_WINDOW_SECONDS]
+        lowest_t, lowest = min(in_surge_window, key=lambda w: w[1], default=(0, 0.0))
         # With a single reading there is no trend, so nothing is rising.
         return cls(
-            water_cm=newest.water_m * 100,
-            water_gain_cm=(newest.water_m - oldest.water_m) * 100,
-            surge_rise_cm=round((newest.water_m - lowest.water_m) * 100, 1),
-            surge_seconds=newest.t - lowest.t,
-            rain_mmh=newest.rain_mmh,
-            soil_gain_points=newest.soil_pct - oldest.soil_pct,
-            pressure_hpa=newest.pressure_hpa,
+            water_cm=newest_water * 100 if water else None,
+            water_gain_cm=(newest_water - water[0][1]) * 100 if water else 0.0,
+            surge_rise_cm=round((newest_water - lowest) * 100, 1) if water else 0.0,
+            surge_seconds=newest_water_t - lowest_t if water else 0,
+            rain_mmh=rain[-1][1] if rain else None,
+            soil_gain_points=soil[-1][1] - soil[0][1] if soil else 0.0,
+            pressure_hpa=pressure[-1][1] if pressure else None,
         )
 
     @property
@@ -95,13 +114,40 @@ class _NodeView:
     def level(self) -> NodeLevel | None:
         if (
             self.surging
-            or self.water_cm >= WATER_HIGH_CM
-            or (self.rain_mmh >= RAIN_HIGH_MMH and self.water_rising)
+            or _reaches(self.water_cm, WATER_HIGH_CM)
+            or (_reaches(self.rain_mmh, RAIN_HIGH_MMH) and self.water_rising)
         ):
             return "high"
-        if self.water_cm >= WATER_ELEVATED_CM or self.rain_mmh >= RAIN_ELEVATED_MMH:
+        if _reaches(self.water_cm, WATER_ELEVATED_CM) or _reaches(self.rain_mmh, RAIN_ELEVATED_MMH):
             return "elevated"
         return "elevated" if self.water_rising else None
+
+
+def _reaches(value: float | None, limit: float) -> bool:
+    return value is not None and value >= limit
+
+
+def _series(
+    node: str, readings: list[CommunityReading], kind: str, unit: str
+) -> list[tuple[int, float]]:
+    """Each reading's (sender timestamp, value) for `kind`, oldest first, in the unit this Rule set reads."""
+    series = []
+    for reading in readings:
+        for measured_kind, value, measured_unit in reading.m:
+            if measured_kind != kind:
+                continue
+            if measured_unit == unit:
+                series.append((reading.t, value))
+            elif (node, kind, measured_unit) not in _logged_unit_mismatches:
+                _logged_unit_mismatches.add((node, kind, measured_unit))
+                logger.warning(
+                    "ignoring %s from Node %s: sent in %s, the flood-warning rules read %s",
+                    kind,
+                    node,
+                    measured_unit,
+                    unit,
+                )
+    return series
 
 
 def flood_risk(
@@ -109,13 +155,17 @@ def flood_risk(
 ) -> FloodRisk:
     """Flood Risk for everything this Node can see, from each counted Node's recent readings."""
     views = {
-        node: _NodeView.of(readings)
+        node: _NodeView.of(node, readings)
         for node, readings in recent.items()
         if _counts(node, registered_ids)
     }
     node_levels = {node: view.level for node, view in views.items()}
 
-    low_pressure = [view for view in views.values() if view.pressure_hpa < STORM_PRESSURE_HPA]
+    low_pressure = [
+        view
+        for view in views.values()
+        if view.pressure_hpa is not None and view.pressure_hpa < STORM_PRESSURE_HPA
+    ]
     storm_on = bool(low_pressure) and len(low_pressure) * 2 >= len(views)
     storm = low_pressure if storm_on else []
     soil_rising = [view for view in views.values() if view.soil_rising]
@@ -132,7 +182,11 @@ def flood_risk(
             _reason(
                 "water_high",
                 max,
-                [v.water_cm for v in views.values() if v.water_cm >= WATER_ELEVATED_CM],
+                [
+                    v.water_cm
+                    for v in views.values()
+                    if v.water_cm is not None and v.water_cm >= WATER_ELEVATED_CM
+                ],
             ),
             _reason(
                 "water_rising", max, [v.water_gain_cm for v in views.values() if v.water_rising]
@@ -140,9 +194,17 @@ def flood_risk(
             _reason(
                 "rain_heavy",
                 max,
-                [v.rain_mmh for v in views.values() if v.rain_mmh >= RAIN_ELEVATED_MMH],
+                [
+                    v.rain_mmh
+                    for v in views.values()
+                    if v.rain_mmh is not None and v.rain_mmh >= RAIN_ELEVATED_MMH
+                ],
             ),
-            _reason("pressure_falling", min, [v.pressure_hpa for v in storm]),
+            _reason(
+                "pressure_falling",
+                min,
+                [v.pressure_hpa for v in storm if v.pressure_hpa is not None],
+            ),
             _reason("raining", max, [v.soil_gain_points for v in soil_rising] if raining else []),
         ]
         if reason
@@ -162,7 +224,9 @@ def flood_risk(
         storm_signal=StormSignal(
             on=storm_on,
             nodes=len(storm),
-            pressure_hpa=min((v.pressure_hpa for v in storm), default=None),
+            pressure_hpa=min(
+                (v.pressure_hpa for v in storm if v.pressure_hpa is not None), default=None
+            ),
         ),
         nodes=node_levels,
         surged=sorted(surged),

@@ -10,12 +10,19 @@ import { historyKey, type Trend } from "./readingTrends";
 import type { FloodRisk, ReadingKind } from "./nodeState";
 import { usePrefersReducedMotion } from "./useViewport";
 
-export const KIND_LABELS: Record<ReadingKind, string> = {
-  pressure: "Pressure",
+const KIND_LABELS: Partial<Record<ReadingKind, string>> = {
+  air_pressure: "Pressure",
   rain_rate: "Rain rate",
   water_level: "Water level",
   soil_moisture: "Soil moisture",
 };
+
+// A kind the dashboard has no label for reads as its own name: "wind_speed" is "Wind speed".
+export function kindLabel(kind: ReadingKind): string {
+  if (KIND_LABELS[kind]) return KIND_LABELS[kind];
+  const words = kind.replaceAll("_", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
 
 function post(path: string, afterPost: () => void) {
   fetch(path, { method: "POST" })
@@ -115,7 +122,7 @@ export function ReadingsPanel({
                 value={measurement.value}
                 trend={trends[historyKey(node.id, measurement.kind)]}
               >
-                {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
+                {kindLabel(measurement.kind)}: {measurement.value} {measurement.unit}
               </ReadingSlot>
             </li>
           ))}

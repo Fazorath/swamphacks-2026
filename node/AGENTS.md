@@ -6,7 +6,8 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **Strict counting:** no registry heard means nobody counts toward Flood Risk. `MeshedNodes.register(*names)` after the last `start(...)`; with a running `start_hub()` register through `/api/registry/signup` and `/accept` instead.
 - **A Hub entered with its lifespan would call real services** (Open-Meteo): inject an offline `weather_source` as `MeshedNodes.start_hub` does.
 - **Background loops only run under `with TestClient(app)`**; a bare `TestClient(app)` never starts them. A Node shows Mesh-only until its first connectivity probe answers.
-- **Adding a field to a reading or a `/api/state` Node entry breaks two exact-field tests** (`test_community_reading.py`, `test_state_snapshot.py`).
+- **Adding a field to a reading or a `/api/state` Node entry breaks two exact-field tests** (`test_community_reading.py`, `test_state_snapshot.py`). A reading's values are Measurements (`m`, `[kind, value, unit]`); build a hand-fed one with `MeshedNodes.hear_from(..., leaving_out=..., also=[Measurement(...)])`.
+- **Each mesh message kind has its own `v`** (`reading` is 2, the rest 1); `decode_message` reads it from the class, so a version bump is a one-line change on that class.
 - **Surges are judged on the sender's timestamps**, and `surged` is "surging now", not latched (it clears about 60 s after the jump). A Surge is 300 cm or more within 60 s.
 - **One signed Reticulum packet is 464 bytes**, which caps a registry (4 to 8 Nodes) and an Official Alert's headline.
 - **Shelter status and the registry are trusted only from `HUB_IDENTITY`**; a blank or wrong id drops them silently. When a Node shows nothing open, or a Sensor ignores the Replay, check `HUB_IDENTITY` first (printed as `Node <id> (...) is up as hub`; it changes if `NODE_DATA_DIR` is wiped).

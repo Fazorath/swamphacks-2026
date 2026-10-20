@@ -4,7 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
-from storm_shield.scenario import Reading, Scenario
+from storm_shield.community_reading import Reading
+from storm_shield.scenario import Scenario
 
 
 def _values_by_node_and_kind(client: TestClient) -> dict[tuple[str, str], float]:
@@ -26,9 +27,11 @@ def test_each_node_lists_its_own_readings_and_the_others(meshed_nodes: MeshedNod
 def test_a_reading_stepped_on_one_node_shows_up_on_another(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch", "garage")
     meshed_nodes["porch"].post("/api/scenario/reset")
-    normal_day = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
+    normal_day = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "air_pressure")]
     meshed_nodes["porch"].post("/api/scenario/step")
-    assert _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")] < normal_day - 5
+    assert (
+        _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "air_pressure")] < normal_day - 5
+    )
 
 
 def test_readings_from_other_nodes_are_aged_and_labeled_simulated(
@@ -51,7 +54,7 @@ def test_removing_a_node_leaves_the_others_working(meshed_nodes: MeshedNodes) ->
     creek_as_seen_by_porch = _values_by_node_and_kind(meshed_nodes["porch"])
     porch_as_seen_by_creek = _values_by_node_and_kind(meshed_nodes["creek"])
     assert creek_as_seen_by_porch[("creek", "rain_rate")] > 5
-    assert porch_as_seen_by_creek[("porch", "pressure")] < 1010
+    assert porch_as_seen_by_creek[("porch", "air_pressure")] < 1010
 
 
 def test_positions_shared_between_nodes_are_fuzzed_to_about_200_metres(
@@ -73,7 +76,7 @@ def test_a_restarted_node_is_heard_again_though_its_seq_starts_over(
     meshed_nodes.advance(16)
     meshed_nodes.start("porch")
     meshed_nodes["porch"].post("/api/scenario/reset")
-    pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
+    pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "air_pressure")]
     assert pressure > 1010
 
 
@@ -94,5 +97,5 @@ def test_a_step_is_never_hidden_by_a_tick_that_read_the_old_scenario(
     for _ in range(100):
         for path, normal in [("/api/scenario/reset", True), ("/api/scenario/step", False)]:
             meshed_nodes["porch"].post(path)
-            pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "pressure")]
+            pressure = _values_by_node_and_kind(meshed_nodes["garage"])[("porch", "air_pressure")]
             assert (pressure > 1010) == normal, f"{path} left garage showing {pressure} hPa"

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel
 
 from storm_shield.community_reading import CommunityReading, Position
-from storm_shield.scenario import ReadingKind
 from storm_shield.timing import (
     DROPS_OFF_AFTER_SECONDS,
     STALE_AFTER_SECONDS,
@@ -14,7 +13,9 @@ from storm_shield.timing import (
 )
 
 
-class Measurement(BaseModel):
+class MeasuredValue(BaseModel):
+    """A Measurement as /api/state lists it, under its kind: in the unit the Node sent."""
+
     value: float
     unit: str
 
@@ -29,7 +30,7 @@ class NodeSnapshot(BaseModel):
     age_s: float
     stale: bool
     counts: bool
-    measurements: dict[ReadingKind, Measurement]
+    measurements: dict[str, MeasuredValue]
 
 
 @dataclass(frozen=True)
@@ -118,7 +119,6 @@ def _node_snapshot(sender: str, last_heard: HeardReading, now: datetime) -> Node
         stale=age_s > STALE_AFTER_SECONDS,
         counts=_counts(age_s),
         measurements={
-            m.kind: Measurement(value=m.value, unit=m.unit)
-            for m in reading.as_readings(last_heard.received_at)
+            kind: MeasuredValue(value=value, unit=unit) for kind, value, unit in reading.m
         },
     )

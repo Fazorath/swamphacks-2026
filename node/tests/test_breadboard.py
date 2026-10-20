@@ -60,8 +60,8 @@ def _node(settings: Settings) -> TestClient:
 def _water_cm(client: TestClient) -> float:
     state = client.get("/api/state").json()
     own = next(node for node in state["nodes"] if node["id"] == state["id"])
-    water_cm: float = own["measurements"]["water_level"]["value"]
-    return water_cm
+    water_m: float = own["measurements"]["water_level"]["value"]
+    return round(water_m * 100, 1)
 
 
 @pytest.mark.parametrize(

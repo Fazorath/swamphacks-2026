@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     alert_check_seconds: float = 1
     # How often a Node shares its readings.
     publish_every_seconds: float = 3
+    # The kinds this Sensor Node measures, comma-separated; it sends only these. The default is the
+    # four the flood-warning rules read. A kind with no source on this Node is simply never sent.
+    measures: str = "water_level,rain_rate,soil_moisture,air_pressure"
     # Whether this Node reads the Pi's Breadboard. "auto" turns it on only on a Raspberry Pi; "on"
     # stops the Node if the Breadboard cannot start; "off" never loads the GPIO library.
     gpio: GpioMode = "auto"

@@ -30,7 +30,7 @@ WATER_MODEL = (
     f"per mm of rain in the previous 24 h (at most {MAX_RISE_CM} cm), for the {RISING_TOWNS} "
     "towns with the most rain; every other site stays at its calm base"
 )
-UNITS = {"water_level": "cm", "rain_rate": "mm/h", "soil_moisture": "%", "pressure": "hPa"}
+UNITS = {"water_level": "m", "rain_rate": "mm/h", "soil_moisture": "%", "air_pressure": "hPa"}
 
 
 def distance_km(first: tuple[float, float], second: tuple[float, float]) -> float:
@@ -168,7 +168,7 @@ def fleet_from_archive(
                 "pos": [site["lat"], site["lon"]],
                 "silent_at": silent_at,
                 "track": {
-                    "water_level": [round(value, 1) for value in water],
+                    "water_level": [round(value / 100, 3) for value in water],
                     "rain_rate": [
                         round(_between(stamps, hourly["precipitation"], moment), 2)
                         for moment in track_moments
@@ -177,7 +177,7 @@ def fleet_from_archive(
                         round(_between(stamps, hourly["soil_moisture_0_to_7cm"], moment) * 100, 1)
                         for moment in track_moments
                     ],
-                    "pressure": [
+                    "air_pressure": [
                         round(_between(stamps, hourly["surface_pressure"], moment), 1)
                         for moment in track_moments
                     ],

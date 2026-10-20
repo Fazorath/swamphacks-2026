@@ -1,11 +1,14 @@
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from meshed_nodes import MeshedNodes
 
+from storm_shield.community_reading import Measurement
 from storm_shield.flood_risk import STORM_PRESSURE_HPA
 
 
@@ -322,3 +325,44 @@ def test_no_replay_keyframe_is_below_the_storm_signal_pressure() -> None:
         for keyframe in track["keyframes"]
     )
     assert lowest >= STORM_PRESSURE_HPA
+
+
+def test_a_kind_the_rules_do_not_know_is_never_counted(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
+    meshed_nodes.hear_from("creek", also=[Measurement("wind_speed", 400, "km/h")])
+    meshed_nodes.hear_from("creek", also=[Measurement("wind_speed", 900, "km/h")])
+
+    assert _flood_risk(meshed_nodes["porch"])["level"] is None
+    creek = next(n for n in _nodes(meshed_nodes["porch"]) if n["id"] == "creek")
+    assert creek["measurements"]["wind_speed"] == {"value": 900, "unit": "km/h"}
+
+
+def test_a_known_kind_in_another_unit_is_ignored_and_logged_once_per_node(
+    meshed_nodes: MeshedNodes, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING)
+    meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
+    # 900 cm is a High level, but only if it were metres.
+    for _ in range(3):
+        meshed_nodes.hear_from(
+            "creek", leaving_out={"water_level"}, also=[Measurement("water_level", 900, "cm")]
+        )
+
+    assert _flood_risk(meshed_nodes["porch"])["level"] is None
+    assert caplog.text.count("ignoring water_level from Node creek") == 1
+
+
+def test_a_node_that_does_not_measure_rain_is_judged_on_what_it_does_measure(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start("porch")
+    meshed_nodes.register("creek", "porch")
+    meshed_nodes.hear_from("creek", leaving_out={"rain_rate", "air_pressure"}, water_cm=650)
+
+    assert _flood_risk(meshed_nodes["porch"])["nodes"]["creek"] == "high"
+
+
+def _nodes(client: TestClient) -> list[dict[str, Any]]:
+    return client.get("/api/state").json()["nodes"]  # type: ignore[no-any-return]
