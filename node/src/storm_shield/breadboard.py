@@ -5,12 +5,13 @@ from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 
+from storm_shield.scenario import ScenarioStep
 from storm_shield.settings import GpioMode
 
 logger = logging.getLogger(__name__)
 
 # BCM pin numbers; change pi/README.md's pin table with them.
-STEP_PINS: dict[int, str] = {17: "pressure_drop", 22: "rain", 5: "water_rising"}
+STEP_PINS: dict[int, ScenarioStep] = {17: "pressure_drop", 22: "rain", 5: "water_rising"}
 RESET_PIN = 16
 
 # A jumper wire bounces for a few milliseconds when it touches the pin.
@@ -40,7 +41,7 @@ def _logging_failures(action: Callable[[], None]) -> Callable[[], None]:
 class Breadboard:
     """Releasing a wire does nothing, so taking a hand off the board never undoes the storm."""
 
-    def __init__(self, jump_to: Callable[[str], None], reset: Callable[[], None]) -> None:
+    def __init__(self, jump_to: Callable[[ScenarioStep], None], reset: Callable[[], None]) -> None:
         # Imported here so a laptop without the library never needs it.
         from gpiozero import Button
 
@@ -69,7 +70,7 @@ class Breadboard:
 
 
 def open_breadboard(
-    mode: GpioMode, jump_to: Callable[[str], None], reset: Callable[[], None]
+    mode: GpioMode, jump_to: Callable[[ScenarioStep], None], reset: Callable[[], None]
 ) -> Breadboard | None:
     """None when the Node runs without GPIO. "on" insists; "auto" gives up with a log line."""
     if mode == "off" or (mode == "auto" and not runs_on_a_raspberry_pi()):

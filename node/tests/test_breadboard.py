@@ -181,4 +181,4 @@ def test_every_pin_jumps_to_a_step_the_scenario_has() -> None:
 
 def test_jumping_to_a_step_the_scenario_lacks_is_an_error() -> None:
     with pytest.raises(ValueError):
-        Scenario().go_to("no_such_step")
+        Scenario().go_to("no_such_step")  # type: ignore[arg-type]

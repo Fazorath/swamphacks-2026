@@ -190,7 +190,7 @@ One file, the same shape for the recorded weather and the forecast. Fixed in tic
 }
 ```
 
-- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid is the national one: 153 points at 0.5° inside the Nepal box (26.3 to 30.5 N, 80.0 to 88.3 E), so it ends at 30.3 N and 88.0 E. A reader clamps outside it.
+- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid is the national one: 180 points (10 rows, 18 columns) at 0.5° from the south-west corner of the Nepal box (26.3 to 30.5 N, 80.0 to 88.3 E); the last row and column reach 30.8 N and 88.5 E so the box's north and east edges have a point. A reader clamps outside it.
 - `times` are hourly, UTC, ISO 8601 with a `Z`. The recorded file holds 72 hours (25 to 27 Aug 2026; 08:37 NPT on the 26th is `2026-08-26T02:52Z`).
 - Each variable is a list with one flat array per entry of `times`, each of `rows * cols` numbers in row-major order (index `row * cols + col`). Precipitation is the hour's total, so mm/h.
 - The values are reanalysis at model resolution: context for the country, not a measurement at a village.

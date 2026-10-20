@@ -6,12 +6,14 @@ from pydantic import BaseModel
 
 ReadingKind = Literal["pressure", "rain_rate", "water_level", "soil_moisture"]
 
-SCENARIO_STEPS = ["normal_day", "pressure_drop", "rain", "water_rising"]
+ScenarioStep = Literal["normal_day", "pressure_drop", "rain", "water_rising"]
+
+SCENARIO_STEPS: list[ScenarioStep] = ["normal_day", "pressure_drop", "rain", "water_rising"]
 
 # Base values per step: pressure hPa, rain rate mm/h, water level cm, soil moisture %. Water and
 # pressure are scaled to the levels in flood_risk.py. The last step is High from heavy rain on
 # rising water and stays under the Surge size, so a quick run of steps is not a Surge.
-_STEP_VALUES: dict[str, dict[ReadingKind, float]] = {
+_STEP_VALUES: dict[ScenarioStep, dict[ReadingKind, float]] = {
     "normal_day": {"pressure": 1015, "rain_rate": 0, "water_level": 100, "soil_moisture": 30},
     "pressure_drop": {"pressure": 990, "rain_rate": 0, "water_level": 100, "soil_moisture": 32},
     "rain": {"pressure": 985, "rain_rate": 12, "water_level": 350, "soil_moisture": 55},
@@ -39,13 +41,13 @@ class Scenario:
         self._index = 0
 
     @property
-    def step_name(self) -> str:
+    def step_name(self) -> ScenarioStep:
         return SCENARIO_STEPS[self._index]
 
     def step(self) -> None:
         self._index = min(self._index + 1, len(SCENARIO_STEPS) - 1)
 
-    def go_to(self, step_name: str) -> None:
+    def go_to(self, step_name: ScenarioStep) -> None:
         self._index = SCENARIO_STEPS.index(step_name)
 
     def reset(self) -> None:

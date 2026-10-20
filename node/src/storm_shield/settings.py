@@ -9,6 +9,9 @@ MeshKind = Literal["reticulum", "memory"]
 ReticulumInterface = Literal["auto", "loopback", "tcp"]
 GpioMode = Literal["auto", "on", "off"]
 
+# The address pi/setup-hotspot.sh gives the machine that hosts the hotspot; a test keeps them equal.
+HOTSPOT_ADDRESS = "10.88.0.1"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="NODE_", populate_by_name=True)
@@ -109,3 +112,8 @@ class Settings(BaseSettings):
     # Whose Shelter status this Node believes (the Hub prints its identity at startup). Blank or
     # wrong means no Shelter status is accepted, so the Node shows nothing open.
     hub_identity: str = Field(default="", validation_alias="HUB_IDENTITY")
+
+    @property
+    def dashboard_url(self) -> str:
+        """Where a phone on the hotspot opens this Node's dashboard."""
+        return self.hotspot_dashboard_url or f"http://{HOTSPOT_ADDRESS}:{self.port}"

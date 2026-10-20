@@ -92,6 +92,7 @@ def test_a_new_warning_emails_the_team_with_the_node_the_river_km_and_the_time(
     assert "km -12.2" in body
     assert "Nepal time" in body
     assert "not an official alert" in body
+    assert "http://10.88.0.1:" in body
 
 
 def test_the_email_does_not_order_an_evacuation(meshed_nodes: MeshedNodes) -> None:

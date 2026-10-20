@@ -25,8 +25,11 @@ class FloodEmail:
     stands in for it. A failed send is logged and nothing else happens.
     """
 
-    def __init__(self, sender: str, app_password: str, recipients: list[str]) -> None:
+    def __init__(
+        self, sender: str, app_password: str, recipients: list[str], dashboard_url: str
+    ) -> None:
         self._sender = sender
+        self._dashboard_url = dashboard_url
         self._app_password = app_password
         self._recipients = recipients
 
@@ -43,7 +46,12 @@ class FloodEmail:
             or not recipients
         ):
             return None
-        return cls(settings.alert_email_from, settings.alert_email_app_password, recipients)
+        return cls(
+            settings.alert_email_from,
+            settings.alert_email_app_password,
+            recipients,
+            settings.dashboard_url,
+        )
 
     def send_for(self, warning: CommunityWarning) -> None:
         """Send in the background so a slow SMTP server cannot delay the warning."""
@@ -72,7 +80,7 @@ class FloodEmail:
             f"km {warning.origin_km:g}, at {surge_time:%H:%M} Nepal time. "
             "A flood may be coming down the river.\n\n"
             "This is a Storm Shield Community Warning, not an official alert. "
-            "Open the Storm Shield dashboard to see the arrival estimate and the nearest open "
+            f"Open the Storm Shield dashboard ({self._dashboard_url}) to see the arrival estimate and the nearest open "
             "Shelter, and follow your official sources (DHM and your district) for instructions."
         )
         return message
