@@ -3,9 +3,11 @@ import smtplib
 import time
 from collections.abc import Callable
 from email.message import EmailMessage
+from pathlib import Path
 from typing import Any, ClassVar, Self
 
 import pytest
+from fixture_pack import build_fixture_pack
 from meshed_nodes import MeshedNodes
 
 from storm_shield.flood_email import FloodEmail
@@ -169,3 +171,20 @@ def test_a_failing_send_still_issues_the_warning_and_never_logs_the_password(
     assert len(_warning_log(meshed_nodes)) == 1
     assert "SMTPAuthenticationError" in caplog.text
     assert LOGIN_TEXT not in caplog.text
+
+
+def test_a_warning_during_a_replay_has_a_loud_rehearsal_subject(
+    meshed_nodes: MeshedNodes, tmp_path: Path
+) -> None:
+    meshed_nodes.start_hub(cache_pack=(tmp_path / "packs", build_fixture_pack()), **EMAIL_SETTINGS)
+    _register(meshed_nodes, "s0")
+    assert meshed_nodes["hub"].post("/api/replay/start").status_code == 200
+
+    _surge(meshed_nodes, "s0")
+
+    _wait_until(lambda: len(FakeSmtp.sent) == 1)
+    assert (
+        FakeSmtp.sent[0]["Subject"]
+        == "*** REHEARSAL, NOT A REAL FLOOD *** ALERT OF FLOOD INCOMING!"
+    )
+    assert "REHEARSAL" in FakeSmtp.sent[0].get_content()

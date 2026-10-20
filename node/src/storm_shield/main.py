@@ -232,7 +232,7 @@ def create_app(
             heard_warnings.hear(warning)
             # A measured speed updates a warning the team was already emailed about.
             if flood_email and warning.measured is None:
-                flood_email.send_for(warning)
+                flood_email.send_for(warning, rehearsal=event.state != "stopped")
             try:
                 mesh.publish(warning)
             except Exception:

@@ -16,6 +16,9 @@ SMTP_TIMEOUT_SECONDS = 15
 NEPAL_TIME = timezone(timedelta(hours=5, minutes=45))
 
 SUBJECT = "ALERT OF FLOOD INCOMING!"
+# Loud on purpose: a Replay runs the same surge code, and the team must never mistake it
+# for the river.
+REHEARSAL_SUBJECT = f"*** REHEARSAL, NOT A REAL FLOOD *** {SUBJECT}"
 
 
 class FloodEmail:
@@ -53,29 +56,29 @@ class FloodEmail:
             settings.dashboard_url,
         )
 
-    def send_for(self, warning: CommunityWarning) -> None:
+    def send_for(self, warning: CommunityWarning, rehearsal: bool) -> None:
         """Send in the background so a slow SMTP server cannot delay the warning."""
-        threading.Thread(target=self._deliver, args=(warning,), daemon=True).start()
+        threading.Thread(target=self._deliver, args=(warning, rehearsal), daemon=True).start()
 
-    def _deliver(self, warning: CommunityWarning) -> None:
+    def _deliver(self, warning: CommunityWarning, rehearsal: bool) -> None:
         try:
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_SSL_PORT, timeout=SMTP_TIMEOUT_SECONDS) as smtp:
                 smtp.login(self._sender, self._app_password)
-                smtp.send_message(self._message(warning))
+                smtp.send_message(self._message(warning, rehearsal))
         except (OSError, smtplib.SMTPException) as error:
             # Only the type: an SMTP error's text can echo the login.
             logger.warning(
                 "could not email the flood alert for %s: %s", warning.origin, type(error).__name__
             )
 
-    def _message(self, warning: CommunityWarning) -> EmailMessage:
+    def _message(self, warning: CommunityWarning, rehearsal: bool) -> EmailMessage:
         surge_time = datetime.fromtimestamp(warning.surge_t, UTC).astimezone(NEPAL_TIME)
         message = EmailMessage()
-        message["Subject"] = SUBJECT
+        message["Subject"] = REHEARSAL_SUBJECT if rehearsal else SUBJECT
         message["From"] = self._sender
         message["To"] = ", ".join(self._recipients)
         message.set_content(
-            f"{SUBJECT}\n\n"
+            f"{message['Subject']}\n\n"
             f"Node {warning.origin} reported a sudden rise in the river at "
             f"km {warning.origin_km:g}, at {surge_time:%H:%M} Nepal time. "
             "A flood may be coming down the river.\n\n"
