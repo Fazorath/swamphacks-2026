@@ -1,37 +1,30 @@
 #!/usr/bin/env bash
-# Warns, never blocks:
-# - pushing a branch that is behind origin/main (merge main in now, not at the end);
-# - pushing Node or dashboard code to main: runs scripts/check.sh and shouts if it fails.
-# SKIP_CHECK=1 git push ... skips the check (claims and ticket edits never run it).
+# Refuses two pushes that caused most of our merge pain:
+# - straight to main: changes reach main through a pull request (branch protection
+#   refuses it on GitHub too; this says so before the upload);
+# - a branch that is behind origin/main: merge main in first, so conflicts are solved
+#   on your branch, by you, now, and CI tests what will actually land.
+# Every agent and person gets this, since git runs it; Claude Code turns hooks on at
+# session start (otherwise: git config core.hooksPath .githooks).
 
 zero=0000000000000000000000000000000000000000
-repo="$(git rev-parse --show-toplevel)"
+fetched=false
 
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue
-  case "$remote_ref" in
-    refs/heads/main)
-      [ "${SKIP_CHECK:-}" = 1 ] && continue
-      if [ "$remote_sha" = "$zero" ] || ! git cat-file -e "$remote_sha" 2>/dev/null; then
-        changed="$(git diff --name-only origin/main "$local_sha" 2>/dev/null)"
-      else
-        changed="$(git diff --name-only "$remote_sha" "$local_sha")"
-      fi
-      if grep -qE '^(node|dashboard)/' <<<"$changed"; then
-        echo "pre-push: code is going to main; running scripts/check.sh (SKIP_CHECK=1 to skip)" >&2
-        # stdin carries the remaining refs for this loop; keep the check off it.
-        if ! "$repo/scripts/check.sh" </dev/null >&2; then
-          echo >&2
-          echo "pre-push: WARNING: main is getting code that fails the Commands. Fix it right after this push; main must stay demoable." >&2
-        fi
-      fi
-      ;;
-    *)
-      behind="$(git rev-list --count "$local_sha..origin/main" 2>/dev/null || echo 0)"
-      if [ "$behind" -gt 0 ]; then
-        echo "pre-push: ${remote_ref#refs/heads/} is $behind commits behind origin/main. Merge it in soon: git fetch && git merge origin/main" >&2
-      fi
-      ;;
-  esac
+  if [ "$remote_ref" = refs/heads/main ]; then
+    echo "pre-push: refusing to push to main. Push your branch and open a pull request (docs/agents/issue-tracker.md)." >&2
+    exit 1
+  fi
+  if ! $fetched; then
+    git fetch --quiet origin main || echo "pre-push: could not fetch origin/main; checking against the last one fetched." >&2
+    fetched=true
+  fi
+  if ! git merge-base --is-ancestor origin/main "$local_sha" 2>/dev/null; then
+    behind="$(git rev-list --count "$local_sha..origin/main" 2>/dev/null || echo "some")"
+    echo "pre-push: ${remote_ref#refs/heads/} is $behind commits behind origin/main. Merge it in, rerun scripts/check.sh, then push:" >&2
+    echo "  git merge origin/main" >&2
+    exit 1
+  fi
 done
 exit 0

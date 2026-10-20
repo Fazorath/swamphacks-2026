@@ -34,6 +34,18 @@ else
   fix "no pnpm" "use npx --yes pnpm@10 <command> from dashboard/, or: npm install -g pnpm@10"
 fi
 
+# A Claude Code cloud session reaches GitHub through its own tools, not gh.
+if [ -n "${CLAUDE_CODE_REMOTE:-}" ]; then
+  ok "cloud session: GitHub through its own tools"
+elif ! command -v gh >/dev/null 2>&1; then
+  fix "no GitHub CLI (the implement skill uses it for issues and pull requests)" \
+    "install gh (https://cli.github.com), then: gh auth login"
+elif ! gh auth status >/dev/null 2>&1; then
+  fix "gh is not logged in" "gh auth login"
+else
+  ok "gh logged in"
+fi
+
 node_major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
 if [ "$node_major" -ge 22 ]; then
   ok "Node $node_major"
@@ -48,7 +60,7 @@ section "checkout"
 # Relative from Claude Code's session hook, or absolute to the main checkout's copy.
 hooks_path="$(git config core.hooksPath || true)"
 if [ "${hooks_path%/}" = ".githooks" ] || [ "${hooks_path%/}" = "$main_checkout/.githooks" ]; then
-  ok "git hooks on (secret scan, attribution strip, pre-push warnings)"
+  ok "git hooks on (secret scan, attribution strip, pre-push checks)"
 else
   fix "git hooks off" "git config core.hooksPath .githooks"
 fi

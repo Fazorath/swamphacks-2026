@@ -1,0 +1,25 @@
+# Starts real Node processes over Reticulum (loopback and TCP) and checks they hear each
+# other. Not required for merging: run it from the Actions tab before relying on the real
+# Mesh path, or after changing Reticulum code. A green PR says nothing about this path.
+name: Mesh integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reticulum:
+    name: Reticulum Nodes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - working-directory: node
+        run: |
+          uv sync
+          uv run pytest -m mesh_integration -v

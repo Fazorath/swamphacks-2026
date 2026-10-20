@@ -1,13 +1,19 @@
 ---
 name: implement
-description: "Implement a piece of work based on a spec or set of tickets."
+description: "Implement one GitHub issue, from claiming it to a ready-for-review pull request."
 disable-model-invocation: true
 ---
 
-Implement the work described by the user in the spec or tickets.
+Implement the GitHub issue the user names (`/implement 42`). One issue per session. Tracker rules: `docs/agents/issue-tracker.md`.
 
-1. Claim the ticket with `scripts/claim.sh <NNNN>`. It refuses a ticket someone else owns or whose blockers aren't done, pushes the claim to `main` so teammates see it, and creates the `<NNNN>-<slug>` branch from it. Work on that branch (in a worktree: `git merge origin/main`, push with `git push origin HEAD:<NNNN>-<slug>`). If it refuses, stop and tell the user why; never claim by editing the ticket yourself.
-2. Build the smallest thing that meets the acceptance criteria. Add a smoke test at the pre-agreed seam where one is cheap; don't go test-first.
-3. Run `scripts/check.sh` and fix every FAIL and SKIP before you call it done; paste its summary in your report. If the Reticulum tests say ports are taken, run `scripts/stop-nodes.sh` and rerun.
-4. Use /code-review against `main`.
-5. Tick the acceptance criteria, set `**Status:** done`, commit, then `git fetch && git merge origin/main`, run `scripts/check.sh` again if that brought anything in, merge into `main` and push (see **Git** in `AGENTS.md`).
+1. **Read before touching anything.** `gh issue view <N> --comments`: the acceptance criteria, the spec it links (read it), its blockers and parent. If a blocker is still open, or someone else is assigned, stop and tell the user. Read the sections of `docs/agents/lessons.md` for the area you will touch, and `CONTEXT.md` for its words.
+2. **Claim it where everyone can see.**
+   - `gh issue edit <N> --add-assignee @me`
+   - Work in your own worktree, never in a checkout another session uses: if this session is not already in one, enter a worktree named `<N>-<slug>` (Claude Code's worktree tool, or `git worktree add ../<repo>-<N> origin/main`).
+   - `git fetch origin main` and start the branch from `origin/main`. The branch on GitHub is `<N>-<slug>`: push with `git push -u origin HEAD:<N>-<slug>`.
+   - Make a first commit and open a **draft PR at once**: `gh pr create --draft --title "<issue title>" --body "Closes #<N>"`. The draft PR tells teammates you are on it.
+3. **Build** the smallest thing that meets the acceptance criteria. Add a smoke test at the pre-agreed seam where one is cheap; don't go test-first. Push small commits as you go.
+4. **Pull before you push.** Before every push, `git fetch origin main` and merge it if the branch is behind (`git merge origin/main`); a hook refuses a push from a branch behind `main`. Rerun `scripts/check.sh` after any merge that brought code in.
+5. **Check.** Run `scripts/check.sh` and fix every FAIL and SKIP; paste its summary in your report. CI runs the same thing and blocks the merge if it fails.
+6. **Review.** Run `/code-review` against `main`. Fix what it finds or answer it in the PR.
+7. **Hand over.** Tick the acceptance criteria in the issue, add a lessons entry if something broke or surprised you, push, then `gh pr ready`. Squash-merge once CI is green and the branch is up to date with `main` (`gh pr merge --squash --delete-branch`), unless the user wants a teammate to look first.

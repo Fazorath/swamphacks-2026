@@ -10,7 +10,7 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
 Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
 
-The tracker is local markdown files: see `docs/agents/issue-tracker.md`.
+The tracker is GitHub Issues: see `docs/agents/issue-tracker.md`.
 
 ## Process
 
@@ -26,9 +26,9 @@ Before going further, confirm the fixed point resolves (`git rev-parse <fixed-po
 
 Look for the originating spec, in this order:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.), fetched via the workflow in `docs/agents/issue-tracker.md`.
+1. The issue the branch is for: the number prefixing the branch name (`42-some-slug`), `Closes #42` in the open PR's body (`gh pr view --json body`), or `#123` in the commit messages. Read it with `gh issue view <N>`, and the spec it links to in `docs/specs/`.
 2. A path the user passed as an argument.
-3. The ticket in `docs/tickets/` whose number prefixes the branch name, and the spec it links to in `docs/specs/`.
+3. For hackathon-era code, the ticket in `docs/tickets/` whose number prefixes the branch name or the commit messages (frozen archive), and the spec it links to.
 4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
 ### 3. Identify the standards sources

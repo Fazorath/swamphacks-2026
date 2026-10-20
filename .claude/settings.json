@@ -19,7 +19,12 @@
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)"
     ],
     "deny": [
       "Read(./.env)",

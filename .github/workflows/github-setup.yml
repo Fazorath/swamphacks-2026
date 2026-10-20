@@ -1,0 +1,22 @@
+# Keeps the issue labels and roadmap milestones in step with scripts/github-labels.sh.
+name: GitHub setup
+
+on:
+  push:
+    branches: [main]
+    paths: [scripts/github-labels.sh]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  labels:
+    name: Labels and milestones
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/github-labels.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}

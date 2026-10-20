@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Rules for every coding agent on this repo (Claude Code, Cursor, Copilot, Codex…) and for the humans driving them. Four people, one weekend, one demo. Keep it working, keep it readable, leak nothing.
+Rules for every coding agent on this repo (Claude Code, Cursor, Copilot, Codex…) and for the humans driving them. Four part-time people, every change through a pull request. Keep it working, keep it readable, leak nothing.
 
 ## Project
 
@@ -15,7 +15,7 @@ Rules for every coding agent on this repo (Claude Code, Cursor, Copilot, Codex�
 
 ## Commands
 
-Run these before calling any ticket done. An agent must not claim "done" without running them.
+Run these before calling any issue done. An agent must not claim "done" without running them.
 
 | Task | Command |
 |---|---|
@@ -28,8 +28,9 @@ Run these before calling any ticket done. An agent must not claim "done" without
 | Typecheck | `cd node && uv run mypy src tests` and `cd dashboard && pnpm typecheck` |
 | Lint + format | `cd node && uv run ruff check . && uv run ruff format --check .` and `cd dashboard && pnpm lint` (`pnpm format` to fix) |
 | Tests | `cd node && uv run pytest` and `cd dashboard && pnpm test` |
+| Real-Reticulum tests (not in CI) | `cd node && uv run pytest -m mesh_integration`, or the "Mesh integration" workflow on GitHub |
 | **All of the above** | `scripts/check.sh` (`node` or `dashboard` for one side; works without uv/pnpm and on Node 20, and lists anything it could not run) |
-| Claim a ticket | `scripts/claim.sh NNNN` (pushes the claim to `main`, creates the branch) |
+| Start an issue | `/implement <N>` (assigns you, worktree, branch `<N>-<slug>`, draft PR) |
 | Setup problems | `scripts/doctor.sh` (missing tools, hooks off, behind `main`, a Node left running) |
 | Stop stray Nodes | `scripts/stop-nodes.sh` (frees the ports the Node tests need) |
 
@@ -39,28 +40,28 @@ Agents and their drivers currently have **no Raspberry Pis or sensors**; phones 
 
 ## Workflow
 
-Idea → spec → tickets → build → review → merge.
+Idea → spec → issues → build → review → pull request → merge. Plan and order of work: `docs/roadmap.md`.
 
 1. **Grill** the idea until it's sharp (`grilling` skill, or `/grill-with-docs` to also update `CONTEXT.md` and ADRs as you go). Opus.
 2. **Spec** it: `to-spec` writes `docs/specs/<feature>.md`. Opus.
-3. **Slice** it: `to-tickets` writes `docs/tickets/NNNN-<slug>.md` — thin vertical slices, each one demoable. Opus.
-4. **Build** one ticket per session: `implement`. Sonnet.
+3. **Slice** it: `to-tickets` files GitHub issues — thin vertical slices, each one demoable, with blockers and sub-issues. Opus.
+4. **Build** one issue per session: `/implement <N>`. Sonnet.
 5. **Review** before merge: `code-review` against `main`.
-6. **Merge** into `main` yourself and push. No waiting on a teammate.
+6. **Merge** through the pull request once CI is green and the branch is up to date with `main` (squash). No human approval needed.
 
-Tracker rules: `docs/agents/issue-tracker.md`. Claim a ticket before starting it, and say so in the group chat. Every new ticket gets an `Assignee` from the routing table there (UI → Fazorath; routes, evacuation algorithms and data builds → refloow-0; breadboard, hardware and Mesh transport → amitathik7; tests, workflow and miscellaneous fixes → leonardorofaDV); whoever writes a ticket, person or agent, sets it.
+Tracker rules: `docs/agents/issue-tracker.md`. Assign yourself and open a draft PR before you write code; that is the claim everyone can see. Every new issue gets a type and an area label; the area says whose queue it is in (dashboard → Fazorath; Node rules, routes and data builds → refloow-0; hardware and Mesh → amitathik7; workflow, tests and the rest → leonardorofaDV). `docs/tickets/` is the frozen hackathon tracker: read it, never edit it.
 
 Other playbooks: `prototype` (throwaway UI/logic experiments), `diagnosing-bugs` (anything broken or slow), `domain-modeling` (keeps `CONTEXT.md`, the shared glossary), `resolving-merge-conflicts`, `handoff` (context running low), `wait-what` (agent lost you).
 
-**Not using Claude Code?** Every playbook is plain markdown at `.claude/skills/<name>/SKILL.md`. Tell your agent "follow `.claude/skills/implement/SKILL.md` for ticket 0004".
+**Not using Claude Code?** Every playbook is plain markdown at `.claude/skills/<name>/SKILL.md`. Tell your agent "follow `.claude/skills/implement/SKILL.md` for issue 42".
 
 ## Code
 
-The repo goes public at submission and judges read it. Write for a teammate seeing the file for the first time at 4 am.
+The repo is public and open source; strangers read it. Write for a teammate seeing the file for the first time at 4 am.
 
 - **Deep modules.** Small interface, real work behind it. `saveTrip(trip)` hides the three API calls; callers never see them. No pass-through wrappers, no one-line "service" classes.
 - **Names say what it is.** No `data`, `info`, `handle`, `utils`, `helpers`, `manager`. Use the words in `CONTEXT.md`.
-- **No speculative code.** Build what the ticket asks. No config options, plugin points or abstractions for needs nobody has.
+- **No speculative code.** Build what the issue asks. No config options, plugin points or abstractions for needs nobody has.
 - **No dead code.** Delete commented-out blocks, unused exports, `console.log` debugging and placeholder TODOs before merge.
 - **Comments explain why, never what.** If code needs a "what" comment, rename things instead.
 - **One feature, one place.** Code that changes together lives together (feature folders over layer folders).
@@ -76,18 +77,16 @@ The repo goes public at submission and judges read it. Write for a teammate seei
 
 ## Git
 
-- Branch per ticket: `NNNN-<slug>` from an up-to-date `main`.
+- Branch per issue: `<N>-<slug>` from an up-to-date `origin/main`, in its own worktree. Never two issues in one checkout.
 - Small commits, imperative subject: `add trip search endpoint`.
-- Merge into `main` when `code-review` is clean and **Commands** pass, then push. `main` must always be demoable.
-- Pull `main` often; merge it into long branches rather than letting them drift. `scripts/doctor.sh` runs by itself at Claude Code session start and after every `git pull` and says how far behind you are (and any other setup problem); `git push` warns on a branch behind `origin/main`.
-- Claim only with `scripts/claim.sh` (the `implement` skill does it); the pre-commit hook refuses a claim edited by hand on a branch.
-- Pushing Node or dashboard code to `main` runs `scripts/check.sh` first and warns loudly if it fails (it does not block; `SKIP_CHECK=1` skips it).
+- Nothing is pushed to `main`: open a pull request (`Closes #N`), and it merges when CI is green and the branch is up to date with `main`. `main` must always be demoable.
+- **Pull before you start and before you push.** `git fetch origin main && git merge origin/main`, then rerun `scripts/check.sh` if that brought code in. The `pre-push` hook refuses a push to `main` and a push from a branch behind `origin/main`; `scripts/doctor.sh` runs at Claude Code session start and after every `git pull` and says how far behind you are.
 - Never force-push, `reset --hard`, or delete someone else's branch (Claude Code blocks these via a hook).
 - No AI attribution in commits or PRs (no `Co-Authored-By: Claude`, no "Generated with" footers). Commits are authored by whoever is driving; the `commit-msg` hook strips any trailer an agent adds.
 
 ## Saving limits
 
-- One ticket per session. Start a fresh session for the next ticket instead of continuing a long one.
+- One issue per session. Start a fresh session for the next issue instead of continuing a long one.
 - When context runs low, run `handoff` and start fresh from the file it writes.
-- Point agents at exact files and tickets; don't ask them to "look around the codebase".
+- Point agents at exact files and issues; don't ask them to "look around the codebase".
 - Big searches go to a subagent so the main session keeps only the answer.

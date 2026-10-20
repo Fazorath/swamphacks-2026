@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # PreToolUse hook: refuse git commands that destroy work. Adapted from
 # mattpocock/skills git-guardrails, minus jq (not every laptop has it) and
-# minus plain `git push` (we self-merge and push main).
+# minus plain `git push` (.githooks/pre-push refuses pushes to main and from a
+# branch behind it).
 #
 # Matches the raw hook JSON rather than parsing it; a false positive just
 # means the human runs the command themselves.

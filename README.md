@@ -11,13 +11,15 @@ git config core.hooksPath .githooks   # turns on secret scan + attribution strip
 cp .env.example .env                  # then fill in keys; .env never gets committed
 ```
 
-Then open the repo in your agent of choice. Read `AGENTS.md` once: it covers the workflow, code rules and how tickets work.
+Install the GitHub CLI and run `gh auth login` once; the agent skills use it for issues and pull requests. Then open the repo in your agent of choice. Read `AGENTS.md` once: it covers the workflow, code rules and how issues and pull requests work.
 
 ## How we work
 
 - `AGENTS.md`: the rules for agents and humans
+- `docs/roadmap.md`: what comes next and in which order
+- [GitHub Issues](../../issues): the work, one issue per pull request (`docs/agents/issue-tracker.md`)
 - `docs/specs/`: what we're building
-- `docs/tickets/`: thin, claimable slices of it
+- `docs/tickets/`: the hackathon tickets (frozen archive)
 - `.claude/skills/`: playbooks (grill, spec, tickets, implement, review…), readable by any agent
 
 Skills in `.claude/skills/` are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT, see `.claude/skills/LICENSE-mattpocock-skills`).

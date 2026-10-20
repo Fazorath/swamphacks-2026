@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know.
 
-The tracker is local markdown files: see `docs/agents/issue-tracker.md`.
+Specs live in the repo; the work they lead to is tracked in GitHub Issues: see `docs/agents/issue-tracker.md`.
 
 ## Process
 
