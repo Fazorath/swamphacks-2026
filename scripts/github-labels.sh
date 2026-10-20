@@ -30,9 +30,10 @@ milestones=(
   "M1 Review|2026-10-26|closed|code-review of the rushed final-day code; findings filed as issues|"
   "Hackathon findings||open|Review findings in the hackathon code; close each when a change fixes it or makes it moot|M2 Cleanup"
   "M2 Direction|2026-11-02|open|Grill and spec modular Regions, scenarios and the Sandbox|M3 Direction"
-  "M3 Sandbox||open|One command or button: Hub and simulated sensors in one process from a scenario file|M4 Simulated mesh"
-  "M4 Regions||open|Nepal behind the Region module; a section of Florida as the second region|"
-  "M5 Wave on any region||open|The event plays on whichever region is loaded|"
+  "M3 Sandbox||open|Generic Measurements; one command starts a Hub and simulated Sensors on the in-memory Mesh with a radio range|M4 Simulated mesh"
+  "M4 Regions||open|A Region is one file plus a build command; Fort Myers is the default Region, Nepal moves behind it|"
+  "M5 Event on any Region||open|Events play on whichever Region is loaded: Hurricane Ian at Fort Myers, the coast Water ETA|M5 Wave on any region"
+  "M6 General sensors||open|Sensors beyond flood warning, a second Rule set when needed, cameras as sensors, a desktop launcher|"
 )
 
 existing="$(gh api "repos/$GH_REPO/milestones?state=all&per_page=100" --jq '.[] | "\(.number)|\(.title)"')"
