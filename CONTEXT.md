@@ -61,14 +61,22 @@ A phone or browser that shows the dashboard by connecting to a Node, without bei
 _Avoid_: client, user device
 
 **Sandbox**:
-A Hub and any number of simulated Sensor Nodes started by one command in one process, sharing an in-memory Mesh, for the team to try the app without a terminal juggling ports, slots and Hub ids. Sensors are placed and the event is played from the dashboard. Every reading in it is a Simulated Reading.
+A Hub and any number of simulated Sensor Nodes started by one command in one process, sharing an in-memory Mesh, for the team to try the app without a terminal juggling ports, slots and Hub ids. Sensors are placed on the map and the event is played from the dashboard. A message reaches only Nodes within a set radio range, directly or hopping through other Nodes. Every reading in it is a Simulated Reading.
 _Avoid_: simulator, demo mode, playground
 
 ## Information
 
 **Community Reading**:
-One timestamped measurement from a Sensor Node, such as pressure or soil moisture.
+One timestamped set of Measurements from a Sensor Node.
 _Avoid_: data point, sample, telemetry
+
+**Measurement**:
+One value in a Community Reading with its kind and unit, such as water level in cm or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
+_Avoid_: field, metric, value
+
+**Rule set**:
+The rules that turn the Measurements a Node can see into states and warnings. Flood warning (Flood Risk, Surges, Community Warnings) is the first and, for now, only Rule set; others follow as Storm Shield grows into a general sensor network.
+_Avoid_: plugin, module, detector
 
 **Simulated Reading**:
 A Community Reading whose value comes from a breadboard input or replay script instead of a real sensor; always labeled as such.
@@ -111,15 +119,19 @@ The speed of a Surge between the first two Registered Nodes that surged, worked 
 _Avoid_: actual speed, live speed
 
 **Official Alert**:
-A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
+A warning or order issued by the Region's official alert source (DHM, NDRRMA or a district office in Nepal; the National Weather Service in Florida), shown distinctly from community information.
 _Avoid_: warning, notification
+
+**Official Gauge**:
+A government water-level station (a NOAA tide gauge in Florida) whose measurements the Hub brings into the Mesh while online. Shown beside Community Readings and visibly different from them; never counted toward Flood Risk.
+_Avoid_: official sensor, station, buoy
 
 **Community Warning**:
 A signed warning the Hub issues when one Registered Node reports a Surge; it names that Node and its River km so each Viewer can work out when the wave reaches its home. Never an evacuation order, and always points residents to official sources for evacuation decisions.
 _Avoid_: alert, alarm, evacuation notice
 
 **Region**:
-The place a Storm Shield network watches, described in one small hand-written file: its name, area, time zone, display units, official alert source, the water it watches (river or coast), its Shelters and its suggested sensor sites. Adding a region means writing this file, not code. Nepal's Bhote Koshi valley is one Region; a Florida coast is the second.
+The place a Storm Shield network watches, described in one small hand-written file: its name, area, time zone, display units, official alert source, the water it watches (river or coast), the thresholds its Rule set uses, its Shelters and its suggested sensor sites. Adding a region means writing this file, not code. Nepal's Bhote Koshi valley is one Region; a Florida coast is the second.
 _Avoid_: map, area, location, scenario
 
 **Cache Pack**:
@@ -185,7 +197,7 @@ A hand-placed spot on the hillside above a town, picked into the Cache Pack with
 _Avoid_: safe zone, refuge
 
 **Flood-Prone Area**:
-The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered. The map always marks it approximate.
+The land the Region's water can reach: on a river, the corridor drawn by hand along it (the Lhende Khola, Bhote Koshi and Trishuli in Nepal); on a coast, the land below a set height. A Shelter inside it is never offered. The map always marks it approximate.
 _Avoid_: evacuation zone, surge zone
 
 ## Dashboard
