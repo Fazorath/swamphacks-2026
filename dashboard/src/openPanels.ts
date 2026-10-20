@@ -2,14 +2,13 @@ import { useState } from "react";
 
 import type { FloodRisk } from "./nodeState";
 
-export type PanelName = "readings" | "alerts" | "plan" | "cameras";
+export type PanelName = "readings" | "alerts" | "plan";
 
-const PANEL_NAMES: PanelName[] = ["readings", "alerts", "plan", "cameras"];
+const PANEL_NAMES: PanelName[] = ["readings", "alerts", "plan"];
 const SIDE_OF: Record<PanelName, "left" | "right"> = {
   readings: "left",
   alerts: "right",
   plan: "right",
-  cameras: "right",
 };
 const MOST_OPEN_PER_SIDE = 2;
 const MOST_OPEN_PER_SIDE_ON_A_TABLET = 1;

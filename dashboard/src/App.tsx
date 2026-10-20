@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 
 import { AlertsPanel } from "./AlertsPanel";
 import { firstSurgeAt } from "./communityWarnings";
-import { CamerasPanel } from "./CamerasPanel";
 import { EvacuationPlanPanel } from "./EvacuationPlanPanel";
 import { evacuationPlan } from "./evacuationPlan";
 import { HouseholdPanel } from "./HouseholdPanel";
@@ -29,7 +28,6 @@ import { TopBar } from "./TopBar";
 import { blockedRoadLines, roadNear } from "./rerouting";
 import { useBlockedRoads } from "./useBlockedRoads";
 import { useCachePack } from "./useCachePack";
-import { useCameras } from "./useCameras";
 import { useEventClock } from "./useEventClock";
 import { useReadingTrends } from "./readingTrends";
 import { useContactNotes, useLevelRises } from "./useMarkerEvents";
@@ -72,7 +70,6 @@ export function App() {
   const identity = lastAnswer?.state ?? null;
   const floodRisk = state?.flood_risk ?? null;
   const eventClock = useEventClock(!unreachable);
-  const cameras = useCameras(!unreachable);
   const nodes = nodesOnMap(state);
   const rises = useLevelRises(nodes);
   const trends = useReadingTrends(nodes, lastAnswer?.at ?? 0);
@@ -249,9 +246,6 @@ export function App() {
       panel={panel("plan")}
     />
   );
-  const camerasPanel = (
-    <CamerasPanel tiles={cameras} clock={eventClock.clock} panel={panel("cameras")} />
-  );
   const latestOfficialAlert = latestAlert(officialAlerts);
   const pending = pendingWarnings(officialAlerts, communityWarnings, acknowledged);
   const allNodes = lastAnswer?.state.nodes ?? [];
@@ -388,12 +382,7 @@ export function App() {
             )}
             {phoneTab !== "map" && (
               <div className="phone-pane">
-                {phoneTab === "readings" && (
-                  <>
-                    {readingsPanel}
-                    {camerasPanel}
-                  </>
-                )}
+                {phoneTab === "readings" && readingsPanel}
                 {phoneTab === "alerts" && alertsPanel}
                 {phoneTab === "plan" && (
                   <>
@@ -421,11 +410,6 @@ export function App() {
               openPanels={panels.open}
               registeredNodes={nodes.filter((node) => node.registered).length}
               openShelters={openShelterCount}
-              playingCameras={
-                eventClock.clock?.state === "playing"
-                  ? cameras.filter((tile) => tile.state === "live").length
-                  : 0
-              }
               onToggleLayer={toggleLayer}
               onTogglePanel={panels.toggle}
               weatherLayer={weather.layer}
@@ -449,7 +433,6 @@ export function App() {
             <div className="panel-column right">
               {alertsPanel}
               {planPanel}
-              {camerasPanel}
             </div>
             <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
           </>
@@ -461,7 +444,6 @@ export function App() {
         identity={identity}
         connecting={connection === "connecting"}
         status={state?.status ?? null}
-        cameras={cameras}
         cachePackBuilt={cachePack?.built ?? null}
         cachePackLoaded={cachePack !== null}
         nepal={cachePack?.nepal ?? null}

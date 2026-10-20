@@ -91,8 +91,8 @@ Contact lost is display only; Flood Risk, Surge and the 15 s and 60 s rules do n
 ### Layout changes to `ui.md`
 
 - **Top bar (D-48):** logo, Event clock, Flood Risk chip, Online / Mesh-only pill, Hub button. The Event clock takes the Node name's place on the left; the Node name moves to the status strip. After an acknowledged warning the violet chip sits beside the Flood Risk chip (D-29).
-- **Status strip (D-49):** the Simulated badge first, then freshness per source (readings, Official Alerts, Cache Pack version, cameras) and the Node name, the data credit at the right. The strip also carries the contact-lost note (D-52), the terrain-off line (D-35) and the RECONSTRUCTION line (D-47).
-- **Panels (D-50, D-51):** Readings docks left; Alerts and the Evacuation Plan stack right, Cameras third on the right. On a calm day only Readings is open; the Evacuation Plan Panel stays hidden until a warning, when Alerts and the Plan open (replaces `ui.md`'s calm default of Readings and Plan).
+- **Status strip (D-49):** the Simulated badge first, then freshness per source (readings, Official Alerts, Cache Pack version) and the Node name, the data credit at the right. The strip also carries the contact-lost note (D-52), the terrain-off line (D-35) and the RECONSTRUCTION line (D-47).
+- **Panels (D-50, D-51):** Readings docks left; Alerts and the Evacuation Plan stack right. On a calm day only Readings is open; the Evacuation Plan Panel stays hidden until a warning, when Alerts and the Plan open (replaces `ui.md`'s calm default of Readings and Plan).
 - **Layer rail:** gains the Fleet toggle, a rail button with the count as its badge (D-41).
 - **Readings Panel (D-36 to D-38, ticket 0070):** variant C, a river ladder by River km: the valley Nodes in river order on a vertical river line, the wave's position marked between them, and the real Nodes off the river listed under it. The breadboard Pi's card is pinned at the top with a cyan `LIVE SENSORS` tag. A fleet Node clicked on the map opens a popover beside its dot and leaves the Panel untouched.
 

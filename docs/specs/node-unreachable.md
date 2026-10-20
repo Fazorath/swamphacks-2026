@@ -2,6 +2,8 @@
 
 **Status:** ready-for-agent
 
+> **Cameras removed.** The camera tiles, `/api/cameras` and the Cameras Panel were deleted (`docs/specs/regions-events-and-sandbox.md`, decision 7). Read the camera parts below as history.
+
 Ticket: `docs/tickets/0042-node-unreachable.md`. Parent spec: `docs/specs/state-snapshot.md`, whose "Node unreachable" parts this spec replaces. Formats: `docs/specs/wire-formats.md` ("Node HTTP API"). Words follow `CONTEXT.md`.
 
 ## Problem Statement

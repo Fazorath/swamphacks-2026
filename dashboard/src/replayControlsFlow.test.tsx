@@ -26,7 +26,6 @@ beforeEach(() => {
     if (path === "/api/replay/phases") {
       return Response.json({ phases: PHASES, internet_cue_event_t: INTERNET_CUE });
     }
-    if (path === "/api/cameras") return Response.json([]);
     if (path === "/api/state") return Response.json(fakeNodeState({ id: "hub", name: "hub" }));
     return new Response(null, { status: 404 });
   });
