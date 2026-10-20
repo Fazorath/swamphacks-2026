@@ -333,7 +333,16 @@ Each deletion takes its tests, docs and glossary entries with it in the same PR.
   - If the river surface turns out not to be mechanical, the Bhote Koshi Replay is deleted too and Nepal stays a map-only Region.
   - The `v0-swamphacks` tag keeps the original.
 
-### 8. Milestones
+### 8. The look stays swappable
+
+The mock-ups for issue #21 settled what the screens hold and how they behave, not how they look. The owner doesn't like the current look: the colours, the sharp corners, and a coast that looks blocky instead of fluid and real. A redesign is expected later, so nothing built here may lock the look in.
+
+- **Every visual value is a theme role in `theme.css`.** That covers colours, corner radii, shadows, fonts and motion. The new screens need new roles: the range circle, a link, "no path to Hub", a Sensor being dragged, the Official Gauge marker, the coast Water ETA. Components use roles only, as `theme.test.ts` already enforces for colours, so a new look means editing one file.
+- **The map draws the Region's real geography.** The coastline, water and land come from the Region's basemap data (OpenStreetMap) at its true shape. Nothing is hand-drawn or approximated as blocks. Fills, line widths and opacities live in one map style module that reads theme roles, so the map can be restyled without touching map logic.
+- **Placement belongs to the layout stylesheet, not the components.** The Sandbox, Region picker and Evacuation Plan pieces are built from the existing Panel and its parts, and where each one sits is set in CSS. Panels can be moved around without rewriting them.
+- **No ticket here polishes the look.** Each ticket builds the behaviour with today's theme, and a later design pass re-themes it.
+
+### 9. Milestones
 
 - **M3 Sandbox**:
   - the generic Measurements wire change and its two tests (first, per ADR 0006);
@@ -403,6 +412,7 @@ Each deletion takes its tests, docs and glossary entries with it in the same PR.
 ## Further Notes
 
 - The open item from issue #21 (the USGS storm sensor readings for Fort Myers Beach and Estero Bay) doesn't block this spec. The Ian Replay ships with the scaled, labelled-reconstructed stations and swaps them when the readings are fetched from a laptop.
+- Mock-ups: https://claude.ai/artifact/AjDsPvQPY3DFkSp1qzVCTH (Sandbox controls, Region picker, coast Water ETA). They were approved for content and behaviour only; see decision 8 for the look.
 - The Fort Myers thresholds in the Region-file example are placeholders. The ticket that writes the Region file sets them from the NWS storm-surge categories and records where they came from.
 - Glossary entries that this work makes untrue go in the PR that makes them untrue. Scenario, Camera, Camera Clip, Simulated Fleet and Breadboard go with their deletions. River km becomes a river-Region term. Shelter's "well above the river" becomes "outside the Flood-Prone Area". The God's Eye View's "whole of Nepal" becomes "the whole Region".
 - `docs/specs/wire-formats.md` is updated in the wire-format PR. Its "units in the field names" rule becomes "units in the Measurement".
