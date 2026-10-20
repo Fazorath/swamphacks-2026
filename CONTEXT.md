@@ -90,8 +90,16 @@ _Avoid_: exact location, coordinates
 A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by the laptop keyboard or HTTP, or jumped to a named step by a wire touched to a breadboard input. No longer the demo's driver (the Replay is); kept for tests and the breadboard. A press changes only the Pi's own Node and does nothing visible while the Sensor is playing a Replay.
 _Avoid_: demo script, simulation, playback
 
+**Event**:
+One happening at a Region, of one Hazard: Hurricane Ian's storm surge at Fort Myers on 28 September 2022, or the Bhote Koshi flash flood of 26 August 2026. An Event can be real or made up for testing.
+_Avoid_: scenario, incident, storm (alone)
+
+**Hazard**:
+The kind of Event: flash flood or storm surge today, others (lightning, frost) as more Rule sets arrive. The Hazard names the Community Warning and decides what triggers it.
+_Avoid_: event type, threat, disaster
+
 **Replay**:
-A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
+How an Event is played: a file describing the water surface and weather over time, played on the Event clock. Each Sensor Node reads its Simulated Readings from that surface at its own position, so a Node on high ground stays dry; a real Event's Replay is rebuilt from recorded gauges and reports, and its Official Alerts appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
 **Camera**:
@@ -103,16 +111,16 @@ A five-minute illustrative video a demo camera plays in place of a live feed, co
 _Avoid_: recording, live feed, camera footage
 
 **Event clock**:
-The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
+The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
 _Avoid_: replay time, sim time
 
 **River km**:
 A Node's or home's distance along the river from the Lhende–Kyirong confluence at the border, positive downstream; set in each Node's config and measured on the river line in the Cache Pack.
 _Avoid_: chainage, mile marker, distance
 
-**Wave ETA**:
-How long the Surge in a Community Warning takes to reach a Viewer's home, counted down on the Event clock. Worked out on the Viewer from the home snapped to the river line (never on the Hub, and the home never leaves the device); with several warnings it follows the earliest arrival; a home upstream of the origin, or more than 2 km from the river line, has none.
-_Avoid_: countdown, arrival time, ETA (alone)
+**Water ETA**:
+How long until flood water reaches a Viewer's home, counted down on the Event clock and worked out on the Viewer (never on the Hub; the home never leaves the device). On a river, it is when the Surge in a Community Warning arrives at the home snapped to the river line; with several warnings it follows the earliest, and a home upstream of the origin or more than 2 km from the river line has none. On a coast, it is when the rising water level reported over the Mesh passes the home's ground height, at its current rate of rise.
+_Avoid_: Wave ETA, countdown, arrival time, ETA (alone)
 
 **Measured wave speed**:
 The speed of a Surge between the first two Registered Nodes that surged, worked out by the Hub from their River kms and Surge times and carried on the Community Warning; it replaces the reconstructed speed for the reaches below the second Node.
@@ -147,8 +155,8 @@ The condition, judged across the Mesh and not from any single Node, that soil mo
 _Avoid_: wet weather, precipitation
 
 **Surge**:
-A sudden rise in one Node's water level, at least a set amount within a short window; it makes that Node's Flood Risk High at once and triggers a Community Warning.
-_Avoid_: spike, flash, wave
+A sudden rise in one Node's water level, at least a set amount within a short window: the flash-flood trigger. It makes that Node's Flood Risk High at once and triggers a Community Warning titled with the Hazard; the word itself is never shown alone on screen.
+_Avoid_: storm surge (that is a Hazard), spike, flash, wave
 
 **Storm Signal**:
 The dashboard indicator that air pressure is low across the Nodes that count, a sign a storm is approaching. It stays on while pressure stays low and is separate from Flood Risk, though it makes Flood Risk appear (as Low) when nothing else would.
@@ -161,7 +169,7 @@ What a resident should do and where to go: their risk, and either the nearest op
 _Avoid_: evac info, escape route
 
 **Reachable Shelter**:
-An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Wave ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
+An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Water ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
 _Avoid_: safe Shelter, nearest Shelter (the nearest need not be reachable)
 
 **Household Profile**:
