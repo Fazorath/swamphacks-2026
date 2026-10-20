@@ -5,14 +5,14 @@ import math
 import struct
 import time
 import zlib
-from collections.abc import Callable
 from datetime import date
 from functools import partial
 from pathlib import Path
 from typing import Any
 
 import httpx
-import pack_weather
+from http_retry import get_with_retries
+from pack_routes import ring_contains
 from storm_shield.weather_grid import NEPAL_BBOX, BBox
 
 # The Kathmandu valley, drawn as finely as the demo valley because the capital is a labelled place.
@@ -72,15 +72,6 @@ def simplify_line(points: list[tuple[float, float]], tolerance: float) -> list[t
     return [point for point, kept in zip(points, keep, strict=True) if kept]
 
 
-def _inside(point: tuple[float, float], ring: list[tuple[float, float]]) -> bool:
-    x, y = point
-    crossings = False
-    for (x1, y1), (x2, y2) in zip(ring, ring[1:] + ring[:1], strict=True):
-        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) / (y2 - y1) * (x2 - x1):
-            crossings = not crossings
-    return crossings
-
-
 def _polygons(geometry: dict[str, Any]) -> list[list[list[list[float]]]]:
     """The polygons of a Polygon or MultiPolygon geometry."""
     if geometry["type"] == "Polygon":
@@ -97,12 +88,17 @@ class Country:
 
     def __init__(self, border: dict[str, Any]) -> None:
         self._rings = [
-            simplify_line([(lon, lat) for lon, lat in polygon[0]], COUNTRY_TEST_TOLERANCE_DEGREES)
+            [
+                (lat, lon)
+                for lon, lat in simplify_line(
+                    [(lon, lat) for lon, lat in polygon[0]], COUNTRY_TEST_TOLERANCE_DEGREES
+                )
+            ]
             for polygon in _polygons(border["features"][0]["geometry"])
         ]
 
     def contains(self, lon: float, lat: float) -> bool:
-        return any(_inside((lon, lat), ring) for ring in self._rings)
+        return any(ring_contains(ring, (lat, lon)) for ring in self._rings)
 
 
 def _rounded(geometry: dict[str, Any]) -> dict[str, Any]:
@@ -112,27 +108,12 @@ def _rounded(geometry: dict[str, Any]) -> dict[str, Any]:
     return {"type": "MultiPolygon", "coordinates": polygons}
 
 
-def _get_with_retries(request: Callable[[], httpx.Response], what: str) -> httpx.Response:
-    def attempt() -> httpx.Response:
-        response = request()
-        response.raise_for_status()
-        return response
-
-    for number in range(1, pack_weather.ATTEMPTS):
-        try:
-            return attempt()
-        except httpx.HTTPError as error:
-            print(f"{what} attempt {number} failed ({error}); retrying", flush=True)
-            time.sleep(pack_weather.RETRY_PAUSE_SECONDS)
-    return attempt()
-
-
 def fetch_boundary(client: httpx.Client, level: str) -> tuple[dict[str, Any], dict[str, str]]:
     """One geoBoundaries level (ADM0 the border, ADM2 the districts), as the dataset gives it."""
-    meta = _get_with_retries(
+    meta = get_with_retries(
         partial(client.get, GEOBOUNDARIES_URL.format(level=level)), f"geoBoundaries {level}"
     ).json()
-    shapes = _get_with_retries(
+    shapes = get_with_retries(
         partial(client.get, meta["simplifiedGeometryGeoJSON"], follow_redirects=True),
         f"geoBoundaries {level} shapes",
     ).json()
@@ -155,7 +136,7 @@ def fetch_boundary(client: httpx.Client, level: str) -> tuple[dict[str, Any], di
 
 
 def _overpass(client: httpx.Client, query: str, what: str) -> list[dict[str, Any]]:
-    response = _get_with_retries(
+    response = get_with_retries(
         partial(
             client.post,
             OVERPASS_URL,
@@ -261,7 +242,7 @@ def _json_bytes(content: dict[str, Any]) -> bytes:
     return json.dumps(content, separators=(",", ":"), ensure_ascii=False).encode()
 
 
-def _tile_position(lat: float, lon: float, zoom: int) -> tuple[float, float]:
+def tile_position(lat: float, lon: float, zoom: int) -> tuple[float, float]:
     """The point's place on the zoom's tile grid; the integer part is the tile, the rest is inside it."""
     n = 2**zoom
     return (
@@ -270,26 +251,26 @@ def _tile_position(lat: float, lon: float, zoom: int) -> tuple[float, float]:
     )
 
 
-def elevation_tiles(bbox: BBox, zooms: range) -> list[tuple[int, int, int]]:
+def tiles_covering(bbox: BBox, zooms: range) -> list[tuple[int, int, int]]:
     """Every (z, x, y) web-mercator tile touching `bbox`."""
     south, west, north, east = bbox
     tiles = []
     for zoom in zooms:
-        x_min, y_max = (int(value) for value in _tile_position(south, west, zoom))
-        x_max, y_min = (int(value) for value in _tile_position(north, east, zoom))
+        x_min, y_max = (int(value) for value in tile_position(south, west, zoom))
+        x_max, y_min = (int(value) for value in tile_position(north, east, zoom))
         tiles += [(zoom, x, y) for x in range(x_min, x_max + 1) for y in range(y_min, y_max + 1)]
     return tiles
 
 
 def fetch_elevation(client: httpx.Client, detail_areas: list[BBox]) -> dict[str, bytes]:
     """Terrarium elevation tiles: the country coarsely, each detail area finely. Fails over budget."""
-    wanted = set(elevation_tiles(NEPAL_BBOX, NATIONAL_ZOOMS))
+    wanted = set(tiles_covering(NEPAL_BBOX, NATIONAL_ZOOMS))
     for area in detail_areas:
-        wanted.update(elevation_tiles(area, DETAIL_ZOOMS))
+        wanted.update(tiles_covering(area, DETAIL_ZOOMS))
     tiles = {}
     for zoom, x, y in sorted(wanted):
         url = ELEVATION_URL.format(z=zoom, x=x, y=y)
-        tiles[f"elevation/{zoom}/{x}/{y}.png"] = _get_with_retries(
+        tiles[f"elevation/{zoom}/{x}/{y}.png"] = get_with_retries(
             partial(client.get, url), f"elevation {zoom}/{x}/{y}"
         ).content
         time.sleep(ELEVATION_DELAY_SECONDS)
@@ -344,7 +325,7 @@ def _decode_rgb(png: bytes) -> tuple[int, int, int, bytes]:
 def elevation_at(tiles: dict[str, bytes], lat: float, lon: float) -> float:
     """Metres above sea level at a point, read from the finest Terrarium tile that holds it."""
     for zoom in range(DETAIL_ZOOMS.stop - 1, NATIONAL_ZOOMS.start - 1, -1):
-        x, y = _tile_position(lat, lon, zoom)
+        x, y = tile_position(lat, lon, zoom)
         tile = tiles.get(f"elevation/{zoom}/{int(x)}/{int(y)}.png")
         if tile is not None:
             width, height, pixel, pixels = _decode_rgb(tile)
