@@ -53,4 +53,4 @@ Moving to the Pis: on each Pi leave `NODE_MESH_INTERFACE` unset (it defaults to 
 
 ## Tests
 
-`tests/test_reticulum_mesh.py` checks signing and verification and `tests/test_reticulum_config.py` the generated Reticulum config. `tests/test_reticulum_nodes.py` starts three real Node processes, once on the loopback interface and once on fixed TCP addresses (HTTP ports 8101-8103, Reticulum ports 4250-4252 and 4350-4352) and takes under 20 s; stop any Node running on those ports first.
+`tests/test_reticulum_mesh.py` checks signing and verification and `tests/test_reticulum_config.py` the generated Reticulum config. `tests/test_reticulum_nodes.py` starts three real Node processes, once on the loopback interface and once on fixed TCP addresses (HTTP ports 8101-8103, Reticulum ports 4250-4252 and 4350-4352) and takes under 20 s; stop any Node running on those ports first. It is marked `mesh_integration`, so a plain `pytest` (and CI on every PR) leaves it out; run it with `uv run pytest -m mesh_integration` or the "Mesh integration" workflow on GitHub.

@@ -37,6 +37,10 @@ line-length = 100
 [tool.pytest.ini_options]
 # The Cache Pack build script is not part of the Node, but its routing is tested here.
 pythonpath = ["../scripts"]
+# Real Reticulum Nodes on fixed ports. Left out by default (and in CI); run them with
+# `uv run pytest -m mesh_integration` or the "Mesh integration" workflow.
+markers = ["mesh_integration: starts real Node processes over Reticulum"]
+addopts = '-m "not mesh_integration"'
 
 [tool.mypy]
 strict = true

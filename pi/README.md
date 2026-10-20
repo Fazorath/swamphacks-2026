@@ -53,7 +53,7 @@ pi/setup-hotspot.sh down   # off; the Pi is an ordinary Node again
 - The hotspot hands out addresses (phones need that) and shares whatever uplink the Pi has. **With Ethernet plugged into the Pi, hotspot clients have internet.** Unplug the Pi's cable before the demo so "internet off" is real; the script warns if Ethernet is connected. The Pi has no other uplink, so unplugging the Hub laptop's tether then cuts the internet.
 - The password is passed to `nmcli` as an argument, so another user on the Pi could see it in `ps` for a moment. Quote values in `.env` that contain spaces or `$` (the script reads the file as shell, like `scripts/run-live.sh`).
 - The Pi is at `10.88.0.1`. Phones open `http://10.88.0.1:8000` or the Hub's address. It is not NetworkManager's default `10.42.0.1` on purpose: a laptop sharing its connection over an Ethernet cable is also `10.42.0.1`, so `ssh 10.42.0.1` reached the laptop ("connection refused") instead of the Pi.
-- If it misbehaves, a phone's hotspot is the fallback: AutoInterface already worked over an iPhone hotspot (`docs/agents/lessons.md`, ticket 0004).
+- If it misbehaves, a phone's hotspot is the fallback: AutoInterface already worked over an iPhone hotspot (`docs/agents/lessons-archive.md`, ticket 0004).
 
 ## Laptops that cannot do Wi-Fi discovery (WSL2, Docker)
 
