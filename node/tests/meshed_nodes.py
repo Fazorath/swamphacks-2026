@@ -9,15 +9,13 @@ from fastapi.testclient import TestClient
 from storm_shield.cache_pack import CachePack
 from storm_shield.community_reading import CommunityReading, Measurement, Position
 from storm_shield.community_warning import CommunityWarning
-from storm_shield.main import create_app
-from storm_shield.mesh import InMemoryMesh, InMemoryNetwork, Message
+from storm_shield.mesh import InMemoryMesh, Message
 from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
-from storm_shield.settings import GpioMode, Settings
+from storm_shield.sandbox import HUB, SimulatedNodes
+from storm_shield.settings import GpioMode
 from storm_shield.shelter_status import ShelterStatus
-
-HUB = "hub"
 
 
 def _no_internet(request: httpx.Request) -> httpx.Response:
@@ -30,12 +28,11 @@ class MeshedNodes:
     def __init__(self, directory: Path) -> None:
         # Every Node's files live under here, never in the checkout: a built dashboard, a downloaded
         # Cache Pack or a Hub's saved Shelter status there would change what the tests see.
-        self._directory = directory
-        self._network = InMemoryNetwork(radio_range_m=None)
-        self._clients: dict[str, TestClient] = {}
         self._now = datetime.now(UTC)
+        self._directory = directory
+        self._nodes = SimulatedNodes(directory, clock=lambda: self._now)
+        self._network = self._nodes.network
         self._hand_fed: dict[str, tuple[InMemoryMesh, int]] = {}
-        self._running: list[TestClient] = []
         self._registry_ver = 0
 
     def start(
@@ -46,13 +43,12 @@ class MeshedNodes:
     ) -> None:
         """Start Nodes that trust `HUB`; with a (directory, zip) pair each already holds that pack."""
         for name in names:
-            mesh = self._network.join(name, HUB)
-            settings = self._settings(name, hub_identity=HUB, **overrides)
+            settings = self._nodes.settings(name, hub_identity=HUB, **overrides)
             if cache_pack:
                 directory, pack = cache_pack
                 settings = settings.model_copy(update={"cache_pack_dir": directory / name})
                 CachePack(directory / name).install(pack)
-            self._clients[name] = TestClient(create_app(settings, mesh, clock=lambda: self._now))
+            self._nodes.start(settings)
 
     def start_sensor(
         self,
@@ -64,7 +60,7 @@ class MeshedNodes:
         gpio: GpioMode = "off",
     ) -> None:
         """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
-        settings = self._settings(
+        settings = self._nodes.settings(
             name,
             hub_identity=HUB,
             gpio=gpio,
@@ -72,10 +68,7 @@ class MeshedNodes:
             publish_every_seconds=publish_every_seconds,
             sign_up_repeat_seconds=sign_up_repeat_seconds,
         )
-        client = TestClient(create_app(settings, self._network.join(name, HUB), clock=self._clock))
-        client.__enter__()
-        self._running.append(client)
-        self._clients[name] = client
+        self._nodes.start(settings, running=True)
 
     def start_hub(
         self,
@@ -88,7 +81,7 @@ class MeshedNodes:
         **overrides: Any,
     ) -> None:
         """Start the Hub, whose identity is `HUB`, with its background loops running."""
-        settings = self._settings(
+        settings = self._nodes.settings(
             HUB,
             role="hub",
             shelter_repeat_seconds=shelter_repeat_seconds,
@@ -103,26 +96,8 @@ class MeshedNodes:
                 update={"cache_pack_dir": directory / HUB, "data_dir": directory / HUB / "data"}
             )
             CachePack(directory / HUB).install(pack)
-        mesh = self._network.join(HUB, HUB)
         weather_source = httpx.Client(transport=httpx.MockTransport(_no_internet))
-        client = TestClient(
-            create_app(settings, mesh, clock=lambda: self._now, weather_source=weather_source)
-        )
-        client.__enter__()
-        self._running.append(client)
-        self._clients[HUB] = client
-
-    def _settings(self, name: str, **overrides: Any) -> Settings:
-        own = self._directory / name
-        # Off unless a test asks, so a run on a real Pi never reads its pins.
-        overrides = {"gpio": "off", **overrides}
-        return Settings(
-            name=name,
-            dashboard_dir=own / "no-dashboard",
-            cache_pack_dir=own / "cache-pack",
-            data_dir=own / "data",
-            **overrides,
-        )
+        self._nodes.start(settings, running=True, weather_source=weather_source)
 
     def data_dir(self, name: str) -> Path:
         """Where a Node keeps its saved files."""
@@ -130,14 +105,10 @@ class MeshedNodes:
 
     def stop_hub(self) -> None:
         """Stop the Hub as a power cut would; `start_hub` with the same directory brings it back."""
-        client = self._clients.pop(HUB)
-        client.__exit__(None, None, None)
-        self._running.remove(client)
-        self._network.leave(HUB)
+        self._nodes.stop(HUB)
 
     def close(self) -> None:
-        for client in self._running:
-            client.__exit__(None, None, None)
+        self._nodes.close()
 
     def announce_replay(
         self, state: Literal["playing", "paused", "stopped"], event_t: int, *, sender: str = HUB
@@ -212,9 +183,6 @@ class MeshedNodes:
         )
         return heard
 
-    def _clock(self) -> datetime:
-        return self._now
-
     def advance(self, seconds: float) -> None:
         """Move every Node's clock forward without waiting."""
         self._now += timedelta(seconds=seconds)
@@ -262,8 +230,7 @@ class MeshedNodes:
         )
 
     def remove(self, name: str) -> None:
-        self._network.leave(name)
-        del self._clients[name]
+        self._nodes.stop(name)
 
     def __getitem__(self, name: str) -> TestClient:
-        return self._clients[name]
+        return self._nodes[name]
