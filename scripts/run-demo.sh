@@ -78,16 +78,6 @@ if [ ! -x node/.venv/bin/storm-shield-node ]; then
   (cd node && uv sync --quiet)
 fi
 
-# Camera Clips: the gitignored stage set (scripts/make_camera_clips.py --local) wins over the
-# committed fallback. The Hub serves its camera from CAMERA_CLIPS_DIR; Sensor Nodes ignore it.
-if [ -f "$demo_dir/clips/manifest.json" ]; then
-  export CAMERA_CLIPS_DIR="$demo_dir/clips"
-  echo "Camera clips: $CAMERA_CLIPS_DIR (stage set, never committed)"
-else
-  export CAMERA_CLIPS_DIR="$PWD/camera-clips"
-  echo "Camera clips: $CAMERA_CLIPS_DIR (committed fallback; see its README for the stage set)"
-fi
-
 # Stopping this server (kill $(cat .demo/pack-server.pid)) is half of the demo's "cut the internet".
 python3 -m http.server "$pack_port" --bind 127.0.0.1 --directory "$demo_dir/pack" \
   >"$demo_dir/logs/pack-server.log" 2>&1 &

@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { App } from "./App";
 import { lastMap, sourceData } from "./fakeMaplibre";
-import { fakeCameraTile } from "./fakeCameraTile";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import { defaultPanels, withPanelToggled } from "./openPanels";
 
@@ -22,12 +21,6 @@ const SHELTERS = [
     special_needs: false,
     pet_friendly: false,
   },
-];
-
-const CAMERAS = [
-  fakeCameraTile(),
-  fakeCameraTile({ id: "second", label: "Second" }),
-  fakeCameraTile({ id: "third", label: "Third", state: "offline" }),
 ];
 
 function stubNode(state = fakeNodeState({ nodes: [fakeNodeSnapshot("porch")] })) {
@@ -56,7 +49,6 @@ function stubNode(state = fakeNodeState({ nodes: [fakeNodeSnapshot("porch")] }))
       ],
     },
     "/api/shelters": { open: ["gym", "hall"] },
-    "/api/cameras": CAMERAS,
     "/api/replay": { state: "playing", event_t: 1787712300, rate: 30 },
   };
   vi.stubGlobal(
@@ -78,7 +70,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("the rail's counts", () => {
-  it("count Registered Nodes, open Shelters and cameras playing", async () => {
+  it("count Registered Nodes and open Shelters", async () => {
     stubNode(
       fakeNodeState({
         nodes: [
@@ -92,7 +84,6 @@ describe("the rail's counts", () => {
 
     expect(await rail().findByRole("button", { name: "Nodes, 2" })).toBeVisible();
     expect(await rail().findByRole("button", { name: "Shelters, 2" })).toBeVisible();
-    expect(await rail().findByRole("button", { name: "Cameras, 2" })).toBeVisible();
   });
 });
 
@@ -151,23 +142,6 @@ describe("the rail's Panel buttons", () => {
     expect(isOpen("Readings")).not.toBeNull();
   });
 
-  it("collapse the oldest Panel on a side when a third opens", async () => {
-    stubNode();
-    render(<App />);
-
-    fireEvent.click(rail().getByRole("button", { name: "Alerts" }));
-    fireEvent.click(screen.getByRole("button", { name: "Expand Evacuation Plan" }));
-    expect(isOpen("Alerts")).not.toBeNull();
-    expect(isOpen("Evacuation Plan")).not.toBeNull();
-
-    fireEvent.click(rail().getByRole("button", { name: /^Cameras/ }));
-    expect(isOpen("Alerts")).toBeNull();
-    expect(isOpen("Evacuation Plan")).not.toBeNull();
-    expect(isOpen("Cameras")).not.toBeNull();
-    // The left side is its own count.
-    expect(isOpen("Readings")).not.toBeNull();
-  });
-
   it("re-centre the map on the selected Node so the Panel does not hide it", async () => {
     stubNode();
     render(<App />);
@@ -191,12 +165,12 @@ describe("remembered Panels", () => {
     stubNode();
     const first = render(<App />);
     fireEvent.click(rail().getByRole("button", { name: "Readings" }));
-    fireEvent.click(rail().getByRole("button", { name: /^Cameras/ }));
+    fireEvent.click(rail().getByRole("button", { name: "Alerts" }));
     first.unmount();
 
     render(<App />);
     expect(isOpen("Readings")).toBeNull();
-    expect(isOpen("Cameras")).not.toBeNull();
+    expect(isOpen("Alerts")).not.toBeNull();
   });
 
   it("fall back to the defaults when the saved value is unreadable", () => {
@@ -205,7 +179,7 @@ describe("remembered Panels", () => {
     render(<App />);
 
     expect(isOpen("Readings")).not.toBeNull();
-    expect(isOpen("Cameras")).toBeNull();
+    expect(isOpen("Alerts")).toBeNull();
   });
 
   it("fall back to the defaults when the browser will not read storage", () => {
@@ -244,10 +218,6 @@ describe("the starting Panels", () => {
 
 describe("withPanelToggled", () => {
   it("drops the oldest Panel of the same side only", () => {
-    expect(withPanelToggled(["readings", "alerts", "plan"], "cameras")).toEqual([
-      "readings",
-      "plan",
-      "cameras",
-    ]);
+    expect(withPanelToggled(["readings", "alerts"], "plan", 1)).toEqual(["readings", "plan"]);
   });
 });

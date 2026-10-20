@@ -2,7 +2,7 @@
 
 Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.md`) only once a session reads a file in this folder; other agents read the nearest `AGENTS.md`. Add a line when something here breaks, surprises you or takes more than one try; delete a line once your change makes it untrue. Repo-wide lessons: `docs/agents/lessons.md`.
 
-- **jsdom has no WebGL, canvas, Web Audio, `matchMedia` or `<video>` playback.** `setup.ts` swaps in `fakeMaplibre.ts`, `fakeViewport.ts`, `fakeMedia.ts` and a mocked `weatherImageUrl`; read back what the app gave the map with `sourceData`, `lastMap().layerIds`, `tapMap`.
+- **jsdom has no WebGL, canvas, Web Audio or `matchMedia`.** `setup.ts` swaps in `fakeMaplibre.ts`, `fakeViewport.ts` and a mocked `weatherImageUrl`; read back what the app gave the map with `sourceData`, `lastMap().layerIds`, `tapMap`.
 - **Fake timers must use `shouldAdvanceTime: true`**, or every `findBy*` hangs into a 5 s timeout. To prove "updates without waiting for the poll", look inside the poll interval with `advanceTimersByTimeAsync(STATE_POLL_MS / 10)`; a `findBy*` passes even when the code is broken.
 - **Map assertions wait with `waitFor`.** Check a new test by breaking the code it covers.
 - **`localStorage` is cleared after every test** (open Panels are remembered there). A calm day opens only the Readings Panel: call `expandPanel(...)` first.

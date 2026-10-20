@@ -16,7 +16,7 @@ Storm Shield shows what a handful of amateur Nodes along the river could have do
 
 The Evacuation Plan then picks one of two outcomes. If a Shelter (a public building well above the river) can be reached on foot before the wave, with a safety margin, the plan points there. Otherwise it says there is no Shelter you can reach in time and tells you to get to higher ground, away from the river, now. The replayed DHM alerts appear on the same clock, so the audience sees the gap between the Community Warning and the first official word: about 38 minutes, and at Betrawati about 43 minutes of warning instead of 5.
 
-The internet is lost during the replay and the Mesh keeps carrying readings and the warning. A camera on the Hub plays a recorded clip on the event clock, labelled as a replay.
+The internet is lost during the replay and the Mesh keeps carrying readings and the warning.
 
 ## User Stories
 
@@ -39,7 +39,6 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 15. As a resident, I want to keep receiving readings and the warning after the internet goes down, so that the warning still reaches me in the outage.
 16. As a resident, I want a Sensor that has gone silent shown as Stale, so that I understand the upstream station may have been destroyed rather than the river having calmed.
 17. As a resident, I want the map to show the river corridor as the Flood-Prone Area, so that I can see where not to be.
-18. As a resident, I want to see the Hub's camera, so that I can see the river at Betrawati with my own eyes.
 
 ### Sensor Node operator
 
@@ -79,7 +78,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
   | S0 | Lhende Khola, below the collapse (hypothetical station in Langtang National Park) | −12.2, measured on the pack's river line at 28.3517 N, 85.4477 E | Sensor; first to surge, silent within a minute |
   | S1 | Timure (28.2528, 85.3667) | 3.4 | Sensor; silent at about 08:45 |
   | S2 | Syabrubesi (28.1632, 85.3391) | 14.6 | Sensor; silent at 08:50 like the real gauge |
-  | Hub | Betrawati (27.9731, 85.1860) | 45.6 | Hub, with the camera |
+  | Hub | Betrawati (27.9731, 85.1860) | 45.6 | Hub |
   | S3 | Trishuli (27.9215, 85.1460) | 54.0 | Sensor; last hit, longest countdown |
 
 ### Replay
@@ -130,17 +129,6 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 - **The Hub emails the team when it issues a new Community Warning (ticket 0081, decided 2026-10-18).** The subject is "ALERT OF FLOOD INCOMING!"; the body names the Node and its River km, the Event clock time, and says it is a Community Warning, not an official alert, so it keeps the rule that Storm Shield never orders an evacuation. Recipients are the four team members, set in `ALERT_EMAIL_TO`; the sender is the team Gmail account over SMTP with an app password kept in `.env`.
 - It is optional and never blocks anything: with a blank setting nothing is sent, and a failed send is logged and ignored. It needs internet, so it is a bonus beside the Mesh warning, not part of the offline path; the 08:37 Surge's warning comes before the 09:20 internet cue.
 
-### Cameras
-
-- **The FL511 cameras are removed.** The Hub's camera plays a recorded clip of the flood synced to the event clock, labelled "CAMERA · REPLAY 09:18 NPT". The stage clip lives in a gitignored folder on the demo laptop, because we do not hold its rights. A credited Creative Commons clip is committed as the fallback, so a fresh clone still works. The Offline and Unavailable states stay.
-- **Several cameras, live where they exist (decided 2026-10-18, tickets 0074 to 0077).** Each demo Node site may have a camera. A site uses a live Nepal camera if one is public, allowed by its terms and stays up (0074 decides; none had a public feed on 2026-10-18), and otherwise a five-minute demo clip. The 0074 research is in `docs/research/nepal-cameras.md`: no candidate qualified on 2026-10-18, so every site is a clip. Five minutes covers the whole Replay (4 real minutes at ×30) with a minute to spare, and a clip's position is the Event clock's, shifted so the flood in the clip lands when the wave reaches that site. The clips are composed from short sources (0076), include real flood footage so the demo shows an extreme case, and are always labelled as illustrative; unlicensed footage stays in the gitignored stage folder. At the internet cue every tile goes Offline.
-
-- **The Hub's replay camera (ticket 0038, decided 2026-10-18).** No live Nepal camera and no free API showing Nepal turned up, so every camera is a recording; the list, any live source and the timing shift belong to 0075 and 0077. 0038 builds the first one: a single Hub camera, `hub-betrawati` (ids are strings now), replacing the FL511 code and its four cameras. The Hub serves its clip from `GET /api/cameras/{id}/clip` with HTTP range requests (Safari needs them to seek). `GET /api/cameras` gives each tile `kind` (`replay`), `credit` and `flood_onset_s` from the clip manifest beside the clips, with the existing `live` / `offline` / `unavailable` state. The clip is clip 1 (calm then surge), taken from `CAMERA_CLIPS_DIR` (`.demo/clips/`, which `run-demo.sh` exports) when it holds one, otherwise from the committed `camera-clips/`; the README credits the fallback and says where the stage clip goes. The clip's position is the Event clock's, `(Event time - Event start) / rate`, with no shift (0077 adds the shift that lines the flood up with the wave). With the Event clock stopped the tile shows the clip's poster at 0:00 labelled `CAMERA · REPLAY` with no time; paused (Reset is paused at 08:30) it holds the frame and shows the Event time in NPT. A Sensor Node answers 404 for a clip, so its Viewer sees `UNAVAILABLE`, never a broken player. Going Mesh-only relabels the same tile in place (dashed muted frame, `OFFLINE · internet down`) and removes its video, so the Viewer asks for no clip.
-
-- **The camera list (ticket 0075, decided 2026-10-18).** `node/src/storm_shield/cameras.json` lists four cameras, one per site: `hub-betrawati` (Hub, clip 1), `s1-timure` (clip 3), `s2-syabrubesi` (clip 2, the extreme case) and `s3-trishuli` (clip 1); clips may be shared. Each has `id`, `label`, `site` (the Node's name), `lat`, `lon` and `clip`. `GET /api/cameras` gives each tile `site`, `lat` and `lon` beside the fields above. **The live path is deferred**: 0074 found no qualifying live feed and the FL511 fetcher is gone, so a live source, fallback to the clip and a key in `.env` get their own ticket when a feed qualifies. A camera with no clip, a clip key the manifest lacks, or a missing file logs a warning naming it at startup and shows `unavailable`; the Hub still starts and the other cameras work. An unreadable list logs and leaves the Hub with no cameras.
-
-- **Camera Clips (ticket 0076, decided 2026-10-18).** A script composes three five-minute 854 × 480 H.264 clips with no audio from a source list in the repo (address, licence, credit, second range, role `calm` / `rising` / `flood` / `extreme`) and refuses a source with no licence or credit. Clip 1 is calm then a fast surge (the story clip), clip 2 an extreme case with real flood footage, clip 3 a rise that stays below flooding. A manifest beside them gives each clip's length, the credit for every source and which seconds are real footage of which event, and `flood_onset_s` for tickets 0075 and 0077. Clips are illustrative: nothing claims they were filmed at the Node's site. The committed fallback (under 20 MB, public-domain or Creative Commons only, credited in the README) is built from USGS and Wikimedia Commons sources whose licence page was checked; if none shows debris or a bridge overtopped, the manifest and lessons say so and the extreme clip uses the strongest licensed footage. Unlicensed clips go in the gitignored `.demo/clips/`. `scripts/run-demo.sh` exports `CAMERA_CLIPS_DIR` as `.demo/clips/` when it exists, otherwise the committed folder, and prints which; the Node reads it in 0075. `ffmpeg` is required; the script prints how to install it when missing.
-
 ### Cache Pack
 
 - Rebuilt for the valley box. Tiles cover a narrower zoom range so the larger box stays small. FEMA zones and the creek floodplains are replaced by a hand-drawn river corridor as the Flood-Prone Area. A new `river.geojson` holds the river line with River km and the reach speeds. The hand-picked Shelters cite their OSM ids or sources.
@@ -178,7 +166,7 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
   - no evacuation language from the plan itself.
 
   Prior art: the existing Evacuation Plan tests with fixture Cache Packs.
-- **No new seams.** The dashboard's event clock and camera clip are checked with Vitest component tests like the existing flow tests.
+- **No new seams.** The dashboard's event clock is checked with Vitest component tests like the existing flow tests.
 - **Manual rehearsal on one laptop** with two phones over the hotspot or Tailscale runs the full replay. It proves the software path only. Wi-Fi discovery between real devices, and any Pi, stay unproven.
 
 ## Out of Scope
@@ -193,12 +181,12 @@ The internet is lost during the replay and the Mesh keeps carrying readings and 
 ## Further Notes
 
 - **Demo storyline (about 4 minutes of replay):**
-  1. 08:30 calm: five Registered Nodes along the valley, camera at Betrawati.
+  1. 08:30 calm: five Registered Nodes along the valley, Hub at Betrawati.
   2. 08:37 S0 surges; the Hub's Community Warning reaches every phone within seconds. Syabrubesi shows about 11 min, Betrawati about 43.
   3. S0, S1 and S2 go silent as the wave passes them; their cards turn Stale.
   4. Phone 1 (Syabrubesi): "No Shelter you can reach in time. Get to higher ground." Phone 2 (Betrawati): the hillside Shelter, 12 min walk.
   5. 09:15 the replayed DHM SMS arrives. The lead-time line reads "Community Warning 08:37 · first official SMS 09:15".
-  6. Internet cue at 09:20: the camera tile goes Offline, readings and the countdown keep going over the Mesh.
+  6. Internet cue at 09:20: the badge turns Mesh-only, readings and the countdown keep going over the Mesh.
 - **Tone.** This happened seven weeks ago to real families and the search is not over. On screen and in the pitch: the replay is "a reconstruction from reported times", never the official record; no casualty total is presented as final (cite NDRRMA with its date if a number is needed at all); no victim imagery; no "Himalayan tsunami"; the origin was in Nepal, so do not blame China for the start. Many victims were migrant workers and pilgrims.
 - **Honest limits, said out loud.** Near the source the wave was fast enough that Timure would have had one to eight minutes. The gain is real from Syabrubesi downstream. Arrival times at Rasuwagadhi, Timure and Syabrubesi are inferred from gauges going silent, and the surge sizes are invented; the pitch, the README and the replay timeline file all say so.
 - **Sources** (checked 2026-10-17):

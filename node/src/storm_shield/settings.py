@@ -106,12 +106,6 @@ class Settings(BaseSettings):
         default=Path(__file__).resolve().parents[3] / "cache-pack",
         validation_alias="CACHE_PACK_DIR",
     )
-    # Where the Hub finds its Camera Clips and their manifest.json. scripts/run-demo.sh points it
-    # at the gitignored stage set when there is one, otherwise at the committed fallback.
-    camera_clips_dir: Path = Field(
-        default=Path(__file__).resolve().parents[3] / "camera-clips",
-        validation_alias="CAMERA_CLIPS_DIR",
-    )
     # Whose Shelter status this Node believes (the Hub prints its identity at startup). Blank or
     # wrong means no Shelter status is accepted, so the Node shows nothing open.
     hub_identity: str = Field(default="", validation_alias="HUB_IDENTITY")

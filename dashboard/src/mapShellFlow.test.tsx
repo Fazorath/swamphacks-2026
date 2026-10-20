@@ -223,7 +223,7 @@ describe("the Panels", () => {
     await screen.findByRole("region", { name: "Map" });
 
     expect(screen.getByRole("button", { name: "Collapse Readings" })).toBeInTheDocument();
-    for (const name of ["Alerts", "Evacuation Plan", "Cameras"]) {
+    for (const name of ["Alerts", "Evacuation Plan"]) {
       expect(screen.getByRole("button", { name: `Expand ${name}` })).toBeInTheDocument();
     }
   });
@@ -234,7 +234,6 @@ describe("the Panels", () => {
 
     expect(await screen.findByRole("button", { name: "Collapse Alerts" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Collapse Evacuation Plan" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Expand Cameras" })).toBeInTheDocument();
   });
 
   it("hides a Panel's content when it is collapsed and brings it back when expanded", async () => {

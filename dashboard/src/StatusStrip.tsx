@@ -2,7 +2,6 @@ import { agoWords } from "./agoWords";
 import type { NepalMap } from "./evacuationPlan";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { NodeState } from "./nodeState";
-import type { CameraTile } from "./useCameras";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 
@@ -20,7 +19,6 @@ type Props = {
   identity: Pick<NodeState, "name" | "role"> | null;
   connecting: boolean;
   status: NodeState["status"] | null;
-  cameras: CameraTile[];
   cachePackBuilt: string | null;
   cachePackLoaded: boolean;
   nepal: NepalMap | null;
@@ -36,7 +34,6 @@ export function StatusStrip({
   identity,
   connecting,
   status,
-  cameras,
   cachePackBuilt,
   cachePackLoaded,
   nepal,
@@ -45,7 +42,6 @@ export function StatusStrip({
 }: Props) {
   const simulated = nodes.filter((node) => node.simulated).length;
   const youngest = nodes.length > 0 ? Math.min(...nodes.map((node) => node.ageSeconds)) : null;
-  const camerasLive = cameras.some((camera) => camera.state === "live");
   return (
     <footer className="status-strip" aria-label="Status">
       {nodes.length > 0 && (
@@ -64,7 +60,6 @@ export function StatusStrip({
         Cache Pack{" "}
         {cachePackLoaded ? `built ${cachePackBuilt?.slice(0, 10) ?? "(date unknown)"}` : "not yet"}
       </span>
-      <span>Cameras {camerasLive ? "live" : "offline"}</span>
       <span>
         {identity
           ? `${identity.name} · ${ROLE_LABELS[identity.role]}`
