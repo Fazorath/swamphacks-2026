@@ -60,7 +60,8 @@ trap stop_all EXIT
 
 # Each step below needs the internet only the first time, so a start on stage never reaches for it.
 if [ ! -f "$demo_dir/pack/cache-pack.zip" ]; then
-  # Download beside the final name so an interrupted download is not mistaken for the pack on the next start.
+  # gh carries the login the Release download needs. Download beside the final name so an
+  # interrupted download is not mistaken for the pack on the next start.
   rm -rf "$demo_dir/pack-download"
   gh release download cache-pack-v5 --pattern cache-pack.zip --dir "$demo_dir/pack-download"
   mv "$demo_dir/pack-download/cache-pack.zip" "$demo_dir/pack/cache-pack.zip"

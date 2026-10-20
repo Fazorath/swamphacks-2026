@@ -29,9 +29,9 @@ class FloodEmail:
         self, sender: str, app_password: str, recipients: list[str], dashboard_url: str
     ) -> None:
         self._sender = sender
-        self._dashboard_url = dashboard_url
         self._app_password = app_password
         self._recipients = recipients
+        self._dashboard_url = dashboard_url
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "FloodEmail | None":
@@ -80,7 +80,7 @@ class FloodEmail:
             f"km {warning.origin_km:g}, at {surge_time:%H:%M} Nepal time. "
             "A flood may be coming down the river.\n\n"
             "This is a Storm Shield Community Warning, not an official alert. "
-            f"Open the Storm Shield dashboard ({self._dashboard_url}) to see the arrival estimate and the nearest open "
-            "Shelter, and follow your official sources (DHM and your district) for instructions."
+            f"Open the Storm Shield dashboard ({self._dashboard_url}) to see the arrival estimate "
+            "and the nearest open Shelter, and follow your official sources (DHM and your district) for instructions."
         )
         return message

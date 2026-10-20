@@ -1,6 +1,6 @@
 import random
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Literal, get_args
 
 from pydantic import BaseModel
 
@@ -8,7 +8,7 @@ ReadingKind = Literal["pressure", "rain_rate", "water_level", "soil_moisture"]
 
 ScenarioStep = Literal["normal_day", "pressure_drop", "rain", "water_rising"]
 
-SCENARIO_STEPS: list[ScenarioStep] = ["normal_day", "pressure_drop", "rain", "water_rising"]
+SCENARIO_STEPS: list[ScenarioStep] = list(get_args(ScenarioStep))
 
 # Base values per step: pressure hPa, rain rate mm/h, water level cm, soil moisture %. Water and
 # pressure are scaled to the levels in flood_risk.py. The last step is High from heavy rain on
