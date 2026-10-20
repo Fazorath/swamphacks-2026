@@ -1,5 +1,6 @@
 import argparse
 import logging
+import subprocess
 import threading
 import time
 import webbrowser
@@ -9,6 +10,7 @@ from tempfile import TemporaryDirectory
 from types import TracebackType
 from typing import Any, NamedTuple, Self
 
+import httpx
 import uvicorn
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -21,9 +23,14 @@ from storm_shield.settings import Settings
 logger = logging.getLogger(__name__)
 
 HUB = "hub"
-PACK_RELEASE = "cache-pack-v6"
+PACK_URL = (
+    "https://github.com/StormShields/Stormshield/releases/download/cache-pack-v6/cache-pack.zip"
+)
+DOWNLOAD_TIMEOUT_SECONDS = 120
+REPO = Path(__file__).resolve().parents[3]
 # Where scripts/run-demo.sh keeps the pack it downloads, so one download serves both.
-DEFAULT_PACK = Path(__file__).resolve().parents[3] / ".demo" / "pack" / "cache-pack.zip"
+DEFAULT_PACK = REPO / ".demo" / "pack" / "cache-pack.zip"
+BUILT_DASHBOARD = REPO / "dashboard" / "dist" / "index.html"
 
 
 class NodeSite(NamedTuple):
@@ -57,11 +64,7 @@ class Sandbox:
 
     def __init__(self, pack: Path) -> None:
         if not pack.is_file():
-            raise SandboxError(
-                f"no Cache Pack at {pack}. Download it with: gh release download {PACK_RELEASE}"
-                f" --pattern cache-pack.zip --dir {pack.parent}"
-                " (or pass --pack with a pack you built)"
-            )
+            raise SandboxError(f"no Cache Pack at {pack}; build one or drop --pack to download it")
         self._pack = pack
         self._stack = ExitStack()
         self.hub: FastAPI
@@ -135,16 +138,63 @@ def _open_browser_when_up(server: uvicorn.Server, url: str) -> None:
     webbrowser.open(url)
 
 
+def download_pack_if_missing(pack: Path, client: httpx.Client) -> None:
+    """Fetch the published Cache Pack to `pack` unless it is already there."""
+    if pack.is_file():
+        return
+    logger.info("downloading the Cache Pack to %s (once)", pack)
+    try:
+        response = client.get(PACK_URL)
+        response.raise_for_status()
+    except httpx.HTTPError as error:
+        # The error text carries the URL; the type is enough to tell offline from refused.
+        raise SandboxError(
+            f"could not download the Cache Pack ({type(error).__name__}); connect to the internet"
+            " once, or pass --pack with a pack you have"
+        ) from None
+    pack.parent.mkdir(parents=True, exist_ok=True)
+    # Written beside the final name, so an interrupted download is not mistaken for the pack.
+    partial = pack.with_name(pack.name + ".part")
+    partial.write_bytes(response.content)
+    partial.rename(pack)
+
+
+def build_dashboard_if_missing() -> None:
+    """Build the dashboard the Hub serves, the first time only."""
+    if BUILT_DASHBOARD.is_file():
+        return
+    logger.info("building the dashboard (once)")
+    dashboard = REPO / "dashboard"
+    try:
+        for command in (["pnpm", "install", "--frozen-lockfile"], ["pnpm", "build"]):
+            subprocess.run(command, cwd=dashboard, check=True, capture_output=True)
+    except FileNotFoundError:
+        raise SandboxError("pnpm is not installed, and the dashboard needs building once") from None
+    except subprocess.CalledProcessError as error:
+        raise SandboxError(
+            f"`{' '.join(error.cmd)}` failed in dashboard/:\n{error.stderr.decode()[-2000:]}"
+        ) from None
+
+
 def run() -> None:
     logging.basicConfig(level=logging.INFO)
+    # httpx logs request URLs at INFO, and the Release download's URL is signed.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     parser = argparse.ArgumentParser(
         prog="storm-shield-sandbox",
         description="Start a Hub and simulated Sensors in one process and open the dashboard.",
     )
     parser.add_argument("--port", type=int, default=8000, help="where the dashboard is served")
-    parser.add_argument("--pack", type=Path, default=DEFAULT_PACK, help="the Cache Pack zip to use")
+    parser.add_argument(
+        "--pack", type=Path, help="a Cache Pack zip to use instead of the published one"
+    )
     arguments = parser.parse_args()
     try:
+        if arguments.pack is None:
+            arguments.pack = DEFAULT_PACK
+            with httpx.Client(timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True) as client:
+                download_pack_if_missing(DEFAULT_PACK, client)
+        build_dashboard_if_missing()
         with Sandbox(arguments.pack) as sandbox:
             server = uvicorn.Server(uvicorn.Config(sandbox.hub, port=arguments.port))
             url = f"http://localhost:{arguments.port}"
