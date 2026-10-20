@@ -1,12 +1,13 @@
 import json
 import logging
+import math
 import threading
 from collections.abc import Callable, Iterable
 from typing import Annotated, Any, Protocol, get_args
 
 from pydantic import Field, TypeAdapter, ValidationError
 
-from storm_shield.community_reading import CommunityReading
+from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.community_warning import CommunityWarning
 from storm_shield.node_registry import NodeRegistryMessage, SignUp
 from storm_shield.official_alert import OfficialAlert
@@ -27,6 +28,11 @@ Message = (
 MessageListener = Callable[[str, Message], None]
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_RADIO_RANGE_M = 1000.0
+EARTH_RADIUS_M = 6_371_000
+# Where a Node joins unless told, so a caller that never places Nodes still hears everyone in range.
+ORIGIN = Position(0, 0)
 
 _MESSAGE: TypeAdapter[Message] = TypeAdapter(Annotated[Message, Field(discriminator="kind")])
 # The `v` each message class declares; decode_message checks it before the classes see the body.
@@ -92,24 +98,58 @@ class Mesh(Protocol):
     def subscribe(self, listener: MessageListener) -> None: ...
 
 
-class InMemoryNetwork:
-    """Stands in for the radio: Nodes created here hear each other inside one process."""
+def _metres_between(a: Position, b: Position) -> float:
+    lat_a, lat_b = math.radians(a.latitude), math.radians(b.latitude)
+    half_chord = (
+        math.sin((lat_b - lat_a) / 2) ** 2
+        + math.cos(lat_a)
+        * math.cos(lat_b)
+        * math.sin(math.radians(b.longitude - a.longitude) / 2) ** 2
+    )
+    return 2 * EARTH_RADIUS_M * math.asin(math.sqrt(half_chord))
 
-    def __init__(self) -> None:
+
+class InMemoryNetwork:
+    """Stands in for the radio: Nodes created here hear each other inside one process.
+
+    A model of who hears whom, not of a radio: a message reaches every Node joined to its sender
+    by a chain of Nodes each within `radio_range_m` of the next, instantly and without loss.
+    `radio_range_m` of None is unlimited, so every Node hears every other.
+    """
+
+    def __init__(self, radio_range_m: float | None = DEFAULT_RADIO_RANGE_M) -> None:
         self._lock = threading.Lock()
         self._meshes: dict[str, InMemoryMesh] = {}
+        self._positions: dict[str, Position] = {}
+        self._radio_range_m = radio_range_m
 
-    def join(self, identity: str, hub_identity: str = "") -> "InMemoryMesh":
+    def join(
+        self, identity: str, hub_identity: str = "", position: Position = ORIGIN
+    ) -> "InMemoryMesh":
         mesh = InMemoryMesh(identity, self, hub_identity)
         with self._lock:
             if identity in self._meshes:
                 raise ValueError(f"a Node named {identity} has already joined")
             self._meshes[identity] = mesh
+            self._positions[identity] = position
         return mesh
 
     def leave(self, identity: str) -> None:
         with self._lock:
             self._meshes.pop(identity, None)
+            self._positions.pop(identity, None)
+
+    def move(self, identity: str, position: Position) -> None:
+        """Takes effect on the next message."""
+        with self._lock:
+            if identity not in self._meshes:
+                raise ValueError(f"no Node named {identity} has joined")
+            self._positions[identity] = position
+
+    def set_radio_range(self, radio_range_m: float | None) -> None:
+        """Takes effect on the next message; None is unlimited."""
+        with self._lock:
+            self._radio_range_m = radio_range_m
 
     def has_joined(self, mesh: "InMemoryMesh") -> bool:
         with self._lock:
@@ -119,14 +159,31 @@ class InMemoryNetwork:
         self.deliver_bytes(sender, message.model_dump_json().encode())
 
     def deliver_bytes(self, sender: str, body: bytes) -> None:
-        """What the radio does: every other Node decodes the same bytes, or drops them."""
+        """What the radio does: every Node the sender reaches decodes the same bytes, or drops them."""
         with self._lock:
-            receivers = [mesh for name, mesh in self._meshes.items() if name != sender]
+            receivers = [self._meshes[name] for name in self._reached_from(sender)]
         wire_copy = decode_message(body)
         if wire_copy is None:
             return
         for mesh in receivers:
             mesh.receive(sender, wire_copy)
+
+    def _reached_from(self, sender: str) -> list[str]:
+        """The other Nodes the sender's message gets to, hopping through relays. Hold the lock."""
+        if sender not in self._positions:
+            return []
+        reached = {sender}
+        frontier = [sender]
+        while frontier:
+            relay = frontier.pop()
+            for name, position in self._positions.items():
+                if name not in reached and self._in_range(self._positions[relay], position):
+                    reached.add(name)
+                    frontier.append(name)
+        return [name for name in self._positions if name in reached and name != sender]
+
+    def _in_range(self, a: Position, b: Position) -> bool:
+        return self._radio_range_m is None or _metres_between(a, b) <= self._radio_range_m
 
 
 class InMemoryMesh:

@@ -71,7 +71,9 @@ class Sandbox:
             directory = Path(
                 setup.enter_context(TemporaryDirectory(prefix="storm-shield-sandbox-"))
             )
-            network = InMemoryNetwork()
+            # The Replay Nodes are tens of km apart, far past the default range; setting one is a
+            # later step.
+            network = InMemoryNetwork(radio_range_m=None)
             self.hub = self._create_hub(directory, network)
             hub_client = TestClient(self.hub)
             for site in SENSOR_SITES:
