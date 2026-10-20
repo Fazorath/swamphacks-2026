@@ -1,6 +1,6 @@
 # Tickets
 
-**Frozen archive.** These are the SwampHacks tickets, kept for history; new and open work lives in GitHub Issues (`docs/agents/issue-tracker.md`). 0077, the one ticket never built, became a GitHub issue. Nothing here is edited any more.
+**Frozen archive.** These are the SwampHacks tickets, kept for history; new and open work lives in GitHub Issues (`docs/agents/issue-tracker.md`). 0077, the one ticket never built, became issue #4. Nothing here is edited any more.
 
 76 of 78 done at the freeze (2026-10-20).
 
