@@ -4,11 +4,13 @@ import subprocess
 import threading
 import time
 import webbrowser
+from collections.abc import Callable
 from contextlib import ExitStack
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import TracebackType
-from typing import Any, NamedTuple, Self
+from typing import Any, NamedTuple, Self, cast
 
 import httpx
 import uvicorn
@@ -55,6 +57,73 @@ class SandboxError(Exception):
     """The Sandbox cannot start; the message says what to do about it."""
 
 
+class SimulatedNodes:
+    """Nodes in this process on one in-memory Mesh: the harness under the Sandbox and the tests.
+
+    Each Node keeps its files in its own folder under `directory`, and all of them read `clock`.
+    The radio range is unlimited unless the caller sets one.
+    """
+
+    def __init__(
+        self,
+        directory: Path,
+        *,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        radio_range_m: float | None = None,
+    ) -> None:
+        self.network = InMemoryNetwork(radio_range_m=radio_range_m)
+        self._directory = directory
+        self._clock = clock
+        self._clients: dict[str, TestClient] = {}
+        self._running: set[str] = set()
+
+    def settings(self, name: str, **overrides: Any) -> Settings:
+        """A Node's settings: its own folders, no dashboard, and pins off unless asked for."""
+        own = self._directory / name
+        return Settings(
+            **{
+                "name": name,
+                "dashboard_dir": own / "no-dashboard",
+                "cache_pack_dir": own / "cache-pack",
+                "data_dir": own / "data",
+                "gpio": "off",
+                **overrides,
+            }
+        )
+
+    def start(self, settings: Settings, *, running: bool = False, **app_options: Any) -> TestClient:
+        """Join the Mesh and build the Node, which trusts `HUB`.
+
+        With `running` the Node's background loops start, so it keeps publishing until `stop` or
+        `close`; otherwise it only answers requests.
+        """
+        app = create_app(
+            settings, self.network.join(settings.name, HUB), clock=self._clock, **app_options
+        )
+        client = TestClient(app)
+        if running:
+            client.__enter__()
+            self._running.add(settings.name)
+        self._clients[settings.name] = client
+        return client
+
+    def stop(self, name: str) -> None:
+        """Take a Node off the Mesh as a power cut would; starting it again keeps its folder."""
+        client = self._clients.pop(name)
+        if name in self._running:
+            self._running.remove(name)
+            client.__exit__(None, None, None)
+        self.network.leave(name)
+
+    def close(self) -> None:
+        for name in list(self._running):
+            self._clients[name].__exit__(None, None, None)
+        self._running.clear()
+
+    def __getitem__(self, name: str) -> TestClient:
+        return self._clients[name]
+
+
 class Sandbox:
     """A Hub and simulated Sensors in this process on one in-memory Mesh, already registered.
 
@@ -76,18 +145,13 @@ class Sandbox:
             )
             # The Replay Nodes are tens of km apart, far past the default range; setting one is a
             # later step.
-            network = InMemoryNetwork(radio_range_m=None)
-            self.hub = self._create_hub(directory, network)
-            hub_client = TestClient(self.hub)
+            nodes = SimulatedNodes(directory)
+            setup.callback(nodes.close)
+            hub_client = self._start_hub(nodes)
+            self.hub = cast(FastAPI, hub_client.app)
             for site in SENSOR_SITES:
-                sensor = TestClient(
-                    create_app(
-                        _settings(site, directory, dashboard_dir=directory / site.name / "none"),
-                        network.join(site.name, HUB),
-                    )
-                )
-                # Entering the client starts the Sensor's loops, so it keeps publishing.
-                setup.enter_context(sensor)
+                # Running starts the Sensor's loops, so it keeps publishing.
+                sensor = nodes.start(_settings(nodes, site), running=True)
                 # An in-memory Node's id is its name.
                 _register(sensor, hub_client, site.name)
             self._stack = setup.pop_all()
@@ -101,27 +165,23 @@ class Sandbox:
     ) -> None:
         self._stack.close()
 
-    def _create_hub(self, directory: Path, network: InMemoryNetwork) -> FastAPI:
-        settings = _settings(HUB_SITE, directory, role="hub")
+    def _start_hub(self, nodes: SimulatedNodes) -> TestClient:
+        settings = _settings(nodes, HUB_SITE, role="hub", dashboard_dir=BUILT_DASHBOARD.parent)
         try:
             CachePack(settings.cache_pack_dir).install(self._pack.read_bytes())
         except InvalidCachePack as error:
             raise SandboxError(f"{self._pack} is not a usable Cache Pack: {error}") from error
-        return create_app(settings, network.join(HUB, HUB), sandbox=True)
+        return nodes.start(settings, sandbox=True)
 
 
-def _settings(site: NodeSite, directory: Path, **overrides: Any) -> Settings:
-    own = directory / site.name
-    return Settings(
-        name=site.name,
+def _settings(nodes: SimulatedNodes, site: NodeSite, **overrides: Any) -> Settings:
+    return nodes.settings(
+        site.name,
         latitude=site.latitude,
         longitude=site.longitude,
         river_km=site.river_km,
         replay_track=site.replay_track,
         hub_identity=HUB,
-        gpio="off",
-        data_dir=own / "data",
-        cache_pack_dir=own / "cache-pack",
         **overrides,
     )
 
