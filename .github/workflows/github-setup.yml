@@ -1,4 +1,5 @@
-# Keeps the issue labels and roadmap milestones in step with scripts/github-labels.sh.
+# Keeps the issue labels, roadmap milestones and the hackathon release in step with
+# scripts/github-labels.sh.
 name: GitHub setup
 
 on:
@@ -9,6 +10,7 @@ on:
 
 permissions:
   issues: write
+  contents: write
 
 jobs:
   labels:

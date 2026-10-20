@@ -36,7 +36,7 @@ Do this after the M0 setup PR has merged, so its CI checks exist to pick. Settin
 
 ## 5. Tag the hackathon submission
 
-Agent sessions cannot push tags, so this is a click: Releases → **Draft a new release** → Choose a tag → type `v0-swamphacks` → **Create new tag** → Target: **Recent commits** → `333f4e6` ("add demo runbook and run-demo check script", the last commit before M0). Title "SwampHacks 2026 submission", tick **Set as a pre-release**, publish.
+Nothing to click: the "GitHub setup" workflow creates the `v0-swamphacks` pre-release on `333f4e6` (the last commit before M0). Check it under Releases.
 
 ## 6. After the transfer
 

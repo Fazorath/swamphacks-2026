@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Creates or updates the repo's issue labels and roadmap milestones on GitHub, so the
+# Creates or updates the repo's issue labels, roadmap milestones and the hackathon release on GitHub, so the
 # tracker matches docs/agents/issue-tracker.md and docs/roadmap.md. Safe to rerun.
 # Runs from .github/workflows/github-setup.yml when this file changes on main; by hand:
 #   GH_REPO=<owner>/<repo> scripts/github-labels.sh   (needs an authenticated gh)
@@ -54,3 +54,11 @@ for entry in "${milestones[@]}"; do
     echo "created milestone $title"
   fi
 done
+
+# The hackathon submission stays one click away: the last commit before the move to Issues.
+if ! gh release view v0-swamphacks >/dev/null 2>&1; then
+  gh release create v0-swamphacks --target 333f4e604aa9b4fb1d2f2fb0ad2652b99a3cec4c \
+    --title "SwampHacks 2026 submission" --prerelease \
+    --notes "Storm Shield as submitted at SwampHacks 2026: the Nepal flood replay demo. Run it with scripts/run-demo.sh from this tag."
+  echo "created release v0-swamphacks"
+fi
