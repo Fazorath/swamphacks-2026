@@ -152,10 +152,10 @@ details p, details ul { margin: 8px 0 0; }
 
   <label class="step"><input type="checkbox" data-id="first-run">
     <div class="body"><h3>Do one full first start, then stop it</h3>
-    <p>The first start downloads <code>cache-pack-v5</code> into <code>.demo/pack/</code>, runs <code>pnpm install</code> and <code>pnpm build</code>, and runs <code>uv sync</code>. Later starts need no internet.</p>
+    <p>The first start downloads <code>cache-pack-v6</code> into <code>.demo/pack/</code>, runs <code>pnpm install</code> and <code>pnpm build</code>, and runs <code>uv sync</code>. Later starts need no internet.</p>
     <div class="code"><pre>scripts/run-demo.sh</pre><button class="copy" type="button">Copy</button></div>
     <p>Press Ctrl-C when it prints the addresses.</p>
-    <p class="note">If you ran the demo before the v5 pack, delete <code>.demo/pack/</code> and <code>.demo/hub/data/shelter_status.json</code> once. A Node never replaces a valid pack.</p></div></label>
+    <p class="note">If you ran the demo before the v6 pack, delete <code>.demo/pack/</code> and <code>.demo/hub/data/shelter_status.json</code> once. A Node never replaces a valid pack.</p></div></label>
 
   <label class="step"><input type="checkbox" data-id="clips">
     <div class="body"><h3>Camera clips (optional stage set)</h3>
@@ -340,7 +340,7 @@ details p, details ul { margin: 8px 0 0; }
       <li>Chime and pager sound on real phone speakers; clip playback on iOS Safari</li>
     </ul>
   </div>
-  <p class="when" style="margin-top:16px">Two repo docs are out of date: <code>scripts/demo-setup.md</code> still says the first start downloads <code>cache-pack-v4</code> (the script downloads <code>cache-pack-v5</code>) and that registering Sensors waits for ticket 0012 (the script registers them now).</p>
+  <p class="when" style="margin-top:16px">A repo doc is out of date: <code>scripts/demo-setup.md</code> still says that registering Sensors waits for ticket 0012 (the script registers them now).</p>
 </section>
 </div>
 
