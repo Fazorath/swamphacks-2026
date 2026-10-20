@@ -60,6 +60,10 @@ _Avoid_: offline node
 A phone or browser that shows the dashboard by connecting to a Node, without being part of the Mesh itself.
 _Avoid_: client, user device
 
+**Sandbox**:
+A Hub and any number of simulated Sensor Nodes started by one command in one process, sharing an in-memory Mesh, for the team to try the app without a terminal juggling ports, slots and Hub ids. Sensors are placed and the event is played from the dashboard. Every reading in it is a Simulated Reading.
+_Avoid_: simulator, demo mode, playground
+
 ## Information
 
 **Community Reading**:
@@ -114,8 +118,12 @@ _Avoid_: warning, notification
 A signed warning the Hub issues when one Registered Node reports a Surge; it names that Node and its River km so each Viewer can work out when the wave reaches its home. Never an evacuation order, and always points residents to official sources for evacuation decisions.
 _Avoid_: alert, alarm, evacuation notice
 
+**Region**:
+The place a Storm Shield network watches, described in one small hand-written file: its name, area, time zone, display units, official alert source, the water it watches (river or coast), its Shelters and its suggested sensor sites. Adding a region means writing this file, not code. Nepal's Bhote Koshi valley is one Region; a Florida coast is the second.
+_Avoid_: map, area, location, scenario
+
 **Cache Pack**:
-The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built once by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
+The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built from a Region's file by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
