@@ -55,7 +55,6 @@ from storm_shield.shelter_status import (
     ShelterStatus,
     UnknownShelter,
 )
-from storm_shield.simulated_fleet import FLEET_FILE, FleetEntry, SimulatedFleet
 from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
 from storm_shield.weather_forecast import FORECAST_TIMEOUT_SECONDS, WeatherForecast
 
@@ -88,7 +87,6 @@ class NodeState(BaseModel):
     nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
     community_warnings: list[CommunityWarning]
-    fleet: list[FleetEntry]
 
 
 class OpenShelters(BaseModel):
@@ -166,7 +164,6 @@ def create_app(
         )
     cameras = Cameras(settings.camera_clips_dir, settings.role, timeline.start_unix)
     event_clock = EventClock()
-    simulated_fleet = SimulatedFleet()
 
     measured_kinds = {kind.strip() for kind in settings.measures.split(",") if kind.strip()}
 
@@ -537,7 +534,6 @@ def create_app(
             ],
             official_alerts=official_alerts.shown_at(event_clock.current(clock())),
             community_warnings=heard_warnings.shown_at(event_clock.current(clock())),
-            fleet=simulated_fleet.at(cache_pack.file(FLEET_FILE), event_clock.current(clock())),
         )
 
     @app.post("/api/registry/signup")

@@ -29,7 +29,6 @@ WEATHER_REPLAY = {"source": "fixture", "credit": "fixture credit", "times": ["20
 TILE = b"\x89PNG fixture tile"
 TILE_PATH = "tiles/10/754/429.png"
 WEATHER_PATH = "weather_replay.json"
-FLEET_PATH = "fleet.json"
 NEPAL_BORDER_PATH = "nepal/border.geojson"
 NEPAL_BORDER = {"type": "FeatureCollection", "features": []}
 ELEVATION_PATH = "elevation/5/24/13.png"
@@ -57,7 +56,6 @@ def build_fixture_pack(
     corrupt_weather: bool = False,
     with_nepal: bool = False,
     corrupt_nepal: bool = False,
-    fleet: dict[str, Any] | None = None,
     shelters: list[dict[str, object]] = SHELTERS,
 ) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
@@ -69,8 +67,6 @@ def build_fixture_pack(
     }
     if with_weather:
         files[WEATHER_PATH] = json.dumps(WEATHER_REPLAY).encode()
-    if fleet is not None:
-        files[FLEET_PATH] = json.dumps(fleet).encode()
     if with_nepal:
         files[NEPAL_BORDER_PATH] = json.dumps(NEPAL_BORDER).encode()
         files[ELEVATION_PATH] = ELEVATION_TILE

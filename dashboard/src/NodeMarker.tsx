@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import type { Side } from "./labelPlacement";
 import { MapMarker } from "./MapMarker";
 import { markerState } from "./markerState";
-import { FleetPopover } from "./FleetPopover";
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
 
@@ -19,8 +18,6 @@ type Props = {
   // The wave front passed this Node in the last two event minutes (D-18): wave-white, then its
   // real state again.
   wavePassed?: boolean;
-  // A fleet Node's popover beside its dot (D-38); its click toggles it instead of selecting.
-  popoverOpen?: boolean;
   // How many times this Node's Flood Risk has risen; a new count plays the ring once.
   rises: number;
   // The key of the warning this Node started, while it is shown: the Node rings red (D-28).
@@ -38,7 +35,6 @@ export function NodeMarker({
   node,
   selected,
   wavePassed = false,
-  popoverOpen = false,
   rises,
   originOf,
   onSelect,
@@ -49,7 +45,6 @@ export function NodeMarker({
   const real = !node.simulated;
   const classes = [
     "node-marker",
-    node.fleet ? "fleet" : "valley",
     real ? "real" : "simulated",
     appearance,
     contactArc !== null && "contact-lost",
@@ -94,7 +89,6 @@ export function NodeMarker({
         {contactArc !== null && <span className="tag contact-lost">CONTACT LOST</span>}
         {real && <span className="tag real">REAL</span>}
       </span>
-      {popoverOpen && <FleetPopover node={node} onClose={() => onSelect(node.id)} />}
     </MapMarker>
   );
 }
