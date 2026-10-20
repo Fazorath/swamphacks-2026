@@ -63,7 +63,7 @@ Publish the approved tickets as GitHub issues (see `docs/agents/issue-tracker.md
 - Labels: one type (`feature` for a vertical slice, `chore` for a prefactor) and one area label from the routing table. No assignee: assigning means "working on it now".
 - Milestone: the one the user names, or the current one in `docs/roadmap.md`.
 - If the work comes from one feature, create a parent issue for it (title = the feature, body = a link to the spec) and add each ticket as its **sub-issue**.
-- Record each blocker with GitHub's native "Blocked by" relationship. If your tools cannot set it, list the blockers in the body's "Blocked by" section as `#N` and say so in your report.
+- Record each blocker with GitHub's native "Blocked by" relationship, and each slice as a sub-issue, with the `gh api` calls in `docs/agents/issue-tracker.md` ("Blockers and sub-issues"); also list the blockers in the body's "Blocked by" section as `#N` so they read in the text. If a call fails, say which links are missing in your report.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 

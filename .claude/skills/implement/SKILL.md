@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 Implement the GitHub issue the user names (`/implement 42`). One issue per session. Tracker rules: `docs/agents/issue-tracker.md`.
 
-1. **Read before touching anything.** `gh issue view <N> --comments`: the acceptance criteria, the spec it links (read it), its blockers and parent. If a blocker is still open, or someone else is assigned, stop and tell the user. Read the lessons for the area you will touch (`node/`, `dashboard/`, `scripts/` or `pi/` `AGENTS.md`), and `CONTEXT.md` for its words.
+1. **Read before touching anything.** `gh issue view <N> --comments`: the acceptance criteria, the spec it links (read it) and its parent. Read its blockers from GitHub, not the body: `gh api 'repos/{owner}/{repo}/issues/<N>/dependencies/blocked_by' --jq '.[] | select(.state == "open") | "#\(.number) \(.title)"'` lists the ones still open. If that prints anything, or someone else is assigned, stop and tell the user. Read the lessons for the area you will touch (`node/`, `dashboard/`, `scripts/` or `pi/` `AGENTS.md`), and `CONTEXT.md` for its words.
 2. **Claim it where everyone can see.**
    - `gh issue edit <N> --add-assignee @me`
    - Work in your own worktree, never in a checkout another session uses: if this session is not already in one, enter a worktree named `<N>-<slug>` (Claude Code's worktree tool, or `git worktree add ../<repo>-<N> origin/main`).
