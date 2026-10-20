@@ -111,7 +111,11 @@ def test_a_sensor_outside_the_corridor_sends_no_water_level(
     meshed_nodes.advance(20)
     _wait_until(lambda: _water_cm(meshed_nodes, "hub", "wet") == 162.0)
     # A reading older than the Event's would be the Scenario's, which has a water level.
-    _wait_until(lambda: _heard_from(meshed_nodes, "hub", "dry")["measurements"]["air_pressure"]["value"] < 1010)
+    _wait_until(
+        lambda: (
+            _heard_from(meshed_nodes, "hub", "dry")["measurements"]["air_pressure"]["value"] < 1010
+        )
+    )
     dry = _heard_from(meshed_nodes, "hub", "dry")["measurements"]
     assert "water_level" not in dry
     assert {"rain_rate", "soil_moisture", "air_pressure"} <= dry.keys()

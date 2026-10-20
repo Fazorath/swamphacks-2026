@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from storm_shield.community_reading import Reading
 from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
@@ -19,7 +19,7 @@ class ReplayClockMessage(BaseModel):
 
     v: Literal[2] = 2
     kind: Literal["replay"] = "replay"
-    # The Event every Node plays; a Node that does not hold this Event reads its own first moment.
+    # The Event every Node plays; a Node that does not hold this Event ignores the clock.
     event: str
     state: Literal["playing", "paused", "stopped"]
     # Event time (Unix seconds) at the moment of sending; receivers anchor it on their own clock.
@@ -60,10 +60,22 @@ class Station(BaseModel):
     # (seconds after the Event starts, level in the surface's unit)
     series: list[tuple[int, float]]
 
+    @field_validator("series")
+    @classmethod
+    def _in_time_order(cls, series: list[tuple[int, float]]) -> list[tuple[int, float]]:
+        _require_increasing([at for at, _ in series], "a station's series")
+        return series
+
 
 class WaterSurface(BaseModel):
     unit: Literal["m"]
     stations: list[Station]
+
+    @field_validator("stations")
+    @classmethod
+    def _in_river_order(cls, stations: list[Station]) -> list[Station]:
+        _require_increasing([station.river_km for station in stations], "the stations")
+        return stations
 
 
 class WeatherKeyframe(BaseModel):
@@ -71,6 +83,11 @@ class WeatherKeyframe(BaseModel):
     rain_mmh: float
     soil_pct: float
     pressure_hpa: float
+
+
+def _require_increasing(positions: list[float], what: str) -> None:
+    if not positions or any(b <= a for a, b in itertools.pairwise(positions)):
+        raise ValueError(f"{what} must be a non-empty list in strictly increasing order")
 
 
 class Phase(BaseModel):
@@ -115,6 +132,12 @@ class Event(BaseModel):
     official_alerts: list[ReplayedAlert]
     surface: WaterSurface
     weather: list[WeatherKeyframe]
+
+    @field_validator("weather")
+    @classmethod
+    def _weather_in_time_order(cls, weather: list[WeatherKeyframe]) -> list[WeatherKeyframe]:
+        _require_increasing([keyframe.t for keyframe in weather], "the weather")
+        return weather
 
     def event_t_at(self, clock_time: str) -> int:
         """The Event clock's Unix seconds when the replay reads `clock_time`."""
@@ -168,7 +191,7 @@ class Event(BaseModel):
         ]
 
     def _water_level_at(self, river_km: float | None, elapsed: int) -> float | None:
-        stations = sorted(self.surface.stations, key=lambda station: station.river_km)
+        stations = self.surface.stations
         if river_km is None or not stations[0].river_km <= river_km <= stations[-1].river_km:
             return None
         return _interpolate(
@@ -187,9 +210,7 @@ def _as_points(series: list[tuple[int, float]]) -> list[tuple[float, tuple[float
     return [(at, (level,)) for at, level in series]
 
 
-def _interpolate(
-    at: float, points: Sequence[tuple[float, tuple[float, ...]]]
-) -> tuple[float, ...]:
+def _interpolate(at: float, points: Sequence[tuple[float, tuple[float, ...]]]) -> tuple[float, ...]:
     """The values at `at`, on straight lines between points sorted by position; held beyond the ends."""
     if at <= points[0][0]:
         return points[0][1]

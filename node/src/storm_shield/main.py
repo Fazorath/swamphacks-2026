@@ -171,7 +171,9 @@ def create_app(
     def own_measurements() -> list[Reading] | None:
         """What this Node reads from the Event's surface at its own position.
 
-        Until the Scenario is deleted, a stopped Event clock leaves the Scenario's readings in place.
+        With the Event clock stopped, or running another Event, it keeps the Scenario's readings: the
+        Scenario's tests build their readings that way, and its deletion (#35) moves them to the
+        Event's first moment.
         """
         heard = event_clock.current(clock())
         if heard.state == "stopped" or heard.event != loaded_event.id:
@@ -361,7 +363,7 @@ def create_app(
                 forward_official_alert(alert)
 
     def pause_at_the_end() -> None:
-        """Hold the clock at the replay's end instead of letting it play on past the loaded_event."""
+        """Hold the clock at the replay's end instead of letting it play on past the Event's end."""
         event = event_clock.current(clock())
         if event.state == "playing" and event.event_t >= loaded_event.end_unix:
             announce_event_clock(
@@ -391,11 +393,14 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        publish_every_seconds = min(settings.publish_every_seconds, REPLAY_PUBLISH_EVERY_SECONDS)
-
         async def keep_sharing() -> None:
             while True:
-                await asyncio.sleep(publish_every_seconds)
+                playing = event_clock.current(clock()).state != "stopped"
+                await asyncio.sleep(
+                    min(settings.publish_every_seconds, REPLAY_PUBLISH_EVERY_SECONDS)
+                    if playing
+                    else settings.publish_every_seconds
+                )
                 try:
                     publisher.share()
                 except Exception:
@@ -581,7 +586,9 @@ def create_app(
     def replay_phases() -> ReplayPhases:
         return ReplayPhases(
             phases=[
-                ReplayPhase(id=phase.id, label=phase.label, event_t=loaded_event.event_t_at(phase.at))
+                ReplayPhase(
+                    id=phase.id, label=phase.label, event_t=loaded_event.event_t_at(phase.at)
+                )
                 for phase in loaded_event.phases
             ],
             internet_cue_event_t=loaded_event.event_t_at(loaded_event.internet_cue.at),
@@ -730,6 +737,7 @@ def create_app(
 
         @app.post("/api/replay/reset")
         def reset_replay() -> ReplayClockMessage:
+            # Paused at 08:30 rather than stopped: a stopped Sensor falls back to the Scenario.
             return set_replay("paused", loaded_event.start_unix)
 
         @app.post("/api/replay/jump")
