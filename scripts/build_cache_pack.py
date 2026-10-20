@@ -13,7 +13,7 @@ from functools import partial
 from pathlib import Path
 
 import httpx
-from http_retry import get_with_retries
+from http_retry import describe_error, get_with_retries
 from pack_high_ground import build_high_ground, load_high_ground
 from pack_nepal import build_nepal_bundle, elevation_at, load_key_places, tiles_covering
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
@@ -75,21 +75,24 @@ def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
 
 
 def download_osm_extract(destination: Path) -> None:
-    print(f"downloading {OSM_EXTRACT_URL} to {destination}", flush=True)
+    print(f"downloading the Nepal OSM extract to {destination}", flush=True)
     destination.parent.mkdir(parents=True, exist_ok=True)
     # Beside the final name, so an interrupted download is not mistaken for the extract next run.
     partial = destination.with_name(destination.name + ".part")
-    with httpx.stream(
-        "GET",
-        OSM_EXTRACT_URL,
-        headers={"User-Agent": USER_AGENT},
-        timeout=60,
-        follow_redirects=True,
-    ) as response:
-        response.raise_for_status()
-        with partial.open("wb") as file:
-            for chunk in response.iter_bytes():
-                file.write(chunk)
+    try:
+        with httpx.stream(
+            "GET",
+            OSM_EXTRACT_URL,
+            headers={"User-Agent": USER_AGENT},
+            timeout=60,
+            follow_redirects=True,
+        ) as response:
+            response.raise_for_status()
+            with partial.open("wb") as file:
+                for chunk in response.iter_bytes():
+                    file.write(chunk)
+    except httpx.HTTPError as error:
+        sys.exit(f"OSM extract download failed: {describe_error(error)}")
     partial.rename(destination)
 
 

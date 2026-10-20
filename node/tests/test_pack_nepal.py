@@ -292,7 +292,7 @@ def test_the_bundle_has_every_layer_the_elevation_and_each_source_with_its_licen
     assert all(source["checked"] for source in entry["sources"])
 
 
-def test_the_build_fails_when_the_tiles_covering_go_over_budget(
+def test_the_build_fails_when_the_elevation_tiles_go_over_budget(
     small_pack: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(pack_nepal, "ELEVATION_BUDGET_BYTES", 10)

@@ -140,12 +140,12 @@ def download(source_id: str, source: Record) -> Path:
         return target
     SOURCE_CACHE.mkdir(parents=True, exist_ok=True)
     request = urllib.request.Request(source["url"], headers={"User-Agent": USER_AGENT})
-    partial = target.with_suffix(target.suffix + ".part")
+    part_path = target.with_suffix(target.suffix + ".part")
     for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
         try:
             with urllib.request.urlopen(request, timeout=600) as response:
-                partial.write_bytes(response.read())
-            partial.rename(target)
+                part_path.write_bytes(response.read())
+            part_path.rename(target)
             time.sleep(3)  # Wikimedia throttles bursts with HTTP 429
             return target
         except urllib.error.HTTPError as error:
@@ -166,7 +166,7 @@ def download(source_id: str, source: Record) -> Path:
 
 def retry_after_seconds(header: str | None) -> int:
     """Seconds a `Retry-After` header asks for, 0 when it is missing or an HTTP date."""
-    return int(header) if header and header.strip().isdigit() else 0
+    return int(header) if header and header.strip().isdecimal() else 0
 
 
 def probe_seconds(ffmpeg: str, path: Path) -> float:
