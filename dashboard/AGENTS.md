@@ -1,0 +1,17 @@
+# Lessons: Dashboard
+
+Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.md`) only once a session reads a file in this folder; other agents read the nearest `AGENTS.md`. Add a line when something here breaks, surprises you or takes more than one try; delete a line once your change makes it untrue. Repo-wide lessons: `docs/agents/lessons.md`.
+
+- **jsdom has no WebGL, canvas, Web Audio, `matchMedia` or `<video>` playback.** `setup.ts` swaps in `fakeMaplibre.ts`, `fakeViewport.ts`, `fakeMedia.ts` and a mocked `weatherImageUrl`; read back what the app gave the map with `sourceData`, `lastMap().layerIds`, `tapMap`.
+- **Fake timers must use `shouldAdvanceTime: true`**, or every `findBy*` hangs into a 5 s timeout. To prove "updates without waiting for the poll", look inside the poll interval with `advanceTimersByTimeAsync(STATE_POLL_MS / 10)`; a `findBy*` passes even when the code is broken.
+- **Map assertions wait with `waitFor`.** Check a new test by breaking the code it covers.
+- **`localStorage` is cleared after every test** (open Panels are remembered there). A calm day opens only the Readings Panel: call `expandPanel(...)` first.
+- **Build test state with `fakeNodeState()` / `fakeNodeSnapshot()`**; a `fetch` stub without `/api/state` stays on "Connecting…". GeoJSON fixtures need `type: "FeatureCollection"`.
+- **`theme.test.ts` bans raw colours outside `theme.css`** (even in comments and as `rgba(`) and any `font-family` that is not a theme variable. A new colour is a role in `theme.css` first.
+- **ESLint `react-hooks/set-state-in-effect`** rejects setting state at the top of an effect; derive it during render instead.
+- **An effect that needs a MapLibre layer from another effect must run after it in the same component** (child effects run first).
+- **MapLibre data URLs must be absolute and `{z}/{x}/{y}` must stay literal**: `new URL(...)` percent-encodes the braces and the map silently loses its terrain.
+- **No MapLibre text layers** (they need a glyph server); labels are DOM markers placed by `labelPlacement.ts`.
+- **Browsers play no sound until the first tap**; sound code must warn, never throw, without Web Audio.
+- **`findLast` is not in the TypeScript lib target**: use `.filter(...).at(-1)`.
+- **Icons are `lucide-react`, pinned exact.** Fonts are bundled `@fontsource` files; the page makes no request to another host.
