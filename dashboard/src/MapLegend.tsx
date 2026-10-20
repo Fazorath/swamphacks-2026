@@ -11,12 +11,7 @@ type Props = {
 
 // A key to the markers, small enough to stay out of the way. Its last row is the 2D | 3D switch
 // (D-34) and the Valley button, which flies the camera to the valley.
-export function MapLegend({
-  nepal,
-  terrain,
-  onChooseTerrain,
-  onFlyToValley,
-}: Props) {
+export function MapLegend({ nepal, terrain, onChooseTerrain, onFlyToValley }: Props) {
   const terrainAvailable = nepal !== null;
   return (
     <aside className="map-legend" aria-label="Legend">

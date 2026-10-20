@@ -14,8 +14,7 @@ import type { PanelName } from "./openPanels";
 import type { WeatherLayer } from "./weatherLayer";
 import { WeatherPicker } from "./WeatherPicker";
 
-export type MapLayerName =
-  "nodes" | "flood-prone" | "shelters" | "route" | "storm-signal";
+export type MapLayerName = "nodes" | "flood-prone" | "shelters" | "route" | "storm-signal";
 
 type Button = {
   label: string;
