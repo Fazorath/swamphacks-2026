@@ -3,8 +3,6 @@ from typing import Literal, NamedTuple, Self
 
 from pydantic import BaseModel
 
-from storm_shield.scenario import Reading, ReadingKind
-
 # About 200 m. Fuzzing happens before a position leaves the Node, so the true spot is never sent.
 POSITION_GRID_DEGREES = 0.002
 
@@ -21,10 +19,28 @@ def fuzz_position(latitude: float, longitude: float) -> Position:
     return Position(snap(latitude), snap(longitude))
 
 
+class Reading(BaseModel):
+    """One Measurement as a Node produces it, before it goes into a Community Reading."""
+
+    kind: str
+    value: float
+    unit: str
+    timestamp: datetime
+    simulated: bool = True
+
+
+class Measurement(NamedTuple):
+    """What a Node measured: a kind, a value and the unit the value is in. Sent as a triple."""
+
+    kind: str
+    value: float
+    unit: str
+
+
 class CommunityReading(BaseModel):
     """One Sensor Node's measurements for one tick, in the mesh format of docs/specs/wire-formats.md."""
 
-    v: Literal[1] = 1
+    v: Literal[2] = 2
     kind: Literal["reading"] = "reading"
     node: str
     seq: int
@@ -33,10 +49,7 @@ class CommunityReading(BaseModel):
     pos: Position
     # Where the operator put this Node along the river; the Hub reads it to place a Community Warning.
     river_km: float | None = None
-    pressure_hpa: float
-    water_m: float
-    rain_mmh: float
-    soil_pct: float
+    m: list[Measurement]
 
     @classmethod
     def from_measurements(
@@ -47,7 +60,6 @@ class CommunityReading(BaseModel):
         readings: list[Reading],
         river_km: float | None = None,
     ) -> Self:
-        value: dict[ReadingKind, float] = {reading.kind: reading.value for reading in readings}
         return cls(
             node=node,
             seq=seq,
@@ -55,22 +67,5 @@ class CommunityReading(BaseModel):
             sim=all(reading.simulated for reading in readings),
             pos=position,
             river_km=river_km,
-            pressure_hpa=value["pressure"],
-            water_m=round(value["water_level"] / 100, 3),
-            rain_mmh=value["rain_rate"],
-            soil_pct=value["soil_moisture"],
+            m=[Measurement(reading.kind, reading.value, reading.unit) for reading in readings],
         )
-
-    def as_readings(self, received_at: datetime) -> list[Reading]:
-        """The displayed form: water in centimetres, units named. The inverse of from_measurements."""
-        # Age is measured on this Node's clock, so the timestamp is when we received it, not `t`.
-        values: list[tuple[ReadingKind, float, str]] = [
-            ("pressure", self.pressure_hpa, "hPa"),
-            ("rain_rate", self.rain_mmh, "mm/h"),
-            ("soil_moisture", self.soil_pct, "%"),
-            ("water_level", round(self.water_m * 100, 1), "cm"),
-        ]
-        return [
-            Reading(kind=kind, value=value, unit=unit, timestamp=received_at, simulated=self.sim)
-            for kind, value, unit in values
-        ]

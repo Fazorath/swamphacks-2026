@@ -6,18 +6,19 @@ The messages Nodes exchange over the mesh, the Node HTTP API the dashboard polls
 
 - JSON, UTF-8, one object per message.
 - Each message stays **under about 350 bytes**, so it always fits one Reticulum packet (single-packet limit is about 500 bytes, about 380 usable after encryption; ticket 0004 confirms this). Anything bigger is split, never grown.
-- Every message has `v` (format version, currently `1`) and `kind`.
+- Every message has `v` (format version) and `kind`. Each kind has its own version: every kind is at `1` except `reading`, which is at `2`. A receiver drops a message whose `v` is not the one it knows for that kind.
 - Reticulum does not say who sent a data packet, so every message is **signed by the sending Node** with its Reticulum identity: the packet is the 64-byte signature followed by the JSON. The Mesh module checks it against the public key it learned from that Node's announce (sent on start and every 10 s) before a message reaches anyone else, and drops it if the Node has not announced yet, the signature fails, or the JSON is not a message. The signature is not repeated in the JSON, and the 12-character `node` id inside it must match the key that signed it. The signature counts toward the packet limit below (about 465 bytes unencrypted).
 - Receivers ignore unknown `kind` values and unknown fields, so a newer Node never crashes an older one.
 
 ## Community Reading (`kind: "reading"`)
 
-One message per Sensor Node per tick, all four measurements together.
+One message per Sensor Node per tick, with every Measurement the Node declares (default: the four flood kinds) together.
 
 ```json
-{ "v": 1, "kind": "reading", "node": "91c2e0b47a3d", "seq": 412, "t": 1760650928,
+{ "v": 2, "kind": "reading", "node": "91c2e0b47a3d", "seq": 412, "t": 1760650928,
   "sim": true, "pos": [29.652, -82.325], "river_km": -12.2,
-  "pressure_hpa": 991.2, "water_m": 0.84, "rain_mmh": 14.8, "soil_pct": 91 }
+  "m": [["air_pressure", 991.2, "hPa"], ["water_level", 0.84, "m"],
+        ["rain_rate", 14.8, "mm/h"], ["soil_moisture", 91, "%"]] }
 ```
 
 - `node`: the sender's short Reticulum identity (first 12 hex characters). **This 12-character id is the only Node id**: warnings, the registry and the API all use it as is.
@@ -26,7 +27,8 @@ One message per Sensor Node per tick, all four measurements together.
 - `sim`: `true` for a Simulated Reading; it produces the SIMULATED tag.
 - `pos`: latitude and longitude already fuzzed by the sender to a grid of about 0.002° (roughly 200 m). The true location never goes on the wire.
 - `river_km`: the operator's `NODE_RIVER_KM`, or `null`. The Hub reads it from the surging Node's reading to fill a warning's `origin_km`; a Node without it can surge but starts no warning (ticket 0013).
-- Units are in the field names: `water_m` is metres, `soil_pct` a percentage. A Node may hold readings in another shape internally; the conversion happens where a message is built or received.
+- `m`: the Measurements, each a `[kind, value, unit]` triple. Units are in the Measurement, not in field names. A Sensor Node declares the kinds it measures (`NODE_MEASURES`, default `water_level,rain_rate,soil_moisture,air_pressure`) and sends only those. The flood-warning Rule set knows four kinds, each with one wire unit: `water_level` in `m`, `rain_rate` in `mm/h`, `soil_moisture` in `%`, `air_pressure` in `hPa`. It ignores a known kind sent in another unit (and logs it once per Node) and never reads a kind it does not know; an unknown kind is still carried, stored and shown with its own unit. Display units convert on screen only.
+- Version 1 readings (four fixed fields `pressure_hpa`, `water_m`, `rain_mmh`, `soil_pct`) are dropped; every Node is upgraded together.
 
 ### Timing (one config module, tunable)
 
@@ -139,7 +141,7 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" a
 
 `/api/state` grows ticket by ticket. `GET /api/node`, `/api/readings`, `/api/readings/stream`, `/api/flood-risk` and `GET /api/scenario` no longer exist and answer 404.
 
-- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind (`pressure`, `rain_rate`, `water_level`, `soil_moisture`) with `{value, unit}`. `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). It also carries `community_warnings` (the verified ones only), and `fleet`, the Simulated Fleet from this Node's Cache Pack (ticket 0064), sorted by `id`: `{id, name, river, site, position, age_s, stale, measurements}`, with `measurements` shaped as in `nodes`. `fleet` is `[]` when the pack has no fleet file; nothing reads it but the map. Open Shelter ids are not in the snapshot; they come from `GET /api/shelters`.
+- `GET /api/state` returns everything the screen needs in one consistent object. Today: this Node's `id`, `name`, `role` and `online` / `mesh_only` `status`; the Scenario step (`scenario: {step}`); `flood_risk` (level, reasons with codes, Storm Signal, per-Node levels); and `nodes`, one entry per Node heard, this one included, sorted by `id`: `{id, position, simulated, age_s, stale, measurements, registered, name}` (`name` is the registry name, `null` when Unverified), where `measurements` is keyed by kind with `{value, unit}`, holding only the kinds that Node sent, in the unit it sent (water level in m). `stale` is decided by the Node (silent for more than 15 s). `official_alerts` (see Official Alerts above). The top level also has `registration` (`unverified`, `waiting` or `registered`; the Hub is always `registered`). It also carries `community_warnings` (the verified ones only), and `fleet`, the Simulated Fleet from this Node's Cache Pack (ticket 0064), sorted by `id`: `{id, name, river, site, position, age_s, stale, measurements}`, with `measurements` shaped as in `nodes`. `fleet` is `[]` when the pack has no fleet file; nothing reads it but the map. Open Shelter ids are not in the snapshot; they come from `GET /api/shelters`.
 - Actions are small POSTs: `POST /api/scenario/step`, `POST /api/scenario/reset`, and on the Hub `POST /api/registry/accept` and `POST /api/shelters/open`.
 - The Household Profile never touches the API; it stays in the Viewer's browser.
 - Viewers cannot check Reticulum signatures, so the Node serves only warnings whose Hub signature verified. The dashboard never sees an unverified one.
@@ -207,16 +209,16 @@ Decided in the 0064 grill on 2026-10-18; spec: `docs/specs/gods-eye-view.md`. Th
   "credit":  "Weather data by Open-Meteo.com (CC BY 4.0)",
   "water_model": "water level modelled from Open-Meteo rainfall: base_cm + gain * rain of the previous 24 h",
   "start_t": 1787712300, "step_s": 30,
-  "units": { "water_level": "cm", "rain_rate": "mm/h", "soil_moisture": "%", "pressure": "hPa" },
+  "units": { "water_level": "m", "rain_rate": "mm/h", "soil_moisture": "%", "air_pressure": "hPa" },
   "entries": [
     { "id": "fleet-chisapani", "name": "Chisapani", "river": "Karnali", "site": "town", "pos": [28.644, 81.276],
       "silent_at": null,
-      "track": { "water_level": [...], "rain_rate": [...], "soil_moisture": [...], "pressure": [...] } }
+      "track": { "water_level": [...], "rain_rate": [...], "soil_moisture": [...], "air_pressure": [...] } }
   ]
 }
 ```
 
-- `start_t` is 08:30 NPT on 26 Aug 2026 in event time; point `i` of every track is at `start_t + i * step_s`, through 10:30. Units are those of `measurements` (cm, mm/h, %, hPa).
+- `start_t` is 08:30 NPT on 26 Aug 2026 in event time; point `i` of every track is at `start_t + i * step_s`, through 10:30. Units are those of `measurements` (m, mm/h, %, hPa).
 - `site` is `town` or `headwater`. `silent_at` (event time) is set on one town site only; its track ends there, so past it the entry keeps its last point and ages.
 - A Node serves the reading at the last point at or before its Event clock; with no Replay heard, point 0. `age_s` is `(event_now − last_point_t) / rate`, frozen while the clock is paused or stopped.
 - Ids are `fleet-<slug>`, never shaped like a Node id. The manifest lists the file's checksum like any other.

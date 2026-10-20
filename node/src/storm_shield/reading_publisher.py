@@ -2,9 +2,8 @@ import itertools
 import threading
 from collections.abc import Callable
 
-from storm_shield.community_reading import CommunityReading, Position
+from storm_shield.community_reading import CommunityReading, Position, Reading
 from storm_shield.mesh import Mesh
-from storm_shield.scenario import Reading
 
 
 class ReadingPublisher:

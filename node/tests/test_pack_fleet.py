@@ -103,19 +103,19 @@ def test_the_towns_with_the_most_rain_rise_and_the_rest_stay_calm() -> None:
     risen = [
         entry["id"]
         for entry in fleet["entries"]
-        if max(entry["track"]["water_level"]) > CALM_BASE_CM
+        if max(entry["track"]["water_level"]) > CALM_BASE_CM / 100
     ]
 
     assert sorted(risen) == ["fleet-damp", "fleet-drizzle", "fleet-wet"]
     assert len(risen) == RISING_TOWNS
     # The headwater site had the most rain and still stays calm.
-    assert set(_entry(fleet, "lake")["track"]["water_level"]) == {CALM_BASE_CM}
+    assert set(_entry(fleet, "lake")["track"]["water_level"]) == {CALM_BASE_CM / 100}
 
 
 def test_a_rise_stays_below_the_surge_size() -> None:
     fleet = _fleet([40.0, 1.0, 0.5, 0.0, 0.2, 3.0])
 
-    assert max(_entry(fleet, "wet")["track"]["water_level"]) == CALM_BASE_CM + MAX_RISE_CM
+    assert max(_entry(fleet, "wet")["track"]["water_level"]) == (CALM_BASE_CM + MAX_RISE_CM) / 100
     assert MAX_RISE_CM < 300
 
 
@@ -147,13 +147,13 @@ def test_units_and_conversions_follow_the_measurements() -> None:
 
     dry = _entry(fleet, "dry")
     assert dry["track"]["soil_moisture"][0] == 35.0
-    assert dry["track"]["pressure"][0] == 850.0
+    assert dry["track"]["air_pressure"][0] == 850.0
     assert dry["track"]["rain_rate"][0] == 0.0
     assert fleet["units"] == {
-        "water_level": "cm",
+        "water_level": "m",
         "rain_rate": "mm/h",
         "soil_moisture": "%",
-        "pressure": "hPa",
+        "air_pressure": "hPa",
     }
     assert "modelled" in fleet["water_model"]
 

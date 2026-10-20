@@ -11,7 +11,7 @@ let nodeOrder: string[];
 
 const SNAPSHOTS: Record<string, () => ReturnType<typeof fakeNodeSnapshot>> = {
   porch: () =>
-    fakeNodeSnapshot("porch", { measurements: { pressure: { value: pressure, unit: "hPa" } } }),
+    fakeNodeSnapshot("porch", { measurements: { air_pressure: { value: pressure, unit: "hPa" } } }),
   barn: () => fakeNodeSnapshot("barn"),
   attic: () => fakeNodeSnapshot("attic"),
   zed: () => fakeNodeSnapshot("zed", { registered: false }),

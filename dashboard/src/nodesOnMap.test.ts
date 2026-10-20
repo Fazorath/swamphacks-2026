@@ -4,11 +4,29 @@ import { nodesOnMap } from "./nodesOnMap";
 test("a Node shows its water level, position and simulated flag", () => {
   const state = fakeNodeState({
     nodes: [
-      fakeNodeSnapshot("garage", { measurements: { water_level: { value: 84, unit: "cm" } } }),
+      fakeNodeSnapshot("garage", { measurements: { water_level: { value: 0.84, unit: "m" } } }),
     ],
   });
   const [node] = nodesOnMap(state);
   expect(node).toMatchObject({ waterLevelCm: 84, position: [29.652, -82.324], simulated: true });
+});
+
+test("a kind the dashboard has no label for is carried with its own unit", () => {
+  const state = fakeNodeState({
+    nodes: [
+      fakeNodeSnapshot("garage", {
+        measurements: {
+          water_level: { value: 0.84, unit: "m" },
+          wind_speed: { value: 31, unit: "km/h" },
+        },
+      }),
+    ],
+  });
+  const [node] = nodesOnMap(state);
+  expect(node.measurements).toEqual([
+    { kind: "water_level", value: 84, unit: "cm" },
+    { kind: "wind_speed", value: 31, unit: "km/h" },
+  ]);
 });
 
 test("this Node is labeled with its name and every other Node with its id", () => {
