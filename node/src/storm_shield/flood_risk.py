@@ -27,7 +27,7 @@ STORM_PRESSURE_HPA = 1000  # the replay never goes below 1002; the 2026 flood wa
 WATER_LEVEL, WATER_UNIT = "water_level", "m"
 RAIN_RATE, RAIN_UNIT = "rain_rate", "mm/h"
 SOIL_MOISTURE, SOIL_UNIT = "soil_moisture", "%"
-AIR_PRESSURE, PRESSURE_UNIT = "air_pressure", "hPa"
+AIR_PRESSURE, AIR_PRESSURE_UNIT = "air_pressure", "hPa"
 
 logger = logging.getLogger(__name__)
 # So a Node that keeps sending the wrong unit fills the log once, not every few seconds.
@@ -81,7 +81,7 @@ class _NodeView:
         water = _series(node, readings, WATER_LEVEL, WATER_UNIT)
         rain = _series(node, readings, RAIN_RATE, RAIN_UNIT)
         soil = _series(node, readings, SOIL_MOISTURE, SOIL_UNIT)
-        pressure = _series(node, readings, AIR_PRESSURE, PRESSURE_UNIT)
+        pressure = _series(node, readings, AIR_PRESSURE, AIR_PRESSURE_UNIT)
         newest_water_t, newest_water = water[-1] if water else (0, 0.0)
         # The Surge window counts in the sender's own timestamps, so a slow rise cannot pass for
         # one just because its readings arrived together.

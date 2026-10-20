@@ -10,7 +10,7 @@ import { historyKey, type Trend } from "./readingTrends";
 import type { FloodRisk, ReadingKind } from "./nodeState";
 import { usePrefersReducedMotion } from "./useViewport";
 
-const KIND_LABELS: Record<ReadingKind, string> = {
+const KIND_LABELS: Partial<Record<ReadingKind, string>> = {
   air_pressure: "Pressure",
   rain_rate: "Rain rate",
   water_level: "Water level",
