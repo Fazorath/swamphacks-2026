@@ -67,7 +67,7 @@ function stubNode(nodes: ReturnType<typeof fakeNodeSnapshot>[], eventT = SURGE_T
   );
 }
 
-const water = (value: number) => ({ water_level: { value, unit: "cm" } });
+const water = (cm: number) => ({ water_level: { value: cm / 100, unit: "m" } });
 const NODES = [
   fakeNodeSnapshot("s2", { name: "S2 Betrawati", river_km: 20, measurements: water(210) }),
   fakeNodeSnapshot("hub", { name: "hub", simulated: false }),
@@ -75,7 +75,7 @@ const NODES = [
   fakeNodeSnapshot("pi", {
     name: "pi-table",
     simulated: false,
-    measurements: { ...water(40), pressure: { value: 1009, unit: "hPa" } },
+    measurements: { ...water(40), air_pressure: { value: 1009, unit: "hPa" } },
   }),
   fakeNodeSnapshot("s1", { name: "S1 Timure", river_km: 0, measurements: water(120) }),
 ];

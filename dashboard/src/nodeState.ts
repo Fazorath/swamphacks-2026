@@ -19,7 +19,9 @@ export type FloodRisk = {
   surged: string[];
 };
 
-export type ReadingKind = "pressure" | "rain_rate" | "water_level" | "soil_moisture";
+// The flood-warning kinds are water_level (m), rain_rate (mm/h), soil_moisture (%) and air_pressure
+// (hPa); a Node may send any other kind, and it is shown with the unit it came with.
+export type ReadingKind = string;
 
 export type Measurement = { value: number; unit: string };
 

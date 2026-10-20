@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 
 import { NodeTags } from "./NodeTags";
 import type { NodeOnMap } from "./nodesOnMap";
-import { KIND_LABELS } from "./ReadingsPanel";
+import { kindLabel } from "./ReadingsPanel";
 
 // The phone's peek at the selected Node, where the desktop highlights its card instead.
 export function NodeSheet({ node, onClose }: { node: NodeOnMap; onClose: () => void }) {
@@ -18,7 +18,7 @@ export function NodeSheet({ node, onClose }: { node: NodeOnMap; onClose: () => v
       <ul>
         {node.measurements.map((measurement) => (
           <li key={measurement.kind}>
-            {KIND_LABELS[measurement.kind]}: {measurement.value} {measurement.unit}
+            {kindLabel(measurement.kind)}: {measurement.value} {measurement.unit}
           </li>
         ))}
       </ul>

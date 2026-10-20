@@ -71,7 +71,7 @@ One timestamped set of Measurements from a Sensor Node.
 _Avoid_: data point, sample, telemetry
 
 **Measurement**:
-One value in a Community Reading with its kind and unit, such as water level in cm or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
+One value in a Community Reading with its kind and unit, such as water level in m or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
 _Avoid_: field, metric, value
 
 **Rule set**:

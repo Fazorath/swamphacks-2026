@@ -143,7 +143,7 @@ describe("a Node's marker", () => {
         fakeNodeSnapshot("s0", {
           stale: true,
           age_s: 20,
-          measurements: { water_level: { value: 420, unit: "cm" } },
+          measurements: { water_level: { value: 4.2, unit: "m" } },
         }),
       ],
     });
