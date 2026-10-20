@@ -31,7 +31,7 @@ class MeshedNodes:
         # Every Node's files live under here, never in the checkout: a built dashboard, a downloaded
         # Cache Pack or a Hub's saved Shelter status there would change what the tests see.
         self._directory = directory
-        self._network = InMemoryNetwork()
+        self._network = InMemoryNetwork(radio_range_m=None)
         self._clients: dict[str, TestClient] = {}
         self._now = datetime.now(UTC)
         self._hand_fed: dict[str, tuple[InMemoryMesh, int]] = {}
