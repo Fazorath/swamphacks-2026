@@ -1,14 +1,17 @@
 import random
 from datetime import UTC, datetime
+from typing import Literal, get_args
 
 from storm_shield.community_reading import Reading
 
-SCENARIO_STEPS = ["normal_day", "pressure_drop", "rain", "water_rising"]
+ScenarioStep = Literal["normal_day", "pressure_drop", "rain", "water_rising"]
+
+SCENARIO_STEPS: list[ScenarioStep] = list(get_args(ScenarioStep))
 
 # Base values per step: air pressure hPa, rain rate mm/h, water level m, soil moisture %. Water and
 # pressure are scaled to the levels in flood_risk.py. The last step is High from heavy rain on
 # rising water and stays under the Surge size, so a quick run of steps is not a Surge.
-_STEP_VALUES: dict[str, dict[str, float]] = {
+_STEP_VALUES: dict[ScenarioStep, dict[str, float]] = {
     "normal_day": {"air_pressure": 1015, "rain_rate": 0, "water_level": 1.0, "soil_moisture": 30},
     "pressure_drop": {"air_pressure": 990, "rain_rate": 0, "water_level": 1.0, "soil_moisture": 32},
     "rain": {"air_pressure": 985, "rain_rate": 12, "water_level": 3.5, "soil_moisture": 55},
@@ -32,13 +35,13 @@ class Scenario:
         self._index = 0
 
     @property
-    def step_name(self) -> str:
+    def step_name(self) -> ScenarioStep:
         return SCENARIO_STEPS[self._index]
 
     def step(self) -> None:
         self._index = min(self._index + 1, len(SCENARIO_STEPS) - 1)
 
-    def go_to(self, step_name: str) -> None:
+    def go_to(self, step_name: ScenarioStep) -> None:
         self._index = SCENARIO_STEPS.index(step_name)
 
     def reset(self) -> None:
