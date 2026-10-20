@@ -74,9 +74,28 @@ def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
     return response.content
 
 
+def download_osm_extract(destination: Path) -> None:
+    print(f"downloading {OSM_EXTRACT_URL} to {destination}", flush=True)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    # Beside the final name, so an interrupted download is not mistaken for the extract next run.
+    partial = destination.with_name(destination.name + ".part")
+    with httpx.stream(
+        "GET",
+        OSM_EXTRACT_URL,
+        headers={"User-Agent": USER_AGENT},
+        timeout=60,
+        follow_redirects=True,
+    ) as response:
+        response.raise_for_status()
+        with partial.open("wb") as file:
+            for chunk in response.iter_bytes():
+                file.write(chunk)
+    partial.rename(destination)
+
+
 def load_roads(osm_extract: Path) -> Roads:
     if not osm_extract.is_file():
-        sys.exit(f"{osm_extract} not found: download {OSM_EXTRACT_URL} to that path")
+        download_osm_extract(osm_extract)
     from pyrosm import OSM  # build-only dependency: `uv run --with pyrosm`
 
     south, west, north, east = VALLEY_BBOX
@@ -188,8 +207,8 @@ if __name__ == "__main__":
         "--roads-pbf",
         type=Path,
         help=(
-            f"OSM extract of Nepal ({OSM_EXTRACT_URL}); adds roads.json for rerouting on the phone"
-            " and the Routes to the Shelters"
+            f"OSM extract of Nepal, downloaded from {OSM_EXTRACT_URL} if the file is missing;"
+            " adds roads.json for rerouting on the phone and the Routes to the Shelters"
         ),
     )
     parser.add_argument(
