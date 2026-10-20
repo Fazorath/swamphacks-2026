@@ -12,6 +12,8 @@ fetched=false
 
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue
+  # Tags (a release, the hackathon snapshot) point at old commits on purpose.
+  case "$remote_ref" in refs/heads/*) ;; *) continue ;; esac
   if [ "$remote_ref" = refs/heads/main ]; then
     echo "pre-push: refusing to push to main. Push your branch and open a pull request (docs/agents/issue-tracker.md)." >&2
     exit 1

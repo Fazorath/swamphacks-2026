@@ -34,7 +34,11 @@ Do this after the M0 setup PR has merged, so its CI checks exist to pick. Settin
 - [ ] Columns: Backlog, Ready, In progress, In review, Done.
 - [ ] Workflows (⋯ → Workflows): turn on **Auto-add to project** (filter `is:issue,pr is:open`), **Item closed → Done**, **Pull request merged → Done**, and set new items to **Backlog**.
 
-## 5. After the transfer
+## 5. Tag the hackathon submission
+
+Agent sessions cannot push tags, so this is a click: Releases → **Draft a new release** → Choose a tag → type `v0-swamphacks` → **Create new tag** → Target: **Recent commits** → `333f4e6` ("add demo runbook and run-demo check script", the last commit before M0). Title "SwampHacks 2026 submission", tick **Set as a pre-release**, publish.
+
+## 6. After the transfer
 
 - [ ] Run the "GitHub setup" workflow once (Actions → GitHub setup → Run workflow) if the labels or milestones look wrong.
 - [ ] Tell the Claude Code session the new repo name so it can attach it.
