@@ -60,11 +60,23 @@ _Avoid_: offline node
 A phone or browser that shows the dashboard by connecting to a Node, without being part of the Mesh itself.
 _Avoid_: client, user device
 
+**Sandbox**:
+A Hub and any number of simulated Sensor Nodes started by one command in one process, sharing an in-memory Mesh, for the team to try the app without a terminal juggling ports, slots and Hub ids. Sensors are placed on the map and the event is played from the dashboard. A message reaches only Nodes within a set radio range, directly or hopping through other Nodes. Every reading in it is a Simulated Reading.
+_Avoid_: simulator, demo mode, playground
+
 ## Information
 
 **Community Reading**:
-One timestamped measurement from a Sensor Node, such as pressure or soil moisture.
+One timestamped set of Measurements from a Sensor Node.
 _Avoid_: data point, sample, telemetry
+
+**Measurement**:
+One value in a Community Reading with its kind and unit, such as water level in cm or air pressure in hPa. A Sensor Node declares the kinds it measures; nothing in the Mesh assumes a fixed list.
+_Avoid_: field, metric, value
+
+**Rule set**:
+The rules that turn the Measurements a Node can see into states and warnings. Flood warning (Flood Risk, Surges, Community Warnings) is the first and, for now, only Rule set; others follow as Storm Shield grows into a general sensor network.
+_Avoid_: plugin, module, detector
 
 **Simulated Reading**:
 A Community Reading whose value comes from a breadboard input or replay script instead of a real sensor; always labeled as such.
@@ -78,8 +90,16 @@ _Avoid_: exact location, coordinates
 A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by the laptop keyboard or HTTP, or jumped to a named step by a wire touched to a breadboard input. No longer the demo's driver (the Replay is); kept for tests and the breadboard. A press changes only the Pi's own Node and does nothing visible while the Sensor is playing a Replay.
 _Avoid_: demo script, simulation, playback
 
+**Event**:
+One happening at a Region, of one Hazard: Hurricane Ian's storm surge at Fort Myers on 28 September 2022, or the Bhote Koshi flash flood of 26 August 2026. An Event can be real or made up for testing.
+_Avoid_: scenario, incident, storm (alone)
+
+**Hazard**:
+The kind of Event: flash flood or storm surge today, others (lightning, frost) as more Rule sets arrive. The Hazard names the Community Warning and decides what triggers it.
+_Avoid_: event type, threat, disaster
+
 **Replay**:
-A reconstruction of a real flood from reported times, played on the Event clock: each Sensor Node follows its own track of Simulated Readings, and the recorded Official Alerts and camera clip appear at their real times. Always labelled REPLAY.
+How an Event is played: a file describing the water surface and weather over time, played on the Event clock. Each Sensor Node reads its Simulated Readings from that surface at its own position, so a Node on high ground stays dry; a real Event's Replay is rebuilt from recorded gauges and reports, and its Official Alerts appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
 **Camera**:
@@ -91,31 +111,39 @@ A five-minute illustrative video a demo camera plays in place of a live feed, co
 _Avoid_: recording, live feed, camera footage
 
 **Event clock**:
-The time inside the Replay (for example 26 Aug 2026 · 08:41 NPT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
+The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
 _Avoid_: replay time, sim time
 
 **River km**:
 A Node's or home's distance along the river from the Lhende–Kyirong confluence at the border, positive downstream; set in each Node's config and measured on the river line in the Cache Pack.
 _Avoid_: chainage, mile marker, distance
 
-**Wave ETA**:
-How long the Surge in a Community Warning takes to reach a Viewer's home, counted down on the Event clock. Worked out on the Viewer from the home snapped to the river line (never on the Hub, and the home never leaves the device); with several warnings it follows the earliest arrival; a home upstream of the origin, or more than 2 km from the river line, has none.
-_Avoid_: countdown, arrival time, ETA (alone)
+**Water ETA**:
+How long until flood water reaches a Viewer's home, counted down on the Event clock and worked out on the Viewer (never on the Hub; the home never leaves the device). On a river, it is when the Surge in a Community Warning arrives at the home snapped to the river line; with several warnings it follows the earliest, and a home upstream of the origin or more than 2 km from the river line has none. On a coast, it is when the rising water level reported over the Mesh passes the home's ground height, at its current rate of rise.
+_Avoid_: Wave ETA, countdown, arrival time, ETA (alone)
 
 **Measured wave speed**:
 The speed of a Surge between the first two Registered Nodes that surged, worked out by the Hub from their River kms and Surge times and carried on the Community Warning; it replaces the reconstructed speed for the reaches below the second Node.
 _Avoid_: actual speed, live speed
 
 **Official Alert**:
-A warning or order issued by DHM, NDRRMA or a district office, shown distinctly from community information.
+A warning or order issued by the Region's official alert source (DHM, NDRRMA or a district office in Nepal; the National Weather Service in Florida), shown distinctly from community information.
 _Avoid_: warning, notification
+
+**Official Gauge**:
+A government water-level station (a NOAA tide gauge in Florida) whose measurements the Hub brings into the Mesh while online. Shown beside Community Readings and visibly different from them; never counted toward Flood Risk.
+_Avoid_: official sensor, station, buoy
 
 **Community Warning**:
 A signed warning the Hub issues when one Registered Node reports a Surge; it names that Node and its River km so each Viewer can work out when the wave reaches its home. Never an evacuation order, and always points residents to official sources for evacuation decisions.
 _Avoid_: alert, alarm, evacuation notice
 
+**Region**:
+The place a Storm Shield network watches, described in one small hand-written file: its name, area, time zone, display units, official alert source, the water it watches (river or coast), the thresholds its Rule set uses, its Shelters and its suggested sensor sites. Adding a region means writing this file, not code. Nepal's Bhote Koshi valley is one Region; a Florida coast is the second.
+_Avoid_: map, area, location, scenario
+
 **Cache Pack**:
-The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built once by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
+The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built from a Region's file by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
@@ -127,8 +155,8 @@ The condition, judged across the Mesh and not from any single Node, that soil mo
 _Avoid_: wet weather, precipitation
 
 **Surge**:
-A sudden rise in one Node's water level, at least a set amount within a short window; it makes that Node's Flood Risk High at once and triggers a Community Warning.
-_Avoid_: spike, flash, wave
+A sudden rise in one Node's water level, at least a set amount within a short window: the flash-flood trigger. It makes that Node's Flood Risk High at once and triggers a Community Warning titled with the Hazard; the word itself is never shown alone on screen.
+_Avoid_: storm surge (that is a Hazard), spike, flash, wave
 
 **Storm Signal**:
 The dashboard indicator that air pressure is low across the Nodes that count, a sign a storm is approaching. It stays on while pressure stays low and is separate from Flood Risk, though it makes Flood Risk appear (as Low) when nothing else would.
@@ -141,7 +169,7 @@ What a resident should do and where to go: their risk, and either the nearest op
 _Avoid_: evac info, escape route
 
 **Reachable Shelter**:
-An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Wave ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
+An open Shelter that fits the household, lies outside the Flood-Prone Area, and can be walked to before the wave: its walking time is less than the Water ETA minus a safety margin. Re-judged every second on the Event clock; with none, the Evacuation Plan says to get to higher ground.
 _Avoid_: safe Shelter, nearest Shelter (the nearest need not be reachable)
 
 **Household Profile**:
@@ -177,7 +205,7 @@ A hand-placed spot on the hillside above a town, picked into the Cache Pack with
 _Avoid_: safe zone, refuge
 
 **Flood-Prone Area**:
-The river corridor, drawn by hand along the Lhende Khola, Bhote Koshi and Trishuli; a Shelter inside it is never offered. The map always marks it approximate.
+The land the Region's water can reach: on a river, the corridor drawn by hand along it (the Lhende Khola, Bhote Koshi and Trishuli in Nepal); on a coast, the land below a set height. A Shelter inside it is never offered. The map always marks it approximate.
 _Avoid_: evacuation zone, surge zone
 
 ## Dashboard

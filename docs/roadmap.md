@@ -22,21 +22,25 @@ GitHub Issues instead of `docs/tickets/` (a frozen archive), pull requests only,
 
 ## M2 Direction
 
-A grilling session, then a spec: what a Region is (map area, rivers and terrain, sensor sites, time zone, official sources), where its data comes from (a prebuilt pack, or fetched once and cached), what a scenario or event is, what the Sandbox does and how someone who doesn't use a terminal starts it, and what stays from the flood logic. Mock-ups of the new screens are shown for a yes or no before anything is built.
+A grilling session (issue #21), then the spec `docs/specs/regions-events-and-sandbox.md`: what a Region is, where its data comes from, what an Event and a Replay are, what the Sandbox does, and what stays from the flood logic (ADR 0006). Mock-ups of the new screens are shown for a yes or no before anything is built.
 
 ## M3 Sandbox
 
-One command (or button) starts a Hub and N simulated sensors in one process on the in-memory Mesh, from a scenario file: no ports per Node, no pack server, no identity copying. It is also the base for the automated tests and for the simulated radio range (a message reaches only Nodes in range).
+Community Readings become lists of Measurements (the wire change comes first). The Simulated Fleet, camera clips, breadboard and Scenario are deleted with their tests. One command starts a Hub and simulated Sensors in one process on the in-memory Mesh, with a radio range (about 1 km, hopping through Nodes): no ports per Node, no pack server, no identity copying. Sensors are placed and dragged on the map, and an Event is picked and played from the dashboard. The Sandbox is also the test harness.
 
 ## M4 Regions
 
-The Nepal valley moves behind the Region module, and a section of Florida is added as the second region, which proves the modularity.
+A Region is one hand-written file, `regions/<name>/region.json`, and one build command makes its Cache Pack (published as a Release). Fort Myers (Fort Myers Beach and Estero Bay) becomes the default Region and the one the tests use; Nepal moves behind the Region file where the move is mechanical.
 
-## M5 Wave on any region
+## M5 Event on any Region
 
-The event plays on whichever region is loaded: the wave front, Surges, warnings.
+An Event plays on whichever Region is loaded: a water surface over time that each Sensor reads at its own position, with the Hazard picking the warning (a Surge for a flash flood, a rising level for a storm surge). Hurricane Ian at Fort Myers is the first coast Event, with the coast Water ETA, NWS Official Alerts and NOAA Official Gauges.
 
-Dates for M3 to M5 are set when M2 ends.
+## M6 General sensors
+
+The end goal: Sensor Nodes measure whatever their owner needs (a farm, remote land, a stretch of coast), a second Rule set arrives when one is needed, cameras return as sensors, and a desktop launcher starts the Sandbox without a terminal.
+
+Dates for M3 to M6 are set when M2 ends.
 
 ## Not planned yet
 
