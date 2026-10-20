@@ -44,4 +44,4 @@ Dates for M3 to M6 are set when M2 ends.
 
 ## Not planned yet
 
-Real radios, LoRa, a hosted anything. Ideas go in as issues with no milestone.
+Real sensors and radios, LoRa, a hosted anything. Ideas go in as issues with no milestone.
