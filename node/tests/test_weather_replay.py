@@ -7,7 +7,8 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 from fixture_pack import WEATHER_PATH, WEATHER_REPLAY, build_fixture_pack
-from pack_weather import ATTEMPTS, fetch_weather_replay, weather_replay_from_archive
+from http_retry import ATTEMPTS, RequestFailed
+from pack_weather import fetch_weather_replay, weather_replay_from_archive
 from test_cache_pack import PackSource
 
 from storm_shield.main import create_app
@@ -179,7 +180,7 @@ def _flaky_archive(failures: list[httpx.Response | Exception]) -> tuple[httpx.Cl
 
 
 def test_a_failed_archive_request_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("pack_weather.RETRY_PAUSE_SECONDS", 0)
+    monkeypatch.setattr("http_retry.RETRY_PAUSE_SECONDS", 0)
     client, calls = _flaky_archive([httpx.Response(503), httpx.ConnectError("reset")])
 
     weather = fetch_weather_replay(client, BBOX, "2026-08-26", "2026-08-26")
@@ -189,10 +190,24 @@ def test_a_failed_archive_request_is_retried(monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_the_archive_request_gives_up_after_its_attempts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("pack_weather.RETRY_PAUSE_SECONDS", 0)
+    monkeypatch.setattr("http_retry.RETRY_PAUSE_SECONDS", 0)
     client, calls = _flaky_archive([httpx.Response(503)] * 99)
 
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(RequestFailed):
         fetch_weather_replay(client, BBOX, "2026-08-26", "2026-08-26")
 
     assert len(calls) == ATTEMPTS
+
+
+def test_a_failed_request_reports_the_error_but_never_the_url(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("http_retry.RETRY_PAUSE_SECONDS", 0)
+    client, _ = _flaky_archive([httpx.Response(503)] * 99)
+
+    with pytest.raises(RequestFailed) as failure:
+        fetch_weather_replay(client, BBOX, "2026-08-26", "2026-08-26")
+
+    shown = capsys.readouterr().out + str(failure.value)
+    assert "HTTP 503" in shown
+    assert "archive-api.open-meteo.com" not in shown

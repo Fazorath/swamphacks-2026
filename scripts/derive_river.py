@@ -8,16 +8,15 @@ import itertools
 import json
 import math
 import sys
-import time
+from functools import partial
 from pathlib import Path
 
 import httpx
+from http_retry import get_with_retries
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
-OVERPASS_ATTEMPTS = 6
-OVERPASS_RETRY_SECONDS = 15
 # OSM ways of the river, upstream to downstream: Lende Khola (3 ways to the confluence),
 # Bhote Koshi (2), then Trishuli River / Trishuli Ganga River down to below Trishuli bazaar.
 WAY_IDS = (
@@ -57,14 +56,9 @@ def distance_m(a: Point, b: Point) -> float:
 def fetch_ways() -> dict[int, list[Point]]:
     query = f"[out:json][timeout:90];way(id:{','.join(map(str, WAY_IDS))});out geom;"
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=120) as client:
-        for attempt in range(1, OVERPASS_ATTEMPTS + 1):
-            response = client.post(OVERPASS_URL, data={"data": query})
-            if response.status_code == 200:
-                break
-            print(f"Overpass attempt {attempt} answered {response.status_code}", flush=True)
-            if attempt == OVERPASS_ATTEMPTS:
-                sys.exit("Overpass stays unavailable: try again later")
-            time.sleep(OVERPASS_RETRY_SECONDS)
+        response = get_with_retries(
+            partial(client.post, OVERPASS_URL, data={"data": query}), "Overpass"
+        )
     return {
         element["id"]: [(p["lat"], p["lon"]) for p in element["geometry"]]
         for element in response.json()["elements"]

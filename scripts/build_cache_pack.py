@@ -3,18 +3,19 @@
 import argparse
 import hashlib
 import json
-import math
 import os
 import sys
 import time
 import zipfile
 import zlib
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 
 import httpx
+from http_retry import describe_error, get_with_retries
 from pack_high_ground import build_high_ground, load_high_ground
-from pack_nepal import build_nepal_bundle, elevation_at, load_key_places
+from pack_nepal import build_nepal_bundle, elevation_at, load_key_places, tiles_covering
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
@@ -35,29 +36,6 @@ TILE_DELAY_SECONDS = 0.15
 WEATHER_FIRST_DAY = "2026-08-25"
 WEATHER_LAST_DAY = "2026-08-27"
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
-
-
-def tile_of(lat: float, lon: float, zoom: int) -> tuple[int, int]:
-    n = 2**zoom
-    x = int((lon + 180) / 360 * n)
-    y = int((1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * n)
-    return x, y
-
-
-def tiles_covering(
-    bbox: tuple[float, float, float, float],
-) -> list[tuple[int, int, int]]:
-    south, west, north, east = bbox
-    tiles = []
-    for zoom in ZOOMS:
-        x_min, y_max = tile_of(south, west, zoom)
-        x_max, y_min = tile_of(north, east, zoom)
-        tiles += [
-            (zoom, x, y)
-            for x in range(x_min, x_max + 1)
-            for y in range(y_min, y_max + 1)
-        ]
-    return tiles
 
 
 def load_shelters() -> list[dict[str, object]]:
@@ -87,30 +65,34 @@ def carto_key() -> str:
 
 
 def fetch_tile(client: httpx.Client, zoom: int, x: int, y: int) -> bytes:
-    response = client.get(TILE_URL.format(z=zoom, x=x, y=y), params={"key": carto_key()})
-    if response.status_code != 200:
-        # Not raise_for_status: its message would print the URL, and the URL carries the key.
-        sys.exit(f"CARTO answered {response.status_code} for tile {zoom}/{x}/{y}")
+    # The URL carries the key; get_with_retries never prints it.
+    response = get_with_retries(
+        partial(client.get, TILE_URL.format(z=zoom, x=x, y=y), params={"key": carto_key()}),
+        f"CARTO tile {zoom}/{x}/{y}",
+    )
     time.sleep(TILE_DELAY_SECONDS)
     return response.content
 
 
 def download_osm_extract(destination: Path) -> None:
-    print(f"downloading {OSM_EXTRACT_URL} to {destination}", flush=True)
+    print(f"downloading the Nepal OSM extract to {destination}", flush=True)
     destination.parent.mkdir(parents=True, exist_ok=True)
     # Beside the final name, so an interrupted download is not mistaken for the extract next run.
     partial = destination.with_name(destination.name + ".part")
-    with httpx.stream(
-        "GET",
-        OSM_EXTRACT_URL,
-        headers={"User-Agent": USER_AGENT},
-        timeout=60,
-        follow_redirects=True,
-    ) as response:
-        response.raise_for_status()
-        with partial.open("wb") as file:
-            for chunk in response.iter_bytes():
-                file.write(chunk)
+    try:
+        with httpx.stream(
+            "GET",
+            OSM_EXTRACT_URL,
+            headers={"User-Agent": USER_AGENT},
+            timeout=60,
+            follow_redirects=True,
+        ) as response:
+            response.raise_for_status()
+            with partial.open("wb") as file:
+                for chunk in response.iter_bytes():
+                    file.write(chunk)
+    except httpx.HTTPError as error:
+        sys.exit(f"OSM extract download failed: {describe_error(error)}")
     partial.rename(destination)
 
 
@@ -169,17 +151,17 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
         "river.geojson": (SOURCE_DIR / "river.source.geojson").read_bytes(),
     }
     manifest_extras: dict[str, object] = {}
+    flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
     if osm_extract is not None:
         shelters = load_shelters()
         roads = load_roads(osm_extract)
         graph = build_road_graph(roads, [tuple(shelter["pos"]) for shelter in shelters])
         files["roads.json"] = json.dumps(graph, separators=(",", ":")).encode()
         print(f"road graph: {len(graph['nodes'])} junctions, {len(graph['edges'])} segments")
-        flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
         route_grid, route_files = build_route_files(roads, shelters, flood_prone)
         files.update(route_files)
         manifest_extras["route_grid"] = route_grid.as_manifest_entry()
-    tile_list = tiles_covering(VALLEY_BBOX) if raster_tiles else []
+    tile_list = tiles_covering(VALLEY_BBOX, ZOOMS) if raster_tiles else []
     tiles_note = f" and {len(tile_list)} tiles" if tile_list else ""
     print(f"fetching Nepal, the weather{tiles_note}", flush=True)
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
@@ -196,7 +178,7 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
             load_high_ground(SOURCE_DIR / "high_ground.source.json"),
             key_places,
             [(lat, lon) for line in river_lines for lon, lat in line["geometry"]["coordinates"]],
-            FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"])),
+            flood_prone,
             lambda lat, lon: elevation_at(elevation, lat, lon),
         )
         files["high_ground.json"] = json.dumps(high_ground, indent=1).encode()
