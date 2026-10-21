@@ -7,7 +7,7 @@ import type { NodeOnMap } from "./nodesOnMap";
 import { ReadingSlot } from "./ReadingSlot";
 import { readingsLadder, rungBeforeWave } from "./readingsLadder";
 import { historyKey, type Trend } from "./readingTrends";
-import type { FloodRisk, ReadingKind } from "./nodeState";
+import type { FloodRisk, Hazard, ReadingKind, Region } from "./nodeState";
 import { usePrefersReducedMotion } from "./useViewport";
 
 const KIND_LABELS: Partial<Record<ReadingKind, string>> = {
@@ -27,6 +27,8 @@ export function kindLabel(kind: ReadingKind): string {
 type Props = {
   nodes: NodeOnMap[];
   floodRisk: FloodRisk | null;
+  region: Region | null;
+  hazard: Hazard | null;
   // The Hub's id when this Node is the Hub; the Pi's card is the real Node that is not it.
   hubId: string | null;
   // River km of the wave front now, or null while no wave is running.
@@ -43,6 +45,8 @@ type Props = {
 export function ReadingsPanel({
   nodes,
   floodRisk,
+  region,
+  hazard,
   hubId,
   waveKm,
   selectedId,
@@ -113,7 +117,7 @@ export function ReadingsPanel({
 
   return (
     <Panel label="Readings" {...panel}>
-      <FloodRiskCard floodRisk={floodRisk} />
+      <FloodRiskCard floodRisk={floodRisk} region={region} hazard={hazard} />
       {pinned && card(pinned, { hero: false, liveSensors: true })}
       {rungs.length > 0 && (
         <ol className="river-ladder" aria-label="Valley Nodes by River km">

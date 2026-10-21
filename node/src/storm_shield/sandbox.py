@@ -23,6 +23,7 @@ from storm_shield.cache_pack import CachePack, InvalidCachePack
 from storm_shield.community_reading import Position
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
+from storm_shield.region import load_region, region_path
 from storm_shield.river_line import river_km_at
 from storm_shield.sandbox_api import (
     SandboxControls,
@@ -37,8 +38,8 @@ from storm_shield.settings import Settings
 logger = logging.getLogger(__name__)
 
 HUB = "hub"
-# Wide enough for the Replay Nodes below, whose longest gap is about 33 km. When the Sandbox places
-# its Sensors on a Region's sites (#46) this becomes the 1 km the spec asks for.
+# Wide enough for the Region's sensor sites, whose longest gap is about 33 km. When the Sandbox
+# places its Sensors on a Region's sites (#46) this becomes the 1 km the spec asks for.
 SANDBOX_RADIO_RANGE_M = 40_000.0
 PACK_URL = (
     "https://github.com/StormShields/Stormshield/releases/download/cache-pack-v6/cache-pack.zip"
@@ -57,15 +58,13 @@ class NodeSite(NamedTuple):
     river_km: float | None
 
 
-# Until Regions exist these are the Replay Nodes of scripts/run-demo.sh; the Hub sits at Betrawati.
+# The Hub sits at Betrawati until a Region says where its Hub goes.
 HUB_SITE = NodeSite(HUB, 27.9731, 85.1860, 45.6)
-# Nearest the Hub first: a Node's first reading goes out as it joins, and only reaches the Hub if
-# the Nodes between are already there to relay it.
+# The Region's sensor sites, in the file's order: nearest the Hub first, because a Node's first
+# reading goes out as it joins and only reaches the Hub if the Nodes between are already there.
 SENSOR_SITES = [
-    NodeSite("s3", 27.9215, 85.1460, 54.0),
-    NodeSite("s2", 28.1632, 85.3391, 14.6),
-    NodeSite("s1", 28.2528, 85.3667, 3.4),
-    NodeSite("s0", 28.3517, 85.4477, -12.2),
+    NodeSite(site.id, site.pos[0], site.pos[1], site.river_km)
+    for site in load_region(region_path(Settings().region)).sensor_sites
 ]
 
 

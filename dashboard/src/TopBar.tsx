@@ -3,7 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { EventClockTag } from "./EventClockTag";
 import { FloodRiskChip } from "./FloodRiskPanel";
 import { stormSignalSentence } from "./floodRiskSentences";
-import type { FloodRisk, NodeState } from "./nodeState";
+import type { FloodRisk, NodeState, Region } from "./nodeState";
 import type { EventClock } from "./useEventClock";
 import { WarningChip } from "./WarningBand";
 
@@ -12,6 +12,7 @@ const STATUS_LABELS = { online: "Online", mesh_only: "Mesh-only" } as const;
 type Props = {
   eventClock: EventClock | null;
   floodRisk: FloodRisk | null;
+  region: Region | null;
   showStormSignal: boolean;
   // Set once a warning is acknowledged on this desktop; null otherwise (D-29).
   warningChip: { minutesLeft: number | null; community: boolean; onOpen: () => void } | null;
@@ -29,6 +30,7 @@ type Props = {
 export function TopBar({
   eventClock,
   floodRisk,
+  region,
   showStormSignal,
   warningChip,
   status,
@@ -50,8 +52,10 @@ export function TopBar({
       {status && <span className={`connection-badge ${status}`}>{STATUS_LABELS[status]}</span>}
       {!phone && (
         <>
-          {showStormSignal && floodRisk?.storm_signal.on && (
-            <span className="storm-signal">{stormSignalSentence(floodRisk.storm_signal)}</span>
+          {showStormSignal && floodRisk?.storm_signal.on && region && (
+            <span className="storm-signal">
+              {stormSignalSentence(floodRisk.storm_signal, region)}
+            </span>
           )}
           <p className="household-status">
             {householdSaved ? "Household profile saved" : "Fill in your household profile"}

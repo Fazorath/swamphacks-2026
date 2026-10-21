@@ -163,10 +163,26 @@ def test_the_state_holds_exactly_these_keys(
         "status",
         "registration",
         "sandbox",
+        "region",
+        "hazard",
         "flood_risk",
         "nodes",
         "official_alerts",
         "community_warnings",
+    }
+
+
+def test_the_state_names_the_region_and_its_hazard(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start("porch")
+    state = _state(meshed_nodes["porch"])
+    assert state["hazard"] == "flash_flood"
+    assert state["region"]["name"] == "nepal"
+    assert state["region"]["time_zone"] == "Asia/Kathmandu"
+    assert state["region"]["display_units"]["water_level"] == "cm"
+    assert {s["tag"]: s["name"] for s in state["region"]["official_alert_sources"]} == {
+        "dhm": "DHM",
+        "ndrrma": "NDRRMA",
+        "district": "District authorities",
     }
 
 

@@ -21,7 +21,7 @@ from storm_shield.cache_pack import (
 from storm_shield.community_reading import CommunityReading, Reading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
 from storm_shield.flood_email import FloodEmail
-from storm_shield.flood_risk import HISTORY_WINDOW_SECONDS, FloodRisk, flood_risk
+from storm_shield.flood_risk import FloodRisk, flood_risk
 from storm_shield.internet_connection import (
     CONNECTIVITY_TIMEOUT_SECONDS,
     InternetConnection,
@@ -43,6 +43,7 @@ from storm_shield.node_registry import (
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
+from storm_shield.region import Hazard, Region, RegionSummary, load_region, region_path
 from storm_shield.replay import Event, EventClock, ReplayClockMessage, load_events
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.sandbox_api import (
@@ -90,6 +91,8 @@ class NodeState(BaseModel):
     status: Status
     registration: RegistrationState
     sandbox: SandboxState | None
+    region: RegionSummary
+    hazard: Hazard
     flood_risk: FloodRisk
     nodes: list[NodeEntry]
     official_alerts: list[OfficialAlert]
@@ -163,7 +166,10 @@ def create_app(
     internet_source: httpx.Client | None = None,
     weather_source: httpx.Client | None = None,
     sandbox: SandboxControls | None = None,
+    region: Region | None = None,
 ) -> FastAPI:
+    region = region or load_region(region_path(settings.region))
+    rules = region.rules.flood_warning
     cache_pack = CachePack(settings.cache_pack_dir)
     weather_forecast = WeatherForecast(settings.data_dir)
     weather_source = weather_source or httpx.Client(
@@ -178,8 +184,10 @@ def create_app(
     )
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    store = ReadingStore(HISTORY_WINDOW_SECONDS)
+    store = ReadingStore(rules.flash_flood.rising_window_s)
     events = load_events()
+    for each in events.values():
+        each.require_alert_sources_of(region)
     first_event = next(iter(events.values()))
     event_clock = EventClock(first_event.id)
 
@@ -238,7 +246,7 @@ def create_app(
         if not hub_warnings:
             return
         snapshot = store.snapshot(clock())
-        surged = flood_risk(snapshot.recent, heard_registry.registered_ids()).surged
+        surged = flood_risk(snapshot.recent, heard_registry.registered_ids(), rules).surged
         river_km = {node: snapshot.recent[node][-1].river_km for node in surged}
         event = event_clock.current(clock())
         now = int(clock().timestamp())
@@ -553,7 +561,9 @@ def create_app(
             status=internet.status,
             registration=registration(),
             sandbox=SandboxState() if sandbox else None,
-            flood_risk=flood_risk(snapshot.recent, registered_ids),
+            region=region.summary(),
+            hazard=region.hazard,
+            flood_risk=flood_risk(snapshot.recent, registered_ids, rules),
             nodes=[
                 NodeEntry(
                     **node.model_dump(),

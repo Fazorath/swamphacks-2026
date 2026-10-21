@@ -1,5 +1,5 @@
 import { cardReasons, reasonSentence } from "./floodRiskSentences";
-import type { FloodRisk } from "./nodeState";
+import type { FloodRisk, Hazard, Region } from "./nodeState";
 import { usePrefersReducedMotion } from "./useViewport";
 
 const LEVEL_WORDS = { low: "Low", elevated: "Elevated", high: "High" } as const;
@@ -18,14 +18,22 @@ export function FloodRiskChip({ floodRisk }: { floodRisk: FloodRisk | null }) {
   );
 }
 
-export function FloodRiskCard({ floodRisk }: { floodRisk: FloodRisk | null }) {
-  if (!floodRisk?.level) return null;
+export function FloodRiskCard({
+  floodRisk,
+  region,
+  hazard,
+}: {
+  floodRisk: FloodRisk | null;
+  region: Region | null;
+  hazard: Hazard | null;
+}) {
+  if (!floodRisk?.level || !region || !hazard) return null;
   return (
     <section aria-label="Flood Risk" className={`flood-risk-card ${floodRisk.level}`}>
       <h3>Flood Risk · {LEVEL_WORDS[floodRisk.level]}</h3>
       <ul>
         {cardReasons(floodRisk).map((reason) => (
-          <li key={reason.code}>{reasonSentence(reason)}</li>
+          <li key={reason.code}>{reasonSentence(reason, region, hazard)}</li>
         ))}
       </ul>
     </section>

@@ -1,4 +1,5 @@
-import type { FloodRisk, FloodRiskReason } from "./nodeState";
+import { inDisplayUnit } from "./displayUnits";
+import type { FloodRisk, FloodRiskReason, Hazard, Region } from "./nodeState";
 
 function nodeCount(count: number): string {
   return count === 1 ? "1 Node" : `${count} Nodes`;
@@ -9,19 +10,32 @@ function howLong(seconds: number): string {
   return seconds === 0 ? "at once" : `in ${seconds} s`;
 }
 
-export function reasonSentence({ code, nodes, value, seconds }: FloodRiskReason): string {
+// What a Surge reads like depends on the Hazard.
+const SURGE_SENTENCES: Record<Hazard, (rise: string, howLong: string) => string> = {
+  flash_flood: (rise, howLong) => `water rose ${rise} ${howLong}`,
+};
+
+export function reasonSentence(
+  { code, nodes, value, seconds }: FloodRiskReason,
+  region: Region,
+  hazard: Hazard,
+): string {
   const at = `at ${nodeCount(nodes)}`;
+  const units = region.display_units;
   switch (code) {
     case "water_surge":
-      return `water rose ${Number((value / 100).toFixed(1))} m ${howLong(seconds ?? 0)}`;
+      return SURGE_SENTENCES[hazard](
+        inDisplayUnit(value, "water_level", units),
+        howLong(seconds ?? 0),
+      );
     case "water_high":
-      return `water level ${value} cm ${at}`;
+      return `water level ${inDisplayUnit(value, "water_level", units)} ${at}`;
     case "water_rising":
       return `water level rising ${at}`;
     case "rain_heavy":
-      return `heavy rain: ${value} mm/h ${at}`;
+      return `heavy rain: ${inDisplayUnit(value, "rain_rate", units)} ${at}`;
     case "pressure_falling":
-      return `low pressure: ${value} hPa ${at}`;
+      return `low pressure: ${inDisplayUnit(value, "air_pressure", units)} ${at}`;
     case "raining":
       return `soil moisture rising ${at}`;
   }
@@ -37,6 +51,13 @@ export function cardReasons(floodRisk: FloodRisk): FloodRiskReason[] {
   );
 }
 
-export function stormSignalSentence({ nodes, pressure_hpa }: FloodRisk["storm_signal"]): string {
-  return `Low pressure: ${pressure_hpa} hPa at ${nodeCount(nodes)}`;
+export function stormSignalSentence(
+  { nodes, pressure_hpa }: FloodRisk["storm_signal"],
+  region: Region,
+): string {
+  const pressure =
+    pressure_hpa === null
+      ? ""
+      : `: ${inDisplayUnit(pressure_hpa, "air_pressure", region.display_units)}`;
+  return `Low pressure${pressure} at ${nodeCount(nodes)}`;
 }

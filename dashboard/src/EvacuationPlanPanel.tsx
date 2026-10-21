@@ -4,7 +4,8 @@ import { agoWords } from "./agoWords";
 import { JoinCard } from "./JoinCard";
 import { Panel, type PanelControl } from "./Panel";
 import type { EvacuationPlan } from "./evacuationPlan";
-import { officialTag, SOURCE_LABELS } from "./officialAlerts";
+import type { Region } from "./nodeState";
+import { officialTag, sourceName } from "./officialAlerts";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
@@ -27,6 +28,7 @@ function ShelterStatusAge({ confirmedAt }: { confirmedAt: number }) {
 
 export function EvacuationPlanPanel({
   plan,
+  region,
   exampleHome,
   handOff,
   waveArrival,
@@ -35,6 +37,7 @@ export function EvacuationPlanPanel({
   panel,
 }: {
   plan: EvacuationPlan;
+  region: Region | null;
   exampleHome: boolean;
   // The projected Hub has no household of its own: it hands the plan to a phone.
   handOff: boolean;
@@ -67,8 +70,8 @@ export function EvacuationPlanPanel({
         <ul className="plan-official-alerts" aria-label="Official Alerts for your household">
           {plan.officialAlerts.map((alert) => (
             <li key={alert.id} className="official-alert">
-              <span className="official-tag">{officialTag(alert)}</span>{" "}
-              {SOURCE_LABELS[alert.source]}: {alert.headline}
+              <span className="official-tag">{officialTag(alert)}</span> {sourceName(region, alert)}
+              : {alert.headline}
             </li>
           ))}
         </ul>

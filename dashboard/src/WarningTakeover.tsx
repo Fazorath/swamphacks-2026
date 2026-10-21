@@ -5,18 +5,26 @@ import {
   warningSentence,
   type CommunityWarning,
 } from "./communityWarnings";
-import type { NodeSnapshot } from "./nodeState";
-import { issuedAsGiven, officialTag, SOURCE_LABELS, type OfficialAlert } from "./officialAlerts";
+import type { NodeSnapshot, Region } from "./nodeState";
+import { issuedAsGiven, officialTag, sourceName, type OfficialAlert } from "./officialAlerts";
 import type { TakeoverWarning } from "./acknowledgedWarnings";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
 
-function OfficialBody({ alert, online }: { alert: OfficialAlert; online: boolean }) {
+function OfficialBody({
+  alert,
+  region,
+  online,
+}: {
+  alert: OfficialAlert;
+  region: Region | null;
+  online: boolean;
+}) {
   return (
     <>
       <p className="official-alert-tags">
         <span className="official-tag">{officialTag(alert)}</span>
-        <span>{SOURCE_LABELS[alert.source]}</span>
+        <span>{sourceName(region, alert)}</span>
       </p>
       <h2>{alert.headline}</h2>
       <p>Issued {issuedAsGiven(alert.issued)}</p>
@@ -73,6 +81,7 @@ function CommunityBody({
 // Shows the first of the warnings this device has not acknowledged, over a dimmed live map.
 export function WarningTakeover({
   pending,
+  region,
   nodes,
   thisNodeId,
   waveArrival,
@@ -81,6 +90,7 @@ export function WarningTakeover({
   onAcknowledge,
 }: {
   pending: TakeoverWarning[];
+  region: Region | null;
   nodes: NodeSnapshot[];
   thisNodeId: string;
   waveArrival: WaveArrival | null;
@@ -101,7 +111,7 @@ export function WarningTakeover({
       >
         {pending.length > 1 && <p className="takeover-count">1 of {pending.length}</p>}
         {current.kind === "official" ? (
-          <OfficialBody alert={current.alert} online={online} />
+          <OfficialBody alert={current.alert} region={region} online={online} />
         ) : (
           <CommunityBody
             warning={current.warning}

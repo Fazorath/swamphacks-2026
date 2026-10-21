@@ -3,7 +3,7 @@ import { cardReasons, reasonSentence } from "./floodRiskSentences";
 import type { Home, HouseholdProfile } from "./householdProfile";
 import { appliesToHousehold, type OfficialAlert } from "./officialAlerts";
 import type { LatLon, RouteGrid, Routes } from "./routeGrid";
-import type { FloodRisk } from "./nodeState";
+import type { FloodRisk, Hazard, Region } from "./nodeState";
 import { rerouteHome, routeIsAffected, type BlockedRoad, type RoadGraph } from "./rerouting";
 
 export type Shelter = {
@@ -320,20 +320,28 @@ export function evacuationPlan({
   rerouting,
   officialAlerts,
   wave,
+  region,
+  hazard,
 }: {
   profile: HouseholdProfile | null;
   pack: CachePackContents | null;
   openShelterIds: string[];
   floodRisk: FloodRisk | null;
+  region: Region | null;
+  hazard: Hazard | null;
   routes: Routes | null;
   rerouting: Rerouting | null;
   officialAlerts: OfficialAlert[];
   // Null with no Community Warning, or none with a Wave ETA for this home.
   wave: WaveWindow | null;
 }): EvacuationPlan {
-  const risk = floodRisk?.level
-    ? { level: floodRisk.level, reasons: cardReasons(floodRisk).map(reasonSentence) }
-    : null;
+  const risk =
+    floodRisk?.level && region && hazard
+      ? {
+          level: floodRisk.level,
+          reasons: cardReasons(floodRisk).map((reason) => reasonSentence(reason, region, hazard)),
+        }
+      : null;
   const plan = {
     risk,
     officialAlerts: [] as OfficialAlert[],

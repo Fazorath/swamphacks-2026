@@ -7,7 +7,7 @@ import {
   issuedUnix,
   leadTimeLine,
   officialTag,
-  SOURCE_LABELS,
+  sourceName,
   type OfficialAlert,
 } from "./officialAlerts";
 import {
@@ -16,7 +16,7 @@ import {
   warningSentence,
   type CommunityWarning,
 } from "./communityWarnings";
-import type { NodeSnapshot } from "./nodeState";
+import type { NodeSnapshot, Region } from "./nodeState";
 import { Panel, type PanelControl } from "./Panel";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
@@ -36,6 +36,7 @@ function AcknowledgeControl({ done, onAcknowledge }: { done: boolean; onAcknowle
 
 export function AlertsPanel({
   alerts,
+  region,
   warnings,
   nodes,
   thisNodeId,
@@ -49,6 +50,7 @@ export function AlertsPanel({
   panel,
 }: {
   alerts: OfficialAlert[];
+  region: Region | null;
   warnings: CommunityWarning[];
   nodes: NodeSnapshot[];
   thisNodeId: string;
@@ -78,7 +80,7 @@ export function AlertsPanel({
         <article key={alert.id} className="official-alert" aria-label="Official Alert">
           <p className="official-alert-tags">
             <span className="official-tag">{officialTag(alert)}</span>
-            <span>{SOURCE_LABELS[alert.source]}</span>
+            <span>{sourceName(region, alert)}</span>
             {appliesToYouIds.includes(alert.id) && (
               <span className="applies-chip">APPLIES TO YOUR HOUSEHOLD</span>
             )}
