@@ -215,7 +215,6 @@ export function App() {
       onSelect={toggleSelected}
       rises={rises}
       trends={trends}
-      onScenarioChanged={refresh}
       panel={panel("readings")}
     />
   );

@@ -1,14 +1,15 @@
 from datetime import UTC, datetime, timedelta
 
+from meshed_nodes import a_calm_day
+
 from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.reading_store import ReadingStore
-from storm_shield.scenario import Scenario
 
 
 def test_a_reading_ages_on_this_nodes_own_clock() -> None:
     received_at = datetime(2026, 10, 16, 12, 0, tzinfo=UTC)
     reading = CommunityReading.from_measurements(
-        node="garage", seq=1, position=Position(29.652, -82.324), readings=Scenario().readings()
+        node="garage", seq=1, position=Position(29.652, -82.324), readings=a_calm_day()
     )
     store = ReadingStore(history_seconds=120)
     store.record("garage", reading, received_at)
@@ -21,7 +22,7 @@ NOON = datetime(2026, 10, 16, 12, 0, tzinfo=UTC)
 
 def _reading(seq: int) -> CommunityReading:
     return CommunityReading.from_measurements(
-        node="garage", seq=seq, position=Position(29.652, -82.324), readings=Scenario().readings()
+        node="garage", seq=seq, position=Position(29.652, -82.324), readings=a_calm_day()
     )
 
 

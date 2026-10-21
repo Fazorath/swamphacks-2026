@@ -1,13 +1,13 @@
 import pytest
+from meshed_nodes import a_calm_day
 
 from storm_shield.community_reading import CommunityReading, Position
 from storm_shield.mesh import InMemoryNetwork
-from storm_shield.scenario import Scenario
 
 
 def _reading(node: str) -> CommunityReading:
     return CommunityReading.from_measurements(
-        node=node, seq=1, position=Position(0, 0), readings=Scenario().readings()
+        node=node, seq=1, position=Position(0, 0), readings=a_calm_day()
     )
 
 

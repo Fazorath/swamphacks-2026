@@ -54,7 +54,6 @@ export type NodeState = {
   role: "sensor" | "hub";
   status: NodeStatus;
   registration: Registration;
-  scenario: { step: string };
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
   official_alerts: OfficialAlert[];

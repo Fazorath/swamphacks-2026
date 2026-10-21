@@ -7,7 +7,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 Role = Literal["sensor", "hub"]
 MeshKind = Literal["reticulum", "memory"]
 ReticulumInterface = Literal["auto", "loopback", "tcp"]
-GpioMode = Literal["auto", "on", "off"]
 
 # The address pi/setup-hotspot.sh gives the machine that hosts the hotspot; a test keeps them equal.
 HOTSPOT_ADDRESS = "10.88.0.1"
@@ -72,9 +71,6 @@ class Settings(BaseSettings):
     # The kinds this Sensor Node measures, comma-separated; it sends only these. The default is the
     # four the flood-warning rules read. A kind with no source on this Node is simply never sent.
     measures: str = "water_level,rain_rate,soil_moisture,air_pressure"
-    # Whether this Node reads the Pi's Breadboard. "auto" turns it on only on a Raspberry Pi; "on"
-    # stops the Node if the Breadboard cannot start; "off" never loads the GPIO library.
-    gpio: GpioMode = "auto"
     # Unprefixed on purpose: operators set CACHE_PACK_URL / CACHE_PACK_DIR in .env.
     # Empty URL means this Node never downloads a pack.
     cache_pack_url: str = Field(default="", validation_alias="CACHE_PACK_URL")
