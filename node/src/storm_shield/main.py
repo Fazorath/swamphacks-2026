@@ -353,7 +353,9 @@ def create_app(
 
     def due_official_alerts() -> list[OfficialAlert]:
         event = event_clock.current(clock())
-        return [] if event.state == "stopped" else clocked_event().official_alerts_due(event.event_t)
+        return (
+            [] if event.state == "stopped" else clocked_event().official_alerts_due(event.event_t)
+        )
 
     def forward_official_alert(alert: OfficialAlert) -> None:
         # The Hub does not hear its own broadcasts, so it keeps the alert itself.

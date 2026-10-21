@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { EventClockTag } from "./EventClockTag";
 import type { EventClockFeed } from "./useEventClock";
 import { usePolledJson } from "./usePolledJson";
 
+type ReplayEvents = { events: { id: string; label: string }[] };
 type Phase = { id: string; label: string; event_t: number };
 type ReplayPhases = { phases: Phase[]; internet_cue_event_t: number };
 
@@ -22,12 +24,20 @@ async function sendToReplay(action: string, body?: object): Promise<void> {
   }
 }
 
-// The Hub Panel's Replay section. The Event clock it shows arrives by the header's poll, so a
-// press shows up within a second.
+// The Replay section of the Hub Panel and the Sandbox Panel. The Event clock it shows arrives by
+// the header's poll, so a press shows up within a second.
 export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   const { clock, heard } = eventClock;
-  const replayPhases = usePolledJson<ReplayPhases>("/api/replay/phases");
+  const replayEvents = usePolledJson<ReplayEvents>("/api/replay/events");
   const [problem, setProblem] = useState<string | null>(null);
+  // Picked before Start; a running replay shows the Event the Event clock carries.
+  const [pickedEventId, setPickedEventId] = useState<string | null>(null);
+  const shownEventId = clock?.event ?? pickedEventId ?? replayEvents?.events[0]?.id;
+  const replayPhases = usePolledJson<ReplayPhases>(
+    shownEventId === undefined
+      ? "/api/replay/phases"
+      : `/api/replay/phases?event=${encodeURIComponent(shownEventId)}`,
+  );
   // Picked before Start; a running replay shows the rate the Event clock carries.
   const [pickedRate, setPickedRate] = useState<number | null>(null);
 
@@ -46,7 +56,8 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
     try {
       if (action === "start" && pickedRate !== null)
         await sendToReplay("rate", { rate: pickedRate });
-      await sendToReplay(action, body);
+      const startsShownEvent = action === "start" && body === undefined && shownEventId;
+      await sendToReplay(action, startsShownEvent ? { event: shownEventId } : body);
     } catch (error) {
       console.error(error);
       setProblem(`Could not ${action} the replay: ${(error as Error).message}`);
@@ -64,6 +75,26 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   return (
     <section aria-label="Replay controls">
       <h3>Replay</h3>
+      <p className="replay-label">REPLAY</p>
+      {replayEvents && (
+        <label className="event-picker">
+          Event
+          <select
+            value={shownEventId}
+            onChange={(change) => {
+              if (clock === null) setPickedEventId(change.target.value);
+              else send("start", { event: change.target.value });
+            }}
+          >
+            {replayEvents.events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <EventClockTag clock={clock} />
       <div className="actions" role="group" aria-label="Replay speed">
         {REPLAY_RATES.map((rate) => (
           <button

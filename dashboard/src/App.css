@@ -1433,6 +1433,18 @@ main.phone {
   font-weight: 700;
 }
 
+.replay-label {
+  margin: 0 0 0.5rem;
+  color: var(--risk-elevated);
+  font-weight: 600;
+}
+
+.event-picker {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
 .internet-cue {
   font-weight: 700;
   color: var(--risk-high);
