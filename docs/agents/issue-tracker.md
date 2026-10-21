@@ -44,7 +44,7 @@ The GitHub assignee means "working on it now", so nobody is assigned until they 
 |---|---|---|
 | UI: dashboard look, map, markers, panels, motion | `area: dashboard` | @Fazorath |
 | Routes and evacuation algorithms; weather, forecast and Cache Pack data builds; backend rules | `area: node` | @refloow-0 |
-| Breadboard, hardware, Mesh and Reticulum transport | `area: hardware`, `area: mesh` | @amitathik7 |
+| Hardware, Mesh and Reticulum transport | `area: hardware`, `area: mesh` | @amitathik7 |
 | Tests, workflow, scripts, miscellaneous fixes, anything that fits none of the above | `area: workflow` | @leonardorofaDV |
 
 An issue that spans two kinds goes by the files it mostly touches. Anyone may take an issue from another queue once its owner has nothing ready of their own in the milestone.

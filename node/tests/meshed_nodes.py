@@ -7,19 +7,32 @@ import httpx
 from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack
-from storm_shield.community_reading import CommunityReading, Measurement, Position
+from storm_shield.community_reading import CommunityReading, Measurement, Position, Reading
 from storm_shield.community_warning import CommunityWarning
 from storm_shield.mesh import InMemoryMesh, Message
 from storm_shield.node_registry import NodeRegistryMessage, RegisteredNode, SignUp
 from storm_shield.official_alert import OfficialAlert
 from storm_shield.replay import ReplayClockMessage
 from storm_shield.sandbox import HUB, SimulatedNodes
-from storm_shield.settings import GpioMode
 from storm_shield.shelter_status import ShelterStatus
 
 
 def _no_internet(request: httpx.Request) -> httpx.Response:
     raise httpx.ConnectError("tests never reach Open-Meteo", request=request)
+
+
+def a_calm_day() -> list[Reading]:
+    """One reading of each kind the rules read, made up: no storm, a metre of water."""
+    now = datetime.now(UTC)
+    return [
+        Reading(kind=kind, value=value, unit=unit, timestamp=now)
+        for kind, value, unit in [
+            ("air_pressure", 1015, "hPa"),
+            ("rain_rate", 0, "mm/h"),
+            ("water_level", 1.0, "m"),
+            ("soil_moisture", 30, "%"),
+        ]
+    ]
 
 
 class MeshedNodes:
@@ -57,13 +70,11 @@ class MeshedNodes:
         river_km: float | None = None,
         publish_every_seconds: float = 0.02,
         sign_up_repeat_seconds: float = 10,
-        gpio: GpioMode = "off",
     ) -> None:
         """Start a Sensor that trusts `HUB`, with its background loops running so it keeps publishing."""
         settings = self._nodes.settings(
             name,
             hub_identity=HUB,
-            gpio=gpio,
             river_km=river_km,
             publish_every_seconds=publish_every_seconds,
             sign_up_repeat_seconds=sign_up_repeat_seconds,
@@ -201,8 +212,8 @@ class MeshedNodes:
     ) -> None:
         """Have a Node that is not running an app publish one reading with exactly these values.
 
-        The Scenario cannot make soil moisture rise while the water stays low, so this reaches
-        the rules it cannot. `leaving_out` drops kinds the Node does not measure; `also` adds
+        The Event's surface cannot make soil moisture rise while the water stays low, so this
+        reaches the rules it cannot. `leaving_out` drops kinds the Node does not measure; `also` adds
         Measurements, such as a kind the rules do not know or a known kind in another unit.
         """
         mesh, seq = self._hand_fed.get(sender) or (self._network.join(sender), 0)

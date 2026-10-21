@@ -20,15 +20,13 @@ def _entry(state: dict[str, Any], node: str) -> dict[str, Any]:
     return next(entry for entry in state["nodes"] if entry["id"] == node)
 
 
-def test_the_state_names_this_node_and_the_scenario_step(meshed_nodes: MeshedNodes) -> None:
+def test_the_state_names_this_node(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes["porch"].post("/api/scenario/step")
     state = _state(meshed_nodes["porch"])
     assert state["id"] == "porch"
     assert state["name"]
     assert state["role"] == "sensor"
     assert state["status"] in {"online", "mesh_only"}
-    assert state["scenario"] == {"step": "pressure_drop"}
 
 
 def test_the_state_groups_each_nodes_readings_with_its_own_and_its_peers(
@@ -57,13 +55,12 @@ def test_the_state_groups_each_nodes_readings_with_its_own_and_its_peers(
 def test_a_node_entry_holds_exactly_the_kinds_its_sensor_declared(
     meshed_nodes: MeshedNodes,
 ) -> None:
-    meshed_nodes.start("porch", measures="water_level,soil_moisture")
+    meshed_nodes.start("porch", measures="water_level,soil_moisture", river_km=14.6)
     meshed_nodes.hear_from(
         "garage",
         leaving_out={"rain_rate", "air_pressure"},
         also=[Measurement("wind_speed", 7, "km/h")],
     )
-    meshed_nodes["porch"].post("/api/scenario/step")
     state = _state(meshed_nodes["porch"])
 
     assert set(_entry(state, "porch")["measurements"]) == {"water_level", "soil_moisture"}
@@ -106,14 +103,14 @@ def test_flood_risk_in_the_state_agrees_with_the_readings_beside_it(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    for _ in range(2):
-        meshed_nodes["porch"].post("/api/scenario/step")
+    meshed_nodes.register("creek")
+    meshed_nodes.hear_from("creek", pressure_hpa=990, water_cm=100, soil_pct=32)
+    meshed_nodes.hear_from("creek", pressure_hpa=985, rain_mmh=12, water_cm=350, soil_pct=55)
     state = _state(meshed_nodes["porch"])
 
-    assert _entry(state, "porch")["measurements"]["water_level"]["value"] > 0.3
+    assert _entry(state, "creek")["measurements"]["water_level"]["value"] > 0.3
     assert state["flood_risk"]["level"] == "elevated"
-    assert state["flood_risk"]["nodes"] == {"porch": "elevated"}
+    assert state["flood_risk"]["nodes"] == {"creek": "elevated"}
 
 
 def test_flood_risk_and_the_node_entries_list_the_same_nodes(meshed_nodes: MeshedNodes) -> None:
@@ -165,7 +162,6 @@ def test_the_state_holds_exactly_these_keys(
         "role",
         "status",
         "registration",
-        "scenario",
         "sandbox",
         "flood_risk",
         "nodes",

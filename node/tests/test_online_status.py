@@ -38,7 +38,9 @@ def _running_node(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     registered: bool = False,
 ) -> Iterator[TestClient]:
-    settings = Settings(name=name, internet_check_seconds=0.01, hub_identity="hub")
+    settings = Settings(
+        name=name, internet_check_seconds=0.01, publish_every_seconds=0.01, hub_identity="hub"
+    )
     network = InMemoryNetwork()
     app = create_app(
         settings,
@@ -67,9 +69,9 @@ def _status(client: TestClient) -> str:
     return str(client.get("/api/state").json()["status"])
 
 
-def _own_values(client: TestClient) -> dict[str, float]:
+def _own_age_s(client: TestClient) -> float:
     [own] = client.get("/api/state").json()["nodes"]
-    return {kind: measurement["value"] for kind, measurement in own["measurements"].items()}
+    return float(own["age_s"])
 
 
 def test_a_node_that_can_reach_the_internet_is_online() -> None:
@@ -109,16 +111,11 @@ def test_a_node_does_not_take_its_status_from_another_node() -> None:
         assert _status(porch) == "online"
 
 
-def test_readings_and_flood_risk_keep_updating_while_the_node_is_mesh_only() -> None:
+def test_readings_keep_updating_while_the_node_is_mesh_only() -> None:
     outside = Outside()
     with _running_node(outside, registered=True) as client:
         _wait_until(lambda: _status(client) == "online", "the Node to report online")
         outside.internet_up = False
         _wait_until(lambda: _status(client) == "mesh_only", "the Node to report mesh_only")
-        before = _own_values(client)
-        assert client.get("/api/state").json()["flood_risk"]["level"] is None
-        for _ in range(3):
-            client.post("/api/scenario/step")
-        after = _own_values(client)
-        assert after["air_pressure"] < before["air_pressure"] - 5
-        assert client.get("/api/state").json()["flood_risk"]["level"] is not None
+        time.sleep(0.3)
+        _wait_until(lambda: _own_age_s(client) < 0.2, "a reading newer than the outage began")

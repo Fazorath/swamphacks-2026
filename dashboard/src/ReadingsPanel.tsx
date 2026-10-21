@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment } from "react";
 
 import { FloodRiskCard } from "./FloodRiskPanel";
 import { NodeTags } from "./NodeTags";
@@ -24,15 +24,6 @@ export function kindLabel(kind: ReadingKind): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function post(path: string, afterPost: () => void) {
-  fetch(path, { method: "POST" })
-    .then((response) => {
-      if (!response.ok) throw new Error(`${path} returned ${response.status}`);
-      afterPost();
-    })
-    .catch(console.error);
-}
-
 type Props = {
   nodes: NodeOnMap[];
   floodRisk: FloodRisk | null;
@@ -46,7 +37,6 @@ type Props = {
   // The arrow of each reading, from the last 30 s of polls (`historyKey`).
   trends: Record<string, Trend>;
   onSelect: (id: string) => void;
-  onScenarioChanged: () => void;
   panel: PanelControl;
 };
 
@@ -59,18 +49,9 @@ export function ReadingsPanel({
   rises,
   trends,
   onSelect,
-  onScenarioChanged,
   panel,
 }: Props) {
   const reducedMotion = usePrefersReducedMotion();
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "n") post("/api/scenario/step", onScenarioChanged);
-      if (event.key === "r") post("/api/scenario/reset", onScenarioChanged);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onScenarioChanged]);
 
   const { pinned, rungs, offRiver } = readingsLadder(nodes, hubId);
   const firstNotCountedId = offRiver.find((node) => !node.registered && !node.isThisNode)?.id;
@@ -155,10 +136,6 @@ export function ReadingsPanel({
           {card(node, { hero: false })}
         </Fragment>
       ))}
-      <button onClick={() => post("/api/scenario/step", onScenarioChanged)}>
-        Step scenario (n)
-      </button>{" "}
-      <button onClick={() => post("/api/scenario/reset", onScenarioChanged)}>Reset (r)</button>
     </Panel>
   );
 }

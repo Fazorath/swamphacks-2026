@@ -1,7 +1,7 @@
 import type { NodeOnMap } from "./nodesOnMap";
 
 export type ReadingsLadder = {
-  // The breadboard Pi: shown first, whatever the river is doing.
+  // The Pi: shown first, whatever the river is doing.
   pinned: NodeOnMap | null;
   // The Nodes on the river, top of the river first.
   rungs: NodeOnMap[];

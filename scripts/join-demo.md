@@ -2,7 +2,7 @@
 
 `scripts/join-demo.sh <hub address> <town>` (or `<name> <lat> <lon>`) makes a laptop a Node on the demo Mesh:
 a dot with the `REAL` ring on the God's Eye View, in a Nepal town, that a volunteer can switch
-off by turning its Wi-Fi off. Its readings are the Scenario's calm step, so say out loud that the
+off by turning its Wi-Fi off. Its readings come from the Event's surface, so say out loud that the
 numbers are simulated; the Node and the Mesh are real.
 
 The Hub laptop must be running `scripts/run-demo.sh`. It listens on Wi-Fi discovery and on TCP
