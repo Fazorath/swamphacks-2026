@@ -22,6 +22,7 @@ import { defaultPanels, useOpenPanels, type PanelName } from "./openPanels";
 import { usePlaces } from "./placeLabels";
 import { nodesOnMap } from "./nodesOnMap";
 import { ReadingsPanel } from "./ReadingsPanel";
+import { SandboxPanel } from "./SandboxPanel";
 import { StatusStrip } from "./StatusStrip";
 import { readTerrainChoice, saveTerrainChoice, type TerrainChoice } from "./terrain";
 import { TopBar } from "./TopBar";
@@ -35,6 +36,7 @@ import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { PagerBanner } from "./PagerBanner";
 import { useNodeState } from "./useNodeState";
+import { useSandboxNodes } from "./useSandboxNodes";
 import { usePager } from "./usePager";
 import { useOpenShelterIds } from "./useOpenShelterIds";
 import { useRoadGraph } from "./useRoadGraph";
@@ -69,6 +71,8 @@ export function App() {
   // Still true of the Node while it is unreachable, unlike its readings.
   const identity = lastAnswer?.state ?? null;
   const floodRisk = state?.flood_risk ?? null;
+  const { sandbox, setRadioRange } = useSandboxNodes(state?.sandbox != null);
+  const [sandboxPanelOpen, setSandboxPanelOpen] = useState(true);
   const eventClock = useEventClock(!unreachable);
   const nodes = nodesOnMap(state);
   const rises = useLevelRises(nodes);
@@ -218,6 +222,18 @@ export function App() {
       panel={panel("readings")}
     />
   );
+  const sandboxPanel = sandbox && (
+    <SandboxPanel
+      sandbox={sandbox}
+      onSetRadioRange={setRadioRange}
+      warningSent={communityWarnings.length > 0}
+      panel={
+        phone
+          ? { open: true, onToggle: () => {} }
+          : { open: sandboxPanelOpen, onToggle: () => setSandboxPanelOpen((open) => !open) }
+      }
+    />
+  );
   const alertsPanel = (
     <AlertsPanel
       alerts={officialAlerts}
@@ -363,6 +379,7 @@ export function App() {
           weather={weatherData}
           weatherAtMs={weatherAtMs}
           waterReaches={waterReaches}
+          sandbox={sandbox}
         />
         {phone ? (
           <>
@@ -381,7 +398,12 @@ export function App() {
             )}
             {phoneTab !== "map" && (
               <div className="phone-pane">
-                {phoneTab === "readings" && readingsPanel}
+                {phoneTab === "readings" && (
+                  <>
+                    {readingsPanel}
+                    {sandboxPanel}
+                  </>
+                )}
                 {phoneTab === "alerts" && alertsPanel}
                 {phoneTab === "plan" && (
                   <>
@@ -428,7 +450,10 @@ export function App() {
               onChooseTerrain={chooseTerrain}
               onFlyToValley={() => setValleyFlights((count) => count + 1)}
             />
-            <div className="panel-column left">{readingsPanel}</div>
+            <div className="panel-column left">
+              {readingsPanel}
+              {sandboxPanel}
+            </div>
             <div className="panel-column right">
               {alertsPanel}
               {planPanel}

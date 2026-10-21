@@ -8,6 +8,7 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
     role: "hub",
     status: "online",
     registration: "registered",
+    sandbox: null,
     flood_risk: {
       level: null,
       reasons: [],

@@ -54,6 +54,8 @@ import type { RiverLine } from "./waveEta";
 import { nodesTheWavePassed, townsTheWaveReached } from "./waveFront";
 import { useRiverFlow } from "./useRiverFlow";
 import { RisingWaterLayer } from "./RisingWaterLayer";
+import { linkLines, rangeCircles } from "./radioRange";
+import type { SandboxNodes } from "./useSandboxNodes";
 import type { WaterReach } from "./risingWater";
 import { waveFront } from "./waveFront";
 import { WaveFrontLayer } from "./WaveFrontLayer";
@@ -229,6 +231,9 @@ type Props = {
   weatherAtMs: number;
   // The water levels the wave has reached, drawn as height lines on the valley walls (D-46).
   waterReaches: WaterReach[];
+  // The Sandbox's radio model: each Node's range circle, the links between Nodes in range of each
+  // other, and a mark on a Sensor with no path to the Hub. Null outside the Sandbox.
+  sandbox: SandboxNodes | null;
 };
 
 export function NodeMap({
@@ -268,6 +273,7 @@ export function NodeMap({
   weather,
   weatherAtMs,
   waterReaches,
+  sandbox,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -423,6 +429,11 @@ export function NodeMap({
     [home, outOfReachShelter],
   );
   const blockedData = useMemo(() => lineCollection(blockedRoadLines), [blockedRoadLines]);
+  const radioRangeData = useMemo(() => rangeCircles(sandbox), [sandbox]);
+  const radioLinksData = useMemo(
+    () => lineCollection(sandbox ? linkLines(sandbox) : []),
+    [sandbox],
+  );
   useEffect(() => {
     if (!map || !styleReady) return;
     setOverlay(map, "flood-prone", floodProneData);
@@ -430,7 +441,19 @@ export function NodeMap({
     setOverlay(map, "route", routeData);
     setOverlay(map, "out-of-reach-line", outOfReachData);
     setOverlay(map, "blocked-roads", blockedData);
-  }, [map, styleReady, floodProneData, valleyRiverData, routeData, outOfReachData, blockedData]);
+    setOverlay(map, "radio-range", radioRangeData);
+    setOverlay(map, "radio-links", radioLinksData);
+  }, [
+    map,
+    styleReady,
+    floodProneData,
+    valleyRiverData,
+    routeData,
+    outOfReachData,
+    blockedData,
+    radioRangeData,
+    radioLinksData,
+  ]);
 
   const eventT = clock?.event_t ?? null;
   // The painted field changes at most once a second, as the polled Event clock does.
@@ -650,6 +673,20 @@ export function NodeMap({
             labelHidden={placement.get(`node:${node.id}`) === null}
           />
         ))}
+      {map &&
+        sandbox?.nodes
+          .filter((node) => node.role === "sensor" && node.hops === null)
+          .map((node) => (
+            <MapMarker
+              key={node.id}
+              map={map}
+              lat={node.position[0]}
+              lon={node.position[1]}
+              className="no-path-marker"
+            >
+              no path to Hub
+            </MapMarker>
+          ))}
       {stormSignalOn && <div className="storm-vignette" aria-hidden="true" />}
     </section>
   );

@@ -54,6 +54,8 @@ export type NodeState = {
   role: "sensor" | "hub";
   status: NodeStatus;
   registration: Registration;
+  // Present only when the Node is the Sandbox's Hub; nothing in the Sandbox is a real reading.
+  sandbox: { label: "SIMULATED" } | null;
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
   official_alerts: OfficialAlert[];

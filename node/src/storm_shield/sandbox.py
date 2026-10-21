@@ -18,13 +18,18 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from storm_shield.cache_pack import CachePack, InvalidCachePack
+from storm_shield.community_reading import Position
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
+from storm_shield.sandbox_api import SandboxControls, SandboxNode, SandboxNodes
 from storm_shield.settings import Settings
 
 logger = logging.getLogger(__name__)
 
 HUB = "hub"
+# Wide enough for the Replay Nodes below, whose longest gap is about 33 km. When the Sandbox places
+# its Sensors on a Region's sites (#46) this becomes the 1 km the spec asks for.
+SANDBOX_RADIO_RANGE_M = 40_000.0
 PACK_URL = (
     "https://github.com/StormShields/Stormshield/releases/download/cache-pack-v6/cache-pack.zip"
 )
@@ -44,11 +49,13 @@ class NodeSite(NamedTuple):
 
 # Until Regions exist these are the Replay Nodes of scripts/run-demo.sh; the Hub sits at Betrawati.
 HUB_SITE = NodeSite(HUB, 27.9731, 85.1860, 45.6)
+# Nearest the Hub first: a Node's first reading goes out as it joins, and only reaches the Hub if
+# the Nodes between are already there to relay it.
 SENSOR_SITES = [
-    NodeSite("s0", 28.3517, 85.4477, -12.2),
-    NodeSite("s1", 28.2528, 85.3667, 3.4),
-    NodeSite("s2", 28.1632, 85.3391, 14.6),
     NodeSite("s3", 27.9215, 85.1460, 54.0),
+    NodeSite("s2", 28.1632, 85.3391, 14.6),
+    NodeSite("s1", 28.2528, 85.3667, 3.4),
+    NodeSite("s0", 28.3517, 85.4477, -12.2),
 ]
 
 
@@ -95,9 +102,10 @@ class SimulatedNodes:
         With `running` the Node's background loops start, so it keeps publishing until `stop` or
         `close`; otherwise it only answers requests.
         """
-        app = create_app(
-            settings, self.network.join(settings.name, HUB), clock=self._clock, **app_options
+        mesh = self.network.join(
+            settings.name, HUB, Position(settings.latitude, settings.longitude)
         )
+        app = create_app(settings, mesh, clock=self._clock, **app_options)
         client = TestClient(app)
         if running:
             client.__enter__()
@@ -126,7 +134,8 @@ class Sandbox:
     """A Hub and simulated Sensors in this process on one in-memory Mesh, already registered.
 
     Everything the Nodes write lives in a temporary folder that is removed on exit. The Sensors
-    run their loops here; the caller serves `hub` (or drives it with a TestClient).
+    run their loops here; the caller serves `hub` (or drives it with a TestClient). `network` is the
+    Mesh they share, for a caller that needs to put a message on it.
     """
 
     def __init__(self, pack: Path) -> None:
@@ -135,23 +144,27 @@ class Sandbox:
         self._pack = pack
         self._stack = ExitStack()
         self.hub: FastAPI
+        self.network: InMemoryNetwork
 
     def __enter__(self) -> Self:
         with ExitStack() as setup:
             directory = Path(
                 setup.enter_context(TemporaryDirectory(prefix="storm-shield-sandbox-"))
             )
-            # The Replay Nodes are tens of km apart, far past the default range; setting one is a
-            # later step.
-            nodes = SimulatedNodes(directory)
+            nodes = SimulatedNodes(directory, radio_range_m=SANDBOX_RADIO_RANGE_M)
             setup.callback(nodes.close)
             hub_client = self._start_hub(nodes)
             self.hub = cast(FastAPI, hub_client.app)
-            for site in SENSOR_SITES:
-                # Running starts the Sensor's loops, so it keeps publishing.
-                sensor = nodes.start(_settings(nodes, site), running=True)
+            self.network = nodes.network
+            # Running starts a Sensor's loops, so it keeps publishing. All of them join before any
+            # signs up: a Sensor out of the Hub's own range needs its neighbours to relay.
+            sensors = {
+                site.name: nodes.start(_settings(nodes, site), running=True)
+                for site in SENSOR_SITES
+            }
+            for name, sensor in sensors.items():
                 # An in-memory Node's id is its name.
-                _register(sensor, hub_client, site.name)
+                _register(sensor, hub_client, name)
             self._stack = setup.pop_all()
         return self
 
@@ -169,7 +182,42 @@ class Sandbox:
             CachePack(settings.cache_pack_dir).install(self._pack.read_bytes())
         except InvalidCachePack as error:
             raise SandboxError(f"{self._pack} is not a usable Cache Pack: {error}") from error
-        return nodes.start(settings, sandbox=True)
+        return nodes.start(settings, sandbox=_Controls(nodes))
+
+
+class _Controls(SandboxControls):
+    """What the Hub's Sandbox API shows and changes: the radio range and who can hear whom."""
+
+    def __init__(self, nodes: SimulatedNodes) -> None:
+        self._nodes = nodes
+
+    def nodes(self) -> SandboxNodes:
+        radio_range_m = self._nodes.network.radio_range_m
+        if radio_range_m is None:
+            raise RuntimeError("the Sandbox always runs with a radio range")
+        links = self._nodes.network.links(HUB)
+        states = {name: self._nodes[name].get("/api/state").json() for name in links}
+        newest_warning = max((w["id"] for w in states[HUB]["community_warnings"]), default=None)
+        return SandboxNodes(
+            radio_range_m=radio_range_m,
+            nodes=[
+                SandboxNode(
+                    id=name,
+                    name=states[name]["name"],
+                    role=states[name]["role"],
+                    position=reach.position,
+                    links=reach.in_range,
+                    hops=reach.hops_from_hub,
+                    heard_warning=newest_warning is not None
+                    and newest_warning in {w["id"] for w in states[name]["community_warnings"]},
+                )
+                for name, reach in links.items()
+            ],
+        )
+
+    def set_radio_range(self, radio_range_m: float) -> SandboxNodes:
+        self._nodes.network.set_radio_range(radio_range_m)
+        return self.nodes()
 
 
 def _settings(nodes: SimulatedNodes, site: NodeSite, **overrides: Any) -> Settings:
