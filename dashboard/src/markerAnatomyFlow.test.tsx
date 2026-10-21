@@ -17,7 +17,7 @@ function stubNode(state: Partial<NodeState>) {
       type: "FeatureCollection",
       features: [],
     }),
-    "/api/cache-pack/files/nepal/places.geojson": () => ({
+    "/api/cache-pack/files/basemap/places.geojson": () => ({
       type: "FeatureCollection",
       features: [],
     }),

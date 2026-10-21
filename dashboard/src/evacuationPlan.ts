@@ -29,18 +29,16 @@ export type HighGroundPoint = {
 // A High-ground point worth showing to this household, with the walk from their home.
 export type HighGroundPin = { point: HighGroundPoint; walkMinutes: number; nearest: boolean };
 
-// The vector map of Nepal a v4 pack built before the Regions carries (`scripts/pack_nepal.py`, since deleted).
-export type NepalMap = {
-  // [south, west, north, east]
+// What the map draws from a pack that holds the Region's basemap and terrain.
+export type Basemap = {
+  // [south, west, north, east], the Region's box: the map frames it.
   bbox: [number, number, number, number];
-  elevation: {
+  terrain: {
     approximate: boolean;
-    // [lowest, highest] zoom of the whole-country tiles and of the valley and Kathmandu tiles.
-    nationalZooms: [number, number];
-    detailZooms: [number, number];
+    // [lowest, highest] zoom of the elevation tiles.
+    zooms: [number, number];
   };
-  boundariesNote: string;
-  sources: { layer: string; name: string; licence: string; url: string; checked: string }[];
+  credits: { layer: string; credit: string; checked: string }[];
 };
 
 export type CachePackContents = {
@@ -53,8 +51,8 @@ export type CachePackContents = {
   bbox: [number, number, number, number] | null;
   // ISO time the pack was built; null when its manifest has none.
   built: string | null;
-  // Null for a pack built before the Nepal map (the map then draws only the valley's own layers).
-  nepal: NepalMap | null;
+  // Null for a pack built without a basemap (the map then draws only the Region's own layers).
+  basemap: Basemap | null;
 };
 
 // What the phone needs to find its own way when the precomputed Route will not do.

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { BASEMAP_MANIFEST_PARTS } from "./fakeBasemap";
 import { Profiler } from "react";
 
 import { App } from "./App";
@@ -10,26 +11,7 @@ import type { NodeState } from "./nodeState";
 const NEPAL_MANIFEST = {
   built: "2026-10-18T12:00:00+00:00",
   bbox: [27.86, 85.08, 28.46, 85.47],
-  nepal: {
-    bbox: [26.3, 80.0, 30.5, 88.3],
-    elevation: {
-      encoding: "terrarium",
-      approximate: true,
-      national_zooms: [5, 8],
-      detail_zooms: [9, 12],
-      detail_areas: [],
-    },
-    boundaries_note: "Boundaries are indicative",
-    sources: [
-      {
-        layer: "borders",
-        name: "geoBoundaries",
-        licence: "CC BY 4.0",
-        url: "https://example.org",
-        checked: "2026-10-18",
-      },
-    ],
-  },
+  ...BASEMAP_MANIFEST_PARTS,
 };
 
 const PLACES = {
@@ -37,12 +19,12 @@ const PLACES = {
   features: [
     {
       type: "Feature",
-      properties: { name: "Kathmandu", kind: "capital", key: true },
+      properties: { name: "Kathmandu", kind: "city" },
       geometry: { type: "Point", coordinates: [85.3, 27.7] },
     },
     {
       type: "Feature",
-      properties: { name: "Pokhara", kind: "city" },
+      properties: { name: "Tatopani", kind: "village" },
       geometry: { type: "Point", coordinates: [83.98, 28.2] },
     },
   ],
@@ -64,7 +46,7 @@ function stubNode(state: Partial<NodeState> = {}, manifest: unknown = null) {
     "/api/cache-pack": { available: manifest !== null, manifest },
     "/api/cache-pack/files/shelters.json": [],
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
-    "/api/cache-pack/files/nepal/places.geojson": PLACES,
+    "/api/cache-pack/files/basemap/places.geojson": PLACES,
     "/api/shelters": { open: [] },
     "/api/replay": { state: "paused", event_t: 1_787_700_000, rate: 30 },
   };
@@ -84,20 +66,20 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("the map", () => {
-  it("draws the Nepal basemap from the Node's own files and asks no other host", async () => {
+  it("draws the Region's basemap from the Node's own files and asks no other host", async () => {
     stubNode({}, NEPAL_MANIFEST);
     render(<App />);
 
-    await waitFor(() => expect(lastMap().layerIds).toContain("land"));
+    await waitFor(() => expect(lastMap().layerIds).toContain("water"));
     expect(lastMap().layerIds).toEqual([
-      "outside",
       "land",
       "height-bands",
       "hillshade",
-      "districts",
-      "rivers",
+      "water",
+      "roads",
+      "waterways",
       "river-flow",
-      "border",
+      "coastline",
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
@@ -123,6 +105,27 @@ describe("the map", () => {
     expect(addresses.some((address) => address.endsWith("elevation/{z}/{x}/{y}.png"))).toBe(true);
   });
 
+  it("reads the water, waterways, coastline and roads from the pack's basemap folder", async () => {
+    stubNode({}, NEPAL_MANIFEST);
+    render(<App />);
+
+    await waitFor(() => expect(lastMap().layerIds).toContain("water"));
+    const addresses = addressesTheMapWouldFetch();
+    for (const name of ["water", "waterways", "coastline", "roads"]) {
+      expect(addresses).toContain(
+        `${window.location.origin}/api/cache-pack/files/basemap/${name}.geojson`,
+      );
+    }
+  });
+
+  it("draws no basemap from a pack whose manifest lists none", async () => {
+    stubNode({}, { ...NEPAL_MANIFEST, files: {} });
+    render(<App />);
+
+    await screen.findByText(/Cache Pack built 2026-10-18/);
+    expect(lastMap().layerIds).not.toContain("water");
+  });
+
   it("makes no request to any host but its own Node, from the page or the map", async () => {
     stubNode({}, NEPAL_MANIFEST);
     render(<App />);
@@ -143,13 +146,13 @@ describe("the map", () => {
     expect(lastMap().sprite).toBeUndefined();
   });
 
-  it("falls back to the valley's own layers when the pack has no Nepal map", async () => {
+  it("falls back to the valley's own layers when the pack has no basemap", async () => {
     stubNode({}, { built: "2026-10-17T12:00:00+00:00", bbox: [27.86, 85.08, 28.46, 85.47] });
     render(<App />);
 
     await screen.findByText(/Cache Pack built 2026-10-17/);
     expect(lastMap().layerIds).toEqual([
-      "outside",
+      "land",
       "valley-river",
       "flood-prone-fill",
       "flood-prone-line",
@@ -168,12 +171,12 @@ describe("the map", () => {
     ]);
   });
 
-  it("labels the capital and the valley towns at the national zoom, not every city", async () => {
+  it("names the cities at the Region zoom, not every village", async () => {
     stubNode({}, NEPAL_MANIFEST);
     render(<App />);
 
     expect(await screen.findByText("Kathmandu")).toBeInTheDocument();
-    expect(screen.queryByText("Pokhara")).toBeNull();
+    expect(screen.queryByText("Tatopani")).toBeNull();
   });
 });
 
@@ -199,7 +202,7 @@ describe("the top bar and status strip", () => {
     expect(within(screen.getByRole("banner")).queryByText(/porch/)).toBeNull();
   });
 
-  it("shows the credit with the boundaries note, the simulated count and Mesh-only", async () => {
+  it("shows the pack's credits, the simulated count and Mesh-only", async () => {
     stubNode(
       {
         status: "mesh_only",
@@ -213,9 +216,8 @@ describe("the top bar and status strip", () => {
     render(<App />);
 
     const strip = await screen.findByRole("contentinfo", { name: "Status" });
-    expect(await within(strip).findByText(/geoBoundaries \(CC BY 4\.0\)/)).toBeInTheDocument();
+    expect(await within(strip).findByText(/© OpenStreetMap contributors/)).toBeInTheDocument();
     expect(within(strip).getByText(/elevation is approximate/)).toBeInTheDocument();
-    expect(within(strip).getByText("Boundaries are indicative")).toBeInTheDocument();
     expect(within(strip).getByText("1 simulated · 1 real")).toBeInTheDocument();
     expect(within(strip).getByText(/Mesh-only/)).toBeInTheDocument();
     expect(within(strip).getByText(/Readings \d+ s ago/)).toBeInTheDocument();

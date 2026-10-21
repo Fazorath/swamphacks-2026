@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { BASEMAP_MANIFEST_PARTS } from "./fakeBasemap";
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
@@ -34,18 +35,7 @@ const NOTICE: OfficialAlert = {
 const NEPAL_MANIFEST = {
   built: "2026-10-18T12:00:00+00:00",
   bbox: [27.86, 85.08, 28.46, 85.47],
-  nepal: {
-    bbox: [26.3, 80.0, 30.5, 88.3],
-    elevation: {
-      encoding: "terrarium",
-      approximate: true,
-      national_zooms: [5, 8],
-      detail_zooms: [9, 12],
-      detail_areas: [],
-    },
-    boundaries_note: "Boundaries are indicative",
-    sources: [],
-  },
+  ...BASEMAP_MANIFEST_PARTS,
 };
 
 let answers: { warnings: CommunityWarning[]; alerts: OfficialAlert[] };
@@ -66,7 +56,7 @@ function stubNode() {
         "/api/cache-pack": { available: true, manifest: NEPAL_MANIFEST },
         "/api/cache-pack/files/shelters.json": [],
         "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
-        "/api/cache-pack/files/nepal/places.geojson": { type: "FeatureCollection", features: [] },
+        "/api/cache-pack/files/basemap/places.geojson": { type: "FeatureCollection", features: [] },
         "/api/shelters": { open: [] },
       };
       return url in known ? Response.json(known[url]) : new Response(null, { status: 404 });

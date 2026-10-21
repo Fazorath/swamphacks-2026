@@ -1,7 +1,7 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect } from "react";
 
-import { RIVER_FLOW_LAYER, flowDashes } from "./basemap";
+import { RIVER_FLOW_LAYER, flowDashes } from "./mapStyle";
 
 const FLOW_STEP_MS = 160;
 

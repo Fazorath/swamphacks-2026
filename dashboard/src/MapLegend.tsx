@@ -1,8 +1,8 @@
-import type { NepalMap } from "./evacuationPlan";
+import type { Basemap } from "./evacuationPlan";
 import type { TerrainChoice } from "./terrain";
 
 type Props = {
-  nepal: NepalMap | null;
+  basemap: Basemap | null;
   // What the map shows now; a frame-rate drop makes it "2d" without changing the saved choice.
   terrain: TerrainChoice;
   onChooseTerrain: (choice: TerrainChoice) => void;
@@ -11,8 +11,8 @@ type Props = {
 
 // A key to the markers, small enough to stay out of the way. Its last row is the 2D | 3D switch
 // (D-34) and the Valley button, which flies the camera to the valley.
-export function MapLegend({ nepal, terrain, onChooseTerrain, onFlyToValley }: Props) {
-  const terrainAvailable = nepal !== null;
+export function MapLegend({ basemap, terrain, onChooseTerrain, onFlyToValley }: Props) {
+  const terrainAvailable = basemap !== null;
   return (
     <aside className="map-legend" aria-label="Legend">
       <ul>

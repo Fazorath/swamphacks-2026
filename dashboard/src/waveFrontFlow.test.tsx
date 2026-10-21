@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { BASEMAP_MANIFEST_PARTS } from "./fakeBasemap";
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
@@ -39,18 +40,7 @@ const RIVER = {
 const MANIFEST = {
   built: "2026-10-18T12:00:00+00:00",
   bbox: [27.7, 84.9, 28.1, 85.1],
-  nepal: {
-    bbox: [26.3, 80.0, 30.5, 88.3],
-    elevation: {
-      encoding: "terrarium",
-      approximate: true,
-      national_zooms: [5, 8],
-      detail_zooms: [9, 12],
-      detail_areas: [],
-    },
-    boundaries_note: "Boundaries are indicative",
-    sources: [],
-  },
+  ...BASEMAP_MANIFEST_PARTS,
 };
 
 const WARNING: CommunityWarning = {
@@ -81,7 +71,7 @@ function stubNode({
     }),
     "/api/replay": { v: 1, kind: "replay", state, event_t: eventT, rate: 30 },
     "/api/cache-pack": { available: true, manifest: MANIFEST },
-    "/api/cache-pack/files/nepal/places.geojson": {
+    "/api/cache-pack/files/basemap/places.geojson": {
       type: "FeatureCollection",
       features: [
         {

@@ -7,7 +7,7 @@ const PACK: CachePackContents = {
   floodProne: { features: [] },
   routeGrid: null,
   built: null,
-  nepal: null,
+  basemap: null,
   bbox: [27.86, 85.08, 28.46, 85.47],
 };
 

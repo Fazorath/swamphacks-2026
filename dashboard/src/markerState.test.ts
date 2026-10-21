@@ -1,4 +1,4 @@
-import { hatchImage } from "./basemap";
+import { hatchImage } from "./mapStyle";
 import { contactArc, levelRose, markerState, risenNodeIds } from "./markerState";
 import type { NodeOnMap } from "./nodesOnMap";
 

@@ -1,15 +1,15 @@
 import { agoWords } from "./agoWords";
-import type { NepalMap } from "./evacuationPlan";
+import type { Basemap } from "./evacuationPlan";
 import type { NodeOnMap } from "./nodesOnMap";
 import type { NodeState } from "./nodeState";
 
 const ROLE_LABELS = { sensor: "Sensor Node", hub: "Hub" } as const;
 
 // What the map is drawn from, as the pack's manifest records it (it also carries the check dates).
-function mapCredit(nepal: NepalMap | null): string {
-  if (!nepal) return "Map: this Node's Cache Pack";
-  const sources = nepal.sources.map((source) => `${source.name} (${source.licence})`).join(" · ");
-  return nepal.elevation.approximate ? `${sources} · elevation is approximate` : sources;
+function mapCredit(basemap: Basemap | null): string {
+  if (!basemap) return "Map: this Node's Cache Pack";
+  const credits = basemap.credits.map(({ credit }) => credit).join(" · ");
+  return basemap.terrain.approximate ? `${credits} · elevation is approximate` : credits;
 }
 
 type Props = {
@@ -21,7 +21,7 @@ type Props = {
   status: NodeState["status"] | null;
   cachePackBuilt: string | null;
   cachePackLoaded: boolean;
-  nepal: NepalMap | null;
+  basemap: Basemap | null;
   // True once the frame-rate watch has turned terrain off (D-35).
   terrainDropped: boolean;
   // True while the map draws a water level, which is always a reconstruction (D-47).
@@ -36,7 +36,7 @@ export function StatusStrip({
   status,
   cachePackBuilt,
   cachePackLoaded,
-  nepal,
+  basemap,
   terrainDropped,
   waterDrawn,
 }: Props) {
@@ -71,11 +71,8 @@ export function StatusStrip({
         <span className="mesh-only">Mesh-only · Mesh features keep working</span>
       )}
       {terrainDropped && <span className="terrain-off">Terrain off · frame rate</span>}
-      <span className="map-credit" title={mapCredit(nepal)}>
-        {mapCredit(nepal)}
-      </span>
-      <span className="boundaries-note">
-        {nepal?.boundariesNote ?? "Boundaries are indicative"}
+      <span className="map-credit" title={mapCredit(basemap)}>
+        {mapCredit(basemap)}
       </span>
     </footer>
   );

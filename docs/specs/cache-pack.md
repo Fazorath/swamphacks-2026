@@ -112,4 +112,4 @@ Ticket 0010 added `routes/` to the Gainesville pack; the valley pack (0043) has 
 - **The Weather Grid covers the Region's bbox**, for the days around its Events; the Hub's live forecast uses the same box.
 - **Events are built into the pack** as `events/<id>.json`. Nodes still play the Events in `regions/nepal/events/` until Events are read from the pack.
 - **Sources are addresses or local files**, so the build test runs a fixture Region whose sources are files and a client that refuses every request (`node/tests/test_build_cache_pack.py`). CI never fetches from the network.
-- **Not here.** The dashboard reading `basemap/` and `terrain` (ticket #41); publishing packs as Releases and `NODE_REGION` (ticket #42); the coast Flood-Prone Area traced from terrain, and gauge and warning sources (tickets #44 and #52).
+- **Not here.** Publishing packs as Releases and `NODE_REGION` (ticket #42); the coast Flood-Prone Area traced from terrain, and gauge and warning sources (tickets #44 and #52).
