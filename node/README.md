@@ -1,6 +1,6 @@
 # Node
 
-The Node service: FastAPI, the Scenario, and the Mesh that shares Community Readings with other Nodes. See `AGENTS.md` for install, test and lint commands.
+The Node service: FastAPI, the Event replay, and the Mesh that shares Community Readings with other Nodes. See `AGENTS.md` for install, test and lint commands.
 
 ## How the Mesh works
 

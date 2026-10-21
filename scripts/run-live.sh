@@ -37,12 +37,7 @@ trap 'stop_node; exit 0' INT TERM
 
 build() {
   (cd dashboard && pnpm install --frozen-lockfile --silent && pnpm build >/dev/null) || return 1
-  # A plain sync removes lgpio, which only the pi group installs, so the Pi needs the group.
-  if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
-    (cd node && uv sync --quiet --group pi) || return 1
-  else
-    (cd node && uv sync --quiet) || return 1
-  fi
+  (cd node && uv sync --quiet) || return 1
 }
 
 # Builds first and swaps the Node only when the build worked, so a bad pull never

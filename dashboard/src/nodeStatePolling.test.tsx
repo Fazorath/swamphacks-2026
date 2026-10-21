@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 
 import { App } from "./App";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
@@ -23,10 +23,6 @@ beforeEach(() => {
   stateRequests = 0;
   hungUp = false;
   vi.stubGlobal("fetch", async (path: string, init?: RequestInit) => {
-    if (init?.method === "POST") {
-      pressure = 1000;
-      return Response.json({ step: "pressure_drop" });
-    }
     if (path === "/api/state") {
       stateRequests += 1;
       if (hungUp) return neverAnswers(init?.signal);
@@ -76,12 +72,4 @@ test("a request the Node never answers is given up on after 2 s, and polling goe
   await act(() => vi.advanceTimersByTimeAsync(3 * STATE_POLL_MS));
   expect(timeout).toHaveBeenCalledWith(2000);
   expect(stateRequests).toBeGreaterThanOrEqual(3);
-});
-
-test("the Scenario step button shows its effect without waiting for the next poll", async () => {
-  render(<App />);
-  await screen.findByText(/Pressure: 1015 hPa/);
-  fireEvent.click(screen.getByRole("button", { name: "Step scenario (n)" }));
-  await act(() => vi.advanceTimersByTimeAsync(STATE_POLL_MS / 10));
-  expect(screen.getByText(/Pressure: 1000 hPa/)).toBeInTheDocument();
 });

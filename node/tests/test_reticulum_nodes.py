@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 import pytest
 
+from storm_shield.replay import load_event
 from storm_shield.reticulum_mesh import LOOPBACK_BASE_PORT
 
 # Real Node processes on fixed ports; run on demand, not on every PR (see docs/roadmap.md).
@@ -69,8 +70,9 @@ class RunningNode:
         entry = next(entry for entry in self._get("/api/state")["nodes"] if entry["id"] == node)
         return float(entry["measurements"]["air_pressure"]["value"])
 
-    def step_scenario(self) -> None:
-        httpx.post(f"{self.url}/api/scenario/step").raise_for_status()
+    def age_of_reading_from(self, node: str) -> float:
+        entry = next(entry for entry in self._get("/api/state")["nodes"] if entry["id"] == node)
+        return float(entry["age_s"])
 
     def _get(self, path: str) -> Any:
         return httpx.get(f"{self.url}{path}").json()
@@ -134,16 +136,15 @@ def nodes(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[list[Runni
         node.stop()
 
 
-def test_nodes_find_each_other_and_a_step_crosses_the_mesh(nodes: list[RunningNode]) -> None:
+def test_nodes_find_each_other_and_a_reading_crosses_the_mesh(nodes: list[RunningNode]) -> None:
     _eventually(lambda: all(len(node.id()) == 12 for node in nodes))
     ids = {node.id() for node in nodes}
     assert len(ids) == 3
     _eventually(lambda: _each_hears_exactly(nodes, ids))
 
     porch_id = nodes[0].id()
-    before = nodes[2].pressure_from(porch_id)
-    nodes[0].step_scenario()
-    _eventually(lambda: nodes[2].pressure_from(porch_id) < before - 5)
+    first_moment = load_event().weather[0].pressure_hpa
+    _eventually(lambda: nodes[2].pressure_from(porch_id) == first_moment)
 
 
 def test_a_restarted_node_keeps_its_id_and_the_others_survive_its_absence(
@@ -152,9 +153,9 @@ def test_a_restarted_node_keeps_its_id_and_the_others_survive_its_absence(
     _eventually(lambda: all(len(node.id()) == 12 for node in nodes))
     first_id = nodes[0].id()
     nodes[0].stop()
-    nodes[1].step_scenario()
     second_id = nodes[1].id()
-    _eventually(lambda: nodes[2].pressure_from(second_id) < 1010)
+    # Younger than the 3 s between readings, so it arrived after the first Node stopped.
+    _eventually(lambda: nodes[2].age_of_reading_from(second_id) < 3)
 
     nodes[0].start()
     _eventually(lambda: nodes[0].id() == first_id)

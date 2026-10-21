@@ -14,7 +14,7 @@ label() {
 label "area: node" 1d76db "Node service (node/)"
 label "area: dashboard" 5319e7 "Dashboard (dashboard/)"
 label "area: mesh" 0e8a16 "Mesh and Reticulum transport"
-label "area: hardware" b60205 "Pi, Breadboard, sensors"
+label "area: hardware" b60205 "Pi, sensors"
 label "area: workflow" c5def5 "Scripts, CI, hooks, agent skills, docs"
 label "bug" d73a4a "Something is broken"
 label "feature" a2eeef "New behaviour a user can see"

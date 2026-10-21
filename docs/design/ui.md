@@ -42,10 +42,9 @@ On desktop, the projector and judges' laptops, the map is a Nepal-only God's Eye
 | Group | Views |
 |---|---|
 | **Must build (on stage)** | Resident Normal day, Raining, Elevated, Storm, Mesh-only; Warning Takeover; Phone Map, Readings, Alerts and Plan tabs; Phone Route |
-| **Simple but real** | Loading, empty and error states; Phone Household Profile; Hub Panel (Registry, Warnings, Shelters, Feeds); Node Panel (Scenario, registration); Join card |
+| **Simple but real** | Loading, empty and error states; Phone Household Profile; Hub Panel (Registry, Warnings, Shelters, Feeds); Node Panel (registration); Join card |
 | **Stretch** | "Mark road blocked" / "Find another route" (0018) |
 
-The breadboard drives the Scenario on stage; the Node Panel's stepper is for laptops and rehearsal.
 
 ## Layout
 
@@ -168,7 +167,6 @@ The "Hub" button in the top bar opens a slide-over with four tabs; the map keeps
 
 Shown only when the dashboard is opened on the Node's own machine (`localhost`); the "Node" button sits beside the Hub button. On the Hub both exist.
 
-- **Scenario:** the stepper with the current beat highlighted, and Reset. The `n` (step) and `r` (reset) keys work only here.
 - **Registration:** `UNVERIFIED`, then "Sign-up sent, waiting for the Hub", then `REGISTERED`, with a "Sign up with the Hub" button.
 
 ## Join card

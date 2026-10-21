@@ -2,26 +2,24 @@ import json
 import math
 from datetime import UTC, datetime
 
+from meshed_nodes import a_calm_day
+
 from storm_shield.community_reading import CommunityReading, Position, Reading, fuzz_position
 from storm_shield.mesh import decode_message
-from storm_shield.scenario import Scenario
 
 
-def _reading_from(scenario: Scenario) -> CommunityReading:
+def _a_reading() -> CommunityReading:
     return CommunityReading.from_measurements(
         node="91c2e0b47a3d",
         seq=412,
         position=Position(29.652, -82.324),
-        readings=scenario.readings(),
+        readings=a_calm_day(),
         river_km=-12.2,
     )
 
 
 def test_a_community_reading_fits_one_reticulum_packet() -> None:
-    scenario = Scenario()
-    for _ in range(3):
-        scenario.step()
-    assert len(_reading_from(scenario).model_dump_json().encode()) < 350
+    assert len(_a_reading().model_dump_json().encode()) < 350
 
 
 def test_a_reading_with_a_kind_the_rules_do_not_know_still_fits_one_packet() -> None:
@@ -45,7 +43,7 @@ def test_a_reading_with_a_kind_the_rules_do_not_know_still_fits_one_packet() -> 
 
 
 def test_a_community_reading_carries_the_agreed_fields() -> None:
-    reading = _reading_from(Scenario())
+    reading = _a_reading()
     assert set(reading.model_dump()) == {
         "v",
         "kind",
@@ -63,7 +61,7 @@ def test_a_community_reading_carries_the_agreed_fields() -> None:
 
 
 def test_measurements_travel_as_kind_value_unit_triples_and_come_back_unchanged() -> None:
-    sent = _reading_from(Scenario())
+    sent = _a_reading()
 
     body = json.loads(sent.model_dump_json())
     assert {kind for kind, _, _ in body["m"]} == {
@@ -86,7 +84,7 @@ def test_measurements_travel_as_kind_value_unit_triples_and_come_back_unchanged(
 
 
 def test_a_version_1_reading_is_dropped() -> None:
-    body = json.loads(_reading_from(Scenario()).model_dump_json())
+    body = json.loads(_a_reading().model_dump_json())
     body.update(v=1, pressure_hpa=1015, water_m=0.2, rain_mmh=0, soil_pct=30)
     del body["m"]
 

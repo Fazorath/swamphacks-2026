@@ -10,10 +10,22 @@ from storm_shield.community_reading import Measurement
 from storm_shield.flood_risk import STORM_PRESSURE_HPA
 from storm_shield.replay import load_event
 
+# A storm in three steps, as (pressure hPa, rain mm/h, water cm, soil %). The last is High from
+# heavy rain on rising water and stays under the Surge size.
+STORM_STEPS = [(990, 0, 100, 32), (985, 12, 350, 55), (980, 30, 390, 85)]
 
-def _step(client: TestClient, times: int = 1) -> None:
-    for _ in range(times):
-        client.post("/api/scenario/step")
+
+def _hear_step(meshed_nodes: MeshedNodes, sender: str, step: int) -> None:
+    pressure_hpa, rain_mmh, water_cm, soil_pct = STORM_STEPS[step - 1]
+    meshed_nodes.hear_from(
+        sender, pressure_hpa=pressure_hpa, rain_mmh=rain_mmh, water_cm=water_cm, soil_pct=soil_pct
+    )
+
+
+def _climb(meshed_nodes: MeshedNodes, sender: str, steps: int) -> None:
+    """Have `sender` publish the first `steps` readings of the storm, one after another."""
+    for step in range(1, steps + 1):
+        _hear_step(meshed_nodes, sender, step)
 
 
 def _flood_risk(client: TestClient) -> dict[str, Any]:
@@ -35,10 +47,10 @@ def test_a_calm_day_shows_no_flood_risk(meshed_nodes: MeshedNodes) -> None:
 def test_the_pressure_drop_raises_the_storm_signal_and_shows_low(
     meshed_nodes: MeshedNodes,
 ) -> None:
-    meshed_nodes.start("porch", "garage")
-    meshed_nodes.register("garage", "porch")
-    _step(meshed_nodes["porch"])
-    _step(meshed_nodes["garage"])
+    meshed_nodes.start("porch")
+    meshed_nodes.register("garage", "creek")
+    _climb(meshed_nodes, "garage", 1)
+    _climb(meshed_nodes, "creek", 1)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["level"] == "low"
     assert flood_risk["storm_signal"]["on"] is True
@@ -49,8 +61,8 @@ def test_the_pressure_drop_raises_the_storm_signal_and_shows_low(
 
 def test_the_rain_step_is_elevated_with_rain_and_water_reasons(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    _step(meshed_nodes["porch"], 2)
+    meshed_nodes.register("creek")
+    _climb(meshed_nodes, "creek", 2)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["level"] == "elevated"
     assert {"rain_heavy", "water_high", "water_rising"} <= _reason_codes(meshed_nodes["porch"])
@@ -58,28 +70,18 @@ def test_the_rain_step_is_elevated_with_rain_and_water_reasons(meshed_nodes: Mes
 
 def test_rain_with_water_rising_is_high(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    _step(meshed_nodes["porch"], 3)
+    meshed_nodes.register("creek")
+    _climb(meshed_nodes, "creek", 3)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["level"] == "high"
     assert {"water_high", "rain_heavy"} <= _reason_codes(meshed_nodes["porch"])
 
 
-def test_resetting_the_scenario_shows_no_flood_risk_again(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    _step(meshed_nodes["porch"], 3)
-    meshed_nodes["porch"].post("/api/scenario/reset")
-    flood_risk = _flood_risk(meshed_nodes["porch"])
-    assert flood_risk["level"] is None
-    assert flood_risk["reasons"] == []
-
-
 def test_reasons_count_the_nodes_that_agree(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start("porch", "garage", "creek")
-    meshed_nodes.register("creek", "garage", "porch")
-    _step(meshed_nodes["porch"], 3)
-    _step(meshed_nodes["garage"], 3)
+    meshed_nodes.start("creek")
+    meshed_nodes.register("garage", "porch")
+    _climb(meshed_nodes, "porch", 3)
+    _climb(meshed_nodes, "garage", 3)
     heavy_rain = next(
         reason
         for reason in _flood_risk(meshed_nodes["creek"])["reasons"]
@@ -112,20 +114,20 @@ def test_soil_moisture_rising_at_one_of_two_nodes_is_not_raining(
 
 def test_a_lone_node_seeing_soil_moisture_rise_is_raining(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    _step(meshed_nodes["porch"], 2)
+    meshed_nodes.register("creek")
+    _climb(meshed_nodes, "creek", 2)
     assert "raining" in _reason_codes(meshed_nodes["porch"])
 
 
 def test_one_low_barometer_among_several_nodes_is_not_a_storm_signal(
     meshed_nodes: MeshedNodes,
 ) -> None:
-    meshed_nodes.start("porch", "garage", "creek")
+    meshed_nodes.start("viewer")
     meshed_nodes.register("creek", "garage", "porch")
     for name in ["garage", "creek"]:
-        meshed_nodes[name].post("/api/scenario/reset")
-    _step(meshed_nodes["porch"])
-    assert _flood_risk(meshed_nodes["creek"])["storm_signal"]["on"] is False
+        meshed_nodes.hear_from(name)
+    _climb(meshed_nodes, "porch", 1)
+    assert _flood_risk(meshed_nodes["viewer"])["storm_signal"]["on"] is False
 
 
 def test_water_that_stays_high_after_the_rain_stops_stays_elevated(
@@ -146,10 +148,10 @@ def test_after_two_minutes_the_rise_fades_but_the_low_pressure_keeps_the_storm_s
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
-    meshed_nodes.register("porch")
-    _step(meshed_nodes["porch"], 3)
+    meshed_nodes.register("creek")
+    _climb(meshed_nodes, "creek", 3)
     meshed_nodes.advance(121)
-    _step(meshed_nodes["porch"])
+    _hear_step(meshed_nodes, "creek", 3)
     flood_risk = _flood_risk(meshed_nodes["porch"])
     assert flood_risk["storm_signal"]["on"] is True
     assert "water_rising" not in _reason_codes(meshed_nodes["porch"])
@@ -159,22 +161,21 @@ def test_after_two_minutes_the_rise_fades_but_the_low_pressure_keeps_the_storm_s
 def test_the_headline_is_the_worst_node_and_each_node_reports_its_own_level(
     meshed_nodes: MeshedNodes,
 ) -> None:
-    meshed_nodes.start("porch", "garage")
+    meshed_nodes.start("viewer")
     meshed_nodes.register("garage", "porch")
-    _step(meshed_nodes["porch"], 3)
-    _step(meshed_nodes["garage"], 2)
-    flood_risk = _flood_risk(meshed_nodes["garage"])
+    _climb(meshed_nodes, "porch", 3)
+    _climb(meshed_nodes, "garage", 2)
+    flood_risk = _flood_risk(meshed_nodes["viewer"])
     assert flood_risk["level"] == "high"
     assert flood_risk["nodes"] == {"garage": "elevated", "porch": "high"}
 
 
 def test_a_node_with_a_single_reading_is_not_rising(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start("garage")
-    _step(meshed_nodes["garage"], 3)
+    _climb(meshed_nodes, "garage", 3)
     meshed_nodes.advance(121)
     meshed_nodes.start("porch")
-    meshed_nodes.register("garage", "porch")
-    _step(meshed_nodes["garage"])
+    meshed_nodes.register("garage")
+    _hear_step(meshed_nodes, "garage", 3)
     codes = _reason_codes(meshed_nodes["porch"])
     assert "water_high" in codes
     assert "water_rising" not in codes

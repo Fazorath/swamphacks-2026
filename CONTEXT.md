@@ -79,16 +79,12 @@ The rules that turn the Measurements a Node can see into states and warnings. Fl
 _Avoid_: plugin, module, detector
 
 **Simulated Reading**:
-A Community Reading whose value comes from a breadboard input or replay script instead of a real sensor; always labeled as such.
+A Community Reading whose value comes from an Event's replayed surface instead of a real sensor; always labeled as such.
 _Avoid_: fake reading, mock data
 
 **Fuzzed Position**:
 A Node's location snapped to a grid of about 200 m before anything is published; the true location never leaves the Node. A fixed grid, not random jitter, because jitter can be averaged away by an observer collecting many readings.
 _Avoid_: exact location, coordinates
-
-**Scenario**:
-A scripted storm sequence (normal day, pressure drop, rain, water rising) that produces Simulated Readings, stepped forward by the laptop keyboard or HTTP, or jumped to a named step by a wire touched to a breadboard input. No longer the demo's driver (the Replay is); kept for tests and the breadboard. A press changes only the Pi's own Node and does nothing visible while the Sensor is playing a Replay.
-_Avoid_: demo script, simulation, playback
 
 **Event**:
 One happening at a Region, of one Hazard: Hurricane Ian's storm surge at Fort Myers on 28 September 2022, or the Bhote Koshi flash flood of 26 August 2026. An Event can be real or made up for testing. It is described by an Event file: id, window, rate, named phases, internet cue, Official Alerts with their times, the water surface and the weather.
@@ -203,11 +199,11 @@ _Avoid_: evacuation zone, surge zone
 ## Dashboard
 
 **Real Node**:
-A Node that is actually on the Mesh (the Hub, the breadboard Pi, an Audience Node), as opposed to a simulated one. Shown with the `REAL` ring.
+A Node that is actually on the Mesh (the Hub, the Pi, an Audience Node), as opposed to a simulated one. Shown with the `REAL` ring.
 _Avoid_: physical node, live node
 
 **Audience Node**:
-A Registered Node on a volunteer's laptop, started with `scripts/join-demo.sh`. It is a Real Node on the real Mesh, but its readings are the Scenario's, so they are simulated.
+A Registered Node on a volunteer's laptop, started with `scripts/join-demo.sh`. It is a Real Node on the real Mesh, but its readings come from the Event's surface, so they are simulated.
 _Avoid_: guest node, visitor node, demo laptop
 
 **God's Eye View**:
@@ -258,12 +254,8 @@ _Avoid_: tile, row, sensor card
 The slide-over on the Hub's dashboard holding the Node registry, the Community Warning log, Shelter status and the Replay controls.
 _Avoid_: admin page, settings, control panel
 
-**Breadboard**:
-The Pi's board of wires and pins that stands in for sensors on stage: plugging a wire from the 3.3 V rail into an input pin is a press that sets the Scenario to that input's step (pressure drop, rain, water rising), and a fourth input resets it. It moves one Node only, so one bad Node cannot raise a Community Warning alone.
-_Avoid_: GPIO panel, controller
-
 **Node Panel**:
-The slide-over shown only on a Node's own screen, holding the Scenario controls and that Node's registration status; never shown to Viewers on other devices.
+The slide-over shown only on a Node's own screen, holding that Node's registration status; never shown to Viewers on other devices.
 _Avoid_: operator panel, settings, admin
 
 **Join card**:
