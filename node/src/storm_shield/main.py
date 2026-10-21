@@ -157,6 +157,14 @@ class CachePackStatus(BaseModel):
     manifest: dict[str, Any] | None
 
 
+def _region_of(settings: Settings, cache_pack: CachePack) -> Region:
+    """A Sensor Node's Region is the one in the pack it holds, from the Hub; a Hub's is its own."""
+    in_pack = cache_pack.file("region.json")
+    if settings.role == "sensor" and in_pack is not None:
+        return load_region(in_pack)
+    return load_region(region_path(settings.region))
+
+
 def create_app(
     settings: Settings,
     mesh: Mesh,
@@ -168,10 +176,10 @@ def create_app(
     sandbox: SandboxControls | None = None,
     region: Region | None = None,
 ) -> FastAPI:
-    region = region or load_region(region_path(settings.region))
-    rules = region.rules.flood_warning
     cache_pack = CachePack(settings.cache_pack_dir)
-    weather_forecast = WeatherForecast(settings.data_dir)
+    region = region or _region_of(settings, cache_pack)
+    rules = region.rules.flood_warning
+    weather_forecast = WeatherForecast(settings.data_dir, region.bbox)
     weather_source = weather_source or httpx.Client(
         timeout=FORECAST_TIMEOUT_SECONDS, follow_redirects=True
     )

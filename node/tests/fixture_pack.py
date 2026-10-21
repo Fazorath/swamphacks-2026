@@ -57,6 +57,7 @@ def build_fixture_pack(
     with_nepal: bool = False,
     corrupt_nepal: bool = False,
     shelters: list[dict[str, object]] = SHELTERS,
+    region_file: bytes | None = None,
 ) -> bytes:
     """A tiny Cache Pack in the real layout; the flags break it in the ways a download can break."""
     files = {
@@ -65,6 +66,8 @@ def build_fixture_pack(
         "river.geojson": json.dumps(RIVER).encode(),
         TILE_PATH: TILE,
     }
+    if region_file is not None:
+        files["region.json"] = region_file
     if with_weather:
         files[WEATHER_PATH] = json.dumps(WEATHER_REPLAY).encode()
     if with_nepal:

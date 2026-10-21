@@ -6,13 +6,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ValidationError, field_validator
 
 from storm_shield.community_reading import Reading
 from storm_shield.official_alert import AppliesTo, OfficialAlert
-from storm_shield.region import Region, RegionError
+from storm_shield.region import REGIONS_DIR, Region, RegionError, describe_problems
 
-EVENTS_DIR = Path(__file__).with_name("events")
+# Every Node plays Nepal's Events until Events travel in the Cache Pack.
+EVENTS_DIR = REGIONS_DIR / "nepal" / "events"
 
 
 class ReplayClockMessage(BaseModel):
@@ -237,12 +238,21 @@ def _seconds_in_day(clock_time: str) -> int:
     return hours * 3600 + minutes * 60 + seconds
 
 
+def read_event_file(path: Path) -> Event:
+    """The Event in `path`; a file that does not fit raises RegionError naming each bad field."""
+    try:
+        return Event.model_validate(json.loads(path.read_text()))
+    except OSError as error:
+        raise RegionError(f"cannot read Event file {path}: {error.strerror}") from error
+    except json.JSONDecodeError as error:
+        raise RegionError(f"{path} is not JSON: {error}") from error
+    except ValidationError as error:
+        raise RegionError(f"{path}:\n{describe_problems(error)}") from error
+
+
 def load_events() -> dict[str, Event]:
     """Every Event file, by id, in file-name order; the first is the one a stopped Node reads."""
-    events = [
-        Event.model_validate(json.loads(path.read_text()))
-        for path in sorted(EVENTS_DIR.glob("*.json"))
-    ]
+    events = [read_event_file(path) for path in sorted(EVENTS_DIR.glob("*.json"))]
     return {event.id: event for event in events}
 
 

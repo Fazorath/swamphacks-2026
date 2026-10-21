@@ -126,6 +126,8 @@ class HighGroundPoint(_Strict):
     name: str
     pos: LatLon
     town: str
+    # Where the walk to the point starts: the town's centre.
+    town_pos: LatLon
     source: str
     checked: str
 
@@ -137,6 +139,25 @@ class SensorSite(_Strict):
     # Set when the Region's water is a river.
     river_km: float | None = None
     why: str
+
+
+class Source(_Strict):
+    # An http(s) address, or a path under the Region's folder for a local copy (what tests use).
+    url: str = Field(min_length=1)
+    credit: str = Field(min_length=1)
+
+
+class Sources(_Strict):
+    """Where the Cache Pack build gets the Region's map and weather."""
+
+    # A Terrarium tile address with {z}, {x} and {y}.
+    terrain: Source
+    # An OpenStreetMap extract (.pbf) of the country or state around the bbox.
+    roads: Source
+    # An Overpass API endpoint, or a saved Overpass answer.
+    basemap: Source
+    # Open-Meteo's archive endpoint, or a saved answer.
+    weather: Source
 
 
 class Region(_Strict):
@@ -152,6 +173,7 @@ class Region(_Strict):
     shelters: list[Shelter]
     high_ground: list[HighGroundPoint] = []
     sensor_sites: list[SensorSite]
+    sources: Sources
 
     @field_validator("bbox")
     @classmethod
@@ -178,6 +200,10 @@ class Region(_Strict):
         places = [
             *((f"shelters[{i}]", each.pos) for i, each in enumerate(self.shelters)),
             *((f"high_ground[{i}]", each.pos) for i, each in enumerate(self.high_ground)),
+            *(
+                (f"high_ground[{i}].town_pos", each.town_pos)
+                for i, each in enumerate(self.high_ground)
+            ),
             *((f"sensor_sites[{i}]", each.pos) for i, each in enumerate(self.sensor_sites)),
         ]
         outside = [
@@ -227,14 +253,14 @@ def load_region(path: Path) -> Region:
     except json.JSONDecodeError as error:
         raise RegionError(f"{path} is not JSON: {error}") from error
     except ValidationError as error:
-        raise RegionError(f"{path}:\n{_describe(error)}") from error
+        raise RegionError(f"{path}:\n{describe_problems(error)}") from error
 
 
 def region_path(name: str) -> Path:
     return REGIONS_DIR / name / "region.json"
 
 
-def _describe(error: ValidationError) -> str:
+def describe_problems(error: ValidationError) -> str:
     lines: list[str] = []
     for problem in error.errors():
         field = ".".join(str(part) for part in problem["loc"]) or "(whole file)"

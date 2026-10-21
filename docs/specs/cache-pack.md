@@ -2,7 +2,7 @@
 
 **Status:** ready-for-agent
 
-> **Area superseded.** The pack now covers the Bhote Koshi valley with a hand-drawn river corridor, hand-picked Shelters and a river line (`docs/specs/flash-flood-replay.md`, ticket 0043). How the pack is built, checked, downloaded and served is unchanged.
+> **Build superseded.** A Region's file (`regions/<name>/region.json`) now says what the pack covers, and `scripts/build-cache-pack.sh <region>` builds it (section "Regions" below, ticket #40). The Gainesville box, the CARTO and FEMA sources and `build_cache_pack.py`'s old constants are gone. How a pack is checked, downloaded and served is unchanged.
 
 Feature slice of `docs/specs/storm-shield.md` (ticket 0007). File layout: `docs/specs/wire-formats.md`. Words follow `CONTEXT.md`.
 
@@ -103,3 +103,13 @@ Ticket 0010 added `routes/` to the Gainesville pack; the valley pack (0043) has 
 - **Routes are shortest drives.** They ignore Flood-Prone Areas and live road conditions, and the dashboard says so.
 - **No route.** A Shelter with no Route from the resident's Grid point ranks after the routed ones by straight-line distance, labelled as such, with no line drawn.
 - **Privacy.** The Viewer asks its connected Node for the file of its home's Grid point, which reveals the home to about 100 m to that Node only (`docs/adr/0003-routes-reveal-a-grid-point-to-the-connected-node.md`).
+
+## Regions (ticket #40)
+
+- **One build command per Region.** `scripts/build-cache-pack.sh <region>` reads `regions/<region>/region.json`, checks it and every Event file in `regions/<region>/events/` against their schemas (a bad field is named with its file) and writes `build/<region>/cache-pack.zip`. Nothing about a place is written in the script: the bbox, Shelters, High-ground points, river files, Events and sources all come from the Region.
+- **The pack holds the Region file.** `region.json` sits in the pack byte for byte. A Sensor Node that holds a pack starts on the Region in it, so only the Hub is told its Region (`NODE_REGION`); a Hub keeps its own. A Sensor that first gets its pack after it started keeps its default Region until it restarts (late binding is ticket #42).
+- **Generic basemap and terrain replace Nepal's layers.** `basemap/` (water, waterways, coastline, roads, places from OpenStreetMap through Overpass) and `elevation/` (Terrarium, zoom 9 to 12 over the bbox) replace `nepal/border.geojson`, `nepal/districts.geojson`, `nepal/rivers.geojson`, `nepal/places.geojson` and the national elevation tiles. The manifest names the Region (`region`), the terrain (`terrain`) and each source's credit (`sources`).
+- **The Weather Grid covers the Region's bbox**, for the days around its Events; the Hub's live forecast uses the same box.
+- **Events are built into the pack** as `events/<id>.json`. Nodes still play the Events in `regions/nepal/events/` until Events are read from the pack.
+- **Sources are addresses or local files**, so the build test runs a fixture Region whose sources are files and a client that refuses every request (`node/tests/test_build_cache_pack.py`). CI never fetches from the network.
+- **Not here.** The dashboard reading `basemap/` and `terrain` (ticket #41); publishing packs as Releases and `NODE_REGION` (ticket #42); the coast Flood-Prone Area traced from terrain, and gauge and warning sources (tickets #44 and #52).

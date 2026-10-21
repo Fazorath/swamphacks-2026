@@ -1,8 +1,10 @@
+import json
 import time
 from collections.abc import Callable
 from pathlib import Path
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 from fixture_pack import (
     ELEVATION_PATH,
@@ -18,9 +20,11 @@ from fixture_pack import (
     build_fixture_pack,
 )
 
+from storm_shield.cache_pack import CachePack
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
-from storm_shield.settings import Settings
+from storm_shield.region import RegionError, region_path
+from storm_shield.settings import Role, Settings
 
 
 class PackSource:
@@ -160,3 +164,31 @@ def test_sensor_downloads_the_pack_from_a_hub_node(tmp_path: Path) -> None:
         with _node(tmp_path, hub, name="sensor", url="/api/cache-pack.zip") as sensor:
             _wait_until(lambda: _has_pack(sensor))
             assert sensor.get(f"/api/cache-pack/files/{TILE_PATH}").content == TILE
+
+
+def _pack_of_another_region(tmp_path: Path) -> Path:
+    """A Node's pack directory holding a pack whose Region file has its own label."""
+    region = json.loads(region_path("nepal").read_text()) | {"label": "The Hub's Region"}
+    directory = tmp_path / "node"
+    directory.mkdir()
+    CachePack(directory).install(build_fixture_pack(region_file=json.dumps(region).encode()))
+    return directory
+
+
+@pytest.mark.parametrize(
+    ("role", "label"), [("sensor", "The Hub's Region"), ("hub", "Bhote Koshi valley, Nepal")]
+)
+def test_a_sensor_takes_its_region_from_the_pack_and_a_hub_keeps_its_own(
+    tmp_path: Path, role: Role, label: str
+) -> None:
+    settings = Settings(role=role, cache_pack_dir=_pack_of_another_region(tmp_path))
+    node = TestClient(create_app(settings, InMemoryNetwork().join("node")))
+    assert node.get("/api/state").json()["region"]["label"] == label
+
+
+def test_a_pack_with_a_bad_region_file_stops_the_sensor_that_holds_it(tmp_path: Path) -> None:
+    directory = tmp_path / "node"
+    directory.mkdir()
+    CachePack(directory).install(build_fixture_pack(region_file=b'{"name": "x"}'))
+    with pytest.raises(RegionError, match="bbox"):
+        create_app(Settings(cache_pack_dir=directory), InMemoryNetwork().join("node"))

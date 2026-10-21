@@ -18,8 +18,6 @@ GRID_STEP_DEGREES = 0.5
 COORDINATE_DECIMALS = 2
 
 BBox = tuple[float, float, float, float]  # (south, west, north, east)
-# All of Nepal: the Cache Pack's map, and the box the Weather Grid fills.
-NEPAL_BBOX: BBox = (26.3, 80.0, 30.5, 88.3)
 
 
 def grid_points(bbox: BBox) -> tuple[int, int, list[tuple[float, float]]]:

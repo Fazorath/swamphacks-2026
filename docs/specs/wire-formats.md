@@ -148,32 +148,37 @@ The dashboard polls **one snapshot** every second and shows "Node unreachable" a
 
 ## Cache Pack (a file, not a mesh message)
 
-Built by a script ahead of the event. The Hub downloads it while online; other Nodes fetch it from the Hub over the local Wi-Fi, never over the mesh.
+Built by `scripts/build-cache-pack.sh <region>` ahead of the event, from the Region's file (`regions/<name>/region.json`, `docs/specs/regions-events-and-sandbox.md` decision 2). The Hub downloads it while online; other Nodes fetch it from the Hub over the local Wi-Fi, never over the mesh.
 
 ```
 cache-pack.zip
-├── manifest.json         { "v": 1, "built": "...", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" }?, "files": { "<path>": "<sha256>" } }
+├── manifest.json         { "v": 1, "built": "...", "region": "nepal", "bbox": [...], "route_grid": { "south", "west", "lat_step", "lon_step" },
+│                           "terrain": { "encoding": "terrarium", "approximate": true, "zooms": [9, 12] },
+│                           "sources": [ { "layer", "credit", "checked" } ], "files": { "<path>": "<sha256>" } }
+├── region.json           the Region file itself, byte for byte; a Sensor Node takes its Region from it
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
 │                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
-├── high_ground.json      [ { "id", "name", "pos": [lat, lon], "town", "climb_m": 96, "walk_minutes": 7, "source", "checked" } ]: High-ground points; `climb_m` is read from the elevation tiles, `walk_minutes` is from the town's key place; packs before 0068 lack it
-├── flood_prone.geojson   the river corridor (Lende Khola, Bhote Koshi, Trishuli), approximate
+├── high_ground.json      [ { "id", "name", "pos": [lat, lon], "town", "climb_m": 96, "walk_minutes": 7, "source", "checked" } ]: High-ground points; `climb_m` is read from the elevation tiles, `walk_minutes` is from the town's `town_pos` in the Region file
+├── flood_prone.geojson   the Flood-Prone Area: a river Region's corridor, approximate
 ├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
-├── weather_replay.json   the recorded weather of 25 to 27 Aug 2026 as a Weather Grid (below); packs built before the Weather layers lack it
-├── nepal/border.geojson     the country border (geoBoundaries ADM0); v4 packs onward
-├── nepal/districts.geojson  the 75 districts, `{ "name" }` (geoBoundaries ADM2)
-├── nepal/rivers.geojson     OpenStreetMap rivers in Nepal, `{ "name": str|null, "main": "Koshi"|"Gandaki"|"Karnali"|"Mahakali"|"Bhote Koshi–Trishuli"|null }`
-├── nepal/places.geojson     cities and towns of Nepal, plus villages and hamlets in the valley box, `{ "name", "kind", "key"?: true }`; `key` marks Kathmandu and the four valley towns, which the map labels at the national zoom
-├── elevation/{z}/{x}/{y}.png  Terrarium elevation tiles: zoom 5 to 8 over Nepal, zoom 9 to 12 over the valley box and the Kathmandu valley
-├── tiles/{z}/{x}/{y}.png dark map tiles for the valley, zoom 10 to 14 (credit shown on the map); v4 leaves them out
-├── roads.json            the Road graph, only when built: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
-└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell, only when Routes are built
+├── basemap/water.geojson      OpenStreetMap lakes, ponds and riverbanks as polygons, `{ "name": str|null }`; an island in a lake is not cut out
+├── basemap/waterways.geojson  rivers, canals and named streams as lines, `{ "name": str|null, "kind" }`
+├── basemap/coastline.geojson  the coastline as lines (sea has no polygon; land is the map's ground)
+├── basemap/roads.geojson      motorway to residential roads as lines, `{ "name": str|null, "kind": "<highway tag>" }`
+├── basemap/places.geojson     cities, towns, villages, hamlets, suburbs and islands as points, `{ "name", "kind" }`; names are Latin-letter only (the map has no Devanagari font)
+├── elevation/{z}/{x}/{y}.png  Terrarium elevation tiles over the bbox, zoom 9 to 12
+├── events/<id>.json      every Event file of the Region, byte for byte
+├── weather_replay.json   the recorded weather around the Events as a Weather Grid (below); absent when the Region has no Event
+├── roads.json            the Road graph: { "nodes": [[lat, lon], ...], "edges": [[a, b, length_m, [[lat, lon], ...]?], ...] }
+└── routes/{gx}_{gy}.json { "<shelter id>": [[lat, lon], ...] }   one file per grid cell
 ```
 
-- `bbox` is `[south, west, north, east]`, the demo box the pack covers.
-- A v4 pack adds a `nepal` entry to the manifest: `{ "bbox": [...] (Nepal), "elevation": { "encoding": "terrarium", "approximate": true, "national_zooms": [5, 8], "detail_zooms": [9, 12], "detail_areas": [[...], [...]] }, "boundaries_note": "Boundaries are indicative", "sources": [ { "layer", "name", "licence", "url", "checked" } ] }`. The files above are listed with their checksums like any other, and the Node serves them at `/api/cache-pack/files/<path>`. A pack without them (v3 and earlier) has no `nepal` entry and the map falls back to the river line and corridor it has. Terrarium encodes metres as `(r * 256 + g + b / 256) - 32768`.
-- A valley pack built without `--roads-pbf` has no `route_grid` and no `routes/` (the plan works without them). When Routes are built (ticket 0051), a Route that crosses the Flood-Prone Area is left out of its file, and the grid spacing is 100, 250 or 500 m, the finest that fits the 5 MB budget (before that, about 100 m; `route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
+- `bbox` is `[south, west, north, east]`, the Region's box; the basemap, terrain, Routes and Weather Grid all cover it. Coordinates in the `basemap/` files are `[lon, lat]` rounded to 4 decimals, lines simplified to about 11 m.
+- `sources` lists the credit of each source the Region file names (terrain, roads, basemap, weather) with the date the build read it, so the map can print them. Terrarium encodes metres as `(r * 256 + g + b / 256) - 32768`.
+- Packs built before the Regions (`scripts/pack_nepal.py`) carry `nepal/border.geojson`, `nepal/districts.geojson`, `nepal/rivers.geojson`, `nepal/places.geojson`, a `nepal` manifest entry, zoom 5 to 12 elevation tiles and no `region.json`; the border and district layers are gone from new packs. Until the map reads `basemap/` and `terrain`, a new pack draws without them.
+- When a Route crosses the Flood-Prone Area it is left out of its file, and the grid spacing is 100, 250 or 500 m, the finest that fits the 5 MB budget (`route_grid` in the manifest gives the origin and steps). Cell `gx = round((lon - west) / lon_step)`, `gy = round((lat - south) / lat_step)`, rounding halves up. A home snaps to the nearest cell and the plan loads only that file; a cell with no file has no Routes. A route runs from the Grid point to the Shelter.
 - `roads.json` lists junctions and bends as `nodes`; an `edge` joins node indexes `a` and `b` in both directions (a one-way road is treated as two-way: a resident on foot or in a hurry ignores it), with `length_m` along the road and an optional list of in-between vertices to draw. Service roads are left out; the file stays under about 2 MB.
-- Polylines use 5 decimal places.
+- Polylines in the Routes and Road graph use 5 decimal places.
 - The Node checks the checksums in `manifest.json` and refuses an incomplete or corrupt pack.
 
 ### Weather Grid (`weather_replay.json`, and later the Hub's forecast file)
@@ -184,14 +189,14 @@ One file, the same shape for the recorded weather and the forecast. Fixed in tic
 {
   "source": "Open-Meteo archive (reanalysis), roughly 10 to 25 km per cell",
   "credit": "Weather data by Open-Meteo.com (CC BY 4.0)",
-  "grid":   { "south": 26.3, "west": 80.0, "rows": 9, "cols": 17, "step_deg": 0.5 },
+  "grid":   { "south": 27.86, "west": 85.08, "rows": 3, "cols": 2, "step_deg": 0.5 },
   "times":  ["2026-08-25T00:00Z", "2026-08-25T01:00Z", ...],
   "units":  { "temperature_2m": "°C", "cloud_cover": "%", "precipitation": "mm/h" },
   "variables": { "temperature_2m": [[...], ...], "cloud_cover": ..., "precipitation": ... }
 }
 ```
 
-- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid is the national one: 180 points (10 rows, 18 columns) at 0.5° from the south-west corner of the Nepal box (26.3 to 30.5 N, 80.0 to 88.3 E); the last row and column reach 30.8 N and 88.5 E so the box's north and east edges have a point. A reader clamps outside it.
+- `grid` gives the south-west corner, the number of rows (south to north) and columns (west to east) and the spacing in degrees. Point `(row, col)` is at `south + row * step_deg`, `west + col * step_deg`. These are the coordinates we asked for, not the ones Open-Meteo reports for its model cell. The grid covers the Region's bbox at 0.5° from its south-west corner; the last row and column may lie past the north and east edges so those edges have a point (Nepal's valley box is 3 rows by 2 columns). A reader clamps outside it.
 - `times` are hourly, UTC, ISO 8601 with a `Z`. The recorded file holds 72 hours (25 to 27 Aug 2026; 08:37 NPT on the 26th is `2026-08-26T02:52Z`).
 - Each variable is a list with one flat array per entry of `times`, each of `rows * cols` numbers in row-major order (index `row * cols + col`). Precipitation is the hour's total, so mm/h.
 - The values are reanalysis at model resolution: context for the country, not a measurement at a village.

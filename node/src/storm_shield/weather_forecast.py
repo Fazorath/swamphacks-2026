@@ -9,8 +9,8 @@ import httpx
 
 from storm_shield.weather_grid import (
     GRID_STEP_DEGREES,
-    NEPAL_BBOX,
     VARIABLES,
+    BBox,
     grid_points,
     weather_grid_from_answers,
 )
@@ -24,22 +24,22 @@ FILE_NAME = "weather_forecast.json"
 SOURCE = "Open-Meteo forecast (model output), roughly 10 to 25 km per cell"
 
 
-def _check_shape(weather: Any) -> None:
-    """Raise ValueError unless this is the national Weather Grid with a value for every hour and point.
+def _check_shape(weather: Any, bbox: BBox) -> None:
+    """Raise ValueError unless this is the Weather Grid over `bbox` with a value for every hour and point.
 
-    A file from before the grid went national (the valley box, or wind variables) fails here, so it
-    counts as absent and is fetched again.
+    A file for another Region's box, or with other variables, fails here, so it counts as absent
+    and is fetched again.
     """
     try:
         grid = weather["grid"]
-        rows, cols, points_in_box = grid_points(NEPAL_BBOX)
+        rows, cols, points_in_box = grid_points(bbox)
         if (grid["south"], grid["west"], grid["rows"], grid["cols"], grid["step_deg"]) != (
-            *NEPAL_BBOX[:2],
+            *bbox[:2],
             rows,
             cols,
             GRID_STEP_DEGREES,
         ):
-            raise ValueError("not the national grid")
+            raise ValueError("not the Region's grid")
         if set(weather["variables"]) != set(VARIABLES):
             raise ValueError("not the current variables")
         points = len(points_in_box)
@@ -61,8 +61,9 @@ def _check_shape(weather: Any) -> None:
 class WeatherForecast:
     """The last good Weather Grid forecast, kept on this Node's disk and served from there."""
 
-    def __init__(self, directory: Path) -> None:
+    def __init__(self, directory: Path, bbox: BBox) -> None:
         self._path = directory / FILE_NAME
+        self._bbox = bbox
 
     def read(self) -> bytes | None:
         """The kept file, or None when there is none or it is damaged (which is logged)."""
@@ -74,15 +75,15 @@ class WeatherForecast:
             logger.exception("could not read %s", self._path)
             return None
         try:
-            _check_shape(json.loads(content))
+            _check_shape(json.loads(content), self._bbox)
         except ValueError as error:
             logger.warning("ignoring the forecast on disk, it is damaged: %s", error)
             return None
         return content
 
     def fetch(self, client: httpx.Client, fetched_at: datetime) -> None:
-        """Ask Open-Meteo for Nepal and keep the answer. Raises and keeps the old copy on any failure."""
-        _, _, points = grid_points(NEPAL_BBOX)
+        """Ask Open-Meteo for the Region's box and keep the answer. Raises and keeps the old copy on any failure."""
+        _, _, points = grid_points(self._bbox)
         response = client.get(
             FORECAST_URL,
             params={
@@ -94,7 +95,7 @@ class WeatherForecast:
             },
         )
         response.raise_for_status()
-        weather = weather_grid_from_answers(response.json(), NEPAL_BBOX, SOURCE)
+        weather = weather_grid_from_answers(response.json(), self._bbox, SOURCE)
         self._keep({**weather, "fetched_at": fetched_at.isoformat()})
 
     def download(self, url: str, client: httpx.Client) -> None:
@@ -104,7 +105,7 @@ class WeatherForecast:
         self._keep(response.json())
 
     def _keep(self, weather: dict[str, Any]) -> None:
-        _check_shape(weather)
+        _check_shape(weather, self._bbox)
         # Written beside the file and renamed over it, so a crash never leaves half a forecast.
         self._path.parent.mkdir(parents=True, exist_ok=True)
         staging = self._path.with_name(f"{FILE_NAME}.staging")

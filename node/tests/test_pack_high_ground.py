@@ -4,7 +4,6 @@ import pytest
 from pack_high_ground import build_high_ground, walk_minutes
 from pack_routes import FloodProneArea, Point
 
-TOWN = {"name": "Syabrubesi", "lat": 28.0, "lon": 85.0}
 RIVER: list[Point] = [(28.0, 84.999), (28.0, 85.001)]
 # The corridor runs along the river, about 200 m north to south at this latitude.
 CORRIDOR = FloodProneArea.from_geojson(
@@ -39,6 +38,7 @@ def point(**changes: Any) -> dict[str, Any]:
         "name": "Ridge above the town",
         "pos": [28.01, 85.0],
         "town": "Syabrubesi",
+        "town_pos": [28.0, 85.0],
         "source": "placeholder",
         "checked": "2026-10-18",
         **changes,
@@ -46,7 +46,7 @@ def point(**changes: Any) -> dict[str, Any]:
 
 
 def build(*points: dict[str, Any]) -> list[dict[str, Any]]:
-    return build_high_ground(list(points), [TOWN], RIVER, CORRIDOR, elevation_at)
+    return build_high_ground(list(points), RIVER, CORRIDOR, elevation_at)
 
 
 def test_the_climb_is_read_from_the_elevation_data_and_the_walk_from_the_town() -> None:
@@ -83,5 +83,3 @@ def test_a_point_that_climbs_too_little_is_refused() -> None:
 def test_a_point_with_no_town_near_it_is_refused() -> None:
     with pytest.raises(ValueError, match="over 2000 m from Syabrubesi"):
         build(point(pos=[28.03, 85.0]))
-    with pytest.raises(ValueError, match="no key place called Nowhere"):
-        build(point(town="Nowhere"))
