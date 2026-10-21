@@ -9,14 +9,10 @@ from fastapi.testclient import TestClient
 from fixture_pack import build_fixture_pack
 from meshed_nodes import MeshedNodes
 
+from storm_shield import sandbox as sandbox_module
+from storm_shield.cache_pack import release_url
 from storm_shield.community_reading import CommunityReading, Measurement, Position
-from storm_shield.sandbox import (
-    HUB_SITE,
-    SENSOR_SITES,
-    Sandbox,
-    SandboxError,
-    download_pack_if_missing,
-)
+from storm_shield.sandbox import HUB_SITE, SENSOR_SITES, Sandbox, SandboxError, pack_for
 
 
 @pytest.fixture
@@ -84,34 +80,76 @@ def test_a_node_outside_the_sandbox_reports_no_sandbox(meshed_nodes: MeshedNodes
     assert meshed_nodes["porch"].get("/api/state").json()["sandbox"] is None
 
 
-def test_a_missing_pack_is_downloaded_once(tmp_path: Path) -> None:
-    requests: list[httpx.Request] = []
+@pytest.fixture
+def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """An empty checkout, so a test decides which packs are on disk."""
+    monkeypatch.setattr(sandbox_module, "REPO", tmp_path / "repo")
+    return tmp_path / "repo"
 
+
+def _a_release_that_serves(requests: list[httpx.Request]) -> httpx.Client:
     def release(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         return httpx.Response(200, content=b"the pack")
 
-    pack = tmp_path / "pack" / "cache-pack.zip"
-    with httpx.Client(transport=httpx.MockTransport(release)) as client:
-        download_pack_if_missing(pack, client)
-        download_pack_if_missing(pack, client)
+    return httpx.Client(transport=httpx.MockTransport(release))
+
+
+def test_a_pack_built_on_disk_is_used_without_downloading(repo: Path) -> None:
+    built = repo / "node" / "build" / "nepal" / "cache-pack.zip"
+    built.parent.mkdir(parents=True)
+    built.write_bytes(b"built here")
+    requests: list[httpx.Request] = []
+
+    with _a_release_that_serves(requests) as client:
+        assert pack_for("nepal", client) == built
+
+    assert requests == []
+
+
+def test_a_region_pack_is_downloaded_from_its_release_once(repo: Path) -> None:
+    requests: list[httpx.Request] = []
+
+    with _a_release_that_serves(requests) as client:
+        pack = pack_for("nepal", client)
+        assert pack_for("nepal", client) == pack
 
     assert pack.read_bytes() == b"the pack"
-    assert len(requests) == 1
+    assert [str(request.url) for request in requests] == [release_url("nepal")]
     assert not pack.with_name("cache-pack.zip.part").exists()
 
 
-def test_a_failed_download_says_so_and_keeps_nothing(tmp_path: Path) -> None:
+def test_cache_pack_url_wins_over_the_release(repo: Path) -> None:
+    requests: list[httpx.Request] = []
+
+    with _a_release_that_serves(requests) as client:
+        pack_for("nepal", client, "http://laptop.local/cache-pack.zip")
+
+    assert [str(request.url) for request in requests] == ["http://laptop.local/cache-pack.zip"]
+
+
+def test_a_failed_download_says_so_and_how_to_build_the_pack(repo: Path) -> None:
     def offline(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("no network", request=request)
 
-    pack = tmp_path / "cache-pack.zip"
     with (
         httpx.Client(transport=httpx.MockTransport(offline)) as client,
-        pytest.raises(SandboxError, match="could not download the Cache Pack"),
+        pytest.raises(SandboxError, match=r"could not download the nepal Cache Pack.*build-cache"),
     ):
-        download_pack_if_missing(pack, client)
-    assert not pack.exists()
+        pack_for("nepal", client)
+    assert not (repo / ".demo").exists()
+
+
+def test_a_region_with_no_pack_anywhere_prints_the_build_command(repo: Path) -> None:
+    requests: list[httpx.Request] = []
+
+    with (
+        _a_release_that_serves(requests) as client,
+        pytest.raises(SandboxError, match=r"`scripts/build-cache-pack\.sh fort-myers`"),
+    ):
+        pack_for("fort-myers", client)
+
+    assert requests == []
 
 
 def _nodes(sandbox: Sandbox) -> dict[str, dict[str, Any]]:

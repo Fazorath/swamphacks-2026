@@ -16,10 +16,28 @@ DOWNLOAD_TIMEOUT_SECONDS = 60
 REQUIRED_FILES = ("shelters.json", "flood_prone.geojson")
 ZIP_NAME = "cache-pack.zip"
 UNPACKED_DIR = "files"
+RELEASES_URL = "https://github.com/StormShields/Stormshield/releases/download"
+# The version of each built-in Region's pack published as the Release `cache-pack-<region>-v<N>`
+# (scripts/cache-pack/README.md): publishing a new version means changing its number here.
+RELEASED_PACKS = {"nepal": 1}
 
 
 class InvalidCachePack(Exception):
     pass
+
+
+def release_url(region: str) -> str | None:
+    """Where the Region's pack is published, or None for a Region with no Release."""
+    version = RELEASED_PACKS.get(region)
+    if version is None:
+        return None
+    return f"{RELEASES_URL}/cache-pack-{region}-v{version}/{ZIP_NAME}"
+
+
+def download_source(override: str, region: str) -> str:
+    """Where a Node fetches its pack: `override` (CACHE_PACK_URL) when set, else the Region's
+    Release. Empty when there is nowhere to fetch from."""
+    return override or release_url(region) or ""
 
 
 def _is_safe_relative_path(path: str) -> bool:

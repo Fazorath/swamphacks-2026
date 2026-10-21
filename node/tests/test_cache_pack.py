@@ -20,7 +20,7 @@ from fixture_pack import (
     build_fixture_pack,
 )
 
-from storm_shield.cache_pack import CachePack
+from storm_shield.cache_pack import RELEASED_PACKS, CachePack, download_source, release_url
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
 from storm_shield.region import RegionError, region_path
@@ -192,3 +192,24 @@ def test_a_pack_with_a_bad_region_file_stops_the_sensor_that_holds_it(tmp_path: 
     CachePack(directory).install(build_fixture_pack(region_file=b'{"name": "x"}'))
     with pytest.raises(RegionError, match="bbox"):
         create_app(Settings(cache_pack_dir=directory), InMemoryNetwork().join("node"))
+
+
+def test_a_node_downloads_from_cache_pack_url_else_its_regions_release() -> None:
+    assert download_source("http://hub:8000/api/cache-pack.zip", "nepal") == (
+        "http://hub:8000/api/cache-pack.zip"
+    )
+    assert download_source("", "nepal") == release_url("nepal")
+    assert release_url("nepal") == (
+        "https://github.com/StormShields/Stormshield/releases/download/"
+        f"cache-pack-nepal-v{RELEASED_PACKS['nepal']}/cache-pack.zip"
+    )
+    assert download_source("", "no-such-region") == ""
+
+
+def test_node_region_chooses_the_release_a_hub_downloads_from(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("NODE_REGION", "no-such-region")
+    assert download_source("", Settings().region) == ""
+    monkeypatch.setenv("NODE_REGION", "nepal")
+    assert download_source("", Settings().region) == release_url("nepal")

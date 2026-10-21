@@ -19,7 +19,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from storm_shield.cache_pack import CachePack, InvalidCachePack
+from storm_shield.cache_pack import CachePack, InvalidCachePack, download_source
 from storm_shield.community_reading import Position
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
@@ -41,13 +41,8 @@ HUB = "hub"
 # Wide enough for the Region's sensor sites, whose longest gap is about 33 km. When the Sandbox
 # places its Sensors on a Region's sites (#46) this becomes the 1 km the spec asks for.
 SANDBOX_RADIO_RANGE_M = 40_000.0
-PACK_URL = (
-    "https://github.com/StormShields/Stormshield/releases/download/cache-pack-v6/cache-pack.zip"
-)
 DOWNLOAD_TIMEOUT_SECONDS = 120
 REPO = Path(__file__).resolve().parents[3]
-# Where scripts/run-demo.sh keeps the pack it downloads, so one download serves both.
-DEFAULT_PACK = REPO / ".demo" / "pack" / "cache-pack.zip"
 BUILT_DASHBOARD = REPO / "dashboard" / "dist" / "index.html"
 
 
@@ -164,7 +159,9 @@ class Sandbox:
 
     def __init__(self, pack: Path) -> None:
         if not pack.is_file():
-            raise SandboxError(f"no Cache Pack at {pack}; build one or drop --pack to download it")
+            raise SandboxError(
+                f"no Cache Pack at {pack}; build one with scripts/build-cache-pack.sh or drop --pack"
+            )
         self._pack = pack
         self._stack = ExitStack()
         self.hub: FastAPI
@@ -338,25 +335,39 @@ def _open_browser_when_up(server: uvicorn.Server, url: str) -> None:
     webbrowser.open(url)
 
 
-def download_pack_if_missing(pack: Path, client: httpx.Client) -> None:
-    """Fetch the published Cache Pack to `pack` unless it is already there."""
-    if pack.is_file():
-        return
-    logger.info("downloading the Cache Pack to %s (once)", pack)
+def pack_for(region: str, client: httpx.Client, override: str = "") -> Path:
+    """The Region's Cache Pack: the one its build command wrote, else the one fetched from its
+    Release on an earlier run, else the Release itself. Says which command to run when none is
+    there."""
+    built = REPO / "node" / "build" / region / "cache-pack.zip"
+    if built.is_file():
+        return built
+    downloaded = REPO / ".demo" / "pack" / region / "cache-pack.zip"
+    if downloaded.is_file():
+        return downloaded
+    build_command = f"scripts/build-cache-pack.sh {region}"
+    url = download_source(override, region)
+    if not url:
+        raise SandboxError(
+            f"no Cache Pack for the {region} Region on disk or published as a Release; "
+            f"build one with `{build_command}`"
+        )
+    logger.info("downloading the %s Cache Pack to %s (once)", region, downloaded)
     try:
-        response = client.get(PACK_URL)
+        response = client.get(url)
         response.raise_for_status()
     except httpx.HTTPError as error:
         # The error text carries the URL; the type is enough to tell offline from refused.
         raise SandboxError(
-            f"could not download the Cache Pack ({type(error).__name__}); connect to the internet"
-            " once, or pass --pack with a pack you have"
+            f"could not download the {region} Cache Pack ({type(error).__name__}); connect to the"
+            f" internet once, build one with `{build_command}`, or pass --pack"
         ) from None
-    pack.parent.mkdir(parents=True, exist_ok=True)
+    downloaded.parent.mkdir(parents=True, exist_ok=True)
     # Written beside the final name, so an interrupted download is not mistaken for the pack.
-    partial = pack.with_name(pack.name + ".part")
+    partial = downloaded.with_name(downloaded.name + ".part")
     partial.write_bytes(response.content)
-    partial.rename(pack)
+    partial.rename(downloaded)
+    return downloaded
 
 
 def build_dashboard_if_missing() -> None:
@@ -386,14 +397,16 @@ def run() -> None:
     )
     parser.add_argument("--port", type=int, default=8000, help="where the dashboard is served")
     parser.add_argument(
-        "--pack", type=Path, help="a Cache Pack zip to use instead of the published one"
+        "--pack",
+        type=Path,
+        help="a Cache Pack zip to use instead of the Region's built or published one",
     )
     arguments = parser.parse_args()
     try:
         if arguments.pack is None:
-            arguments.pack = DEFAULT_PACK
+            settings = Settings()
             with httpx.Client(timeout=DOWNLOAD_TIMEOUT_SECONDS, follow_redirects=True) as client:
-                download_pack_if_missing(DEFAULT_PACK, client)
+                arguments.pack = pack_for(settings.region, client, settings.cache_pack_url)
         build_dashboard_if_missing()
         with Sandbox(arguments.pack) as sandbox:
             server = uvicorn.Server(uvicorn.Config(sandbox.hub, port=arguments.port))
