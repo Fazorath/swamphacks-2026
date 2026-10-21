@@ -204,3 +204,12 @@ def test_a_node_downloads_from_cache_pack_url_else_its_regions_release() -> None
         f"cache-pack-nepal-v{RELEASED_PACKS['nepal']}/cache-pack.zip"
     )
     assert download_source("", "no-such-region") == ""
+
+
+def test_node_region_chooses_the_release_a_hub_downloads_from(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("NODE_REGION", "no-such-region")
+    assert download_source("", Settings().region) == ""
+    monkeypatch.setenv("NODE_REGION", "nepal")
+    assert download_source("", Settings().region) == release_url("nepal")
