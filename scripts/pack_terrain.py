@@ -39,6 +39,10 @@ def tiles_covering(bbox: BBox, zooms: range) -> list[tuple[int, int, int]]:
     return tiles
 
 
+def manifest_entry() -> dict[str, object]:
+    return {"encoding": "terrarium", "approximate": True, "zooms": [ZOOMS.start, ZOOMS.stop - 1]}
+
+
 def fetch_terrain(
     client: httpx.Client, region_dir: Path, source: Source, bbox: BBox
 ) -> dict[str, bytes]:

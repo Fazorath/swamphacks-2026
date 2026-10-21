@@ -17,7 +17,7 @@ LINE_TOLERANCE_DEGREES = 0.0001
 # Ways that carry through traffic; footpaths, tracks and driveways would drown a regional map.
 ROAD_KINDS = "motorway|trunk|primary|secondary|tertiary|unclassified|residential"
 PLACE_KINDS = "city|town|village|hamlet|suburb|island"
-FILES = (
+BASEMAP_FILES = (
     "basemap/water.geojson",
     "basemap/waterways.geojson",
     "basemap/coastline.geojson",
@@ -133,7 +133,7 @@ def basemap_from_elements(elements: list[dict[str, Any]]) -> dict[str, bytes]:
     Water is filled polygons; a lake with an island is drawn whole, since inner rings are not
     cut out. Sea has no polygon: the coastline is a line, and land is the map's ground.
     """
-    layers: dict[str, list[dict[str, Any]]] = {name: [] for name in FILES}
+    layers: dict[str, list[dict[str, Any]]] = {name: [] for name in BASEMAP_FILES}
     for element in elements:
         tags = element.get("tags", {})
         name = _latin_name(tags)

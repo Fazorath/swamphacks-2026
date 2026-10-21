@@ -9,4 +9,4 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **Overpass answers 502 at random on the first try**; the retry covers it. A saved Overpass answer (`out geom tags`) works as the basemap source.
 - **Before committing footage, read the file's wikitext licence**, not only the API's short name. CC BY-SA and NC are out.
 - **Walking time is straight line x 1.4 at 4 km/h, rounded up, in two places** (`pack_high_ground.py`, `evacuationPlan.ts`); change both.
-- **Every httpx builder fetches through `http_retry.get_with_retries`.** It prints only the error type and status, never `str(error)`: an httpx message holds the URL, which can carry a key.
+- **Every httpx builder fetches through `http_retry.get_with_retries`** (the one streamed OpenStreetMap extract download aside, which fails the build with the error type). It prints only the error type and status, never `str(error)`: an httpx message holds the URL, which can carry a key.

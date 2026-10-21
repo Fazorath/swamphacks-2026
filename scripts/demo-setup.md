@@ -10,7 +10,7 @@ loopback, then prints the dashboard addresses. Ctrl-C stops all of it.
 2. Run `scripts/run-demo.sh` once and stop it. That first start also installs and builds what is
    missing (`pnpm install`, `pnpm build`, `uv sync`). Later starts need no internet: they rebuild
    the dashboard only when its sources changed, and never download.
-3. Put `CARTO_API_KEY` in `.env` if you want live map tiles; the pack already holds the tiles.
+3. Put `CARTO_API_KEY` in `.env` if you want live map tiles; the pack holds the Region's own basemap.
 
 ## On the day
 

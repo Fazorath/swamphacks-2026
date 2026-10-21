@@ -21,6 +21,7 @@ from pack_weather import build_weather_replay
 
 from storm_shield.region import REGIONS_DIR, Region, RegionError, load_region
 from storm_shield.replay import Event, read_event_file
+from storm_shield.weather_grid import BBox
 
 # Pis pull the whole pack over the mesh, so routes stay small; the grid coarsens until they fit.
 ROUTE_SPACINGS_M = (100, 250, 500)
@@ -51,7 +52,21 @@ def download_osm_extract(url: str, destination: Path) -> None:
     partial.rename(destination)
 
 
-def load_roads(osm_extract: Path, bbox: tuple[float, float, float, float]) -> Roads:
+def osm_extract_of(region: Region, region_dir: Path, work_dir: Path) -> Path:
+    """The Region's OpenStreetMap extract: its file, or the download kept in `work_dir`."""
+    url = region.sources.roads.url
+    if not is_address(url):
+        extract = region_dir / url
+    else:
+        extract = work_dir / f"{region.name}-roads.osm.pbf"
+        if not extract.is_file():
+            download_osm_extract(url, extract)
+    if not extract.is_file():
+        raise SourceFailed(f"roads: cannot read {extract}")
+    return extract
+
+
+def load_roads(osm_extract: Path, bbox: BBox) -> Roads:
     from pyrosm import OSM  # build-only dependency: `uv run --with pyrosm`
 
     south, west, north, east = bbox
@@ -81,7 +96,7 @@ def build_route_files(
     roads: Roads,
     shelter_points: dict[str, Point],
     avoid: FloodProneArea,
-    bbox: tuple[float, float, float, float],
+    bbox: BBox,
 ) -> tuple[RouteGrid, dict[str, bytes]]:
     for spacing_m in ROUTE_SPACINGS_M:
         grid = RouteGrid.spaced(bbox, spacing_m)
@@ -166,16 +181,11 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
     files["high_ground.json"] = json.dumps(high_ground, indent=1).encode()
     print(f"high ground: {len(high_ground)} points")
 
-    osm_extract = (
-        work_dir / f"{region.name}-roads.osm.pbf"
-        if is_address(sources.roads.url)
-        else region_dir / sources.roads.url
-    )
-    if is_address(sources.roads.url) and not osm_extract.is_file():
-        download_osm_extract(sources.roads.url, osm_extract)
-    if not osm_extract.is_file():
-        raise SourceFailed(f"roads: cannot read {osm_extract}")
-    roads = load_roads(osm_extract, bbox)
+    extract = osm_extract_of(region, region_dir, work_dir)
+    try:
+        roads = load_roads(extract, bbox)
+    except Exception as error:  # pyrosm raises whatever the damaged file trips on
+        raise SourceFailed(f"roads: cannot read {extract}: {type(error).__name__}") from None
     shelter_points = {shelter.id: shelter.pos for shelter in region.shelters}
     graph = build_road_graph(roads, list(shelter_points.values()))
     files["roads.json"] = json.dumps(graph, separators=(",", ":")).encode()
@@ -190,11 +200,7 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
         "region": region.name,
         "bbox": list(bbox),
         "route_grid": route_grid.as_manifest_entry(),
-        "terrain": {
-            "encoding": "terrarium",
-            "approximate": True,
-            "zooms": [pack_terrain.ZOOMS.start, pack_terrain.ZOOMS.stop - 1],
-        },
+        "terrain": pack_terrain.manifest_entry(),
         "sources": [
             {"layer": layer, "credit": source.credit, "checked": checked}
             for layer, source in (
@@ -231,7 +237,7 @@ def main() -> None:
         sys.exit(f"no Region called {arguments.region!r}; the Regions are: {', '.join(known)}")
     output = arguments.output or Path("build") / arguments.region / "cache-pack.zip"
     try:
-        with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=60) as client:
+        with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=DOWNLOAD_TIMEOUT_SECONDS) as client:
             build(region_dir, output, arguments.work_dir, client)
     except (RegionError, SourceFailed, ValueError) as error:
         sys.exit(f"build failed: {error}")
