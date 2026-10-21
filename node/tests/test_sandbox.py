@@ -199,3 +199,134 @@ def test_a_node_with_no_path_to_the_hub_has_not_heard_the_warning(
     for cut_off in ("s2", "s1", "s0"):
         assert nodes[cut_off]["hops"] is None
         assert nodes[cut_off]["heard_warning"] is False
+
+
+def _sensors(sandbox: Sandbox, method: str, path: str, **body: Any) -> httpx.Response:
+    response: httpx.Response = TestClient(sandbox.hub).request(
+        method, f"/api/sandbox/sensors{path}", json=body or None
+    )
+    return response
+
+
+def _heard_by_hub(sandbox: Sandbox) -> dict[str, dict[str, Any]]:
+    state = TestClient(sandbox.hub).get("/api/state").json()
+    return {node["id"]: node for node in state["nodes"]}
+
+
+# Beside the Hub, on the pack's river line, and about 3 km from it.
+BY_THE_RIVER = {"latitude": 27.9735, "longitude": 85.1855}
+UP_THE_HILL = {"latitude": 27.9735, "longitude": 85.2155}
+
+
+def test_a_sensor_added_at_a_spot_is_registered_and_the_hub_hears_it_from_there(
+    pack: Path, scratch: Path
+) -> None:
+    with Sandbox(pack) as sandbox:
+        response = _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+        heard = _heard_by_hub(sandbox)
+
+    assert response.status_code == 200
+    added = {node["id"]: node for node in response.json()["nodes"]}["s4"]
+    assert added["position"] == [BY_THE_RIVER["latitude"], BY_THE_RIVER["longitude"]]
+    assert added["hops"] == 1
+    assert heard["s4"]["registered"] is True
+    assert heard["s4"]["position"] == pytest.approx(
+        [BY_THE_RIVER["latitude"], BY_THE_RIVER["longitude"]], abs=0.002
+    )
+    assert "water_level" in heard["s4"]["measurements"]
+
+
+def test_a_sensor_moved_up_the_hill_reads_from_there_at_once(pack: Path, scratch: Path) -> None:
+    with Sandbox(pack) as sandbox:
+        _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+        assert "water_level" in _heard_by_hub(sandbox)["s4"]["measurements"]
+
+        response = _sensors(sandbox, "PUT", "/s4", **UP_THE_HILL)
+        heard = _heard_by_hub(sandbox)["s4"]
+
+    assert response.status_code == 200
+    assert heard["position"] == pytest.approx(
+        [UP_THE_HILL["latitude"], UP_THE_HILL["longitude"]], abs=0.002
+    )
+    # Dry ground: the Sensor still reads the weather, but no river water.
+    assert "water_level" not in heard["measurements"]
+    assert "rain_rate" in heard["measurements"]
+
+
+def test_moving_a_sensor_into_range_makes_the_hub_hear_it(pack: Path, scratch: Path) -> None:
+    with Sandbox(pack) as sandbox:
+        _set_radio_range(sandbox, 10_000)
+        far = _sensors(sandbox, "POST", "", latitude=28.4, longitude=85.5)
+        out_of_range = {node["id"]: node for node in far.json()["nodes"]}["s4"]
+        unheard = "s4" in _heard_by_hub(sandbox)
+
+        near = _sensors(sandbox, "PUT", "/s4", **BY_THE_RIVER)
+        heard = _heard_by_hub(sandbox)
+
+    assert out_of_range["hops"] is None
+    assert not unheard
+    assert {node["id"]: node for node in near.json()["nodes"]}["s4"]["hops"] == 1
+    assert heard["s4"]["registered"] is True
+
+
+def test_a_removed_sensor_is_off_the_mesh_and_the_node_list(pack: Path, scratch: Path) -> None:
+    with Sandbox(pack) as sandbox:
+        _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+        response = _sensors(sandbox, "DELETE", "/s4")
+        listed = _nodes(sandbox)
+
+    assert response.status_code == 200
+    assert "s4" not in {node["id"] for node in response.json()["nodes"]}
+    assert set(listed) == {"hub", "s0", "s1", "s2", "s3"}
+    assert all("s4" not in node["links"] for node in listed.values())
+
+
+def test_a_removed_sensors_number_is_not_given_out_again(pack: Path, scratch: Path) -> None:
+    with Sandbox(pack) as sandbox:
+        _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+        _sensors(sandbox, "DELETE", "/s4")
+        again = _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+
+    assert "s5" in {node["id"] for node in again.json()["nodes"]}
+
+
+@pytest.mark.parametrize("method", ["PUT", "DELETE"])
+@pytest.mark.parametrize("sensor_id", ["hub", "nobody"])
+def test_the_hub_and_strangers_cannot_be_moved_or_removed(
+    pack: Path, scratch: Path, method: str, sensor_id: str
+) -> None:
+    with Sandbox(pack) as sandbox:
+        response = _sensors(
+            sandbox, method, f"/{sensor_id}", **(BY_THE_RIVER if method == "PUT" else {})
+        )
+        listed = _nodes(sandbox)
+
+    assert response.status_code == 404
+    assert set(listed) == {"hub", "s0", "s1", "s2", "s3"}
+
+
+def test_a_spot_off_the_planet_is_refused(pack: Path, scratch: Path) -> None:
+    with Sandbox(pack) as sandbox:
+        response = _sensors(sandbox, "POST", "", latitude=91, longitude=0)
+
+    assert response.status_code == 422
+
+
+def test_a_sensor_the_registry_has_no_room_for_is_refused_and_not_left_behind(
+    pack: Path, scratch: Path
+) -> None:
+    with Sandbox(pack) as sandbox:
+        refused = None
+        for _ in range(20):
+            response = _sensors(sandbox, "POST", "", **BY_THE_RIVER)
+            if response.status_code != 200:
+                refused = response
+                break
+        listed = _nodes(sandbox)
+
+    assert refused is not None
+    assert refused.status_code == 409
+    assert "no longer fit one packet" in refused.json()["detail"]
+    # The Hub, s0 to s3, and the Sensors that did fit: the refused one is not among them.
+    assert len(listed) >= 6
+    assert len(listed) < 20

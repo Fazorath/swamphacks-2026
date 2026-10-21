@@ -83,6 +83,13 @@ function mapTagCount(node: NodeOnMap): number {
 // How long the pitch takes to ease to the valley angle once the fly has landed (D-26).
 const TILT_MS = 1500;
 
+// In the Sandbox a Node is drawn where it truly is, the centre of its range circle, not at the
+// fuzzed spot its readings carry.
+function atTrueSpot(node: NodeOnMap, sandbox: SandboxNodes | null): NodeOnMap {
+  const listed = sandbox?.nodes.find((each) => each.id === node.id);
+  return listed ? { ...node, position: listed.position } : node;
+}
+
 function placeLabelText(name: string, waveStamps: Map<string, number>): string {
   const arrivedAt = waveStamps.get(name);
   return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
@@ -234,6 +241,10 @@ type Props = {
   // The Sandbox's radio model: each Node's range circle, the links between Nodes in range of each
   // other, and a mark on a Sensor with no path to the Hub. Null outside the Sandbox.
   sandbox: SandboxNodes | null;
+  // Set while "Add Sensor" is armed: the next tap on the map places a Sensor instead of doing
+  // what a tap does otherwise.
+  placingSensor: { onPlace: (spot: Home) => void; onCancel: () => void } | null;
+  onMoveSensor: (id: string, lat: number, lon: number) => Promise<void>;
 };
 
 export function NodeMap({
@@ -274,6 +285,8 @@ export function NodeMap({
   weatherAtMs,
   waterReaches,
   sandbox,
+  placingSensor,
+  onMoveSensor,
 }: Props) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleReady, setStyleReady] = useState(false);
@@ -429,6 +442,10 @@ export function NodeMap({
     [home, outOfReachShelter],
   );
   const blockedData = useMemo(() => lineCollection(blockedRoadLines), [blockedRoadLines]);
+  const sandboxSensors = useMemo(
+    () => new Set(sandbox?.nodes.filter((node) => node.role === "sensor").map((node) => node.id)),
+    [sandbox],
+  );
   const radioRangeData = useMemo(() => rangeCircles(sandbox), [sandbox]);
   const radioLinksData = useMemo(
     () => lineCollection(sandbox ? linkLines(sandbox) : []),
@@ -472,11 +489,13 @@ export function NodeMap({
 
   useEffect(() => {
     if (!map) return;
-    const onTap = picking
-      ? (point: Home) => onPickHome(point)
-      : blocking
-        ? (point: Home) => onTapRoad(point)
-        : null;
+    const onTap = placingSensor
+      ? placingSensor.onPlace
+      : picking
+        ? (point: Home) => onPickHome(point)
+        : blocking
+          ? (point: Home) => onTapRoad(point)
+          : null;
     if (!onTap) return;
     const listener = ({ lngLat }: { lngLat: { lat: number; lng: number } }) =>
       onTap({ lat: lngLat.lat, lon: lngLat.lng });
@@ -484,7 +503,7 @@ export function NodeMap({
     return () => {
       map.off("click", listener);
     };
-  }, [map, picking, blocking, onPickHome, onTapRoad]);
+  }, [map, placingSensor, picking, blocking, onPickHome, onTapRoad]);
 
   const waving = river !== null && eventT !== null && warnings.length > 0;
   const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
@@ -537,6 +556,14 @@ export function NodeMap({
           Tap the map to place your home
           <button type="button" onClick={onDonePicking}>
             Done
+          </button>
+        </div>
+      )}
+      {placingSensor && (
+        <div className="pick-banner place-sensor-banner">
+          Tap the map to place a Sensor
+          <button type="button" onClick={placingSensor.onCancel}>
+            Cancel
           </button>
         </div>
       )}
@@ -659,20 +686,28 @@ export function NodeMap({
         </MapMarker>
       )}
       {map &&
-        nodes.map((node) => (
-          <NodeMarker
-            key={node.id}
-            map={map}
-            node={node}
-            selected={node.id === selectedId}
-            wavePassed={wavePassedIds.has(node.id)}
-            rises={rises[node.id] ?? 0}
-            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
-            onSelect={onSelect}
-            side={sideOf(`node:${node.id}`)}
-            labelHidden={placement.get(`node:${node.id}`) === null}
-          />
-        ))}
+        // A removed Sensor lingers in the Hub's readings as a stale Node; the Sandbox no longer has it.
+        nodes
+          .filter((node) => !sandbox || sandbox.nodes.some((listed) => listed.id === node.id))
+          .map((node) => (
+            <NodeMarker
+              key={node.id}
+              map={map}
+              node={atTrueSpot(node, sandbox)}
+              onDragEnd={
+                sandboxSensors.has(node.id)
+                  ? (lat, lon) => onMoveSensor(node.id, lat, lon)
+                  : undefined
+              }
+              selected={node.id === selectedId}
+              wavePassed={wavePassedIds.has(node.id)}
+              rises={rises[node.id] ?? 0}
+              originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
+              onSelect={onSelect}
+              side={sideOf(`node:${node.id}`)}
+              labelHidden={placement.get(`node:${node.id}`) === null}
+            />
+          ))}
       {map &&
         sandbox?.nodes
           .filter((node) => node.role === "sensor" && node.hops === null)

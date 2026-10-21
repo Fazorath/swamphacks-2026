@@ -183,16 +183,33 @@ class FakeLngLatBounds {
 }
 
 class FakeMarker {
-  private readonly element: HTMLElement;
+  readonly element: HTMLElement;
+  readonly draggable: boolean;
   lngLat: [number, number] = [0, 0];
+  private readonly handlers = new Map<string, Handler[]>();
 
-  constructor(options: { element: HTMLElement }) {
+  constructor(options: { element: HTMLElement; draggable?: boolean }) {
     this.element = options.element;
+    this.draggable = options.draggable ?? false;
+    markers.push(this);
   }
 
   setLngLat(lngLat: [number, number]) {
     this.lngLat = lngLat;
     return this;
+  }
+
+  getLngLat() {
+    return { lng: this.lngLat[0], lat: this.lngLat[1] };
+  }
+
+  on(type: string, handler: Handler) {
+    this.handlers.set(type, [...(this.handlers.get(type) ?? []), handler]);
+    return this;
+  }
+
+  emit(type: string) {
+    for (const handler of this.handlers.get(type) ?? []) handler({});
   }
 
   addTo(map: FakeMap) {
@@ -202,11 +219,13 @@ class FakeMarker {
 
   remove() {
     this.element.remove();
+    markers.splice(markers.indexOf(this), 1);
     return this;
   }
 }
 
 const maps: FakeMap[] = [];
+const markers: FakeMarker[] = [];
 
 export const protocols: string[] = [];
 
@@ -248,4 +267,20 @@ export function addressesTheMapWouldFetch(): string[] {
 
 export function tapMap(lat: number, lon: number) {
   lastMap().emit("click", { lngLat: { lat, lng: lon } });
+}
+
+// Where the marker that holds `inside` sits now, as [lat, lon].
+export function markerAt(inside: HTMLElement): [number, number] {
+  const marker = markers.find((each) => each.element.contains(inside));
+  if (!marker) throw new Error("no marker holds that element");
+  return [marker.lngLat[1], marker.lngLat[0]];
+}
+
+// Drops the draggable marker that holds `inside` at a new spot, as a user's drag would.
+export function dragMarker(inside: HTMLElement, lat: number, lon: number) {
+  const marker = markers.find((each) => each.element.contains(inside));
+  if (!marker) throw new Error("no marker holds that element");
+  if (!marker.draggable) throw new Error("that marker is not draggable");
+  marker.setLngLat([lon, lat]);
+  marker.emit("dragend");
 }

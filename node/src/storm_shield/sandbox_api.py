@@ -28,9 +28,30 @@ class RadioRange(BaseModel):
     radio_range_m: float = Field(gt=0)
 
 
+class Spot(BaseModel):
+    """Where a Sensor goes: a place the user tapped or dropped it on the map."""
+
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class UnknownSensor(Exception):
+    """No Sensor has this id; the Hub is not one, so it cannot be moved or removed."""
+
+
+class SandboxRefused(Exception):
+    """The Sandbox cannot do this; the message says why."""
+
+
 class SandboxControls(Protocol):
     """What the Sandbox lets its Hub's dashboard see and change about the simulated Mesh."""
 
     def nodes(self) -> SandboxNodes: ...
 
     def set_radio_range(self, radio_range_m: float) -> SandboxNodes: ...
+
+    def add_sensor(self, spot: Spot) -> SandboxNodes: ...
+
+    def move_sensor(self, sensor_id: str, spot: Spot) -> SandboxNodes: ...
+
+    def remove_sensor(self, sensor_id: str) -> SandboxNodes: ...

@@ -2,8 +2,8 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
-import { fakeNodeState } from "./fakeNodeState";
-import { sourceData } from "./fakeMaplibre";
+import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
+import { dragMarker, markerAt, sourceData, tapMap } from "./fakeMaplibre";
 import type { SandboxNode, SandboxNodes } from "./useSandboxNodes";
 
 const HUB_AT: [number, number] = [27.97, 85.18];
@@ -50,15 +50,21 @@ const NARROW: SandboxNodes = {
 };
 
 let posted: { path: string; body: unknown }[];
+let sent: { method: string; path: string; body: unknown }[];
 let listed: string[];
 
 function stubTheHub(options: {
   sandbox: boolean;
   answer?: SandboxNodes;
   afterSetting?: SandboxNodes;
+  // What the Hub answers to adding, moving or removing a Sensor; a number refuses with that status.
+  afterChange?: SandboxNodes | number;
   warnings?: CommunityWarning[];
+  // Give the Hub the readings of the Nodes it lists, so each is drawn on the map.
+  heardNodes?: boolean;
 }) {
   posted = [];
+  sent = [];
   listed = [];
   let current = options.answer ?? WIDE;
   vi.stubGlobal("fetch", async (path: string, init?: RequestInit) => {
@@ -71,12 +77,33 @@ function stubTheHub(options: {
       current = options.afterSetting ?? current;
       return Response.json(current);
     }
+    if (path.startsWith("/api/sandbox/sensors")) {
+      sent.push({
+        method: init?.method ?? "GET",
+        path,
+        body: init?.body ? JSON.parse(init.body as string) : undefined,
+      });
+      const answer = options.afterChange ?? current;
+      if (typeof answer === "number") {
+        return Response.json({ detail: "the Hub said no" }, { status: answer });
+      }
+      current = answer;
+      return Response.json(current);
+    }
     if (path === "/api/state") {
       return Response.json(
         fakeNodeState({
           id: "hub",
           name: "hub",
           sandbox: options.sandbox ? { label: "SIMULATED" } : null,
+          // Where the readings say, which is not quite where the Node is.
+          nodes: options.heardNodes
+            ? WIDE.nodes.map((each) =>
+                fakeNodeSnapshot(each.id, {
+                  position: [each.position[0] + 0.001, each.position[1]],
+                }),
+              )
+            : [],
           community_warnings: options.warnings ?? [],
         }),
       );
@@ -119,8 +146,8 @@ test("the Panel lists each Node's hops to the Hub, and a Sensor with none is mar
   const rows = await within(panel).findAllByRole("listitem");
   expect(rows.map((row) => row.textContent)).toEqual([
     "hubHubno warning yet",
-    "near1 hop to Hubno warning yet",
-    "farno path to Hubno warning yet",
+    "near1 hop to Hubno warning yetRemove",
+    "farno path to Hubno warning yetRemove",
   ]);
   // The list says it, and so does the marker pinned to the Sensor on the map.
   expect(await screen.findAllByText("no path to Hub")).toHaveLength(2);
@@ -188,4 +215,133 @@ test("a range the Hub refuses is reported, not swallowed", async () => {
   expect(await within(panel).findByRole("alert")).toHaveTextContent(
     "Could not set the radio range: range must be above zero",
   );
+});
+
+// A Node's label on the map, which is what a person drags.
+async function mapLabel(name: string): Promise<HTMLElement> {
+  return await within(await screen.findByRole("region", { name: "Map" })).findByText(name);
+}
+
+const MOVED_NEAR_AT: [number, number] = [28.0, 85.2];
+const WITH_NEAR_MOVED: SandboxNodes = {
+  ...WIDE,
+  nodes: WIDE.nodes.map((each) =>
+    each.id === "near" ? { ...each, position: MOVED_NEAR_AT } : each,
+  ),
+};
+const WITH_A_NEW_SENSOR: SandboxNodes = {
+  ...WIDE,
+  nodes: [...WIDE.nodes, node("s4", [28.1, 85.25], { links: ["hub"] })],
+};
+
+test("Add Sensor, then a tap on the map, adds a Sensor there, once", async () => {
+  stubTheHub({ sandbox: true, afterChange: WITH_A_NEW_SENSOR });
+  const panel = await sandboxPanel();
+  const add = within(panel).getByRole("button", { name: "Add Sensor" });
+
+  tapMap(28.1, 85.25);
+  expect(sent).toEqual([]);
+
+  fireEvent.click(add);
+  expect(add).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByText("Tap the map to place a Sensor")).toBeInTheDocument();
+  tapMap(28.1, 85.25);
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      { method: "POST", path: "/api/sandbox/sensors", body: { latitude: 28.1, longitude: 85.25 } },
+    ]),
+  );
+  expect(add).toHaveAttribute("aria-pressed", "false");
+  expect(await within(panel).findByText("s4")).toBeInTheDocument();
+  expect(sourceData("radio-range").features).toHaveLength(4);
+  tapMap(28.2, 85.3);
+  expect(sent).toHaveLength(1);
+});
+
+test("a placing started by mistake is cancelled without adding anything", async () => {
+  stubTheHub({ sandbox: true });
+  const panel = await sandboxPanel();
+
+  fireEvent.click(within(panel).getByRole("button", { name: "Add Sensor" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  tapMap(28.1, 85.25);
+
+  expect(within(panel).getByRole("button", { name: "Add Sensor" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  expect(sent).toEqual([]);
+});
+
+test("a Sensor is drawn where it truly is, and dragging it sends where it was dropped", async () => {
+  stubTheHub({ sandbox: true, heardNodes: true, afterChange: WITH_NEAR_MOVED });
+  await sandboxPanel();
+  const near = await mapLabel("near");
+  expect(markerAt(near)).toEqual(NEAR_AT);
+
+  dragMarker(near, 28.0, 85.2);
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      {
+        method: "PUT",
+        path: "/api/sandbox/sensors/near",
+        body: { latitude: 28.0, longitude: 85.2 },
+      },
+    ]),
+  );
+  // The circle, the link and the marker all follow the answer.
+  await waitFor(() => expect(markerAt(near)).toEqual(MOVED_NEAR_AT));
+  const centres = sourceData("radio-range").features.map((circle) => {
+    const ring = (circle.geometry as GeoJSON.Polygon).coordinates[0];
+    return Math.max(...ring.map(([, lat]) => lat));
+  });
+  expect(centres).toContainEqual(expect.closeTo(28.0 + WIDE_RANGE_M / 111_320, 3));
+});
+
+test("the Hub cannot be dragged", async () => {
+  stubTheHub({ sandbox: true, heardNodes: true });
+  await sandboxPanel();
+  const hub = await mapLabel("hub");
+
+  expect(() => dragMarker(hub, 28.0, 85.2)).toThrow("not draggable");
+});
+
+test("a drop the Hub refuses is reported and the Sensor goes back", async () => {
+  stubTheHub({ sandbox: true, heardNodes: true, afterChange: 409 });
+  const panel = await sandboxPanel();
+  const near = await mapLabel("near");
+
+  dragMarker(near, 28.0, 85.2);
+
+  expect(await within(panel).findByRole("alert")).toHaveTextContent(
+    "Could not move the Sensor: the Hub said no",
+  );
+  await waitFor(() => expect(markerAt(near)).toEqual(NEAR_AT));
+});
+
+test("Remove takes a Sensor off the list and the map, and the Hub has no Remove", async () => {
+  const withoutNear: SandboxNodes = {
+    ...WIDE,
+    nodes: WIDE.nodes.filter((each) => each.id !== "near").map((each) => ({ ...each, links: [] })),
+  };
+  // The Hub's readings still list "near", as they do for a Node that went quiet.
+  stubTheHub({ sandbox: true, heardNodes: true, afterChange: withoutNear });
+  const panel = await sandboxPanel();
+  const map = await screen.findByRole("region", { name: "Map" });
+  await within(map).findByText("near");
+  expect(await within(panel).findAllByRole("button", { name: /^Remove / })).toHaveLength(2);
+  expect(within(panel).queryByRole("button", { name: "Remove hub" })).not.toBeInTheDocument();
+
+  fireEvent.click(within(panel).getByRole("button", { name: "Remove near" }));
+
+  await waitFor(() =>
+    expect(sent).toEqual([
+      { method: "DELETE", path: "/api/sandbox/sensors/near", body: undefined },
+    ]),
+  );
+  await waitFor(() => expect(within(panel).queryByText("near")).not.toBeInTheDocument());
+  expect(within(map).queryByText("near")).not.toBeInTheDocument();
+  expect(sourceData("radio-range").features).toHaveLength(2);
 });

@@ -71,8 +71,11 @@ export function App() {
   // Still true of the Node while it is unreachable, unlike its readings.
   const identity = lastAnswer?.state ?? null;
   const floodRisk = state?.flood_risk ?? null;
-  const { sandbox, setRadioRange } = useSandboxNodes(state?.sandbox != null);
+  const { sandbox, problem, setRadioRange, addSensor, moveSensor, removeSensor } = useSandboxNodes(
+    state?.sandbox != null,
+  );
   const [sandboxPanelOpen, setSandboxPanelOpen] = useState(true);
+  const [placingSensor, setPlacingSensor] = useState(false);
   const eventClock = useEventClock(!unreachable);
   const nodes = nodesOnMap(state);
   const rises = useLevelRises(nodes);
@@ -225,7 +228,11 @@ export function App() {
   const sandboxPanel = sandbox && (
     <SandboxPanel
       sandbox={sandbox}
+      problem={problem}
       onSetRadioRange={setRadioRange}
+      placing={placingSensor}
+      onTogglePlacing={() => setPlacingSensor((placing) => !placing)}
+      onRemoveSensor={removeSensor}
       warningSent={communityWarnings.length > 0}
       panel={
         phone
@@ -380,6 +387,18 @@ export function App() {
           weatherAtMs={weatherAtMs}
           waterReaches={waterReaches}
           sandbox={sandbox}
+          placingSensor={
+            placingSensor
+              ? {
+                  onPlace: ({ lat, lon }) => {
+                    setPlacingSensor(false);
+                    void addSensor(lat, lon);
+                  },
+                  onCancel: () => setPlacingSensor(false),
+                }
+              : null
+          }
+          onMoveSensor={moveSensor}
         />
         {phone ? (
           <>

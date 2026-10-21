@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { Panel, type PanelControl } from "./Panel";
 import type { SandboxNode, SandboxNodes } from "./useSandboxNodes";
 
@@ -9,7 +7,12 @@ const RANGE_STEP_KM = 0.1;
 
 type Props = {
   sandbox: SandboxNodes;
+  problem: string | null;
   onSetRadioRange: (metres: number) => Promise<void>;
+  // "Add Sensor" arms the map: the next tap places a Sensor. Pressing it again disarms.
+  placing: boolean;
+  onTogglePlacing: () => void;
+  onRemoveSensor: (id: string) => Promise<void>;
   // Whether the Hub has sent any Community Warning yet; until it has, nobody has heard one.
   warningSent: boolean;
   panel: PanelControl;
@@ -26,19 +29,17 @@ function warningText(node: SandboxNode, warningSent: boolean): string {
   return node.heard_warning ? "heard the warning" : "has not heard the warning";
 }
 
-export function SandboxPanel({ sandbox, onSetRadioRange, warningSent, panel }: Props) {
-  const [problem, setProblem] = useState<string | null>(null);
+export function SandboxPanel({
+  sandbox,
+  problem,
+  onSetRadioRange,
+  placing,
+  onTogglePlacing,
+  onRemoveSensor,
+  warningSent,
+  panel,
+}: Props) {
   const rangeKm = sandbox.radio_range_m / 1000;
-
-  const change = async (km: number) => {
-    setProblem(null);
-    try {
-      await onSetRadioRange(Math.round(km * 1000));
-    } catch (error) {
-      console.error(error);
-      setProblem(`Could not set the radio range: ${(error as Error).message}`);
-    }
-  };
 
   return (
     <Panel label="Sandbox" {...panel}>
@@ -52,10 +53,18 @@ export function SandboxPanel({ sandbox, onSetRadioRange, warningSent, panel }: P
           max={MAX_RANGE_KM}
           step={RANGE_STEP_KM}
           value={rangeKm}
-          onChange={(event) => void change(Number(event.target.value))}
+          onChange={(event) => void onSetRadioRange(Math.round(Number(event.target.value) * 1000))}
         />
         <output>{rangeKm.toFixed(1)} km</output>
       </label>
+      <button
+        type="button"
+        className="sandbox-add"
+        aria-pressed={placing}
+        onClick={onTogglePlacing}
+      >
+        Add Sensor
+      </button>
       {problem && <p role="alert">{problem}</p>}
       <ul aria-label="Sandbox Nodes" className="sandbox-nodes">
         {sandbox.nodes.map((node) => (
@@ -63,6 +72,15 @@ export function SandboxPanel({ sandbox, onSetRadioRange, warningSent, panel }: P
             <strong>{node.name}</strong>
             <span>{hopsText(node)}</span>
             <span>{warningText(node, warningSent)}</span>
+            {node.role === "sensor" && (
+              <button
+                type="button"
+                aria-label={`Remove ${node.name}`}
+                onClick={() => void onRemoveSensor(node.id)}
+              >
+                Remove
+              </button>
+            )}
           </li>
         ))}
       </ul>

@@ -23,6 +23,8 @@ type Props = {
   // The key of the warning this Node started, while it is shown: the Node rings red (D-28).
   originOf?: string;
   onSelect: (id: string) => void;
+  // Given only in the Sandbox, where a Sensor can be dragged: called with where it was dropped.
+  onDragEnd?: (lat: number, lon: number) => void | Promise<void>;
   // Where the label sits, and whether it lost its spot to a more important one (0078).
   side: Side;
   labelHidden: boolean;
@@ -38,6 +40,7 @@ export function NodeMarker({
   rises,
   originOf,
   onSelect,
+  onDragEnd,
   side,
   labelHidden,
 }: Props) {
@@ -60,6 +63,7 @@ export function NodeMarker({
       lon={node.position[1]}
       className={classes}
       onClick={() => onSelect(node.id)}
+      onDragEnd={onDragEnd}
     >
       {originOf !== undefined && <span key={originOf} className="origin-ring" />}
       {rises > 0 && <span key={rises} className="rise-ring" />}
