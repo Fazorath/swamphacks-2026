@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Starts the whole demo on this laptop: the Cache Pack server, the Hub at Betrawati and Sensors
-# S0 to S3 on loopback, each with its own port, slot, data folder, position and track.
+# S0 to S3 on loopback, each with its own port, slot, data folder and position.
 # Ctrl-C stops everything. Setup notes: scripts/demo-setup.md.
 set -euo pipefail
 
@@ -87,7 +87,7 @@ echo "$!" >"$demo_dir/pack-server.pid"
 hub_identity=""
 
 start_node() {
-  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 track=$6 river_km=$7 pack_url reachable_from_other_laptops=false
+  local name=$1 role=$2 slot=$3 lat=$4 lon=$5 river_km=$6 pack_url reachable_from_other_laptops=false
   if [ "$role" = hub ]; then
     pack_url="http://127.0.0.1:$pack_port/cache-pack.zip"
     # S0 to S3 stay on loopback; only the Hub also reaches an Audience Node (scripts/join-demo.md).
@@ -101,7 +101,7 @@ start_node() {
     NODE_MESH_INTERFACE=loopback NODE_LOOPBACK_SLOT=$((slot_base + slot)) \
     NODE_LOOPBACK_FIRST_SLOT="$slot_base" NODE_TCP_PORT="$tcp_port" \
     NODE_ALSO_WIFI_DISCOVERY="$reachable_from_other_laptops" NODE_ALSO_TCP_LISTEN="$reachable_from_other_laptops" \
-    NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" NODE_REPLAY_TRACK="$track" \
+    NODE_LATITUDE="$lat" NODE_LONGITUDE="$lon" NODE_RIVER_KM="$river_km" \
     NODE_DATA_DIR="$demo_dir/$name/data" CACHE_PACK_DIR="$demo_dir/$name/cache-pack" \
     CACHE_PACK_URL="$pack_url" HUB_IDENTITY="$hub_identity" \
     NODE_WEATHER_FORECAST_URL="http://127.0.0.1:$base_port/api/weather/forecast" \
@@ -110,7 +110,7 @@ start_node() {
 }
 
 # Positions are the spec's Demo Nodes (docs/specs/flash-flood-replay.md, "Region and Nodes").
-start_node hub hub 0 27.9731 85.1860 "" 45.6
+start_node hub hub 0 27.9731 85.1860 45.6
 hub_pid=$!
 
 for _ in $(seq 60); do
@@ -127,10 +127,10 @@ if [ -z "$hub_identity" ]; then
   exit 1
 fi
 
-start_node s0 sensor 1 28.3517 85.4477 S0 -12.2
-start_node s1 sensor 2 28.2528 85.3667 S1 3.4
-start_node s2 sensor 3 28.1632 85.3391 S2 14.6
-start_node s3 sensor 4 27.9215 85.1460 S3 54.0
+start_node s0 sensor 1 28.3517 85.4477 -12.2
+start_node s1 sensor 2 28.2528 85.3667 3.4
+start_node s2 sensor 3 28.1632 85.3391 14.6
+start_node s3 sensor 4 27.9215 85.1460 54.0
 
 # Strict counting: until the Hub has registered a Sensor, nobody counts its readings. The Hub keeps
 # its registry in .demo/hub/data, so a second start finds the Sensors already registered.

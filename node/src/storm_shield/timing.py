@@ -4,6 +4,6 @@ STALE_AFTER_SECONDS = 15
 STOPS_COUNTING_AFTER_SECONDS = 60
 # A Node silent this long is removed from the readings a snapshot lists; the registry keeps it.
 DROPS_OFF_AFTER_SECONDS = 600
-# A Sensor following a replay track publishes this often (30 event seconds at x30), so even the
-# shortest ramp in the timeline sends two readings before its Sensor goes silent.
+# While an Event plays, a Sensor publishes at least this often (30 event seconds at x30), so even the shortest ramp in
+# an Event sends two readings while the water is rising.
 REPLAY_PUBLISH_EVERY_SECONDS = 1

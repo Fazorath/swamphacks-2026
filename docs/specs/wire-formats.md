@@ -77,7 +77,7 @@ The Hub's list of Registered Nodes. Always a full snapshot.
 
 ## Official Alert (`kind: "alert"`)
 
-Sent by the Hub only. Today every alert is a replayed DHM or district alert from `replay_timeline.json` (0014); live feeds were dropped with ticket 0017.
+Sent by the Hub only. Today every alert is a replayed DHM or district alert from the Event file `events/bhote-koshi-2026.json` (0014); live feeds were dropped with ticket 0017.
 
 ```json
 { "v": 1, "kind": "alert", "id": "dhm-sms", "source": "dhm", "mode": "replay",
@@ -123,11 +123,11 @@ From `docs/specs/flash-flood-replay.md`; decided by the team on 2026-10-17. The 
 - **Replay clock** (`kind: "replay"`), Hub only, sent on every change and every 10 s:
 
   ```json
-  { "v": 1, "kind": "replay", "state": "playing", "event_t": 1787716020, "rate": 30 }
+  { "v": 2, "kind": "replay", "event": "bhote-koshi-2026", "state": "playing", "event_t": 1787716020, "rate": 30 }
   ```
 
-  `state` is `playing`, `paused` or `stopped`. `event_t` is the event time when the message was sent; a receiver anchors it on its own clock at receipt, like reading age.
-- **Node API (until `/api/state`, 0019, carries it):** `GET /api/replay` returns the Event clock as this Node counts it (`state`, `event_t` now, `rate`), and on the Hub `POST /api/replay/start` starts the replay from 08:30 and announces it. A Sensor with a replay track (`NODE_REPLAY_TRACK`) plays it only while the clock is `playing` or `paused`, and publishes nothing once the track's `silent_at` has passed.
+  `event` is the id of the Event every Node plays; a Node that does not hold that Event reads its own first moment. `state` is `playing`, `paused` or `stopped`. `event_t` is the event time when the message was sent; a receiver anchors it on its own clock at receipt, like reading age.
+- **Node API (until `/api/state`, 0019, carries it):** `GET /api/replay` returns the Event clock as this Node counts it (`state`, `event_t` now, `rate`), and on the Hub `POST /api/replay/start` starts the replay from 08:30 and announces it. Every Sensor reads the Event's water surface at its own River km (a Sensor outside the corridor sends no `water_level`) while the clock is `playing` or `paused`, and the Event's first moment while it is `stopped`.
 - **Official Alert** `source` gains `dhm`, `ndrrma` and `district`.
 - **Cache Pack** gains `river.geojson`: the river line with River km along it and a wave speed (km/h) for each reach.
 

@@ -40,16 +40,15 @@ class NodeSite(NamedTuple):
     latitude: float
     longitude: float
     river_km: float
-    replay_track: str
 
 
 # Until Regions exist these are the Replay Nodes of scripts/run-demo.sh; the Hub sits at Betrawati.
-HUB_SITE = NodeSite(HUB, 27.9731, 85.1860, 45.6, "")
+HUB_SITE = NodeSite(HUB, 27.9731, 85.1860, 45.6)
 SENSOR_SITES = [
-    NodeSite("s0", 28.3517, 85.4477, -12.2, "S0"),
-    NodeSite("s1", 28.2528, 85.3667, 3.4, "S1"),
-    NodeSite("s2", 28.1632, 85.3391, 14.6, "S2"),
-    NodeSite("s3", 27.9215, 85.1460, 54.0, "S3"),
+    NodeSite("s0", 28.3517, 85.4477, -12.2),
+    NodeSite("s1", 28.2528, 85.3667, 3.4),
+    NodeSite("s2", 28.1632, 85.3391, 14.6),
+    NodeSite("s3", 27.9215, 85.1460, 54.0),
 ]
 
 
@@ -180,7 +179,6 @@ def _settings(nodes: SimulatedNodes, site: NodeSite, **overrides: Any) -> Settin
         latitude=site.latitude,
         longitude=site.longitude,
         river_km=site.river_km,
-        replay_track=site.replay_track,
         hub_identity=HUB,
         **overrides,
     )

@@ -91,7 +91,7 @@ A scripted storm sequence (normal day, pressure drop, rain, water rising) that p
 _Avoid_: demo script, simulation, playback
 
 **Event**:
-One happening at a Region, of one Hazard: Hurricane Ian's storm surge at Fort Myers on 28 September 2022, or the Bhote Koshi flash flood of 26 August 2026. An Event can be real or made up for testing.
+One happening at a Region, of one Hazard: Hurricane Ian's storm surge at Fort Myers on 28 September 2022, or the Bhote Koshi flash flood of 26 August 2026. An Event can be real or made up for testing. It is described by an Event file: id, window, rate, named phases, internet cue, Official Alerts with their times, the water surface and the weather.
 _Avoid_: scenario, incident, storm (alone)
 
 **Hazard**:
@@ -99,11 +99,11 @@ The kind of Event: flash flood or storm surge today, others (lightning, frost) a
 _Avoid_: event type, threat, disaster
 
 **Replay**:
-How an Event is played: a file describing the water surface and weather over time, played on the Event clock. Each Sensor Node reads its Simulated Readings from that surface at its own position, so a Node on high ground stays dry; a real Event's Replay is rebuilt from recorded gauges and reports, and its Official Alerts appear at their real times. Always labelled REPLAY.
+How an Event is played: a file describing the water surface and weather over time, played on the Event clock. The surface is a set of stations, each a level series; on a river they sit at River kms, and a Sensor Node inside the corridor reads the level interpolated along River km, while one outside it is dry and sends no water level. Each Sensor Node reads its Simulated Readings at its own position, so a Node on high ground stays dry; a real Event's Replay is rebuilt from recorded gauges and reports, and its Official Alerts appear at their real times. Always labelled REPLAY.
 _Avoid_: playback, recording, simulation
 
 **Event clock**:
-The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), run by the Hub and followed by every Node; it moves ×30 faster than real time and can be paused or jumped to a named phase.
+The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), run by the Hub and followed by every Node, whose message carries the Event's id so all play the same Event; it moves ×30 faster than real time and can be paused or jumped to a named phase.
 _Avoid_: replay time, sim time
 
 **River km**:

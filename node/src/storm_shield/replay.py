@@ -1,22 +1,26 @@
+import itertools
 import json
 import threading
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from storm_shield.community_reading import Reading
 from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
 
-TIMELINE_FILE = Path(__file__).with_name("replay_timeline.json")
+EVENT_FILE = Path(__file__).with_name("events") / "bhote-koshi-2026.json"
 
 
 class ReplayClockMessage(BaseModel):
     """The Hub's Event clock, in the mesh format of docs/specs/wire-formats.md."""
 
-    v: Literal[1] = 1
+    v: Literal[2] = 2
     kind: Literal["replay"] = "replay"
+    # The Event every Node plays; a Node that does not hold this Event ignores the clock.
+    event: str
     state: Literal["playing", "paused", "stopped"]
     # Event time (Unix seconds) at the moment of sending; receivers anchor it on their own clock.
     event_t: int
@@ -26,10 +30,10 @@ class ReplayClockMessage(BaseModel):
 class EventClock:
     """What this Node believes the Event clock reads, anchored on its own clock at receipt."""
 
-    def __init__(self) -> None:
+    def __init__(self, event_id: str) -> None:
         # The Reticulum receive thread writes while request threads read.
         self._lock = threading.Lock()
-        self._heard = ReplayClockMessage(state="stopped", event_t=0, rate=1)
+        self._heard = ReplayClockMessage(event=event_id, state="stopped", event_t=0, rate=1)
         self._heard_at: datetime | None = None
 
     def hear(self, message: ReplayClockMessage, received_at: datetime) -> None:
@@ -47,19 +51,43 @@ class EventClock:
         return heard.model_copy(update={"event_t": heard.event_t + int(elapsed * heard.rate)})
 
 
-class Keyframe(BaseModel):
-    at: str
-    water_m: float
+class Station(BaseModel):
+    """A gauge on the river: its level over the Event, as points joined by straight lines."""
+
+    id: str
+    label: str
+    river_km: float
+    # (seconds after the Event starts, level in the surface's unit)
+    series: list[tuple[int, float]]
+
+    @field_validator("series")
+    @classmethod
+    def _in_time_order(cls, series: list[tuple[int, float]]) -> list[tuple[int, float]]:
+        _require_increasing([at for at, _ in series], "a station's series")
+        return series
+
+
+class WaterSurface(BaseModel):
+    unit: Literal["m"]
+    stations: list[Station]
+
+    @field_validator("stations")
+    @classmethod
+    def _in_river_order(cls, stations: list[Station]) -> list[Station]:
+        _require_increasing([station.river_km for station in stations], "the stations")
+        return stations
+
+
+class WeatherKeyframe(BaseModel):
+    t: int
     rain_mmh: float
     soil_pct: float
     pressure_hpa: float
 
 
-class Track(BaseModel):
-    """One Sensor's Simulated Readings across the replay, as keyframes joined by straight lines."""
-
-    silent_at: str
-    keyframes: list[Keyframe]
+def _require_increasing(positions: list[float], what: str) -> None:
+    if not positions or any(b <= a for a, b in itertools.pairwise(positions)):
+        raise ValueError(f"{what} must be a non-empty list in strictly increasing order")
 
 
 class Phase(BaseModel):
@@ -83,9 +111,15 @@ class ReplayedAlert(BaseModel):
     source: str
 
 
-class ReplayTimeline(BaseModel):
-    """The one replay file, `replay_timeline.json`; each fact in it names its source."""
+class Event(BaseModel):
+    """One Event file, `events/<id>.json`: its window, phases, Official Alerts, surface and weather.
 
+    Each fact in it names its source, or says it is reconstructed.
+    """
+
+    id: str
+    label: str
+    hazard: Literal["flash_flood"]
     date: str
     utc_offset: str
     start: str
@@ -96,7 +130,14 @@ class ReplayTimeline(BaseModel):
     phases: list[Phase]
     internet_cue: InternetCue
     official_alerts: list[ReplayedAlert]
-    tracks: dict[str, Track]
+    surface: WaterSurface
+    weather: list[WeatherKeyframe]
+
+    @field_validator("weather")
+    @classmethod
+    def _weather_in_time_order(cls, weather: list[WeatherKeyframe]) -> list[WeatherKeyframe]:
+        _require_increasing([keyframe.t for keyframe in weather], "the weather")
+        return weather
 
     def event_t_at(self, clock_time: str) -> int:
         """The Event clock's Unix seconds when the replay reads `clock_time`."""
@@ -124,43 +165,60 @@ class ReplayTimeline(BaseModel):
         ]
 
     def readings_at(
-        self, track_name: str, event_t: int, timestamp: datetime
-    ) -> list[Reading] | None:
-        """The track's readings at this event time, or None once its Sensor has gone silent."""
-        track = self.tracks[track_name]
+        self, river_km: float | None, event_t: int, timestamp: datetime
+    ) -> list[Reading]:
+        """What a Sensor at `river_km` reads at this Event time.
+
+        Inside the corridor, between the first and last station, the water level is interpolated
+        along River km. Outside it, or off the river, the spot is dry and sends no `water_level`.
+        """
         elapsed = event_t - self.start_unix
-        if elapsed >= self._seconds_after_start(track.silent_at):
-            return None
-        before, after = self._keyframes_around(track, elapsed)
-        span = self._seconds_after_start(after.at) - self._seconds_after_start(before.at)
-        progress = 0.0 if span <= 0 else (elapsed - self._seconds_after_start(before.at)) / span
-        progress = min(max(progress, 0.0), 1.0)
-
-        def between(first: float, second: float) -> float:
-            return first + (second - first) * progress
-
+        weather = _interpolate(
+            elapsed,
+            [(w.t, (w.rain_mmh, w.soil_pct, w.pressure_hpa)) for w in self.weather],
+        )
         measurements: list[tuple[str, float, str, int]] = [
-            ("air_pressure", between(before.pressure_hpa, after.pressure_hpa), "hPa", 1),
-            ("rain_rate", between(before.rain_mmh, after.rain_mmh), "mm/h", 1),
-            ("water_level", between(before.water_m, after.water_m), "m", 3),
-            ("soil_moisture", between(before.soil_pct, after.soil_pct), "%", 1),
+            ("air_pressure", weather[2], "hPa", 1),
+            ("rain_rate", weather[0], "mm/h", 1),
+            ("soil_moisture", weather[1], "%", 1),
         ]
+        water_m = self._water_level_at(river_km, elapsed)
+        if water_m is not None:
+            measurements.append(("water_level", water_m, "m", 3))
         return [
             Reading(kind=kind, value=round(value, decimals), unit=unit, timestamp=timestamp)
             for kind, value, unit, decimals in measurements
         ]
 
-    def _keyframes_around(self, track: Track, elapsed: int) -> tuple[Keyframe, Keyframe]:
-        """The keyframes either side of `elapsed`; before the first or after the last, that one twice."""
-        before = track.keyframes[0]
-        for keyframe in track.keyframes:
-            if self._seconds_after_start(keyframe.at) > elapsed:
-                return before, keyframe
-            before = keyframe
-        return before, before
+    def _water_level_at(self, river_km: float | None, elapsed: int) -> float | None:
+        stations = self.surface.stations
+        if river_km is None or not stations[0].river_km <= river_km <= stations[-1].river_km:
+            return None
+        return _interpolate(
+            river_km,
+            [
+                (station.river_km, (_interpolate(elapsed, _as_points(station.series))[0],))
+                for station in stations
+            ],
+        )[0]
 
     def _seconds_after_start(self, clock_time: str) -> int:
         return _seconds_in_day(clock_time) - _seconds_in_day(self.start)
+
+
+def _as_points(series: list[tuple[int, float]]) -> list[tuple[float, tuple[float, ...]]]:
+    return [(at, (level,)) for at, level in series]
+
+
+def _interpolate(at: float, points: Sequence[tuple[float, tuple[float, ...]]]) -> tuple[float, ...]:
+    """The values at `at`, on straight lines between points sorted by position; held beyond the ends."""
+    if at <= points[0][0]:
+        return points[0][1]
+    for (before_at, before), (after_at, after) in itertools.pairwise(points):
+        if at <= after_at:
+            progress = (at - before_at) / (after_at - before_at)
+            return tuple(a + (b - a) * progress for a, b in zip(before, after, strict=True))
+    return points[-1][1]
 
 
 def _seconds_in_day(clock_time: str) -> int:
@@ -168,5 +226,5 @@ def _seconds_in_day(clock_time: str) -> int:
     return hours * 3600 + minutes * 60 + seconds
 
 
-def load_timeline() -> ReplayTimeline:
-    return ReplayTimeline.model_validate(json.loads(TIMELINE_FILE.read_text()))
+def load_event() -> Event:
+    return Event.model_validate(json.loads(EVENT_FILE.read_text()))

@@ -11,7 +11,9 @@ from storm_shield.timing import REPLAY_PUBLISH_EVERY_SECONDS
 # 08:30 NPT on 26 Aug 2026, the first moment of the replay timeline.
 REPLAY_START = 1787712300
 RATE = 30
-STALE_AFTER_SECONDS = 15
+# Where the Event file puts its four gauges, in River km.
+S0_KM, S1_KM, S2_KM, S3_KM = -12.2, 3.4, 14.6, 54.0
+STATION_KM = {"S0": S0_KM, "S1": S1_KM, "S2": S2_KM, "S3": S3_KM}
 
 
 def _wait_until(condition: Callable[[], bool]) -> None:
@@ -43,13 +45,14 @@ def _start_replay(meshed_nodes: MeshedNodes) -> None:
 
 def test_a_replay_started_on_the_hub_reaches_every_node(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     meshed_nodes.start_sensor("porch")
     _start_replay(meshed_nodes)
     for name in ("hub", "s0", "porch"):
         assert _event_clock(meshed_nodes, name) == {
-            "v": 1,
+            "v": 2,
             "kind": "replay",
+            "event": "bhote-koshi-2026",
             "state": "playing",
             "event_t": REPLAY_START,
             "rate": RATE,
@@ -65,9 +68,9 @@ def test_every_node_counts_the_event_clock_on_its_own_clock(meshed_nodes: Meshed
         assert _event_clock(meshed_nodes, name)["event_t"] == REPLAY_START + 60 * RATE
 
 
-def test_a_sensors_readings_follow_its_track(meshed_nodes: MeshedNodes) -> None:
+def test_a_sensors_readings_follow_the_surface_at_its_river_km(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s2", replay_track="S2")
+    meshed_nodes.start_sensor("s2", river_km=14.6)
     _start_replay(meshed_nodes)
     # 20 s later the Event clock reads 08:40, where Syabrubesi's gauge read 1.62 m.
     meshed_nodes.advance(20)
@@ -77,40 +80,75 @@ def test_a_sensors_readings_follow_its_track(meshed_nodes: MeshedNodes) -> None:
 
 def test_a_sensor_shows_the_surge_its_track_holds(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     _start_replay(meshed_nodes)
     # 08:37:30 is 450 event seconds in, and S0's water has jumped from 0.7 m to 4.2 m.
     meshed_nodes.advance(15)
     _wait_until(lambda: _water_cm(meshed_nodes, "s0", "s0") == 420.0)
 
 
-def test_a_sensor_whose_track_ends_goes_stale(meshed_nodes: MeshedNodes) -> None:
+def test_sensors_at_different_positions_read_different_levels(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("up", river_km=S0_KM)
+    meshed_nodes.start_sensor("down", river_km=S2_KM)
+    # In the middle of the second reach: S1 (3.4 km) reads 0.9 m and S2 (14.6 km) reads 1.62 m now.
+    meshed_nodes.start_sensor("between", river_km=(S1_KM + S2_KM) / 2)
     _start_replay(meshed_nodes)
-    # S0 goes silent at 08:38, 480 event seconds, which is 16 s of real time.
     meshed_nodes.advance(20)
-    time.sleep(0.2)
-    for viewer in ("s0", "hub"):
-        assert _heard_from(meshed_nodes, viewer, "s0")["age_s"] > STALE_AFTER_SECONDS
+    _wait_until(lambda: _water_cm(meshed_nodes, "hub", "up") == 750.0)
+    _wait_until(lambda: _water_cm(meshed_nodes, "hub", "down") == 162.0)
+    _wait_until(lambda: _water_cm(meshed_nodes, "hub", "between") == pytest.approx(126, abs=1))
 
 
-def test_a_node_with_no_track_keeps_the_scenario(meshed_nodes: MeshedNodes) -> None:
+@pytest.mark.parametrize("river_km", [None, S0_KM - 0.1, S3_KM + 0.1])
+def test_a_sensor_outside_the_corridor_sends_no_water_level(
+    meshed_nodes: MeshedNodes, river_km: float | None
+) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start_sensor("dry", river_km=river_km)
+    meshed_nodes.start_sensor("wet", river_km=S2_KM)
+    _start_replay(meshed_nodes)
+    meshed_nodes.advance(20)
+    _wait_until(lambda: _water_cm(meshed_nodes, "hub", "wet") == 162.0)
+    # A reading older than the Event's would be the Scenario's, which has a water level.
+    _wait_until(
+        lambda: (
+            _heard_from(meshed_nodes, "hub", "dry")["measurements"]["air_pressure"]["value"] < 1010
+        )
+    )
+    dry = _heard_from(meshed_nodes, "hub", "dry")["measurements"]
+    assert "water_level" not in dry
+    assert {"rain_rate", "soil_moisture", "air_pressure"} <= dry.keys()
+
+
+def test_a_sensor_reads_the_events_weather(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
     meshed_nodes.start_sensor("porch")
     _start_replay(meshed_nodes)
-    meshed_nodes.advance(20)
-    assert _water_cm(meshed_nodes, "porch", "porch") == pytest.approx(100, abs=1)
+    # 08:30 is the first moment: 3 mm/h of rain, 80 % soil moisture and 1005 hPa.
+    _wait_until(
+        lambda: _heard_from(meshed_nodes, "hub", "porch")["measurements"]["rain_rate"]["value"] == 3
+    )
+    measurements = _heard_from(meshed_nodes, "hub", "porch")["measurements"]
+    assert measurements["rain_rate"]["value"] == 3
+    assert measurements["soil_moisture"]["value"] == 80
+    assert measurements["air_pressure"]["value"] == 1005
+
+
+def test_a_node_with_the_clock_stopped_keeps_the_scenario(meshed_nodes: MeshedNodes) -> None:
+    meshed_nodes.start_hub()
+    meshed_nodes.start_sensor("porch")
+    _wait_until(lambda: _water_cm(meshed_nodes, "porch", "porch") == pytest.approx(100, abs=1))
 
 
 def test_a_replay_message_not_from_the_hub_is_ignored(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     meshed_nodes.announce_replay("playing", REPLAY_START, sender="intruder")
     assert _event_clock(meshed_nodes, "s0")["state"] == "stopped"
 
 
 def test_a_sensor_cannot_start_the_replay(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     assert meshed_nodes["s0"].post("/api/replay/start").status_code == 404
 
 
@@ -118,19 +156,14 @@ def test_a_node_that_joins_late_converges_after_a_repeat(meshed_nodes: MeshedNod
     meshed_nodes.start_hub(replay_repeat_seconds=0.02)
     _start_replay(meshed_nodes)
     meshed_nodes.advance(10)
-    meshed_nodes.start_sensor("late", replay_track="S1")
+    meshed_nodes.start_sensor("late", river_km=3.4)
     _wait_until(lambda: _event_clock(meshed_nodes, "late")["state"] == "playing")
     assert _event_clock(meshed_nodes, "late")["event_t"] == REPLAY_START + 10 * RATE
 
 
-def test_a_node_told_to_play_an_unknown_track_refuses_to_start(meshed_nodes: MeshedNodes) -> None:
-    with pytest.raises(ValueError, match="S9"):
-        meshed_nodes.start_sensor("s9", replay_track="S9")
-
-
 def test_pausing_the_replay_holds_every_nodes_readings(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s2", replay_track="S2")
+    meshed_nodes.start_sensor("s2", river_km=14.6)
     _start_replay(meshed_nodes)
     meshed_nodes.advance(20)
     assert meshed_nodes["hub"].post("/api/replay/pause").json()["state"] == "paused"
@@ -216,7 +249,7 @@ def test_pause_and_resume_refuse_the_wrong_state(meshed_nodes: MeshedNodes) -> N
 
 def test_reset_returns_every_node_to_calm(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     _start_replay(meshed_nodes)
     meshed_nodes.advance(15)
     _wait_until(lambda: _water_cm(meshed_nodes, "s0", "s0") == 420.0)
@@ -247,7 +280,7 @@ def test_the_phases_and_the_internet_cue_are_listed_in_event_time(
 
 
 def test_a_sensor_cannot_control_the_replay(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     for action in ("pause", "resume", "reset"):
         assert meshed_nodes["s0"].post(f"/api/replay/{action}").status_code == 404
 
@@ -292,7 +325,8 @@ def _wait_until_heard_just_now(meshed_nodes: MeshedNodes, node: str) -> None:
     _wait_until(lambda: _heard_from(meshed_nodes, "hub", node)["age_s"] == 0)
 
 
-SENSORS_AND_SILENCE = {"S0": 8 * 60, "S1": 15 * 60, "S2": 20 * 60, "S3": 80 * 60}
+# Event seconds at which each gauge has finished its surge.
+SURGE_ENDS = {"S0": 8 * 60, "S1": 15 * 60, "S2": 20 * 60, "S3": 80 * 60}
 
 
 @pytest.mark.parametrize("first_publish_event_seconds", [0, 30, 60])
@@ -300,8 +334,8 @@ def test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start(
     meshed_nodes: MeshedNodes, first_publish_event_seconds: int
 ) -> None:
     meshed_nodes.start_hub()
-    for track in SENSORS_AND_SILENCE:
-        meshed_nodes.start_sensor(track.lower(), replay_track=track)
+    for track in SURGE_ENDS:
+        meshed_nodes.start_sensor(track.lower(), river_km=STATION_KM[track])
         # Only Registered Nodes count toward Flood Risk, and a Surge is read from Flood Risk.
         meshed_nodes[track.lower()].post("/api/registry/signup")
         meshed_nodes["hub"].post("/api/registry/accept", json={"id": track.lower()})
@@ -311,12 +345,11 @@ def test_every_sensors_surge_reaches_the_hub_in_a_replay_from_the_start(
     surged: set[str] = set()
     elapsed = first_publish_event_seconds
     # One step is one real publish interval, which is 30 event seconds at x30.
-    while elapsed < max(SENSORS_AND_SILENCE.values()):
+    while elapsed < max(SURGE_ENDS.values()):
         meshed_nodes.advance(REPLAY_PUBLISH_EVERY_SECONDS)
         elapsed += REPLAY_PUBLISH_EVERY_SECONDS * RATE
-        for track, silent_after in SENSORS_AND_SILENCE.items():
-            if elapsed < silent_after:
-                _wait_until_heard_just_now(meshed_nodes, track.lower())
+        for track in SURGE_ENDS:
+            _wait_until_heard_just_now(meshed_nodes, track.lower())
         state = meshed_nodes["hub"].get("/api/state").json()
         surged.update(state["flood_risk"]["surged"])
     assert surged == {"s0", "s1", "s2", "s3"}
@@ -327,17 +360,16 @@ def test_the_collapse_surge_still_reaches_the_hub_at_a_slower_rate(
     meshed_nodes: MeshedNodes, rate: int
 ) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("s0", replay_track="S0")
+    meshed_nodes.start_sensor("s0", river_km=-12.2)
     meshed_nodes["s0"].post("/api/registry/signup")
     meshed_nodes["hub"].post("/api/registry/accept", json={"id": "s0"})
     meshed_nodes["hub"].post("/api/replay/rate", json={"rate": rate})
     _start_replay(meshed_nodes)
     surged: set[str] = set()
     elapsed = 0
-    while elapsed < SENSORS_AND_SILENCE["S0"]:
+    while elapsed < SURGE_ENDS["S0"]:
         meshed_nodes.advance(REPLAY_PUBLISH_EVERY_SECONDS)
         elapsed += REPLAY_PUBLISH_EVERY_SECONDS * rate
-        if elapsed < SENSORS_AND_SILENCE["S0"]:
-            _wait_until_heard_just_now(meshed_nodes, "s0")
+        _wait_until_heard_just_now(meshed_nodes, "s0")
         surged.update(meshed_nodes["hub"].get("/api/state").json()["flood_risk"]["surged"])
     assert surged == {"s0"}

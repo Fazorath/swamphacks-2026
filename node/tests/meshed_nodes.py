@@ -54,7 +54,7 @@ class MeshedNodes:
         self,
         name: str,
         *,
-        replay_track: str = "",
+        river_km: float | None = None,
         publish_every_seconds: float = 0.02,
         sign_up_repeat_seconds: float = 10,
         gpio: GpioMode = "off",
@@ -64,7 +64,7 @@ class MeshedNodes:
             name,
             hub_identity=HUB,
             gpio=gpio,
-            replay_track=replay_track,
+            river_km=river_km,
             publish_every_seconds=publish_every_seconds,
             sign_up_repeat_seconds=sign_up_repeat_seconds,
         )
@@ -115,7 +115,7 @@ class MeshedNodes:
     ) -> None:
         """Have a Node that is not running an app publish one Event clock message."""
         self._hand_fed_mesh(sender).publish(
-            ReplayClockMessage(state=state, event_t=event_t, rate=30)
+            ReplayClockMessage(event="bhote-koshi-2026", state=state, event_t=event_t, rate=30)
         )
 
     def announce_shelters(self, ver: int, open_ids: list[str], *, sender: str = HUB) -> None:

@@ -301,4 +301,6 @@ def test_an_older_copy_of_a_warning_does_not_undo_its_measurement() -> None:
     heard.hear(measured)
     heard.hear(plain)
 
-    assert heard.shown_at(ReplayClockMessage(state="stopped", event_t=0, rate=30)) == [measured]
+    assert heard.shown_at(
+        ReplayClockMessage(event="bhote-koshi-2026", state="stopped", event_t=0, rate=30)
+    ) == [measured]
