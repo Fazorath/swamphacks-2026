@@ -131,7 +131,7 @@ The place a Storm Shield network watches, described in one small hand-written fi
 _Avoid_: map, area, location, scenario
 
 **Cache Pack**:
-The bundle of offline information (Shelters, Flood-Prone Areas, map tiles, and Routes) built from a Region's file by a script, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
+The bundle of offline information (the Region file, an OpenStreetMap basemap, terrain, Shelters, Flood-Prone Areas, Routes, the Weather Grid and Event files) built from a Region's file by `scripts/build-cache-pack.sh <region>`, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:
@@ -239,7 +239,7 @@ One of Temperature, Cloud cover or Rain, laid over the map's terrain from a Weat
 _Avoid_: overlay, weather widget, radar
 
 **Weather Grid**:
-Hourly temperature, cloud cover and rain on a coarse grid of points (about 0.5° apart) over the whole of Nepal. During the Replay it is the recorded weather of 26 August 2026, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
+Hourly temperature, cloud cover and rain on a coarse grid of points (about 0.5° apart) over the Region's bounding box. During the Replay it is the recorded weather around the Event, built into the Cache Pack; otherwise it is the Hub's last good forecast, shown with its age.
 _Avoid_: weather data, forecast feed
 
 **Panel**:

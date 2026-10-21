@@ -29,7 +29,7 @@ export type HighGroundPoint = {
 // A High-ground point worth showing to this household, with the walk from their home.
 export type HighGroundPin = { point: HighGroundPoint; walkMinutes: number; nearest: boolean };
 
-// The vector map of Nepal a v4 or later pack carries (`scripts/pack_nepal.py`).
+// The vector map of Nepal a v4 pack built before the Regions carries (`scripts/pack_nepal.py`, since deleted).
 export type NepalMap = {
   // [south, west, north, east]
   bbox: [number, number, number, number];

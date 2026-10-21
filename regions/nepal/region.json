@@ -149,6 +149,10 @@
         85.33622
       ],
       "town": "Syabrubesi",
+      "town_pos": [
+        28.1632,
+        85.3391
+      ],
       "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 300 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground; nobody has confirmed the slope is open or safe to stand on. Check against the terrain before the event.",
       "checked": "2026-10-18"
     },
@@ -160,6 +164,10 @@
         85.34216
       ],
       "town": "Syabrubesi",
+      "town_pos": [
+        28.1632,
+        85.3391
+      ],
       "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 310 m from the town centre, outside the corridor and its 100 m margin, 126 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
       "checked": "2026-10-18"
     },
@@ -171,6 +179,10 @@
         85.18582
       ],
       "town": "Betrawati",
+      "town_pos": [
+        27.9731,
+        85.186
+      ],
       "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 420 m from the town centre, outside the corridor and its 100 m margin, 90 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
       "checked": "2026-10-18"
     },
@@ -182,6 +194,10 @@
         85.1487
       ],
       "town": "Trishuli",
+      "town_pos": [
+        27.9215,
+        85.146
+      ],
       "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 390 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
       "checked": "2026-10-18"
     }
@@ -227,5 +243,23 @@
       "river_km": -12.2,
       "why": "Furthest upstream station of the replay; sees the surge first."
     }
-  ]
+  ],
+  "sources": {
+    "terrain": {
+      "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+      "credit": "Terrain Tiles (Terrarium) on AWS Open Data; over Nepal built from SRTM"
+    },
+    "roads": {
+      "url": "https://download.geofabrik.de/asia/nepal-latest.osm.pbf",
+      "credit": "© OpenStreetMap contributors (ODbL 1.0)"
+    },
+    "basemap": {
+      "url": "https://overpass-api.de/api/interpreter",
+      "credit": "© OpenStreetMap contributors (ODbL 1.0)"
+    },
+    "weather": {
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "credit": "Weather data by Open-Meteo.com (CC BY 4.0)"
+    }
+  }
 }

@@ -14,7 +14,7 @@ from test_cache_pack import PackSource
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
 from storm_shield.settings import Settings
-from storm_shield.weather_grid import CREDIT, NEPAL_BBOX, VARIABLES, grid_points
+from storm_shield.weather_grid import CREDIT, VARIABLES, grid_points
 
 # Two rows by two columns, 0.5 degrees apart.
 BBOX = (27.86, 85.08, 28.36, 85.58)
@@ -53,7 +53,7 @@ def _wait_until(condition: Callable[[], bool]) -> None:
 
 
 def test_grid_runs_south_to_north_then_west_to_east_and_covers_the_box() -> None:
-    rows, cols, points = grid_points(NEPAL_BBOX)
+    rows, cols, points = grid_points((26.3, 80.0, 30.5, 88.3))
     assert (rows, cols) == (10, 18)
     assert len(points) == 180
     assert points[0] == (26.3, 80.0)

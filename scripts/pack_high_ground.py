@@ -1,4 +1,4 @@
-"""High-ground points for the Cache Pack: hand-placed spots on the hillside above the valley towns."""
+"""High-ground points for the Cache Pack: hand-placed spots on the hillside above the Region's towns."""
 
 import math
 from collections.abc import Callable
@@ -43,7 +43,6 @@ def _near_corridor(point: Point, corridor: FloodProneArea) -> bool:
 
 def build_high_ground(
     points: list[dict[str, Any]],
-    towns: list[dict[str, Any]],
     river: list[Point],
     corridor: FloodProneArea,
     elevation_at: Callable[[float, float], float],
@@ -53,14 +52,11 @@ def build_high_ground(
     Refuses a point that sits in or beside the Flood-Prone Area, climbs too little, or has no
     town near it, so a placeholder that was typed wrongly never reaches a resident's map.
     """
-    anchors = {town["name"]: (town["lat"], town["lon"]) for town in towns}
     built = []
     for each in points:
         point_id = each["id"]
         position: Point = (each["pos"][0], each["pos"][1])
-        if each["town"] not in anchors:
-            raise ValueError(f"high-ground point {point_id}: no key place called {each['town']}")
-        town = anchors[each["town"]]
+        town: Point = (each["town_pos"][0], each["town_pos"][1])
         if distance_m(town, position) > MAX_TOWN_DISTANCE_M:
             raise ValueError(
                 f"high-ground point {point_id} is over {MAX_TOWN_DISTANCE_M} m from {each['town']}"

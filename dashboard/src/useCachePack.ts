@@ -5,7 +5,7 @@ import type { RouteGrid } from "./routeGrid";
 
 const RETRY_EVERY_MS = 5000;
 
-// The manifest as the builder writes it (`scripts/pack_nepal.py`, `manifest_entry`).
+// The `nepal` entry of the manifest of a pack built before the Regions (`scripts/pack_nepal.py`, since deleted).
 type ManifestNepal = {
   bbox: NepalMap["bbox"];
   elevation: {
