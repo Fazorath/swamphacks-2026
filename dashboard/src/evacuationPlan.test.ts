@@ -76,7 +76,7 @@ function pack(overrides: Partial<CachePackContents> = {}): CachePackContents {
     floodProne: { features: [] },
     routeGrid: null,
     built: null,
-    nepal: null,
+    basemap: null,
     bbox: null,
     ...overrides,
   };

@@ -1,11 +1,9 @@
-import { NATIONAL_ZOOM } from "./basemap";
-
 // D-30, D-31: the valley is seen from an angle, with its relief stretched by half.
 export const TERRAIN_PITCH = 45;
 export const TERRAIN_EXAGGERATION = 1.5;
 
-// Zoomed out past this the whole country is in view: flat, top-down, no terrain to draw (D-33).
-export const TERRAIN_FROM_ZOOM = NATIONAL_ZOOM + 2;
+// Zoomed out past this the whole Region is in view: flat, top-down, no terrain to draw (D-33).
+export const TERRAIN_FROM_ZOOM = 8;
 
 // Where the Valley button and the warning's fly take the camera.
 export const VALLEY_VIEW = { center: [85.19, 27.98] as [number, number], zoom: 10 };

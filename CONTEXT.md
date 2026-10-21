@@ -207,7 +207,7 @@ A Registered Node on a volunteer's laptop, started with `scripts/join-demo.sh`. 
 _Avoid_: guest node, visitor node, demo laptop
 
 **God's Eye View**:
-The desktop dashboard's map of the whole of Nepal, drawn from vector data in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
+The desktop dashboard's map of the whole Region, drawn from the basemap and terrain in the Cache Pack with slight 3D terrain: every Node glowing on it and the flood wave visibly running down the river. Made for the projector and judges' laptops; the phone layout is separate.
 _Avoid_: globe, surveillance map, overview
 
 **Headwater Node**:

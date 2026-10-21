@@ -91,7 +91,7 @@ function planFor({
     floodProne: { features: floodProne },
     routeGrid: null,
     built: null,
-    nepal: null,
+    basemap: null,
     bbox: null,
   };
   return evacuationPlan({
@@ -159,7 +159,7 @@ test("a pack with no Road graph keeps the precomputed Route", () => {
       floodProne: { features: [] },
       routeGrid: null,
       built: null,
-      nepal: null,
+      basemap: null,
       bbox: null,
     },
     openShelterIds: ["shelter-a"],
@@ -183,7 +183,7 @@ test("a home far from any road keeps the precomputed Route", () => {
       floodProne: { features: [] },
       routeGrid: null,
       built: null,
-      nepal: null,
+      basemap: null,
       bbox: null,
     },
     openShelterIds: ["shelter-a"],

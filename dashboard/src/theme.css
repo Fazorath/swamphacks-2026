@@ -54,13 +54,10 @@
   --map-block: var(--navy-900);
   --map-road: var(--road-700);
   --map-water: var(--river-500);
-  /* God's Eye View (D-01, D-07): lifted land, rivers one step lighter, border and labels in ink */
-  --map-outside: var(--navy-925);
-  --map-land: var(--navy-900);
+  /* God's Eye View (D-01, D-07): lifted land, rivers one step lighter, coast and labels in ink */
+  --map-land: var(--navy-925);
   --map-river: var(--river-300);
-  --map-border: var(--ink-400);
-  --map-district: var(--navy-600);
-  --map-label: var(--ink-300);
+  --map-coast: var(--ink-400);
   --map-shadow: var(--ink-black);
   /* the Sandbox's radio model: a Node's reach, a link between two in range, and no path to the Hub */
   --radio-range: var(--cyan-400);

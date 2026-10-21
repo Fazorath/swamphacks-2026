@@ -137,7 +137,7 @@ export function App() {
     officialAlerts,
     wave: planWave,
   });
-  const places = usePlaces(cachePack?.nepal != null);
+  const places = usePlaces(cachePack?.basemap != null);
   const warning = officialAlerts.length > 0 || communityWarnings.length > 0;
   const phone = useIsPhone();
   const [phoneTab, setPhoneTab] = useState<PhoneTab>("map");
@@ -369,7 +369,7 @@ export function App() {
           shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
           openShelterIds={openShelterIds}
           floodProne={shows("flood-prone") ? (cachePack?.floodProne ?? null) : null}
-          nepal={cachePack?.nepal ?? null}
+          basemap={cachePack?.basemap ?? null}
           places={places}
           river={river}
           warnings={communityWarnings}
@@ -474,7 +474,7 @@ export function App() {
               onForecastHours={forecastTime.setHours}
             />
             <MapLegend
-              nepal={cachePack?.nepal ?? null}
+              basemap={cachePack?.basemap ?? null}
               terrain={terrainShown}
               onChooseTerrain={chooseTerrain}
               onFlyToValley={() => setValleyFlights((count) => count + 1)}
@@ -499,7 +499,7 @@ export function App() {
         status={state?.status ?? null}
         cachePackBuilt={cachePack?.built ?? null}
         cachePackLoaded={cachePack !== null}
-        nepal={cachePack?.nepal ?? null}
+        basemap={cachePack?.basemap ?? null}
         terrainDropped={terrainDropped}
         waterDrawn={waterReaches.length > 0}
       />

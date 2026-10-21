@@ -28,7 +28,7 @@ main {
   display: flex;
   height: 100vh;
   flex-direction: column;
-  background: var(--map-outside);
+  background: var(--map-land);
 }
 
 .top-bar {
@@ -169,10 +169,6 @@ h1 {
   margin-left: auto;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.boundaries-note {
-  flex: none;
 }
 
 button {
@@ -716,7 +712,7 @@ section p {
 .node-map {
   position: absolute;
   inset: 0;
-  background: var(--map-outside);
+  background: var(--map-land);
 }
 
 /* Over the map but under the Panels. */
@@ -771,15 +767,11 @@ section p {
 }
 
 .place-label {
-  color: var(--map-label);
+  color: var(--text-primary);
   font-size: 0.75rem;
+  font-weight: 600;
   pointer-events: none;
   text-shadow: 0 0 3px var(--map-shadow);
-}
-
-.place-label.key {
-  color: var(--text-primary);
-  font-weight: 600;
 }
 
 /* A Node is a dot with its label beside it. The glow is a static shadow set by the Node's level. */

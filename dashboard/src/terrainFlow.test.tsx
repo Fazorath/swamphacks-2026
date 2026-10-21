@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { BASEMAP_MANIFEST_PARTS } from "./fakeBasemap";
 
 import { App } from "./App";
 import { lastMap } from "./fakeMaplibre";
@@ -8,18 +9,7 @@ import { TERRAIN_EXAGGERATION, TERRAIN_PITCH } from "./terrain";
 const NEPAL_MANIFEST = {
   built: "2026-10-18T12:00:00+00:00",
   bbox: [27.86, 85.08, 28.46, 85.47],
-  nepal: {
-    bbox: [26.3, 80.0, 30.5, 88.3],
-    elevation: {
-      encoding: "terrarium",
-      approximate: true,
-      national_zooms: [5, 8],
-      detail_zooms: [9, 12],
-      detail_areas: [],
-    },
-    boundaries_note: "Boundaries are indicative",
-    sources: [],
-  },
+  ...BASEMAP_MANIFEST_PARTS,
 };
 
 function stubNode(manifest: unknown) {
@@ -28,7 +18,7 @@ function stubNode(manifest: unknown) {
     "/api/cache-pack": { available: manifest !== null, manifest },
     "/api/cache-pack/files/shelters.json": [],
     "/api/cache-pack/files/flood_prone.geojson": { type: "FeatureCollection", features: [] },
-    "/api/cache-pack/files/nepal/places.geojson": { type: "FeatureCollection", features: [] },
+    "/api/cache-pack/files/basemap/places.geojson": { type: "FeatureCollection", features: [] },
     "/api/shelters": { open: [] },
     "/api/replay": { state: "paused", event_t: 1_787_700_000, rate: 30 },
   };

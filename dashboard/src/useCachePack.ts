@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 
-import type { CachePackContents, HighGroundPoint, NepalMap } from "./evacuationPlan";
+import type { Basemap, CachePackContents, HighGroundPoint } from "./evacuationPlan";
 import type { RouteGrid } from "./routeGrid";
 
 const RETRY_EVERY_MS = 5000;
 
-// The `nepal` entry of the manifest of a pack built before the Regions (`scripts/pack_nepal.py`, since deleted).
-type ManifestNepal = {
-  bbox: NepalMap["bbox"];
-  elevation: {
-    approximate: boolean;
-    national_zooms: [number, number];
-    detail_zooms: [number, number];
-  };
-  boundaries_note: string;
-  sources: NepalMap["sources"];
+type Manifest = {
+  built?: string;
+  route_grid?: RouteGrid;
+  bbox?: Basemap["bbox"];
+  terrain?: { approximate: boolean; zooms: [number, number] };
+  sources?: Basemap["credits"][number][];
+  files?: Record<string, string>;
 };
 
 async function getJson(url: string): Promise<unknown> {
@@ -23,30 +20,18 @@ async function getJson(url: string): Promise<unknown> {
   return response.json();
 }
 
-function nepalMap(manifest: ManifestNepal | undefined): NepalMap | null {
-  if (!manifest) return null;
-  return {
-    bbox: manifest.bbox,
-    elevation: {
-      approximate: manifest.elevation.approximate,
-      nationalZooms: manifest.elevation.national_zooms,
-      detailZooms: manifest.elevation.detail_zooms,
-    },
-    boundariesNote: manifest.boundaries_note,
-    sources: manifest.sources,
-  };
+// A pack built before the basemap has no `basemap/` files, and the map then draws without them.
+function basemapOf(manifest: Manifest | null | undefined): Basemap | null {
+  if (!manifest?.bbox || !manifest.terrain) return null;
+  const hasBasemap = Object.keys(manifest.files ?? {}).some((path) => path.startsWith("basemap/"));
+  if (!hasBasemap) return null;
+  return { bbox: manifest.bbox, terrain: manifest.terrain, credits: manifest.sources ?? [] };
 }
 
 async function fetchCachePack(): Promise<CachePackContents | null> {
   const status = (await getJson("/api/cache-pack")) as {
     available?: boolean;
-    manifest?: {
-      built?: string;
-      route_grid?: RouteGrid;
-      bbox?: CachePackContents["bbox"];
-      nepal?: ManifestNepal;
-      files?: Record<string, string>;
-    } | null;
+    manifest?: Manifest | null;
   };
   if (status.available !== true) return null;
   const [shelters, floodProne] = await Promise.all([
@@ -61,8 +46,8 @@ async function fetchCachePack(): Promise<CachePackContents | null> {
   const routeGrid = status.manifest?.route_grid ?? null;
   const bbox = status.manifest?.bbox ?? null;
   const built = status.manifest?.built ?? null;
-  const nepal = nepalMap(status.manifest?.nepal);
-  return { shelters, highGround, floodProne, routeGrid, bbox, built, nepal } as CachePackContents;
+  const basemap = basemapOf(status.manifest);
+  return { shelters, highGround, floodProne, routeGrid, bbox, built, basemap } as CachePackContents;
 }
 
 // The pack never changes once a Node holds a valid one, so it is read once and then kept.

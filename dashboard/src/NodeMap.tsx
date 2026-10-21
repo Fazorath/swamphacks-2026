@@ -4,17 +4,8 @@ import { House, MapPin } from "lucide-react";
 import { LngLatBounds, Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  HATCH_IMAGE,
-  NATIONAL_ZOOM,
-  addNepalBasemap,
-  baseStyle,
-  hatchImage,
-  lineCollection,
-  readMapColors,
-  setOverlay,
-  type MapColors,
-} from "./basemap";
+import { addBasemap, baseStyle, lineCollection, setOverlay } from "./basemap";
+import { HATCH_IMAGE, hatchImage, readMapColors, type MapColors } from "./mapStyle";
 import { nepalClockTime } from "./EventClockTag";
 import { MapMarker } from "./MapMarker";
 import {
@@ -42,7 +33,7 @@ import type { WeatherData } from "./useWeatherGrid";
 import { NodeMarker } from "./NodeMarker";
 import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
-import { highGroundLabel, type HighGroundPin, type NepalMap, type Shelter } from "./evacuationPlan";
+import { highGroundLabel, type Basemap, type HighGroundPin, type Shelter } from "./evacuationPlan";
 import type { FloodProneAreas } from "./floodProne";
 import type { Home } from "./householdProfile";
 import type { LatLon } from "./routeGrid";
@@ -60,8 +51,9 @@ import type { WaterReach } from "./risingWater";
 import { waveFront } from "./waveFront";
 import { WaveFrontLayer } from "./WaveFrontLayer";
 
-const NEPAL_CENTRE: [number, number] = [84.1, 28.4];
-const NEPAL_SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
+// Before the pack or any Node says where the Region is, the map shows the whole world.
+const WORLD_VIEW = { center: [0, 20] as [number, number], zoom: 1 };
+const SPACE_FOR_PANELS = { top: 40, bottom: 40, left: 320, right: 360 };
 
 function viewOf(map: MapLibreMap): View {
   const bounds = map.getBounds();
@@ -157,23 +149,23 @@ function floodProneCollection(areas: FloodProneAreas | null): GeoJSON.FeatureCol
   };
 }
 
-// This Node hears itself before it hears anyone else, so a map with no Nepal map is re-framed as
+// This Node hears itself before it hears anyone else, so a map with no basemap is re-framed as
 // new Nodes appear, until the resident pans or zooms. After that it is never moved again.
 function frameUntilMoved(
   map: MapLibreMap,
   moved: { current: boolean },
-  nepal: NepalMap | null,
+  basemap: Basemap | null,
   nodes: NodeOnMap[],
 ) {
   if (moved.current) return;
-  if (nepal) {
-    const [south, west, north, east] = nepal.bbox;
+  if (basemap) {
+    const [south, west, north, east] = basemap.bbox;
     map.fitBounds(
       [
         [west, south],
         [east, north],
       ],
-      { padding: NEPAL_SPACE_FOR_PANELS, animate: false },
+      { padding: SPACE_FOR_PANELS, animate: false },
     );
   } else if (nodes.length > 0) {
     const bounds = new LngLatBounds();
@@ -197,9 +189,9 @@ type Props = {
   shelters: Shelter[];
   openShelterIds: string[];
   floodProne: FloodProneAreas | null;
-  nepal: NepalMap | null;
+  basemap: Basemap | null;
   places: Place[];
-  // The valley's own river line, drawn only when the pack has no Nepal rivers.
+  // The valley's own river line, drawn only when the pack has no basemap.
   river: RiverLine | null;
   // What the wave front needs: the Surges that started it and the Event clock it runs on.
   warnings: CommunityWarning[];
@@ -257,7 +249,7 @@ export function NodeMap({
   shelters,
   openShelterIds,
   floodProne,
-  nepal,
+  basemap,
   places,
   river,
   warnings,
@@ -309,8 +301,7 @@ export function NodeMap({
     const created = new MapLibreMap({
       container,
       style: baseStyle(colors.current),
-      center: NEPAL_CENTRE,
-      zoom: NATIONAL_ZOOM,
+      ...WORLD_VIEW,
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
@@ -360,25 +351,25 @@ export function NodeMap({
   }, []);
 
   useEffect(() => {
-    if (!map || !styleReady || !nepal || map.getSource("border")) return;
-    addNepalBasemap(map, nepal, colors.current!);
-  }, [map, styleReady, nepal]);
+    if (!map || !styleReady || !basemap || map.getSource("water")) return;
+    addBasemap(map, basemap, colors.current!);
+  }, [map, styleReady, basemap]);
 
   // After the basemap effect above, so the river-flow layer exists when it first looks.
-  useRiverFlow(map, styleReady && nepal !== null, !reducedMotion);
+  useRiverFlow(map, styleReady && basemap !== null, !reducedMotion);
 
   // The resident's 2D | 3D choice (and a frame-rate drop) applies at once, tilting or flattening.
   useEffect(() => {
-    if (!map || !styleReady || !nepal) return;
+    if (!map || !styleReady || !basemap) return;
     const over = map.getZoom() >= TERRAIN_FROM_ZOOM;
     setTerrainDrawn(map, terrain === "3d" && over);
     if (over) map.easeTo({ pitch: terrain === "3d" ? TERRAIN_PITCH : 0 });
-  }, [map, styleReady, nepal, terrain]);
+  }, [map, styleReady, basemap, terrain]);
 
   useEffect(() => {
     if (!map || !styleReady || valleyFlights === 0) return;
     moved.current = true;
-    map.flyTo({ ...VALLEY_VIEW, pitch: terrain === "3d" && nepal ? TERRAIN_PITCH : 0 });
+    map.flyTo({ ...VALLEY_VIEW, pitch: terrain === "3d" && basemap ? TERRAIN_PITCH : 0 });
     // A flight answers a press of the button; changing 2D | 3D later must not fly again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, valleyFlights]);
@@ -393,7 +384,7 @@ export function NodeMap({
   useEffect(() => {
     if (!map || !styleReady || focusLat === undefined || focusLon === undefined) return;
     moved.current = true;
-    const tilted = terrainChoice.current === "3d" && nepal !== null;
+    const tilted = terrainChoice.current === "3d" && basemap !== null;
     const view = { center: [focusLon, focusLat] as [number, number], zoom: VALLEY_VIEW.zoom };
     if (reducedMotion) {
       map.jumpTo({ ...view, pitch: tilted ? TERRAIN_PITCH : 0 });
@@ -405,16 +396,16 @@ export function NodeMap({
         if (!event.originalEvent) map.easeTo({ pitch: TERRAIN_PITCH, duration: TILT_MS });
       });
     }
-    // One camera move per warning: the Node's position, the terrain choice and the Nepal map
+    // One camera move per warning: the Node's position, the terrain choice and the basemap
     // settling later must not fly again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, styleReady, focusKey, focusFound]);
 
   useEffect(() => {
-    if (map && styleReady) frameUntilMoved(map, moved, nepal, nodes);
-    // Re-frame when the set of Nodes or the Nepal map changes, not on every reading.
+    if (map && styleReady) frameUntilMoved(map, moved, basemap, nodes);
+    // Re-frame when the set of Nodes or the basemap changes, not on every reading.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, styleReady, nepal, nodeIds]);
+  }, [map, styleReady, basemap, nodeIds]);
 
   // A Panel opening must not cover the selected Node, so the map's centre moves to the clear part.
   const selected = nodes.find((node) => node.id === selectedId);
@@ -430,8 +421,8 @@ export function NodeMap({
 
   const floodProneData = useMemo(() => floodProneCollection(floodProne), [floodProne]);
   const valleyRiverData = useMemo(
-    () => lineCollection(nepal ? [] : (river ?? []).map((reach) => reach.points)),
-    [nepal, river],
+    () => lineCollection(basemap ? [] : (river ?? []).map((reach) => reach.points)),
+    [basemap, river],
   );
   const routeData = useMemo(() => lineCollection(route ? [route] : []), [route]);
   const outOfReachData = useMemo(
@@ -508,12 +499,7 @@ export function NodeMap({
   const waving = river !== null && eventT !== null && warnings.length > 0;
   const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
   const waveStamps = waving
-    ? townsTheWaveReached(
-        river,
-        warnings,
-        places.filter((place) => place.key),
-        eventT,
-      )
+    ? townsTheWaveReached(river, warnings, places, eventT)
     : new Map<string, number>();
 
   // The label sits on the water: on the wave's head while terrain is on and moving, otherwise on
@@ -606,11 +592,7 @@ export function NodeMap({
               map={map}
               lat={place.lat}
               lon={place.lon}
-              className={[
-                "place-label",
-                place.key && "key",
-                waveStamps.has(place.name) && "wave-reached",
-              ]
+              className={["place-label", waveStamps.has(place.name) && "wave-reached"]
                 .filter(Boolean)
                 .join(" ")}
             >

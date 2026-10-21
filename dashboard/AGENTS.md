@@ -13,6 +13,7 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **ESLint `react-hooks/set-state-in-effect`** rejects setting state at the top of an effect; derive it during render instead.
 - **An effect that needs a MapLibre layer from another effect must run after it in the same component** (child effects run first).
 - **MapLibre data URLs must be absolute and `{z}/{x}/{y}` must stay literal**: `new URL(...)` percent-encodes the braces and the map silently loses its terrain.
+- **Every map fill, line width and opacity lives in `mapStyle.ts`**, with the theme roles it reads (`readMapColors`); `basemap.ts` only adds the pack's sources. The pack's places carry no "key" flag, so `placeLabels.ts` names them by kind and zoom.
 - **No MapLibre text layers** (they need a glyph server); labels are DOM markers placed by `labelPlacement.ts`.
 - **Browsers play no sound until the first tap**; sound code must warn, never throw, without Web Audio.
 - **`findLast` is not in the TypeScript lib target**: use `.filter(...).at(-1)`.

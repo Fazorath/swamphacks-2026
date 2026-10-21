@@ -1,6 +1,6 @@
 import type { ImageSource, Map as MapLibreMap } from "maplibre-gl";
 
-import { FIRST_OVERLAY } from "./basemap";
+import { FIRST_OVERLAY } from "./mapStyle";
 import type { Corners } from "./weatherField";
 
 const WEATHER = "weather";
