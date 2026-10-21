@@ -46,6 +46,7 @@ from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_event
 from storm_shield.reticulum_mesh import ReticulumMesh
+from storm_shield.sandbox_api import RadioRange, SandboxControls, SandboxNodes
 from storm_shield.scenario import Scenario, ScenarioStep
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
@@ -145,7 +146,7 @@ def create_app(
     tile_source: httpx.Client | None = None,
     internet_source: httpx.Client | None = None,
     weather_source: httpx.Client | None = None,
-    sandbox: bool = False,
+    sandbox: SandboxControls | None = None,
 ) -> FastAPI:
     cache_pack = CachePack(settings.cache_pack_dir)
     weather_forecast = WeatherForecast(settings.data_dir)
@@ -749,6 +750,16 @@ def create_app(
             return set_replay(
                 "paused" if keeps_paused else "playing", loaded_event.event_t_at(phase.at)
             )
+
+    if sandbox:
+
+        @app.get("/api/sandbox/nodes")
+        def sandbox_nodes() -> SandboxNodes:
+            return sandbox.nodes()
+
+        @app.post("/api/sandbox/radio-range")
+        def set_sandbox_radio_range(change: RadioRange) -> SandboxNodes:
+            return sandbox.set_radio_range(change.radio_range_m)
 
     @app.get("/api/join")
     def hotspot_to_join(request: Request) -> dict[str, str]:

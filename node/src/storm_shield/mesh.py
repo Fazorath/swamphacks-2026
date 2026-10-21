@@ -3,7 +3,7 @@ import logging
 import math
 import threading
 from collections.abc import Callable, Iterable
-from typing import Annotated, Any, Protocol, get_args
+from typing import Annotated, Any, NamedTuple, Protocol, get_args
 
 from pydantic import Field, TypeAdapter, ValidationError
 
@@ -109,6 +109,14 @@ def _metres_between(a: Position, b: Position) -> float:
     return 2 * EARTH_RADIUS_M * math.asin(math.sqrt(half_chord))
 
 
+class NodeLinks(NamedTuple):
+    position: Position
+    # The Nodes within radio range of this one, whatever they can reach beyond.
+    in_range: list[str]
+    # Radio hops from the Hub to this Node, or None when no chain of Nodes joins them.
+    hops_from_hub: int | None
+
+
 class InMemoryNetwork:
     """Stands in for the radio: Nodes created here hear each other inside one process.
 
@@ -150,6 +158,32 @@ class InMemoryNetwork:
         """Takes effect on the next message; None is unlimited."""
         with self._lock:
             self._radio_range_m = radio_range_m
+
+    def links(self, hub: str) -> dict[str, NodeLinks]:
+        """Where every Node is, who is in range of it, and how many hops it is from `hub`."""
+        with self._lock:
+            in_range = {
+                name: [
+                    other
+                    for other, there in self._positions.items()
+                    if other != name and self._in_range(here, there)
+                ]
+                for name, here in self._positions.items()
+            }
+            hops = {hub: 0} if hub in self._positions else {}
+            frontier = list(hops)
+            while frontier:
+                next_frontier = []
+                for relay in frontier:
+                    for neighbour in in_range[relay]:
+                        if neighbour not in hops:
+                            hops[neighbour] = hops[relay] + 1
+                            next_frontier.append(neighbour)
+                frontier = next_frontier
+            return {
+                name: NodeLinks(self._positions[name], in_range[name], hops.get(name))
+                for name in self._positions
+            }
 
     def has_joined(self, mesh: "InMemoryMesh") -> bool:
         with self._lock:
