@@ -244,7 +244,6 @@ type Props = {
   // Set while "Add Sensor" is armed: the next tap on the map places a Sensor instead of doing
   // what a tap does otherwise.
   placingSensor: { onPlace: (spot: Home) => void; onCancel: () => void } | null;
-  // Where a Sensor was dropped after a drag.
   onMoveSensor: (id: string, lat: number, lon: number) => Promise<void>;
 };
 
@@ -687,25 +686,28 @@ export function NodeMap({
         </MapMarker>
       )}
       {map &&
-        nodes.map((node) => (
-          <NodeMarker
-            key={node.id}
-            map={map}
-            node={atTrueSpot(node, sandbox)}
-            onDragEnd={
-              sandboxSensors.has(node.id)
-                ? (lat, lon) => onMoveSensor(node.id, lat, lon)
-                : undefined
-            }
-            selected={node.id === selectedId}
-            wavePassed={wavePassedIds.has(node.id)}
-            rises={rises[node.id] ?? 0}
-            originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
-            onSelect={onSelect}
-            side={sideOf(`node:${node.id}`)}
-            labelHidden={placement.get(`node:${node.id}`) === null}
-          />
-        ))}
+        // A removed Sensor lingers in the Hub's readings as a stale Node; the Sandbox no longer has it.
+        nodes
+          .filter((node) => !sandbox || sandbox.nodes.some((listed) => listed.id === node.id))
+          .map((node) => (
+            <NodeMarker
+              key={node.id}
+              map={map}
+              node={atTrueSpot(node, sandbox)}
+              onDragEnd={
+                sandboxSensors.has(node.id)
+                  ? (lat, lon) => onMoveSensor(node.id, lat, lon)
+                  : undefined
+              }
+              selected={node.id === selectedId}
+              wavePassed={wavePassedIds.has(node.id)}
+              rises={rises[node.id] ?? 0}
+              originOf={node.id === warningFocus?.nodeId ? warningFocus.key : undefined}
+              onSelect={onSelect}
+              side={sideOf(`node:${node.id}`)}
+              labelHidden={placement.get(`node:${node.id}`) === null}
+            />
+          ))}
       {map &&
         sandbox?.nodes
           .filter((node) => node.role === "sensor" && node.hops === null)

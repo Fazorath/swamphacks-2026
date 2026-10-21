@@ -9,10 +9,8 @@ METRES_PER_DEGREE_OF_LATITUDE = 111_320
 RIVER_REACH_M = 500
 
 
-def river_km_at(
-    river: dict[str, Any], position: Position, reach_m: float = RIVER_REACH_M
-) -> float | None:
-    """The River km of the point on the pack's river line nearest `position`, or None past `reach_m`.
+def river_km_at(river: dict[str, Any], position: Position) -> float | None:
+    """The River km of the river line's nearest point to `position`, or None past `RIVER_REACH_M`.
 
     `river` is the pack's river.geojson: LineString reaches whose `km` list gives the River km of
     each vertex. Between vertices the km is interpolated.
@@ -43,6 +41,6 @@ def river_km_at(
             distance = math.hypot(x1 + along * run_x, y1 + along * run_y)
             if nearest is None or distance < nearest[0]:
                 nearest = (distance, km1 + along * (km2 - km1))
-    if nearest is None or nearest[0] > reach_m:
+    if nearest is None or nearest[0] > RIVER_REACH_M:
         return None
     return nearest[1]

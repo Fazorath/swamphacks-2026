@@ -326,8 +326,11 @@ test("Remove takes a Sensor off the list and the map, and the Hub has no Remove"
     ...WIDE,
     nodes: WIDE.nodes.filter((each) => each.id !== "near").map((each) => ({ ...each, links: [] })),
   };
-  stubTheHub({ sandbox: true, afterChange: withoutNear });
+  // The Hub's readings still list "near", as they do for a Node that went quiet.
+  stubTheHub({ sandbox: true, heardNodes: true, afterChange: withoutNear });
   const panel = await sandboxPanel();
+  const map = await screen.findByRole("region", { name: "Map" });
+  await within(map).findByText("near");
   expect(await within(panel).findAllByRole("button", { name: /^Remove / })).toHaveLength(2);
   expect(within(panel).queryByRole("button", { name: "Remove hub" })).not.toBeInTheDocument();
 
@@ -339,5 +342,6 @@ test("Remove takes a Sensor off the list and the map, and the Hub has no Remove"
     ]),
   );
   await waitFor(() => expect(within(panel).queryByText("near")).not.toBeInTheDocument());
+  expect(within(map).queryByText("near")).not.toBeInTheDocument();
   expect(sourceData("radio-range").features).toHaveLength(2);
 });
