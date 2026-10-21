@@ -58,7 +58,6 @@
   --map-land: var(--navy-925);
   --map-river: var(--river-300);
   --map-coast: var(--ink-400);
-  --map-label: var(--ink-300);
   --map-shadow: var(--ink-black);
   /* the Sandbox's radio model: a Node's reach, a link between two in range, and no path to the Hub */
   --radio-range: var(--cyan-400);
