@@ -11,8 +11,8 @@ function howLong(seconds: number): string {
 }
 
 // What a Surge reads like depends on the Hazard.
-const SURGE_SENTENCES: Record<Hazard, (rise: string, howLong: string) => string> = {
-  flash_flood: (rise, howLong) => `water rose ${rise} ${howLong}`,
+const SURGE_SENTENCES: Record<Hazard, (rise: string, duration: string) => string> = {
+  flash_flood: (rise, duration) => `water rose ${rise} ${duration}`,
 };
 
 export function reasonSentence(
