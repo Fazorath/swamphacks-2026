@@ -45,7 +45,14 @@ from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_event
 from storm_shield.reticulum_mesh import ReticulumMesh
-from storm_shield.sandbox_api import RadioRange, SandboxControls, SandboxNodes
+from storm_shield.sandbox_api import (
+    RadioRange,
+    SandboxControls,
+    SandboxNodes,
+    SandboxRefused,
+    Spot,
+    UnknownSensor,
+)
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
     HeardShelterStatus,
@@ -185,8 +192,8 @@ def create_app(
 
     publisher = ReadingPublisher(
         mesh,
-        fuzz_position(settings.latitude, settings.longitude),
-        settings.river_km,
+        lambda: fuzz_position(settings.latitude, settings.longitude),
+        lambda: settings.river_km,
         own_measurements,
         keep_reading,
     )
@@ -507,6 +514,8 @@ def create_app(
                 task.cancel()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
+    # So the Sandbox, which moves a Node, can have it read from its new spot at once.
+    app.state.share_reading = publisher.share
 
     @app.get("/api/state")
     def node_state() -> NodeState:
@@ -721,6 +730,29 @@ def create_app(
         @app.post("/api/sandbox/radio-range")
         def set_sandbox_radio_range(change: RadioRange) -> SandboxNodes:
             return sandbox.set_radio_range(change.radio_range_m)
+
+        @app.post("/api/sandbox/sensors")
+        def add_sandbox_sensor(spot: Spot) -> SandboxNodes:
+            try:
+                return sandbox.add_sensor(spot)
+            except SandboxRefused as refusal:
+                raise HTTPException(status_code=409, detail=str(refusal)) from None
+
+        @app.put("/api/sandbox/sensors/{sensor_id}")
+        def move_sandbox_sensor(sensor_id: str, spot: Spot) -> SandboxNodes:
+            try:
+                return sandbox.move_sensor(sensor_id, spot)
+            except UnknownSensor:
+                raise HTTPException(status_code=404, detail=f"no Sensor {sensor_id!r}") from None
+            except SandboxRefused as refusal:
+                raise HTTPException(status_code=409, detail=str(refusal)) from None
+
+        @app.delete("/api/sandbox/sensors/{sensor_id}")
+        def remove_sandbox_sensor(sensor_id: str) -> SandboxNodes:
+            try:
+                return sandbox.remove_sensor(sensor_id)
+            except UnknownSensor:
+                raise HTTPException(status_code=404, detail=f"no Sensor {sensor_id!r}") from None
 
     @app.get("/api/join")
     def hotspot_to_join(request: Request) -> dict[str, str]:

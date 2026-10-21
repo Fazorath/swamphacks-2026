@@ -12,12 +12,13 @@ class ReadingPublisher:
     def __init__(
         self,
         mesh: Mesh,
-        position: Position,
-        river_km: float | None,
+        position: Callable[[], Position],
+        river_km: Callable[[], float | None],
         measurements: Callable[[], list[Reading] | None],
         keep: Callable[[str, CommunityReading], None],
     ) -> None:
         self._mesh = mesh
+        # Asked at each share, so a Node the Sandbox moves reads from its new spot.
         self._position = position
         self._river_km = river_km
         self._measurements = measurements
@@ -36,9 +37,9 @@ class ReadingPublisher:
             reading = CommunityReading.from_measurements(
                 node=self._mesh.identity,
                 seq=next(self._sequence),
-                position=self._position,
+                position=self._position(),
                 readings=measurements,
-                river_km=self._river_km,
+                river_km=self._river_km(),
             )
             self._keep(self._mesh.identity, reading)
             self._mesh.publish(reading)

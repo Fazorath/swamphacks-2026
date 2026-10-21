@@ -1,4 +1,6 @@
 import argparse
+import itertools
+import json
 import logging
 import subprocess
 import threading
@@ -21,7 +23,15 @@ from storm_shield.cache_pack import CachePack, InvalidCachePack
 from storm_shield.community_reading import Position
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
-from storm_shield.sandbox_api import SandboxControls, SandboxNode, SandboxNodes
+from storm_shield.river_line import river_km_at
+from storm_shield.sandbox_api import (
+    SandboxControls,
+    SandboxNode,
+    SandboxNodes,
+    SandboxRefused,
+    Spot,
+    UnknownSensor,
+)
 from storm_shield.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -44,7 +54,7 @@ class NodeSite(NamedTuple):
     name: str
     latitude: float
     longitude: float
-    river_km: float
+    river_km: float | None
 
 
 # Until Regions exist these are the Replay Nodes of scripts/run-demo.sh; the Hub sits at Betrawati.
@@ -81,6 +91,7 @@ class SimulatedNodes:
         self._directory = directory
         self._clock = clock
         self._clients: dict[str, TestClient] = {}
+        self._settings: dict[str, Settings] = {}
         self._running: set[str] = set()
 
     def settings(self, name: str, **overrides: Any) -> Settings:
@@ -111,11 +122,25 @@ class SimulatedNodes:
             client.__enter__()
             self._running.add(settings.name)
         self._clients[settings.name] = client
+        self._settings[settings.name] = settings
         return client
+
+    def move(self, name: str, spot: Spot, river_km: float | None) -> None:
+        """Put a Node at `spot` on the Mesh and have it read, and share a reading, from there."""
+        settings = self._settings[name]
+        # The Node reads its spot from its settings each time it shares.
+        settings.latitude, settings.longitude, settings.river_km = (
+            spot.latitude,
+            spot.longitude,
+            river_km,
+        )
+        self.network.move(name, Position(spot.latitude, spot.longitude))
+        cast(FastAPI, self._clients[name].app).state.share_reading()
 
     def stop(self, name: str) -> None:
         """Take a Node off the Mesh as a power cut would; starting it again keeps its folder."""
         client = self._clients.pop(name)
+        del self._settings[name]
         if name in self._running:
             self._running.remove(name)
             client.__exit__(None, None, None)
@@ -182,42 +207,113 @@ class Sandbox:
             CachePack(settings.cache_pack_dir).install(self._pack.read_bytes())
         except InvalidCachePack as error:
             raise SandboxError(f"{self._pack} is not a usable Cache Pack: {error}") from error
-        return nodes.start(settings, sandbox=_Controls(nodes))
+        river = CachePack(settings.cache_pack_dir).file("river.geojson")
+        return nodes.start(
+            settings, sandbox=_Controls(nodes, json.loads(river.read_text()) if river else None)
+        )
 
 
 class _Controls(SandboxControls):
-    """What the Hub's Sandbox API shows and changes: the radio range and who can hear whom."""
+    """What the Hub's Sandbox API shows and changes: the Sensors, the radio range, who hears whom.
 
-    def __init__(self, nodes: SimulatedNodes) -> None:
+    `river` is the pack's river line, which tells a Sensor placed on the map its River km.
+    """
+
+    def __init__(self, nodes: SimulatedNodes, river: dict[str, Any] | None) -> None:
         self._nodes = nodes
+        self._river = river
+        # The API runs on a threadpool: a Sensor being added is half on the Mesh until it is done.
+        self._lock = threading.RLock()
+        # Sensors are numbered on from the Sandbox's own and never reused: a Sensor that came
+        # back under an old id would restart its readings at seq 0, and the Hub would hide them.
+        self._numbers = itertools.count(len(SENSOR_SITES))
+        # Sensors with no path to the Hub when they were placed: it cannot hear them sign up.
+        self._unregistered: set[str] = set()
 
     def nodes(self) -> SandboxNodes:
-        radio_range_m = self._nodes.network.radio_range_m
-        if radio_range_m is None:
-            raise RuntimeError("the Sandbox always runs with a radio range")
-        links = self._nodes.network.links(HUB)
-        states = {name: self._nodes[name].get("/api/state").json() for name in links}
-        newest_warning = max((w["id"] for w in states[HUB]["community_warnings"]), default=None)
-        return SandboxNodes(
-            radio_range_m=radio_range_m,
-            nodes=[
-                SandboxNode(
-                    id=name,
-                    name=states[name]["name"],
-                    role=states[name]["role"],
-                    position=reach.position,
-                    links=reach.in_range,
-                    hops=reach.hops_from_hub,
-                    heard_warning=newest_warning is not None
-                    and newest_warning in {w["id"] for w in states[name]["community_warnings"]},
-                )
-                for name, reach in links.items()
-            ],
-        )
+        with self._lock:
+            radio_range_m = self._nodes.network.radio_range_m
+            if radio_range_m is None:
+                raise RuntimeError("the Sandbox always runs with a radio range")
+            links = self._nodes.network.links(HUB)
+            states = {name: self._nodes[name].get("/api/state").json() for name in links}
+            newest_warning = max((w["id"] for w in states[HUB]["community_warnings"]), default=None)
+            return SandboxNodes(
+                radio_range_m=radio_range_m,
+                nodes=[
+                    SandboxNode(
+                        id=name,
+                        name=states[name]["name"],
+                        role=states[name]["role"],
+                        position=reach.position,
+                        links=reach.in_range,
+                        hops=reach.hops_from_hub,
+                        heard_warning=newest_warning is not None
+                        and newest_warning in {w["id"] for w in states[name]["community_warnings"]},
+                    )
+                    for name, reach in links.items()
+                ],
+            )
 
     def set_radio_range(self, radio_range_m: float) -> SandboxNodes:
-        self._nodes.network.set_radio_range(radio_range_m)
-        return self.nodes()
+        with self._lock:
+            self._nodes.network.set_radio_range(radio_range_m)
+            self._register_those_in_reach()
+            return self.nodes()
+
+    def add_sensor(self, spot: Spot) -> SandboxNodes:
+        with self._lock:
+            name = f"s{next(self._numbers)}"
+            site = NodeSite(name, spot.latitude, spot.longitude, self._river_km(spot))
+            self._nodes.start(_settings(self._nodes, site), running=True)
+            self._unregistered.add(name)
+            try:
+                self._register_those_in_reach()
+            except SandboxRefused:
+                # A Sensor the Hub will not take would sit there never counting.
+                self._nodes.stop(name)
+                self._unregistered.discard(name)
+                raise
+            return self.nodes()
+
+    def move_sensor(self, sensor_id: str, spot: Spot) -> SandboxNodes:
+        with self._lock:
+            self._require_sensor(sensor_id)
+            self._nodes.move(sensor_id, spot, self._river_km(spot))
+            self._register_those_in_reach()
+            return self.nodes()
+
+    def remove_sensor(self, sensor_id: str) -> SandboxNodes:
+        with self._lock:
+            self._require_sensor(sensor_id)
+            self._nodes.stop(sensor_id)
+            self._unregistered.discard(sensor_id)
+            return self.nodes()
+
+    def _require_sensor(self, sensor_id: str) -> None:
+        if sensor_id == HUB or sensor_id not in self._nodes.network.links(HUB):
+            raise UnknownSensor(sensor_id)
+
+    def _river_km(self, spot: Spot) -> float | None:
+        return (
+            river_km_at(self._river, Position(spot.latitude, spot.longitude))
+            if self._river
+            else None
+        )
+
+    def _register_those_in_reach(self) -> None:
+        """Sign up and accept each unregistered Sensor the Hub can now hear."""
+        hops = {name: reach.hops_from_hub for name, reach in self._nodes.network.links(HUB).items()}
+        for name in sorted(self._unregistered):
+            if hops.get(name) is None:
+                continue
+            try:
+                _register(self._nodes[name], self._nodes[HUB], name)
+            except httpx.HTTPStatusError as error:
+                raise SandboxRefused(
+                    f"the Hub would not register {name}: {error.response.json()['detail']}"
+                ) from None
+            self._unregistered.discard(name)
 
 
 def _settings(nodes: SimulatedNodes, site: NodeSite, **overrides: Any) -> Settings:
