@@ -1983,7 +1983,7 @@ section p.flood-prone-caption {
   pointer-events: none;
 }
 
-/* The Sandbox Panel: the SIMULATED label, the radio range slider and the list of Nodes. */
+/* The Sandbox Panel: the SIMULATED label, the radio range slider, Add Sensor and the Node list. */
 .sandbox-label {
   margin: 0 0 0.5rem;
   color: var(--accent);
@@ -1998,6 +1998,20 @@ section p.flood-prone-caption {
 
 .sandbox-range input {
   grid-column: 1 / -1;
+}
+
+/* Below the other pick banners, which share the top of the map. */
+.place-sensor-banner {
+  top: 3.75rem;
+}
+
+.sandbox-add {
+  margin-top: 0.75rem;
+}
+
+.sandbox-add[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .sandbox-nodes {
