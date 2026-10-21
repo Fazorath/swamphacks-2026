@@ -131,7 +131,7 @@ The place a Storm Shield network watches, described in one small hand-written fi
 _Avoid_: map, area, location, scenario
 
 **Cache Pack**:
-The bundle of offline information (the Region file, an OpenStreetMap basemap, terrain, Shelters, Flood-Prone Areas, Routes, the Weather Grid and Event files) built from a Region's file by `scripts/build-cache-pack.sh <region>`, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets it from a GitHub Release (or a laptop serving the zip while the repo is private); sensor Nodes get it from the Hub.
+The bundle of offline information (the Region file, an OpenStreetMap basemap, terrain, Shelters, Flood-Prone Areas, Routes, the Weather Grid and Event files) built from a Region's file by `scripts/build-cache-pack.sh <region>`, then downloaded by every Node while online and served from its own disk so it works without internet. The Hub gets its Region's pack from the GitHub Release `cache-pack-<region>-v<N>` (or from `CACHE_PACK_URL`, such as a laptop serving the zip); sensor Nodes get it from the Hub.
 _Avoid_: offline data, bundle, snapshot
 
 **Flood Risk**:

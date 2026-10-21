@@ -21,8 +21,8 @@ Run these before calling any issue done. An agent must not claim "done" without 
 |---|---|
 | Install | `cd node && uv sync` and `cd dashboard && pnpm install` |
 | Build dashboard | `cd dashboard && pnpm build` |
-| Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
-| Try the app with no setup | `scripts/sandbox.sh` from anywhere (a Hub and four registered simulated Sensors in one process, then the browser; `--port`, `--pack`; the first run downloads the Cache Pack to `.demo/pack` and builds the dashboard, so it needs `pnpm` and the internet once) |
+| Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`; `NODE_REGION=<folder under regions/>` picks the Hub's Region, and its Cache Pack is downloaded from the Release `cache-pack-<region>-v<N>` unless `CACHE_PACK_URL` says otherwise) |
+| Try the app with no setup | `scripts/sandbox.sh` from anywhere (a Hub and four registered simulated Sensors in one process, then the browser; `--port`, `--pack`; it uses the Region's pack from `build/<region>/` or `.demo/pack/<region>/`, else downloads it from the Release once, and says `scripts/build-cache-pack.sh <region>` when neither works; it builds the dashboard on the first run, so it needs `pnpm`) |
 | Keep the Pi's Hub on your checkout | `scripts/run-live.sh` (a Hub by default; rebuilds whenever `HEAD` moves, e.g. after `git pull`, and swaps the Node only when the build worked) |
 | Build a Region's Cache Pack | `scripts/build-cache-pack.sh nepal` (reads `regions/<name>/region.json`; needs the internet and `uv`; writes `build/<name>/cache-pack.zip`; notes in `scripts/cache-pack/README.md`) |
 | Dashboard dev server | `cd dashboard && pnpm dev` (proxies `/api` to port 8000) |

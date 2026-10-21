@@ -4,10 +4,10 @@ Run once per Region, ahead of the event, with internet. Spec: `docs/specs/region
 
 ```
 scripts/build-cache-pack.sh nepal       # reads regions/nepal/region.json, writes build/nepal/cache-pack.zip
-gh release create cache-pack-nepal-v1 build/nepal/cache-pack.zip   # or `gh release upload` to replace it
+gh release create cache-pack-nepal-v1 build/nepal/cache-pack.zip   # tag: cache-pack-<region>-v<N>
 ```
 
-Then set `CACHE_PACK_URL` on the Hub to the Release asset's download URL. Sensor Nodes set it to the Hub's `/api/cache-pack.zip` and take their Region from the `region.json` inside the pack.
+The Release asset must be named `cache-pack.zip`. Then put the new number in `RELEASED_PACKS` (`node/src/storm_shield/cache_pack.py`): a Node with no `CACHE_PACK_URL` downloads its Region's pack (`NODE_REGION`) from `cache-pack-<region>-v<N>`, and the Sandbox does the same when `build/<region>/cache-pack.zip` is not on disk. A Node never re-downloads a valid pack, so a new version reaches a Node only when its `CACHE_PACK_DIR` is empty. `CACHE_PACK_URL` still overrides the source; Sensor Nodes set it to the Hub's `/api/cache-pack.zip` and take their Region from the `region.json` inside the pack.
 
 - `--output <file>` and `--work-dir <folder>` (default `build`, where the OpenStreetMap extract is kept between builds) are the only options. The build needs `uv`; `pyrosm` (the Road graph) is fetched by the script for that run only and is never a Node dependency.
 - **Everything comes from the Region file.** Its `bbox` is the box for the basemap, terrain, Routes and Weather Grid; its `shelters` and `high_ground` become `shelters.json` and `high_ground.json`; its `water` files become `river.geojson` and `flood_prone.geojson`; the Events in `regions/<name>/events/` become `events/<id>.json`. The build checks the Region file and every Event file against their schemas first and names the bad field and the file; an Event's Official Alerts must come from sources the Region lists.

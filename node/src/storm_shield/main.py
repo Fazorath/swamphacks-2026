@@ -17,6 +17,7 @@ from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
     CachePack,
+    download_source,
 )
 from storm_shield.community_reading import CommunityReading, Reading, fuzz_position
 from storm_shield.community_warning import CommunityWarning, HeardCommunityWarnings, HubWarnings
@@ -866,6 +867,9 @@ def build_mesh(settings: Settings) -> Mesh:
 def run() -> None:
     logging.basicConfig(level=logging.INFO)
     settings = Settings()
+    # Only a running Node looks for the Release; tests build their Nodes with create_app and
+    # never download.
+    settings.cache_pack_url = download_source(settings.cache_pack_url, settings.region)
     mesh = build_mesh(settings)
     logger.info("Node %s (%s) is up as %s", mesh.identity, settings.name, settings.role)
     uvicorn.run(create_app(settings, mesh), host="0.0.0.0", port=settings.port)
