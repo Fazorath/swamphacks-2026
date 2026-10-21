@@ -1,6 +1,7 @@
 import { usePolledJson } from "./usePolledJson";
 
 export type EventClock = {
+  event: string;
   state: "playing" | "paused";
   event_t: number;
   rate: number;

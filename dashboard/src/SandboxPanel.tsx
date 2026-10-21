@@ -1,4 +1,6 @@
 import { Panel, type PanelControl } from "./Panel";
+import { ReplayControls } from "./ReplayControls";
+import type { EventClockFeed } from "./useEventClock";
 import type { SandboxNode, SandboxNodes } from "./useSandboxNodes";
 
 const MIN_RANGE_KM = 0.1;
@@ -15,6 +17,7 @@ type Props = {
   onRemoveSensor: (id: string) => Promise<void>;
   // Whether the Hub has sent any Community Warning yet; until it has, nobody has heard one.
   warningSent: boolean;
+  eventClock: EventClockFeed;
   panel: PanelControl;
 };
 
@@ -37,6 +40,7 @@ export function SandboxPanel({
   onTogglePlacing,
   onRemoveSensor,
   warningSent,
+  eventClock,
   panel,
 }: Props) {
   const rangeKm = sandbox.radio_range_m / 1000;
@@ -66,6 +70,7 @@ export function SandboxPanel({
         Add Sensor
       </button>
       {problem && <p role="alert">{problem}</p>}
+      <ReplayControls eventClock={eventClock} />
       <ul aria-label="Sandbox Nodes" className="sandbox-nodes">
         {sandbox.nodes.map((node) => (
           <li key={node.id} className={node.hops === null ? "no-path" : undefined}>

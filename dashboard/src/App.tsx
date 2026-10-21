@@ -234,6 +234,7 @@ export function App() {
       onTogglePlacing={() => setPlacingSensor((placing) => !placing)}
       onRemoveSensor={removeSensor}
       warningSent={communityWarnings.length > 0}
+      eventClock={eventClock}
       panel={
         phone
           ? { open: true, onToggle: () => {} }

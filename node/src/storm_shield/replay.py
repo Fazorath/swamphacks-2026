@@ -11,7 +11,7 @@ from pydantic import BaseModel, field_validator
 from storm_shield.community_reading import Reading
 from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
 
-EVENT_FILE = Path(__file__).with_name("events") / "bhote-koshi-2026.json"
+EVENTS_DIR = Path(__file__).with_name("events")
 
 
 class ReplayClockMessage(BaseModel):
@@ -226,5 +226,14 @@ def _seconds_in_day(clock_time: str) -> int:
     return hours * 3600 + minutes * 60 + seconds
 
 
+def load_events() -> dict[str, Event]:
+    """Every Event file, by id, in file-name order; the first is the one a stopped Node reads."""
+    events = [
+        Event.model_validate(json.loads(path.read_text()))
+        for path in sorted(EVENTS_DIR.glob("*.json"))
+    ]
+    return {event.id: event for event in events}
+
+
 def load_event() -> Event:
-    return Event.model_validate(json.loads(EVENT_FILE.read_text()))
+    return next(iter(load_events().values()))

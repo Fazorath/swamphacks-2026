@@ -11,22 +11,49 @@ const PHASES = [
 ];
 const INTERNET_CUE = REPLAY_START + 50 * 60;
 
+const EVENTS = {
+  events: [
+    { id: "bhote-koshi-2026", label: "Bhote Koshi flood" },
+    { id: "made-up-flood", label: "A made-up flood" },
+  ],
+};
+const MADE_UP_PHASES = [{ id: "only", label: "The only phase", event_t: REPLAY_START }];
+
 let replay: object;
+let events: object | null;
+let sandbox: { label: "SIMULATED" } | null;
 let posted: { path: string; body: unknown }[];
+let fetched: string[];
 
 beforeEach(() => {
   replay = { v: 1, kind: "replay", state: "stopped", event_t: 0, rate: 1 };
+  events = null;
+  sandbox = null;
   posted = [];
+  fetched = [];
   vi.stubGlobal("fetch", async (path: string, init?: RequestInit) => {
     if (init?.method === "POST") {
       posted.push({ path, body: init.body ? JSON.parse(init.body as string) : undefined });
       return Response.json(replay);
     }
+    fetched.push(path);
     if (path === "/api/replay") return Response.json(replay);
+    if (path === "/api/replay/events") {
+      return events ? Response.json(events) : new Response(null, { status: 404 });
+    }
     if (path === "/api/replay/phases") {
       return Response.json({ phases: PHASES, internet_cue_event_t: INTERNET_CUE });
     }
-    if (path === "/api/state") return Response.json(fakeNodeState({ id: "hub", name: "hub" }));
+    if (path === "/api/replay/phases?event=made-up-flood") {
+      return Response.json({ phases: MADE_UP_PHASES, internet_cue_event_t: INTERNET_CUE });
+    }
+    if (path === "/api/replay/phases?event=bhote-koshi-2026") {
+      return Response.json({ phases: PHASES, internet_cue_event_t: INTERNET_CUE });
+    }
+    if (path === "/api/sandbox/nodes") return Response.json({ radio_range_m: 40000, nodes: [] });
+    if (path === "/api/state") {
+      return Response.json(fakeNodeState({ id: "hub", name: "hub", sandbox }));
+    }
     return new Response(null, { status: 404 });
   });
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -126,5 +153,75 @@ test("Resume at the end of the replay shows why the Hub refused it", async () =>
   fireEvent.click(resume);
   expect(await within(panel).findByRole("alert")).toHaveTextContent(
     "Could not resume the replay: the replay has ended; Reset or jump to a phase",
+  );
+});
+
+test("the picker lists the Region's Events, and the picked one is what Start plays", async () => {
+  events = EVENTS;
+  const panel = await openHubPanel();
+  const picker = await within(panel).findByRole("combobox", { name: "Event" });
+  expect(
+    within(picker)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["Bhote Koshi flood", "A made-up flood"]);
+  fireEvent.change(picker, { target: { value: "made-up-flood" } });
+  fireEvent.click(await within(panel).findByRole("button", { name: "The only phase" }));
+  await vi.waitFor(() =>
+    expect(posted).toEqual([
+      { path: "/api/replay/jump", body: { phase: "only", event: "made-up-flood" } },
+    ]),
+  );
+  posted.length = 0;
+  fireEvent.click(within(panel).getByRole("button", { name: "Start" }));
+  await vi.waitFor(() =>
+    expect(posted).toEqual([{ path: "/api/replay/start", body: { event: "made-up-flood" } }]),
+  );
+});
+
+test("a running replay shows its Event, and picking another one starts that", async () => {
+  events = EVENTS;
+  replay = {
+    v: 2,
+    kind: "replay",
+    event: "made-up-flood",
+    state: "playing",
+    event_t: REPLAY_START,
+    rate: 30,
+  };
+  const panel = await openHubPanel();
+  const picker = await within(panel).findByRole("combobox", { name: "Event" });
+  expect(picker).toHaveValue("made-up-flood");
+  fireEvent.change(picker, { target: { value: "bhote-koshi-2026" } });
+  await vi.waitFor(() =>
+    expect(posted).toEqual([{ path: "/api/replay/start", body: { event: "bhote-koshi-2026" } }]),
+  );
+});
+
+test("a running Event is labelled REPLAY beside its clock", async () => {
+  events = EVENTS;
+  replay = {
+    v: 2,
+    kind: "replay",
+    event: "bhote-koshi-2026",
+    state: "playing",
+    event_t: REPLAY_START,
+    rate: 30,
+  };
+  const panel = await openHubPanel();
+  expect(await within(panel).findByText("REPLAY")).toBeVisible();
+  expect(within(panel).getByText(/REPLAY ×30/)).toBeVisible();
+});
+
+test("the Sandbox Panel holds the same Replay controls", async () => {
+  events = EVENTS;
+  sandbox = { label: "SIMULATED" };
+  render(<App />);
+  const panel = await screen.findByRole("region", { name: "Sandbox" });
+  const picker = await within(panel).findByRole("combobox", { name: "Event" });
+  fireEvent.change(picker, { target: { value: "made-up-flood" } });
+  fireEvent.click(within(panel).getByRole("button", { name: "Start" }));
+  await vi.waitFor(() =>
+    expect(posted).toEqual([{ path: "/api/replay/start", body: { event: "made-up-flood" } }]),
   );
 });
