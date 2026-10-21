@@ -4,7 +4,8 @@ from collections.abc import Callable
 import RNS
 from meshed_nodes import MeshedNodes
 
-from storm_shield.official_alert import OfficialAlert
+from storm_shield.official_alert import HEADLINE_MAX_LENGTH, OfficialAlert
+from storm_shield.region import ALERT_TAG_MAX_LENGTH
 from storm_shield.replay import load_event
 from storm_shield.reticulum_mesh import SIGNATURE_LENGTH
 
@@ -112,6 +113,14 @@ def test_the_replayed_alerts_keep_their_real_times_and_source_links() -> None:
         ("10:28", "district"),
     ]
     assert all(alert.url.startswith("https://") for alert in alerts)
+
+
+def test_the_longest_alert_the_region_allows_fits_one_reticulum_packet() -> None:
+    alert = load_event().official_alerts_due(REPLAY_START + 3 * 3600)[0]
+    longest = alert.model_copy(
+        update={"source": "x" * ALERT_TAG_MAX_LENGTH, "headline": "h" * HEADLINE_MAX_LENGTH}
+    )
+    assert SIGNATURE_LENGTH + len(longest.model_dump_json().encode()) <= RNS.Packet.PLAIN_MDU
 
 
 def test_every_replayed_alert_fits_one_reticulum_packet() -> None:

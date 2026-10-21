@@ -1,4 +1,23 @@
-import type { NodeSnapshot, NodeState } from "./nodeState";
+import type { NodeSnapshot, NodeState, Region } from "./nodeState";
+
+// Nepal's Region as a Node reports it.
+export const FAKE_REGION: Region = {
+  name: "nepal",
+  label: "Bhote Koshi valley, Nepal",
+  time_zone: "Asia/Kathmandu",
+  display_units: {
+    water_level: "cm",
+    rain_rate: "mm/h",
+    soil_moisture: "%",
+    air_pressure: "hPa",
+    distance: "km",
+  },
+  official_alert_sources: [
+    { tag: "dhm", name: "DHM", covers: "Nepal" },
+    { tag: "ndrrma", name: "NDRRMA", covers: "Nepal" },
+    { tag: "district", name: "District authorities", covers: "Rasuwa district" },
+  ],
+};
 
 // What a Node answers at /api/state on a calm day with no Node heard yet; tests override the rest.
 export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
@@ -9,6 +28,8 @@ export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
     status: "online",
     registration: "registered",
     sandbox: null,
+    region: FAKE_REGION,
+    hazard: "flash_flood",
     flood_risk: {
       level: null,
       reasons: [],

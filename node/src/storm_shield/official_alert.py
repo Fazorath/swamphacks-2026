@@ -4,13 +4,14 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
+from storm_shield.region import ALERT_TAG_MAX_LENGTH
+
 if TYPE_CHECKING:
     # The replay timeline builds alerts, so a runtime import here would be circular.
     from storm_shield.replay import ReplayClockMessage
 
 HEADLINE_MAX_LENGTH = 120
 
-AlertSource = Literal["dhm", "ndrrma", "district"]
 # Tags the Evacuation Plan matches against a household; empty means everyone in the zone.
 AppliesTo = Literal["mobile_home", "rv", "flood_prone_area"]
 
@@ -21,7 +22,8 @@ class OfficialAlert(BaseModel):
     v: Literal[1] = 1
     kind: Literal["alert"] = "alert"
     id: str
-    source: AlertSource
+    # A tag from the Region's `official_alert_sources`; the dashboard shows the source's name.
+    source: str = Field(max_length=ALERT_TAG_MAX_LENGTH)
     # `replay` is what the dashboard turns into the OFFICIAL · REPLAY label.
     mode: Literal["live", "replay"]
     # The source's own timestamp, shown as given; for a replay it is also the Event time it is due.

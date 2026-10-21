@@ -151,7 +151,7 @@ test("a Surge says how far the water rose and how long it took, without repeatin
   stubFloodRisk(SURGE);
   render(<App />);
   const card = await screen.findByRole("region", { name: "Flood Risk" });
-  expect(within(card).getByText("water rose 3.2 m in 8 s")).toBeInTheDocument();
+  expect(within(card).getByText("water rose 320 cm in 8 s")).toBeInTheDocument();
   expect(within(card).getByText("water level 340 cm at 1 Node")).toBeInTheDocument();
   expect(within(card).queryByText(/rising/)).not.toBeInTheDocument();
 });
@@ -163,7 +163,7 @@ test("a Surge seen within one reading interval says the water rose at once", asy
   });
   render(<App />);
   const card = await screen.findByRole("region", { name: "Flood Risk" });
-  expect(within(card).getByText("water rose 1.5 m at once")).toBeInTheDocument();
+  expect(within(card).getByText("water rose 150 cm at once")).toBeInTheDocument();
 });
 
 test("the Storm Signal sits in the top bar and the card leaves it out when other reasons exist", async () => {

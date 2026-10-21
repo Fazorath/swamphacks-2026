@@ -14,16 +14,19 @@ from pathlib import Path
 
 import httpx
 from http_retry import describe_error, get_with_retries
-from pack_high_ground import build_high_ground, load_high_ground
+from pack_high_ground import build_high_ground
 from pack_nepal import build_nepal_bundle, elevation_at, load_key_places, tiles_covering
 from pack_routes import FloodProneArea, Roads, RouteGrid, build_road_graph, build_routes
 from pack_weather import fetch_weather_replay
 
+from storm_shield.region import load_region, region_path
 from storm_shield.weather_grid import NEPAL_BBOX
 
 SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
+REGION_DIR = region_path("nepal").parent
+REGION = load_region(region_path("nepal"))
 # The valley around the flood: the Lhende Khola down to below Trishuli.
-VALLEY_BBOX = (27.86, 85.08, 28.46, 85.47)
+VALLEY_BBOX = REGION.bbox
 # Few zoom levels on purpose: the box is large and the pack must stay small.
 ZOOMS = range(10, 15)
 # Pis pull the whole pack over the mesh, so routes stay small; the grid coarsens until they fit.
@@ -39,22 +42,8 @@ USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student proje
 
 
 def load_shelters() -> list[dict[str, object]]:
-    shelters = json.loads((SOURCE_DIR / "shelters.source.json").read_text())
-    south, west, north, east = VALLEY_BBOX
-    outside = [
-        shelter["id"]
-        for shelter in shelters
-        if not (
-            south <= shelter["pos"][0] <= north and west <= shelter["pos"][1] <= east
-        )
-    ]
-    if outside:
-        sys.exit(f"Shelters outside the demo box: {', '.join(outside)}")
     # The `source` note is for reviewers of the repo; Nodes only need the fields they show.
-    return [
-        {key: value for key, value in shelter.items() if key != "source"}
-        for shelter in shelters
-    ]
+    return [shelter.model_dump(exclude={"source"}) for shelter in REGION.shelters]
 
 
 def carto_key() -> str:
@@ -147,8 +136,8 @@ def build_route_files(
 def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
     files: dict[str, bytes] = {
         "shelters.json": json.dumps(load_shelters(), indent=1).encode(),
-        "flood_prone.geojson": (SOURCE_DIR / "flood_corridor.source.geojson").read_bytes(),
-        "river.geojson": (SOURCE_DIR / "river.source.geojson").read_bytes(),
+        "flood_prone.geojson": (REGION_DIR / REGION.water.corridor_source).read_bytes(),
+        "river.geojson": (REGION_DIR / REGION.water.line_source).read_bytes(),
     }
     manifest_extras: dict[str, object] = {}
     flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
@@ -175,7 +164,7 @@ def build(output: Path, osm_extract: Path | None, raster_tiles: bool) -> None:
         }
         river_lines = json.loads(files["river.geojson"])["features"]
         high_ground = build_high_ground(
-            load_high_ground(SOURCE_DIR / "high_ground.source.json"),
+            [point.model_dump() for point in REGION.high_ground],
             key_places,
             [(lat, lon) for line in river_lines for lon, lat in line["geometry"]["coordinates"]],
             flood_prone,

@@ -71,6 +71,8 @@ export function App() {
   // Still true of the Node while it is unreachable, unlike its readings.
   const identity = lastAnswer?.state ?? null;
   const floodRisk = state?.flood_risk ?? null;
+  const region = state?.region ?? null;
+  const hazard = state?.hazard ?? null;
   const { sandbox, problem, setRadioRange, addSensor, moveSensor, removeSensor } = useSandboxNodes(
     state?.sandbox != null,
   );
@@ -128,6 +130,8 @@ export function App() {
     pack: cachePack,
     openShelterIds,
     floodRisk,
+    region,
+    hazard,
     routes,
     rerouting: roadGraph && { graph: roadGraph, blocked: blockedRoads },
     officialAlerts,
@@ -216,6 +220,8 @@ export function App() {
     <ReadingsPanel
       nodes={nodes}
       floodRisk={floodRisk}
+      region={region}
+      hazard={hazard}
       hubId={state?.role === "hub" ? state.id : null}
       waveKm={waveKm}
       selectedId={selectedId}
@@ -245,6 +251,7 @@ export function App() {
   const alertsPanel = (
     <AlertsPanel
       alerts={officialAlerts}
+      region={region}
       warnings={communityWarnings}
       nodes={lastAnswer?.state.nodes ?? []}
       thisNodeId={lastAnswer?.state.id ?? ""}
@@ -261,6 +268,7 @@ export function App() {
   const planPanel = (
     <EvacuationPlanPanel
       plan={plan}
+      region={region}
       exampleHome={example !== null}
       handOff={!phone && profile === null}
       waveArrival={arrival}
@@ -298,6 +306,7 @@ export function App() {
         phone={phone}
         eventClock={eventClock.clock}
         floodRisk={floodRisk}
+        region={region}
         showStormSignal={shows("storm-signal")}
         warningChip={warningChip}
         status={state?.status ?? null}
@@ -498,6 +507,7 @@ export function App() {
       {phone && (
         <WarningTakeover
           pending={pending}
+          region={region}
           nodes={allNodes}
           thisNodeId={thisNodeId}
           waveArrival={arrival}

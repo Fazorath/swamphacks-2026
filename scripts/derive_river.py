@@ -1,4 +1,4 @@
-"""Derive scripts/cache-pack/river.source.geojson and flood_corridor.source.geojson from OpenStreetMap.
+"""Derive regions/nepal/sources/river.geojson and flood_corridor.geojson from OpenStreetMap.
 
 Run once when the river inputs change; the Cache Pack build reads the two files it writes.
 See scripts/cache-pack/README.md.
@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 from http_retry import get_with_retries
 
-SOURCE_DIR = Path(__file__).resolve().parent / "cache-pack"
+SOURCE_DIR = Path(__file__).resolve().parents[1] / "regions" / "nepal" / "sources"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 USER_AGENT = "storm-shield-cache-pack-builder/1.0 (SwampHacks 2026 student project)"
 # OSM ways of the river, upstream to downstream: Lende Khola (3 ways to the confluence),
@@ -184,8 +184,8 @@ def main() -> None:
             }
         ],
     }
-    (SOURCE_DIR / "river.source.geojson").write_text(json.dumps(river, separators=(",", ":")))
-    (SOURCE_DIR / "flood_corridor.source.geojson").write_text(
+    (SOURCE_DIR / "river.geojson").write_text(json.dumps(river, separators=(",", ":")))
+    (SOURCE_DIR / "flood_corridor.geojson").write_text(
         json.dumps(flood_prone, separators=(",", ":"))
     )
     print(f"{len(line)} vertices, km {km[0]:.1f} to {km[-1]:.1f}, Betrawati at km {betrawati_km:.1f}")

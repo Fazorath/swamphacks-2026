@@ -1,9 +1,7 @@
 """High-ground points for the Cache Pack: hand-placed spots on the hillside above the valley towns."""
 
-import json
 import math
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 from pack_routes import FloodProneArea, Point, distance_m
@@ -41,11 +39,6 @@ def _near_corridor(point: Point, corridor: FloodProneArea) -> bool:
         if corridor.contains(ring_point):
             return True
     return False
-
-
-def load_high_ground(path: Path) -> list[dict[str, Any]]:
-    points: list[dict[str, Any]] = json.loads(path.read_text())
-    return points
 
 
 def build_high_ground(

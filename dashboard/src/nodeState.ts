@@ -3,6 +3,27 @@ import type { OfficialAlert } from "./officialAlerts";
 
 export type NodeLevel = "elevated" | "high";
 
+// What a Region's water can do; it names the Event and decides what triggers a Community Warning.
+export type Hazard = "flash_flood";
+
+export type DisplayUnits = {
+  water_level: "cm" | "m" | "ft";
+  rain_rate: "mm/h" | "in/h";
+  soil_moisture: "%";
+  air_pressure: "hPa" | "inHg";
+  distance: "km" | "mi";
+};
+
+// The part of the Region file the browser needs; the Node has already checked the rest.
+export type Region = {
+  name: string;
+  label: string;
+  time_zone: string;
+  display_units: DisplayUnits;
+  // An Official Alert names its source by `tag`; the Region says what to call it.
+  official_alert_sources: { tag: string; name: string; covers: string }[];
+};
+
 export type FloodRiskReason = {
   code:
     "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling" | "raining";
@@ -56,6 +77,8 @@ export type NodeState = {
   registration: Registration;
   // Present only when the Node is the Sandbox's Hub; nothing in the Sandbox is a real reading.
   sandbox: { label: "SIMULATED" } | null;
+  region: Region;
+  hazard: Hazard;
   flood_risk: FloodRisk;
   nodes: NodeSnapshot[];
   official_alerts: OfficialAlert[];

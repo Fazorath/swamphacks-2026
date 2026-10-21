@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="NODE_", populate_by_name=True)
 
     name: str = "node-1"
+    # The folder under regions/ whose region.json this Node watches.
+    region: str = "nepal"
     role: Role = "sensor"
     port: int = 8000
     # Betrawati until the operator sets the real spot; only a fuzzed copy leaves the Node.

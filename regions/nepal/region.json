@@ -1,0 +1,231 @@
+{
+  "name": "nepal",
+  "label": "Bhote Koshi valley, Nepal",
+  "bbox": [
+    27.86,
+    85.08,
+    28.46,
+    85.47
+  ],
+  "time_zone": "Asia/Kathmandu",
+  "display_units": {
+    "water_level": "cm",
+    "rain_rate": "mm/h",
+    "soil_moisture": "%",
+    "air_pressure": "hPa",
+    "distance": "km"
+  },
+  "official_alert_sources": [
+    {
+      "tag": "dhm",
+      "name": "DHM",
+      "covers": "Nepal"
+    },
+    {
+      "tag": "ndrrma",
+      "name": "NDRRMA",
+      "covers": "Nepal"
+    },
+    {
+      "tag": "district",
+      "name": "District authorities",
+      "covers": "Rasuwa district"
+    }
+  ],
+  "water": {
+    "type": "river",
+    "km_origin": [
+      28.2781,
+      85.377
+    ],
+    "line_source": "sources/river.geojson",
+    "corridor_source": "sources/flood_corridor.geojson"
+  },
+  "rules": {
+    "flood_warning": {
+      "flash_flood": {
+        "surge_rise": {
+          "value": 300,
+          "unit": "cm"
+        },
+        "surge_window_s": 60,
+        "elevated_level": {
+          "value": 300,
+          "unit": "cm"
+        },
+        "high_level": {
+          "value": 600,
+          "unit": "cm"
+        },
+        "rising": {
+          "value": 50,
+          "unit": "cm"
+        },
+        "rising_window_s": 120
+      },
+      "rain_elevated": {
+        "value": 10,
+        "unit": "mm/h"
+      },
+      "rain_high": {
+        "value": 25,
+        "unit": "mm/h"
+      },
+      "storm_pressure": {
+        "value": 1000,
+        "unit": "hPa"
+      },
+      "soil_rising_points": 3
+    }
+  },
+  "shelters": [
+    {
+      "id": "syabrubesi-gompa",
+      "name": "Buddhist gompa above Syabrubesi",
+      "pos": [
+        28.16876,
+        85.34409
+      ],
+      "height_above_river_m": 66,
+      "special_needs": false,
+      "pet_friendly": false,
+      "source": "OpenStreetMap node 2852823436 (amenity=place_of_worship, religion=buddhist; unnamed in OSM, so the name describes it). Height: SRTM 30 m elevation (OpenTopoData) 1522 m minus 1456 m at the nearest river point, 154 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter. Confirm with Rasuwa District before the event."
+    },
+    {
+      "id": "komin-school",
+      "name": "Shree Komin Primary School",
+      "pos": [
+        28.16167,
+        85.33217
+      ],
+      "height_above_river_m": 263,
+      "special_needs": false,
+      "pet_friendly": false,
+      "source": "OpenStreetMap node 4967982080 (amenity=school, hamlet Narkote). Height: SRTM 30 m elevation 1666 m minus 1403 m at the nearest river point, 383 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+    },
+    {
+      "id": "neelkanta-school",
+      "name": "Shree Neelkanta Higher Secondary School",
+      "pos": [
+        27.97857,
+        85.18407
+      ],
+      "height_above_river_m": 96,
+      "special_needs": false,
+      "pet_friendly": false,
+      "source": "OpenStreetMap node 4706138525 (amenity=school), north of Betrawati. Height: SRTM 30 m elevation 711 m minus 615 m at the nearest river point, 241 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+    },
+    {
+      "id": "sundaradevi-school",
+      "name": "Shree Sundaradevi Primary School",
+      "pos": [
+        27.97627,
+        85.17697
+      ],
+      "height_above_river_m": 159,
+      "special_needs": false,
+      "pet_friendly": false,
+      "source": "OpenStreetMap node 5063441826 (amenity=school, Pati ko Chautara-1), on the hillside west of Betrawati. Height: SRTM 30 m elevation 776 m minus 617 m at the nearest river point, 495 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+    },
+    {
+      "id": "karki-manakamana-school",
+      "name": "Shree Karki Manakamana Lower Secondary School",
+      "pos": [
+        27.98826,
+        85.1742
+      ],
+      "height_above_river_m": 265,
+      "special_needs": false,
+      "pet_friendly": false,
+      "source": "OpenStreetMap node 5045819002 (amenity=school, Pokhari Chapdanda), on the hillside above Betrawati. Height: SRTM 30 m elevation 899 m minus 634 m at the nearest river point, 582 m away; good to about 20 m. Checked 2026-10-17 from maps only; not visited, and nobody has confirmed it opens as a shelter."
+    }
+  ],
+  "high_ground": [
+    {
+      "id": "syabrubesi-west-slope",
+      "name": "Slope west of Syabrubesi",
+      "pos": [
+        28.16428,
+        85.33622
+      ],
+      "town": "Syabrubesi",
+      "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 300 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground; nobody has confirmed the slope is open or safe to stand on. Check against the terrain before the event.",
+      "checked": "2026-10-18"
+    },
+    {
+      "id": "syabrubesi-east-slope",
+      "name": "Slope east of Syabrubesi",
+      "pos": [
+        28.16248,
+        85.34216
+      ],
+      "town": "Syabrubesi",
+      "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 310 m from the town centre, outside the corridor and its 100 m margin, 126 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+      "checked": "2026-10-18"
+    },
+    {
+      "id": "betrawati-north-slope",
+      "name": "Slope north of Betrawati",
+      "pos": [
+        27.97688,
+        85.18582
+      ],
+      "town": "Betrawati",
+      "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 420 m from the town centre, outside the corridor and its 100 m margin, 90 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+      "checked": "2026-10-18"
+    },
+    {
+      "id": "trishuli-south-slope",
+      "name": "Slope south of Trishuli",
+      "pos": [
+        27.91898,
+        85.1487
+      ],
+      "town": "Trishuli",
+      "source": "PLACEHOLDER. Picked from the Cache Pack's Terrarium elevation tiles (SRTM, about 35 m a pixel): a spot about 390 m from the town centre, outside the corridor and its 100 m margin, 96 m above the nearest river vertex. Not visited and not checked on the ground. Check against the terrain before the event.",
+      "checked": "2026-10-18"
+    }
+  ],
+  "sensor_sites": [
+    {
+      "id": "s3",
+      "label": "Betrawati reach",
+      "pos": [
+        27.9215,
+        85.146
+      ],
+      "river_km": 54.0,
+      "why": "Furthest downstream station of the Bhote Koshi replay, next to the Hub; sees the surge last."
+    },
+    {
+      "id": "s2",
+      "label": "Syabrubesi reach",
+      "pos": [
+        28.1632,
+        85.3391
+      ],
+      "river_km": 14.6,
+      "why": "At Syabrubesi, the first town the replay's surge reaches."
+    },
+    {
+      "id": "s1",
+      "label": "Timure reach",
+      "pos": [
+        28.2528,
+        85.3667
+      ],
+      "river_km": 3.4,
+      "why": "Below the confluence, on the way to Syabrubesi."
+    },
+    {
+      "id": "s0",
+      "label": "Lhende-Kyirong confluence",
+      "pos": [
+        28.3517,
+        85.4477
+      ],
+      "river_km": -12.2,
+      "why": "Furthest upstream station of the replay; sees the surge first."
+    }
+  ]
+}

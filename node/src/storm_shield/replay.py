@@ -9,7 +9,8 @@ from typing import Literal
 from pydantic import BaseModel, field_validator
 
 from storm_shield.community_reading import Reading
-from storm_shield.official_alert import AlertSource, AppliesTo, OfficialAlert
+from storm_shield.official_alert import AppliesTo, OfficialAlert
+from storm_shield.region import Region, RegionError
 
 EVENTS_DIR = Path(__file__).with_name("events")
 
@@ -105,7 +106,8 @@ class ReplayedAlert(BaseModel):
 
     id: str
     at: str
-    issuer: AlertSource
+    # A tag from the Region's `official_alert_sources`.
+    issuer: str
     headline: str
     applies_to: list[AppliesTo]
     source: str
@@ -147,6 +149,15 @@ class Event(BaseModel):
     def end_unix(self) -> int:
         """The Event clock's Unix seconds at the end of the replay, where the Hub stops it."""
         return self.event_t_at(self.end)
+
+    def require_alert_sources_of(self, region: Region) -> None:
+        """Raise RegionError if an alert is credited to a source the Region does not list."""
+        for alert in self.official_alerts:
+            if not region.has_alert_source(alert.issuer):
+                raise RegionError(
+                    f"Event {self.id}: alert {alert.id} is from {alert.issuer!r}, which is not "
+                    f"one of the {region.name} Region's official_alert_sources"
+                )
 
     def official_alerts_due(self, event_t: int) -> list[OfficialAlert]:
         """The Official Alerts the Event clock has reached, in the mesh format."""

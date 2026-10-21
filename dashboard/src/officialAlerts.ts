@@ -1,9 +1,11 @@
 import { nepalClockTime } from "./EventClockTag";
 import type { HouseholdProfile } from "./householdProfile";
+import type { Region } from "./nodeState";
 
 export type OfficialAlert = {
   id: string;
-  source: "dhm" | "ndrrma" | "district";
+  // A tag from the Region's `official_alert_sources`.
+  source: string;
   mode: "live" | "replay";
   // The source's own timestamp, ISO 8601 with its offset; shown as given.
   issued: string;
@@ -12,11 +14,10 @@ export type OfficialAlert = {
   url: string;
 };
 
-export const SOURCE_LABELS: Record<OfficialAlert["source"], string> = {
-  dhm: "DHM",
-  ndrrma: "NDRRMA",
-  district: "District authorities",
-};
+// The Region's name for the alert's source; the tag itself if the Region does not list it.
+export function sourceName(region: Region | null, alert: OfficialAlert): string {
+  return region?.official_alert_sources.find((s) => s.tag === alert.source)?.name ?? alert.source;
+}
 
 export function officialTag(alert: OfficialAlert): string {
   return alert.mode === "replay" ? "OFFICIAL · REPLAY" : "OFFICIAL";

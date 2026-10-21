@@ -115,7 +115,7 @@ The speed of a Surge between the first two Registered Nodes that surged, worked 
 _Avoid_: actual speed, live speed
 
 **Official Alert**:
-A warning or order issued by the Region's official alert source (DHM, NDRRMA or a district office in Nepal; the National Weather Service in Florida), shown distinctly from community information.
+A warning or order issued by one of the Region's official alert sources, named in its file (DHM, NDRRMA or a district office in Nepal; the National Weather Service in Florida), shown distinctly from community information.
 _Avoid_: warning, notification
 
 **Official Gauge**:
