@@ -21,7 +21,8 @@ function ring([lat, lon]: LatLon, metres: number): [number, number][] {
 }
 
 // Each Node's reach, one circle per Node.
-export function rangeCircles({ nodes, radio_range_m }: SandboxNodes): GeoJSON.FeatureCollection {
+export function rangeCircles(sandbox: SandboxNodes | null): GeoJSON.FeatureCollection {
+  const { nodes, radio_range_m } = sandbox ?? { nodes: [], radio_range_m: 0 };
   return {
     type: "FeatureCollection",
     features: nodes.map((node) => ({

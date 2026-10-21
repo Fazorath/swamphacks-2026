@@ -182,22 +182,24 @@ class Sandbox:
             CachePack(settings.cache_pack_dir).install(self._pack.read_bytes())
         except InvalidCachePack as error:
             raise SandboxError(f"{self._pack} is not a usable Cache Pack: {error}") from error
-        return nodes.start(settings, sandbox=_Controls(nodes, SANDBOX_RADIO_RANGE_M))
+        return nodes.start(settings, sandbox=_Controls(nodes))
 
 
 class _Controls(SandboxControls):
     """What the Hub's Sandbox API shows and changes: the radio range and who can hear whom."""
 
-    def __init__(self, nodes: SimulatedNodes, radio_range_m: float) -> None:
+    def __init__(self, nodes: SimulatedNodes) -> None:
         self._nodes = nodes
-        self._radio_range_m = radio_range_m
 
     def nodes(self) -> SandboxNodes:
+        radio_range_m = self._nodes.network.radio_range_m
+        if radio_range_m is None:
+            raise RuntimeError("the Sandbox always runs with a radio range")
         links = self._nodes.network.links(HUB)
         states = {name: self._nodes[name].get("/api/state").json() for name in links}
         newest_warning = max((w["id"] for w in states[HUB]["community_warnings"]), default=None)
         return SandboxNodes(
-            radio_range_m=self._radio_range_m,
+            radio_range_m=radio_range_m,
             nodes=[
                 SandboxNode(
                     id=name,
@@ -215,7 +217,6 @@ class _Controls(SandboxControls):
 
     def set_radio_range(self, radio_range_m: float) -> SandboxNodes:
         self._nodes.network.set_radio_range(radio_range_m)
-        self._radio_range_m = radio_range_m
         return self.nodes()
 
 

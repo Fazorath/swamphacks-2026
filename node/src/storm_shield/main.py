@@ -712,7 +712,7 @@ def create_app(
                 "paused" if keeps_paused else "playing", loaded_event.event_t_at(phase.at)
             )
 
-    if sandbox:
+    if sandbox is not None:
 
         @app.get("/api/sandbox/nodes")
         def sandbox_nodes() -> SandboxNodes:

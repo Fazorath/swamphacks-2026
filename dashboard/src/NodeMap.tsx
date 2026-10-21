@@ -429,10 +429,7 @@ export function NodeMap({
     [home, outOfReachShelter],
   );
   const blockedData = useMemo(() => lineCollection(blockedRoadLines), [blockedRoadLines]);
-  const radioRangeData = useMemo(
-    () => (sandbox ? rangeCircles(sandbox) : lineCollection([])),
-    [sandbox],
-  );
+  const radioRangeData = useMemo(() => rangeCircles(sandbox), [sandbox]);
   const radioLinksData = useMemo(
     () => lineCollection(sandbox ? linkLines(sandbox) : []),
     [sandbox],

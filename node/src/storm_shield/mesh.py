@@ -154,6 +154,11 @@ class InMemoryNetwork:
                 raise ValueError(f"no Node named {identity} has joined")
             self._positions[identity] = position
 
+    @property
+    def radio_range_m(self) -> float | None:
+        with self._lock:
+            return self._radio_range_m
+
     def set_radio_range(self, radio_range_m: float | None) -> None:
         """Takes effect on the next message; None is unlimited."""
         with self._lock:
