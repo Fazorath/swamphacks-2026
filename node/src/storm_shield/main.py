@@ -115,6 +115,8 @@ class ShelterChange(BaseModel):
 
 class ReplayJump(BaseModel):
     phase: str
+    # Absent: the Event on the Event clock. A stopped clock names none, so the picker sends it.
+    event: str | None = None
 
 
 class ReplayRate(BaseModel):
@@ -716,12 +718,16 @@ def create_app(
                     return heard
                 return set_replay(clocked_event(), heard.state, heard.event_t)
 
-        @app.post("/api/replay/start")
-        def start_replay(start: ReplayStart | None = None) -> ReplayClockMessage:
-            picked = start.event if start else None
+        def picked_or_clocked(picked: str | None) -> Event:
+            """The Event a control names, else the one on the clock."""
             event = clocked_event() if picked is None else events.get(picked)
             if event is None:
                 raise HTTPException(status_code=422, detail=f"unknown Event {picked!r}")
+            return event
+
+        @app.post("/api/replay/start")
+        def start_replay(start: ReplayStart | None = None) -> ReplayClockMessage:
+            event = picked_or_clocked(start.event if start else None)
             return set_replay(event, "playing", event.start_unix)
 
         @app.post("/api/replay/pause")
@@ -744,14 +750,14 @@ def create_app(
             return set_replay(event, "playing", heard.event_t)
 
         @app.post("/api/replay/reset")
-        def reset_replay() -> ReplayClockMessage:
+        def reset_replay(reset: ReplayStart | None = None) -> ReplayClockMessage:
             # Paused at 08:30 rather than stopped, so every Node keeps following the Event clock.
-            event = clocked_event()
+            event = picked_or_clocked(reset.event if reset else None)
             return set_replay(event, "paused", event.start_unix)
 
         @app.post("/api/replay/jump")
         def jump_replay(jump: ReplayJump) -> ReplayClockMessage:
-            event = clocked_event()
+            event = picked_or_clocked(jump.event)
             phase = next((p for p in event.phases if p.id == jump.phase), None)
             if phase is None:
                 raise HTTPException(status_code=422, detail=f"unknown phase {jump.phase!r}")

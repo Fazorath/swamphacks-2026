@@ -56,8 +56,12 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
     try {
       if (action === "start" && pickedRate !== null)
         await sendToReplay("rate", { rate: pickedRate });
-      const startsShownEvent = action === "start" && body === undefined && shownEventId;
-      await sendToReplay(action, startsShownEvent ? { event: shownEventId } : body);
+      // A stopped clock names no Event, so the controls that act on one carry the picked Event.
+      const needsEvent = ["start", "reset", "jump"].includes(action) && clock === null;
+      await sendToReplay(
+        action,
+        needsEvent && shownEventId ? { ...body, event: shownEventId } : body,
+      );
     } catch (error) {
       console.error(error);
       setProblem(`Could not ${action} the replay: ${(error as Error).message}`);
@@ -75,6 +79,7 @@ export function ReplayControls({ eventClock }: { eventClock: EventClockFeed }) {
   return (
     <section aria-label="Replay controls">
       <h3>Replay</h3>
+      {/* Every Event is a Replay, never a live flood, even before the clock tag appears. */}
       <p className="replay-label">REPLAY</p>
       {replayEvents && (
         <label className="event-picker">

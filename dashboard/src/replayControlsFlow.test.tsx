@@ -166,7 +166,13 @@ test("the picker lists the Region's Events, and the picked one is what Start pla
       .map((option) => option.textContent),
   ).toEqual(["Bhote Koshi flood", "A made-up flood"]);
   fireEvent.change(picker, { target: { value: "made-up-flood" } });
-  expect(await within(panel).findByRole("button", { name: "The only phase" })).toBeVisible();
+  fireEvent.click(await within(panel).findByRole("button", { name: "The only phase" }));
+  await vi.waitFor(() =>
+    expect(posted).toEqual([
+      { path: "/api/replay/jump", body: { phase: "only", event: "made-up-flood" } },
+    ]),
+  );
+  posted.length = 0;
   fireEvent.click(within(panel).getByRole("button", { name: "Start" }));
   await vi.waitFor(() =>
     expect(posted).toEqual([{ path: "/api/replay/start", body: { event: "made-up-flood" } }]),

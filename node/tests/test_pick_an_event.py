@@ -51,6 +51,17 @@ def test_the_controls_follow_the_event_on_the_clock(meshed_nodes: MeshedNodes) -
     assert hub.post("/api/replay/start").json()["event"] == "made-up-flood"
 
 
+def test_jump_and_reset_act_on_the_picked_event_while_the_clock_is_stopped(
+    meshed_nodes: MeshedNodes,
+) -> None:
+    meshed_nodes.start_hub()
+    hub = meshed_nodes["hub"]
+    jumped = hub.post("/api/replay/jump", json={"phase": "only", "event": "made-up-flood"})
+    assert jumped.json()["event"] == "made-up-flood"
+    hub.post("/api/replay/reset", json={"event": "bhote-koshi-2026"})
+    assert hub.get("/api/replay").json()["event"] == "bhote-koshi-2026"
+
+
 def test_phases_can_be_asked_for_before_the_event_plays(meshed_nodes: MeshedNodes) -> None:
     meshed_nodes.start_hub()
     hub = meshed_nodes["hub"]

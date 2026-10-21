@@ -1435,7 +1435,7 @@ main.phone {
 
 .replay-label {
   margin: 0 0 0.5rem;
-  color: var(--risk-elevated);
+  color: var(--replay-cue);
   font-weight: 600;
 }
 
