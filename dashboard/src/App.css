@@ -1982,3 +1982,56 @@ section p.flood-prone-caption {
   animation: rise-ring 900ms ease-out 2 forwards;
   pointer-events: none;
 }
+
+/* The Sandbox Panel: the SIMULATED label, the radio range slider and the list of Nodes. */
+.sandbox-label {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sandbox-range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.5rem;
+}
+
+.sandbox-range input {
+  grid-column: 1 / -1;
+}
+
+.sandbox-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sandbox-nodes li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 0.5rem;
+  font-size: 0.8rem;
+}
+
+.sandbox-nodes li span {
+  color: var(--text-secondary);
+}
+
+.sandbox-nodes li.no-path span:first-of-type {
+  color: var(--no-path);
+}
+
+/* A Sensor no chain of Nodes joins to the Hub; it sits under the Node it names. */
+.no-path-marker {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--no-path);
+  border-radius: 0.25rem;
+  background: var(--surface-glass);
+  color: var(--no-path);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  transform: translateY(1.6rem);
+}

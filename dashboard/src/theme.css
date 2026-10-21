@@ -61,6 +61,10 @@
   --map-district: var(--navy-600);
   --map-label: var(--ink-300);
   --map-shadow: var(--ink-black);
+  /* the Sandbox's radio model: a Node's reach, a link between two in range, and no path to the Hub */
+  --radio-range: var(--cyan-400);
+  --radio-link: var(--ink-300);
+  --no-path: var(--amber-400);
   --map-height-low: var(--navy-700);
   --map-height-mid: var(--navy-600);
   --map-height-high: var(--ink-400);

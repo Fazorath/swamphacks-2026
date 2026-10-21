@@ -2,6 +2,7 @@ import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "mapl
 
 import { BAND_PROTOCOL, parseHex, registerBandProtocol, type Rgb } from "./heightBands";
 import type { NepalMap } from "./evacuationPlan";
+import { radioLayers } from "./mapStyle";
 import type { LatLon } from "./routeGrid";
 
 // Past this zoom the district hairlines appear (D-02); below it the map is the national view.
@@ -31,7 +32,9 @@ export type MapColors = Record<
   | "route"
   | "routeCasing"
   | "blocked"
-  | "wave",
+  | "wave"
+  | "radioRange"
+  | "radioLink",
   string
 >;
 
@@ -50,6 +53,8 @@ const ROLES: Record<keyof MapColors, string> = {
   routeCasing: "--map-shadow",
   blocked: "--risk-high",
   wave: "--wave",
+  radioRange: "--radio-range",
+  radioLink: "--radio-link",
 };
 
 export function readMapColors(): MapColors {
@@ -91,6 +96,8 @@ export type OverlayName =
   | "route"
   | "out-of-reach-line"
   | "blocked-roads"
+  | "radio-range"
+  | "radio-links"
   | "wave-trail"
   | "wave-head"
   | "water-level"
@@ -108,6 +115,8 @@ export function baseStyle(colors: MapColors): StyleSpecification {
       route: { type: "geojson", data: EMPTY },
       "out-of-reach-line": { type: "geojson", data: EMPTY },
       "blocked-roads": { type: "geojson", data: EMPTY },
+      "radio-range": { type: "geojson", data: EMPTY },
+      "radio-links": { type: "geojson", data: EMPTY },
       // The gradient along the trail needs the line's own length (lineMetrics).
       "wave-trail": { type: "geojson", data: EMPTY, lineMetrics: true },
       "wave-head": { type: "geojson", data: EMPTY },
@@ -134,6 +143,7 @@ export function baseStyle(colors: MapColors): StyleSpecification {
         source: "flood-prone",
         paint: { "line-color": colors.floodProne, "line-width": 2, "line-dasharray": [3, 2] },
       },
+      ...radioLayers(colors),
       {
         id: "route-casing",
         type: "line",
