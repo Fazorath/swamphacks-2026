@@ -339,7 +339,7 @@ def pack_for(region: str, client: httpx.Client, override: str = "") -> Path:
     """The Region's Cache Pack: the one its build command wrote, else the one fetched from its
     Release on an earlier run, else the Release itself. Says which command to run when none is
     there."""
-    built = REPO / "build" / region / "cache-pack.zip"
+    built = REPO / "node" / "build" / region / "cache-pack.zip"
     if built.is_file():
         return built
     downloaded = REPO / ".demo" / "pack" / region / "cache-pack.zip"

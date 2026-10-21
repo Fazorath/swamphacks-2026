@@ -96,7 +96,7 @@ def _a_release_that_serves(requests: list[httpx.Request]) -> httpx.Client:
 
 
 def test_a_pack_built_on_disk_is_used_without_downloading(repo: Path) -> None:
-    built = repo / "build" / "nepal" / "cache-pack.zip"
+    built = repo / "node" / "build" / "nepal" / "cache-pack.zip"
     built.parent.mkdir(parents=True)
     built.write_bytes(b"built here")
     requests: list[httpx.Request] = []
