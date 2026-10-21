@@ -16,7 +16,7 @@ type NodeStateFeed = {
   // role, and Official Alerts, which carry their own issue time.
   lastAnswer: { state: NodeState; at: number } | null;
   connection: Connection;
-  // Polls now, e.g. after a Scenario button, so the screen shows the change without waiting.
+  // Polls now, e.g. after a Sign-up, so the screen shows the change without waiting.
   refresh: () => void;
 };
 

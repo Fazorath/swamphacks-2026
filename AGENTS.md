@@ -20,7 +20,6 @@ Run these before calling any issue done. An agent must not claim "done" without 
 | Task | Command |
 |---|---|
 | Install | `cd node && uv sync` and `cd dashboard && pnpm install` |
-| Install on a Raspberry Pi | `pi/install.sh` (system libraries for the pin backend, then `uv sync --group pi`; always sync with `--group pi` on the Pi) |
 | Build dashboard | `cd dashboard && pnpm build` |
 | Run a Node | `cd node && uv run storm-shield-node` (serves the built dashboard; `NODE_ROLE=hub` for the Hub, default `sensor`) |
 | Try the app with no setup | `scripts/sandbox.sh` from anywhere (a Hub and four registered simulated Sensors in one process, then the browser; `--port`, `--pack`; the first run downloads the Cache Pack to `.demo/pack` and builds the dashboard, so it needs `pnpm` and the internet once) |

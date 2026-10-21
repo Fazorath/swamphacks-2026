@@ -23,14 +23,13 @@ class ReadingPublisher:
         self._measurements = measurements
         self._keep = keep
         self._sequence = itertools.count()
-        # A tick and a Scenario step run on different threads; without this a tick that read the
-        # old Scenario could take its seq after the step and hide the step's reading from others.
-        # Whoever changes what the measurements say takes it too, then calls `share`.
-        self.lock = threading.RLock()
+        # Two shares on different threads must not swap their seqs, or the later reading would
+        # carry the lower seq and the others would hide it.
+        self._lock = threading.Lock()
 
     def share(self) -> None:
         """Keep and publish one Community Reading; nothing once the measurements have ended."""
-        with self.lock:
+        with self._lock:
             measurements = self._measurements()
             if measurements is None:
                 return

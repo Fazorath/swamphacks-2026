@@ -9,7 +9,7 @@ export type Trend = "rising" | "falling" | "steady";
 const WINDOW_MS = 30_000;
 
 // The smallest move that counts as a trend, so sensor noise leaves the arrow steady. Chosen just
-// above the jitter of the Scenario and replay readings (about 1 cm, 0.2 hPa).
+// above the noise of the readings (about 1 cm, 0.2 hPa).
 // A kind not listed here has no known noise, so any move counts.
 const SMALLEST_MOVE: Partial<Record<ReadingKind, number>> = {
   water_level: 2,

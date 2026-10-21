@@ -84,7 +84,7 @@ class SimulatedNodes:
         self._running: set[str] = set()
 
     def settings(self, name: str, **overrides: Any) -> Settings:
-        """A Node's settings: its own folders, no dashboard, and pins off unless asked for."""
+        """A Node's settings: its own folders, and no dashboard."""
         own = self._directory / name
         return Settings(
             **{
@@ -92,7 +92,6 @@ class SimulatedNodes:
                 "dashboard_dir": own / "no-dashboard",
                 "cache_pack_dir": own / "cache-pack",
                 "data_dir": own / "data",
-                "gpio": "off",
                 **overrides,
             }
         )

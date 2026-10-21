@@ -110,11 +110,8 @@ def test_a_sensor_outside_the_corridor_sends_no_water_level(
     _start_replay(meshed_nodes)
     meshed_nodes.advance(20)
     _wait_until(lambda: _water_cm(meshed_nodes, "hub", "wet") == 162.0)
-    # A reading older than the Event's would be the Scenario's, which has a water level.
     _wait_until(
-        lambda: (
-            _heard_from(meshed_nodes, "hub", "dry")["measurements"]["air_pressure"]["value"] < 1010
-        )
+        lambda: "dry" in {n["id"] for n in meshed_nodes["hub"].get("/api/state").json()["nodes"]}
     )
     dry = _heard_from(meshed_nodes, "hub", "dry")["measurements"]
     assert "water_level" not in dry
@@ -135,10 +132,12 @@ def test_a_sensor_reads_the_events_weather(meshed_nodes: MeshedNodes) -> None:
     assert measurements["air_pressure"]["value"] == 1005
 
 
-def test_a_node_with_the_clock_stopped_keeps_the_scenario(meshed_nodes: MeshedNodes) -> None:
+def test_a_node_with_the_clock_stopped_reads_the_events_first_moment(
+    meshed_nodes: MeshedNodes,
+) -> None:
     meshed_nodes.start_hub()
-    meshed_nodes.start_sensor("porch")
-    _wait_until(lambda: _water_cm(meshed_nodes, "porch", "porch") == pytest.approx(100, abs=1))
+    meshed_nodes.start_sensor("porch", river_km=S2_KM)
+    _wait_until(lambda: _water_cm(meshed_nodes, "porch", "porch") == 150.0)
 
 
 def test_a_replay_message_not_from_the_hub_is_ignored(meshed_nodes: MeshedNodes) -> None:

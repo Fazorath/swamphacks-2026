@@ -13,7 +13,6 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from storm_shield.breadboard import open_breadboard
 from storm_shield.cache_pack import (
     DOWNLOAD_TIMEOUT_SECONDS,
     RETRY_EVERY_SECONDS,
@@ -47,7 +46,6 @@ from storm_shield.reading_store import NodeSnapshot, ReadingStore
 from storm_shield.replay import EventClock, ReplayClockMessage, load_event
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.sandbox_api import RadioRange, SandboxControls, SandboxNodes
-from storm_shield.scenario import Scenario, ScenarioStep
 from storm_shield.settings import Role, Settings
 from storm_shield.shelter_status import (
     HeardShelterStatus,
@@ -63,10 +61,6 @@ CARTO_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}
 TILE_TIMEOUT_SECONDS = 10
 
 logger = logging.getLogger(__name__)
-
-
-class ScenarioState(BaseModel):
-    step: str
 
 
 class NodeEntry(NodeSnapshot):
@@ -88,7 +82,6 @@ class NodeState(BaseModel):
     role: Role
     status: Status
     registration: RegistrationState
-    scenario: ScenarioState
     sandbox: SandboxState | None
     flood_risk: FloodRisk
     nodes: list[NodeEntry]
@@ -162,7 +155,6 @@ def create_app(
     )
     # httpx logs every request URL at INFO, and a tile URL carries the CARTO key.
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    scenario = Scenario()
     store = ReadingStore(HISTORY_WINDOW_SECONDS)
     loaded_event = load_event()
     event_clock = EventClock(loaded_event.id)
@@ -172,15 +164,15 @@ def create_app(
     def own_measurements() -> list[Reading] | None:
         """What this Node reads from the Event's surface at its own position.
 
-        With the Event clock stopped, or running another Event, it keeps the Scenario's readings: the
-        Scenario's tests build their readings that way, and its deletion (#35) moves them to the
-        Event's first moment.
+        With the Event clock stopped, or running another Event, it reads the first moment of the
+        loaded Event.
         """
         heard = event_clock.current(clock())
         if heard.state == "stopped" or heard.event != loaded_event.id:
-            readings = scenario.readings()
+            event_t = loaded_event.start_unix
         else:
-            readings = loaded_event.readings_at(settings.river_km, heard.event_t, clock())
+            event_t = heard.event_t
+        readings = loaded_event.readings_at(settings.river_km, event_t, clock())
         return [r for r in readings if r.kind in measured_kinds] or None
 
     def keep_reading(sender: str, reading: CommunityReading) -> None:
@@ -198,18 +190,6 @@ def create_app(
         own_measurements,
         keep_reading,
     )
-
-    def press_a_step(step_name: ScenarioStep) -> None:
-        with publisher.lock:
-            scenario.go_to(step_name)
-            publisher.share()
-
-    def reset_the_scenario() -> None:
-        with publisher.lock:
-            scenario.reset()
-            publisher.share()
-
-    breadboard = open_breadboard(settings.gpio, press_a_step, reset_the_scenario)
 
     heard_warnings = HeardCommunityWarnings()
     hub_warnings = HubWarnings(int(clock().timestamp())) if settings.role == "hub" else None
@@ -525,9 +505,6 @@ def create_app(
         finally:
             for task in tasks:
                 task.cancel()
-            # Released even if the app stops on an error, or the pins stay held.
-            if breadboard:
-                breadboard.close()
 
     app = FastAPI(title="Storm Shield Node", lifespan=lifespan)
 
@@ -541,7 +518,6 @@ def create_app(
             role=settings.role,
             status=internet.status,
             registration=registration(),
-            scenario=ScenarioState(step=scenario.step_name),
             sandbox=SandboxState() if sandbox else None,
             flood_risk=flood_risk(snapshot.recent, registered_ids),
             nodes=[
@@ -563,21 +539,6 @@ def create_app(
             sign_up_pressed.set()
             send_sign_up()
         return {"registration": registration()}
-
-    @app.post("/api/scenario/step")
-    def step_scenario() -> ScenarioState:
-        with publisher.lock:
-            scenario.step()
-            publisher.share()
-            return ScenarioState(step=scenario.step_name)
-
-    @app.post("/api/scenario/reset")
-    def reset_scenario() -> ScenarioState:
-        # The lock is re-entrant: holding it here keeps a Breadboard press from landing between the
-        # reset and the step we report.
-        with publisher.lock:
-            reset_the_scenario()
-            return ScenarioState(step=scenario.step_name)
 
     @app.get("/api/replay")
     def replay_clock() -> ReplayClockMessage:
@@ -738,7 +699,7 @@ def create_app(
 
         @app.post("/api/replay/reset")
         def reset_replay() -> ReplayClockMessage:
-            # Paused at 08:30 rather than stopped: a stopped Sensor falls back to the Scenario.
+            # Paused at 08:30 rather than stopped, so every Node keeps following the Event clock.
             return set_replay("paused", loaded_event.start_unix)
 
         @app.post("/api/replay/jump")

@@ -12,7 +12,8 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **Background loops only run under `with TestClient(app)`**; a bare `TestClient(app)` never starts them. A Node shows Mesh-only until its first connectivity probe answers.
 - **Adding a field to a reading or a `/api/state` Node entry breaks two exact-field tests** (`test_community_reading.py`, `test_state_snapshot.py`). A reading's values are Measurements (`m`, `[kind, value, unit]`); build a hand-fed one with `MeshedNodes.hear_from(..., leaving_out=..., also=[Measurement(...)])`.
 - **Each mesh message kind has its own `v`** (`reading` and `replay` are 2, the rest 1); `decode_message` reads it from the class, so a version bump is a one-line change on that class.
-- **A Sensor reads the Event's surface only at a `NODE_RIVER_KM` inside the stations' span** (`MeshedNodes.start_sensor(river_km=...)`); anywhere else it gets the Event's weather and no `water_level`. A stopped Event clock still leaves the Scenario's readings, until the Scenario is deleted.
+- **A Sensor reads the Event's surface only at a `NODE_RIVER_KM` inside the stations' span** (`MeshedNodes.start_sensor(river_km=...)`); anywhere else it gets the Event's weather and no `water_level`. A stopped Event clock reads the Event's first moment.
+- **A Node cannot be walked through a storm**; it reads the Event's surface. Feed storm values to the rules with `MeshedNodes.hear_from(name, ...)` under a name no started Node has (a taken name raises), and build a hand-made `CommunityReading` with `meshed_nodes.a_calm_day()`.
 - **Surges are judged on the sender's timestamps**, and `surged` is "surging now", not latched (it clears about 60 s after the jump). A Surge is 300 cm or more within 60 s.
 - **One signed Reticulum packet is 464 bytes**, which caps a registry (4 to 8 Nodes) and an Official Alert's headline.
 - **Shelter status and the registry are trusted only from `HUB_IDENTITY`**; a blank or wrong id drops them silently. When a Node shows nothing open, or a Sensor ignores the Replay, check `HUB_IDENTITY` first (printed as `Node <id> (...) is up as hub`; it changes if `NODE_DATA_DIR` is wiped).
@@ -24,4 +25,4 @@ Area gotchas that are still true. Claude Code loads this file (through `CLAUDE.m
 - **`RNS.Identity.from_file` returns `None` on a damaged file** and `to_file` writes 644; `load_or_create_identity` handles both.
 - **Mesh decode and delivery go through `mesh.decode_message` and `deliver_to_listeners`** for both Meshes; add rules there.
 
-Networking and Pi lessons (firewalls, TCP peers, `uv sync --group pi`) are in `pi/AGENTS.md`.
+Networking and Pi lessons (firewalls, TCP peers) are in `pi/AGENTS.md`.

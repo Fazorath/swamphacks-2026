@@ -28,9 +28,10 @@ def _row(meshed_nodes: MeshedNodes, node: str) -> dict[str, Any]:
     return next(row for row in _registry(meshed_nodes)["nodes"] if row["id"] == node)
 
 
-def _push_to_high(client: TestClient) -> None:
-    for _ in range(3):
-        client.post("/api/scenario/step")
+def _push_to_high(meshed_nodes: MeshedNodes, sender: str) -> None:
+    meshed_nodes.hear_from(sender, pressure_hpa=990, water_cm=100, soil_pct=32)
+    meshed_nodes.hear_from(sender, pressure_hpa=985, rain_mmh=12, water_cm=350, soil_pct=55)
+    meshed_nodes.hear_from(sender, pressure_hpa=980, rain_mmh=30, water_cm=390, soil_pct=85)
 
 
 def _accept(meshed_nodes: MeshedNodes, node: str) -> Any:
@@ -47,28 +48,28 @@ def _wait_until(condition: Callable[[], bool]) -> None:
 def test_an_unverified_node_pushed_to_high_does_not_change_flood_risk_until_it_is_registered(
     meshed_nodes: MeshedNodes,
 ) -> None:
-    meshed_nodes.start("porch", "garage")
+    meshed_nodes.start("porch")
     meshed_nodes.start_hub()
     meshed_nodes["porch"].post("/api/registry/signup")
     _accept(meshed_nodes, "porch")
 
-    _push_to_high(meshed_nodes["garage"])
+    _push_to_high(meshed_nodes, "garage")
     assert _level(meshed_nodes["porch"]) is None
     garage = next(n for n in _state(meshed_nodes["porch"])["nodes"] if n["id"] == "garage")
     assert garage["registered"] is False
 
-    meshed_nodes["garage"].post("/api/registry/signup")
+    meshed_nodes.announce_sign_up("garage", "garage")
     assert _accept(meshed_nodes, "garage").status_code == 200
 
     assert _level(meshed_nodes["porch"]) == "high"
     assert _state(meshed_nodes["porch"])["flood_risk"]["nodes"]["garage"] == "high"
 
 
-def test_before_any_registry_arrives_nothing_counts_not_even_this_node(
+def test_before_any_registry_arrives_nothing_counts(
     meshed_nodes: MeshedNodes,
 ) -> None:
     meshed_nodes.start("porch")
-    _push_to_high(meshed_nodes["porch"])
+    _push_to_high(meshed_nodes, "creek")
     state = _state(meshed_nodes["porch"])
     assert state["flood_risk"]["level"] is None
     assert state["flood_risk"]["nodes"] == {}
@@ -102,11 +103,11 @@ def test_a_registered_node_shows_its_registry_name_and_an_unverified_one_has_non
 
 
 def test_the_hub_is_always_registered_and_counts_itself(meshed_nodes: MeshedNodes) -> None:
-    meshed_nodes.start_hub()
-    _push_to_high(meshed_nodes["hub"])
-    state = _state(meshed_nodes["hub"])
-    assert state["registration"] == "registered"
-    assert state["flood_risk"]["level"] == "high"
+    # At the end of the replay the gauge at the Hub's River km reads 7.5 m.
+    meshed_nodes.start_hub(river_km=-12.2, publish_every_seconds=0.02)
+    meshed_nodes["hub"].post("/api/replay/jump", json={"phase": "end"})
+    _wait_until(lambda: _level(meshed_nodes["hub"]) == "high")
+    assert _state(meshed_nodes["hub"])["registration"] == "registered"
 
 
 def test_a_sign_up_is_sent_again_until_the_hub_has_accepted_it(
