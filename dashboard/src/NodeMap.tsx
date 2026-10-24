@@ -32,7 +32,7 @@ import { weatherImageUrl } from "./weatherImageUrl";
 import { showWeatherField } from "./weatherOnMap";
 import type { WeatherData } from "./useWeatherGrid";
 import { NodeMarker } from "./NodeMarker";
-import { FLOOD_PRONE_CAPTION, shelterLabel } from "./shelterLabel";
+import { floodProneCaption, shelterLabel } from "./shelterLabel";
 import { visiblePlaces, type Place, type View } from "./placeLabels";
 import { highGroundLabel, type Basemap, type HighGroundPin, type Shelter } from "./evacuationPlan";
 import type { FloodProneAreas } from "./floodProne";
@@ -504,7 +504,8 @@ export function NodeMap({
     };
   }, [map, placingSensor, picking, blocking, onPickHome, onTapRoad]);
 
-  const timeZone = useRegion()?.time_zone ?? null;
+  const region = useRegion();
+  const timeZone = region?.time_zone ?? null;
   const waving = river !== null && eventT !== null && warnings.length > 0;
   const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
   const waveStamps = waving
@@ -545,7 +546,7 @@ export function NodeMap({
   return (
     <section aria-label="Map" className="map-area">
       {floodProne && floodProne.features.length > 0 && (
-        <p className="flood-prone-caption">{FLOOD_PRONE_CAPTION}</p>
+        <p className="flood-prone-caption">{floodProneCaption(region?.water_type ?? "river")}</p>
       )}
       {picking && (
         <div className="pick-banner">

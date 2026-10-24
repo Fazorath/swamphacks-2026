@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import { App } from "./App";
 import { expandPanel } from "./expandPanel";
-import { fakeNodeState } from "./fakeNodeState";
+import { FORT_MYERS_REGION, fakeNodeState } from "./fakeNodeState";
 import { sourceData } from "./fakeMaplibre";
 
 const SHELTERS = [
@@ -38,9 +38,17 @@ const CORRIDOR = {
   ],
 };
 
-function stubNode({ packAvailable, open }: { packAvailable: boolean; open: string[] }) {
+function stubNode({
+  packAvailable,
+  open,
+  region,
+}: {
+  packAvailable: boolean;
+  open: string[];
+  region?: typeof FORT_MYERS_REGION;
+}) {
   const answers: Record<string, unknown> = {
-    "/api/state": fakeNodeState(),
+    "/api/state": fakeNodeState(region ? { region } : {}),
     "/api/cache-pack": { available: packAvailable, manifest: null },
     "/api/cache-pack/files/shelters.json": SHELTERS,
     "/api/cache-pack/files/flood_prone.geojson": CORRIDOR,
@@ -89,6 +97,17 @@ test("the corridor is drawn and captioned as approximate", async () => {
 
   expect(await screen.findByText("Flood-Prone Area: hand-drawn, approximate")).toBeVisible();
   await waitFor(() => expect(sourceData("flood-prone").features).not.toHaveLength(0));
+});
+
+test("a coast Region's traced Flood-Prone Area is captioned as traced and approximate", async () => {
+  stubNode({ packAvailable: true, open: [], region: FORT_MYERS_REGION });
+  render(<App />);
+  expandPanel("Evacuation Plan");
+
+  expect(
+    await screen.findByText("Flood-Prone Area: traced from the terrain, approximate"),
+  ).toBeVisible();
+  expect(screen.queryByText("Flood-Prone Area: hand-drawn, approximate")).toBeNull();
 });
 
 test("the Shelter the plan chose is marked once, apart from the others", async () => {

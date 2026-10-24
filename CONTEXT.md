@@ -103,7 +103,7 @@ The time inside the Event being played (for example 28 Sep 2022 · 14:06 EDT), r
 _Avoid_: replay time, sim time
 
 **River km**:
-A Node's or home's distance along the river from the Lhende–Kyirong confluence at the border, positive downstream; set in each Node's config and measured on the river line in the Cache Pack.
+A river-Region term: a Node's or home's distance along the river from the Region's origin (the Lhende–Kyirong confluence at the border in Nepal), positive downstream; set in each Node's config and measured on the river line in the Cache Pack. A coast Region has no river line, so its Nodes have none.
 _Avoid_: chainage, mile marker, distance
 
 **Water ETA**:
@@ -181,7 +181,7 @@ One of the evenly spaced points, about 100 m apart, that cover the roads of the 
 _Avoid_: waypoint, cell, node
 
 **Shelter**:
-A public building well above the river, picked by hand into the Cache Pack, where people can wait out a flood.
+A public building outside the Flood-Prone Area, picked by hand into the Cache Pack (the build refuses one inside it), where people can wait out a flood.
 _Avoid_: refuge, safe place
 
 **Shelter status**:
@@ -193,7 +193,7 @@ A hand-placed spot on the hillside above a town, picked into the Cache Pack with
 _Avoid_: safe zone, refuge
 
 **Flood-Prone Area**:
-The land the Region's water can reach: on a river, the corridor drawn by hand along it (the Lhende Khola, Bhote Koshi and Trishuli in Nepal); on a coast, the land below a set height. A Shelter inside it is never offered. The map always marks it approximate.
+The land the Region's water can reach: on a river, the corridor drawn by hand along it (the Lhende Khola, Bhote Koshi and Trishuli in Nepal); on a coast, the land below a set height, which the Cache Pack build traces from the terrain. A Shelter inside it is never offered. The map always marks it approximate.
 _Avoid_: evacuation zone, surge zone
 
 ## Dashboard

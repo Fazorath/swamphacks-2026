@@ -44,7 +44,15 @@ from storm_shield.node_registry import (
 from storm_shield.official_alert import HeardOfficialAlerts, OfficialAlert
 from storm_shield.reading_publisher import ReadingPublisher
 from storm_shield.reading_store import NodeSnapshot, ReadingStore
-from storm_shield.region import Hazard, Region, RegionSummary, load_region, region_path
+from storm_shield.region import (
+    CoastFloodWarningRules,
+    Hazard,
+    Region,
+    RegionError,
+    RegionSummary,
+    load_region,
+    region_path,
+)
 from storm_shield.replay import Event, EventClock, ReplayClockMessage, load_events
 from storm_shield.reticulum_mesh import ReticulumMesh
 from storm_shield.sandbox_api import (
@@ -180,6 +188,10 @@ def create_app(
     cache_pack = CachePack(settings.cache_pack_dir)
     region = region or _region_of(settings, cache_pack)
     rules = region.rules.flood_warning
+    if isinstance(rules, CoastFloodWarningRules):
+        raise RegionError(
+            f"{region.label} is a coast Region, and the Node does not read storm-surge rules yet"
+        )
     weather_forecast = WeatherForecast(settings.data_dir, region.bbox)
     weather_source = weather_source or httpx.Client(
         timeout=FORECAST_TIMEOUT_SECONDS, follow_redirects=True

@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 # Resolved from this file, not the cwd, so the Node starts from any directory.
 REGIONS_DIR = Path(__file__).resolve().parents[3] / "regions"
 
-Hazard = Literal["flash_flood"]
+Hazard = Literal["flash_flood", "storm_surge"]
 
 # An Official Alert's source tag travels in every alert, which must fit one 464-byte packet.
 ALERT_TAG_MAX_LENGTH = 16
@@ -70,8 +70,23 @@ class FlashFlood(_Strict):
         return self
 
 
+class StormSurge(_Strict):
+    """The thresholds of a coast Region's storm surge, each written in the Region's own units.
+
+    Levels are the water surface's height above the Region's datum.
+    """
+
+    # A Registered Node's level passing this while it has risen `rising` is a Community Warning.
+    warning_height: Length
+    rising: Length
+    # How much history Flood Risk keeps; `rising` is the gain across it.
+    rising_window_s: int = Field(gt=0)
+    elevated_level: Length
+    high_level: Length
+
+
 class FloodWarningRules(_Strict):
-    """What the flood-warning Rule set reads from the Region."""
+    """What the flood-warning Rule set reads from a river Region."""
 
     flash_flood: FlashFlood
     rain_elevated: RainRate
@@ -80,8 +95,18 @@ class FloodWarningRules(_Strict):
     soil_rising_points: float = Field(gt=0)
 
 
+class CoastFloodWarningRules(_Strict):
+    """What the flood-warning Rule set reads from a coast Region."""
+
+    storm_surge: StormSurge
+    rain_elevated: RainRate
+    rain_high: RainRate
+    storm_pressure: Pressure
+    soil_rising_points: float = Field(gt=0)
+
+
 class Rules(_Strict):
-    flood_warning: FloodWarningRules
+    flood_warning: FloodWarningRules | CoastFloodWarningRules
 
 
 class DisplayUnits(_Strict):
@@ -111,11 +136,20 @@ class River(_Strict):
     corridor_source: str
 
 
+class Coast(_Strict):
+    type: Literal["coast"]
+    # Water levels, ground heights and gauges all compare in this datum.
+    datum: Literal["NAVD88"]
+    # The build traces the Flood-Prone Area as the land below this height.
+    flood_prone_below: Length
+
+
 class Shelter(_Strict):
     id: str
     name: str
     pos: LatLon
-    height_above_river_m: float
+    # Set when the Region's water is a river; a coast Shelter's safety is its height, not this.
+    height_above_river_m: float | None = None
     special_needs: bool
     pet_friendly: bool
     source: str
@@ -139,6 +173,17 @@ class SensorSite(_Strict):
     # Set when the Region's water is a river.
     river_km: float | None = None
     why: str
+
+
+class OfficialGauge(_Strict):
+    """A tide gauge the Hub brings into the Mesh as an Official Gauge."""
+
+    agency: Literal["NOAA"]
+    station: str
+    label: str
+    pos: LatLon
+    # Added to the station's published level (its own datum) to give the height in the Region's.
+    datum_offset: Length
 
 
 class Source(_Strict):
@@ -168,11 +213,12 @@ class Region(_Strict):
     time_zone: str
     display_units: DisplayUnits
     official_alert_sources: list[AlertSource] = Field(min_length=1)
-    water: River
+    water: River | Coast = Field(discriminator="type")
     rules: Rules
     shelters: list[Shelter]
     high_ground: list[HighGroundPoint] = []
     sensor_sites: list[SensorSite]
+    official_gauges: list[OfficialGauge] = []
     sources: Sources
 
     @field_validator("bbox")
@@ -205,6 +251,7 @@ class Region(_Strict):
                 for i, each in enumerate(self.high_ground)
             ),
             *((f"sensor_sites[{i}]", each.pos) for i, each in enumerate(self.sensor_sites)),
+            *((f"official_gauges[{i}]", each.pos) for i, each in enumerate(self.official_gauges)),
         ]
         outside = [
             where
@@ -215,10 +262,24 @@ class Region(_Strict):
             raise ValueError(f"outside the Region's bbox: {', '.join(outside)}")
         return self
 
+    @model_validator(mode="after")
+    def _the_water_fits_its_rules_and_shelters(self) -> Self:
+        river = isinstance(self.water, River)
+        if river != isinstance(self.rules.flood_warning, FloodWarningRules):
+            wanted = "flash_flood" if river else "storm_surge"
+            raise ValueError(f"a {self.water.type} Region's flood_warning rules need {wanted}")
+        if river and any(each.height_above_river_m is None for each in self.shelters):
+            raise ValueError("every Shelter of a river Region needs height_above_river_m")
+        if not river and any(each.height_above_river_m is not None for each in self.shelters):
+            raise ValueError("a coast Region's Shelters have no height_above_river_m")
+        if not river and self.high_ground:
+            raise ValueError("high_ground measures its climb above a river, so a coast has none")
+        return self
+
     @property
     def hazard(self) -> Hazard:
-        """What the Region's water can do: a river means a flash flood."""
-        return "flash_flood"
+        """What the Region's water can do: a river means a flash flood, a coast a storm surge."""
+        return "flash_flood" if isinstance(self.water, River) else "storm_surge"
 
     def has_alert_source(self, tag: str) -> bool:
         return any(source.tag == tag for source in self.official_alert_sources)
@@ -227,6 +288,7 @@ class Region(_Strict):
         return RegionSummary(
             name=self.name,
             label=self.label,
+            water_type=self.water.type,
             time_zone=self.time_zone,
             display_units=self.display_units,
             official_alert_sources=self.official_alert_sources,
@@ -238,6 +300,7 @@ class RegionSummary(BaseModel):
 
     name: str
     label: str
+    water_type: Literal["river", "coast"]
     time_zone: str
     display_units: DisplayUnits
     official_alert_sources: list[AlertSource]

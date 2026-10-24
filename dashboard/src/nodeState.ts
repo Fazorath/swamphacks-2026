@@ -18,6 +18,8 @@ export type DisplayUnits = {
 export type Region = {
   name: string;
   label: string;
+  // A river Region draws a hand-made corridor; a coast Region traces its Flood-Prone Area.
+  water_type: "river" | "coast";
   time_zone: string;
   display_units: DisplayUnits;
   // An Official Alert names its source by `tag`; the Region says what to call it.
