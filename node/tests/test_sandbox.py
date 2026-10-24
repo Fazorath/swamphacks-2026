@@ -145,9 +145,9 @@ def test_a_region_with_no_pack_anywhere_prints_the_build_command(repo: Path) -> 
 
     with (
         _a_release_that_serves(requests) as client,
-        pytest.raises(SandboxError, match=r"`scripts/build-cache-pack\.sh fort-myers`"),
+        pytest.raises(SandboxError, match=r"`scripts/build-cache-pack\.sh unpublished`"),
     ):
-        pack_for("fort-myers", client)
+        pack_for("unpublished", client)
 
     assert requests == []
 
