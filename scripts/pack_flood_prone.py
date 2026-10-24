@@ -78,9 +78,10 @@ def _boundary_rings(grid: list[list[bool]], rows: int, columns: int) -> list[lis
             # Two edges leave a corner where land touches itself diagonally: turn right, which
             # keeps the two pieces apart and so never crosses an outline over itself.
             came_from = ring[-2] if len(ring) > 1 else None
-            following = options[0] if len(options) == 1 or came_from is None else _right_turn(
-                came_from, here, options
-            )
+            if len(options) == 1 or came_from is None:
+                following = options[0]
+            else:
+                following = _right_turn(came_from, here, options)
             options.remove(following)
             if not options:
                 del outgoing[here]

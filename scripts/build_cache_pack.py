@@ -191,15 +191,13 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
         )
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
 
-    river_vertices = (
-        [
+    river_vertices: list[Point] = []
+    if isinstance(water, River):
+        river_vertices = [
             (lat, lon)
             for line in json.loads(files["river.geojson"])["features"]
             for lon, lat in line["geometry"]["coordinates"]
         ]
-        if isinstance(water, River)
-        else []
-    )
     high_ground = build_high_ground(
         [point.model_dump() for point in region.high_ground],
         river_vertices,
