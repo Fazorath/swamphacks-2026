@@ -7,7 +7,7 @@ import {
 } from "./communityWarnings";
 import type { NodeSnapshot, Region } from "./nodeState";
 import { useRegion } from "./RegionContext";
-import { issuedAsGiven, officialTag, sourceName, type OfficialAlert } from "./officialAlerts";
+import { issuedInRegion, officialTag, sourceName, type OfficialAlert } from "./officialAlerts";
 import type { TakeoverWarning } from "./acknowledgedWarnings";
 import type { WaveArrival } from "./waveEta";
 import { WaveEtaLine } from "./WaveEtaLine";
@@ -28,7 +28,7 @@ function OfficialBody({
         <span>{sourceName(region, alert)}</span>
       </p>
       <h2>{alert.headline}</h2>
-      <p>Issued {issuedAsGiven(alert.issued)}</p>
+      <p>Issued {issuedInRegion(alert, region?.time_zone ?? null)}</p>
       {online ? (
         <a href={alert.url} target="_blank" rel="noreferrer">
           Read at the source

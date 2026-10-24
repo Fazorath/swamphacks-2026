@@ -87,7 +87,7 @@ test("the lead-time line compares the warning with the first Official Alert", as
   render(<App />);
 
   expect(
-    await screen.findByText("Community Warning 08:37 · first Official Alert 09:05"),
+    await screen.findByText("Community Warning 08:37 · first Official Alert 09:05 NPT"),
   ).toBeVisible();
 });
 

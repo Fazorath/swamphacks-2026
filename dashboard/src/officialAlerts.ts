@@ -1,4 +1,4 @@
-import { regionClockTime } from "./regionTime";
+import { regionClockTime, regionDate, regionZoneLabel } from "./regionTime";
 import type { HouseholdProfile } from "./householdProfile";
 import type { Region } from "./nodeState";
 
@@ -23,9 +23,11 @@ export function officialTag(alert: OfficialAlert): string {
   return alert.mode === "replay" ? "OFFICIAL · REPLAY" : "OFFICIAL";
 }
 
-// "2026-08-26T09:15:00+05:45" reads as "2026-08-26 09:15 +05:45": the source's own time, unconverted.
-export function issuedAsGiven(issued: string): string {
-  return `${issued.slice(0, 10)} ${issued.slice(11, 16)} ${issued.slice(19)}`;
+// "26 Aug 2026 · 09:15 NPT": when the alert was issued, in the Region's zone.
+export function issuedInRegion(alert: OfficialAlert, timeZone: string | null): string {
+  if (timeZone === null) return alert.issued;
+  const at = issuedUnix(alert);
+  return `${regionDate(at, timeZone)} · ${regionClockTime(at, timeZone)} ${regionZoneLabel(at, timeZone)}`;
 }
 
 export function issuedUnix(alert: OfficialAlert): number {
@@ -60,5 +62,5 @@ export function leadTimeLine(
 ): string | null {
   if (firstCommunityWarningAt === null || alerts.length === 0 || timeZone === null) return null;
   const firstAlertAt = Math.min(...alerts.map(issuedUnix));
-  return `Community Warning ${regionClockTime(firstCommunityWarningAt, timeZone)} · first Official Alert ${regionClockTime(firstAlertAt, timeZone)}`;
+  return `Community Warning ${regionClockTime(firstCommunityWarningAt, timeZone)} · first Official Alert ${regionClockTime(firstAlertAt, timeZone)} ${regionZoneLabel(firstAlertAt, timeZone)}`;
 }

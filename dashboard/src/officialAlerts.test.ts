@@ -21,7 +21,7 @@ test("the lead-time line compares the first Community Warning with the first Off
     alertIssued("2026-08-26T09:05:00+05:45"),
   ];
   expect(leadTimeLine(COLLAPSE, alerts, "Asia/Kathmandu")).toBe(
-    "Community Warning 08:37 · first Official Alert 09:05",
+    "Community Warning 08:37 · first Official Alert 09:05 NPT",
   );
 });
 
