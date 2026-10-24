@@ -12,6 +12,7 @@ from pathlib import Path
 import httpx
 from http_retry import describe_error
 from pack_basemap import fetch_basemap
+from pack_flood_prone import trace_flood_prone_area
 from pack_high_ground import build_high_ground
 from pack_routes import FloodProneArea, Point, Roads, RouteGrid, build_road_graph, build_routes
 from pack_sources import SourceFailed, is_address, read_source
@@ -19,7 +20,7 @@ import pack_terrain
 from pack_terrain import elevation_at, fetch_terrain
 from pack_weather import build_weather_replay
 
-from storm_shield.region import REGIONS_DIR, Region, RegionError, load_region
+from storm_shield.region import REGIONS_DIR, Region, RegionError, River, load_region
 from storm_shield.replay import Event, read_event_file
 from storm_shield.weather_grid import BBox
 
@@ -143,18 +144,15 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
     events = read_events(region, region_dir)
     bbox = region.bbox
     sources = region.sources
-    shelters = [shelter.model_dump(exclude={"source"}) for shelter in region.shelters]
+    shelters = [
+        shelter.model_dump(exclude={"source"}, exclude_none=True) for shelter in region.shelters
+    ]
 
     files: dict[str, bytes] = {
         "region.json": region_file.read_bytes(),
         "shelters.json": json.dumps(shelters, indent=1).encode(),
-        "flood_prone.geojson": read_source(
-            client, region_dir, region.water.corridor_source, "flood corridor"
-        ),
-        "river.geojson": read_source(client, region_dir, region.water.line_source, "river line"),
         **{f"events/{event_id}.json": raw for event_id, (_, raw) in events.items()},
     }
-    flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
 
     print(f"reading the {region.label} basemap", flush=True)
     basemap = fetch_basemap(client, region_dir, sources.basemap, bbox)
@@ -162,6 +160,28 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
     print("reading the terrain", flush=True)
     terrain = fetch_terrain(client, region_dir, sources.terrain, bbox)
     files.update(terrain)
+
+    water = region.water
+    if isinstance(water, River):
+        files["flood_prone.geojson"] = read_source(
+            client, region_dir, water.corridor_source, "flood corridor"
+        )
+        files["river.geojson"] = read_source(client, region_dir, water.line_source, "river line")
+    else:
+        print("tracing the Flood-Prone Area from the terrain", flush=True)
+        traced = trace_flood_prone_area(
+            lambda lat, lon: elevation_at(terrain, lat, lon), bbox, water.flood_prone_below.cm / 100
+        )
+        files["flood_prone.geojson"] = json.dumps(traced, separators=(",", ":")).encode()
+    flood_prone = FloodProneArea.from_geojson(json.loads(files["flood_prone.geojson"]))
+    flooded_shelters = [
+        shelter.id for shelter in region.shelters if flood_prone.contains(shelter.pos)
+    ]
+    if flooded_shelters:
+        raise ValueError(
+            f"Shelters inside the Flood-Prone Area: {', '.join(flooded_shelters)}; move them out "
+            "or drop them"
+        )
 
     if events:
         first_day, last_day = weather_days([event for event, _ in events.values()])
@@ -171,10 +191,16 @@ def build(region_dir: Path, output: Path, work_dir: Path, client: httpx.Client) 
         )
         files["weather_replay.json"] = json.dumps(weather, separators=(",", ":")).encode()
 
-    river_lines = json.loads(files["river.geojson"])["features"]
+    river_vertices: list[Point] = []
+    if isinstance(water, River):
+        river_vertices = [
+            (lat, lon)
+            for line in json.loads(files["river.geojson"])["features"]
+            for lon, lat in line["geometry"]["coordinates"]
+        ]
     high_ground = build_high_ground(
         [point.model_dump() for point in region.high_ground],
-        [(lat, lon) for line in river_lines for lon, lat in line["geometry"]["coordinates"]],
+        river_vertices,
         flood_prone,
         lambda lat, lon: elevation_at(terrain, lat, lon),
     )

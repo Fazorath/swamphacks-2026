@@ -12,7 +12,8 @@ export type Shelter = {
   pos: [number, number];
   special_needs: boolean;
   pet_friendly: boolean;
-  height_above_river_m: number;
+  // Only a river Region's Shelters have one.
+  height_above_river_m?: number;
 };
 
 // A hand-placed spot above a town (`scripts/pack_high_ground.py`); not a Shelter, never open or closed.
@@ -154,7 +155,10 @@ function describe({ shelter, route, km }: Candidate, showHeight: boolean): strin
   const distance = route
     ? `${km.toFixed(1)} km by road`
     : `${km.toFixed(1)} km away in a straight line, no road route available`;
-  const height = showHeight ? `, ${shelter.height_above_river_m} m above the river` : "";
+  const height =
+    showHeight && shelter.height_above_river_m !== undefined
+      ? `, ${shelter.height_above_river_m} m above the river`
+      : "";
   return `Nearest open Shelter: ${shelter.name}, ${distance}${height}${features ? ` (${features})` : ""}.`;
 }
 
@@ -371,7 +375,7 @@ export function evacuationPlan({
   const homeInFloodProneArea = inFloodProneArea(profile.home, pack.floodProne);
   const area = homeInFloodProneArea
     ? "Your home is inside a mapped Flood-Prone Area."
-    : "Your home is outside the mapped Flood-Prone Areas (the river corridor, approximate).";
+    : "Your home is outside the mapped Flood-Prone Areas (approximate).";
   const { shelter, outOfReachShelter, highGround, route, lines } = nearestFittingShelter(
     profile,
     pack,

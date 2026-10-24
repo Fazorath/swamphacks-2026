@@ -157,10 +157,10 @@ cache-pack.zip
 │                           "sources": [ { "layer", "credit", "checked" } ], "files": { "<path>": "<sha256>" } }
 ├── region.json           the Region file itself, byte for byte; a Sensor Node takes its Region from it
 ├── shelters.json         [ { "id": "sr-center", "name": "...", "pos": [lat, lon],
-│                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]
+│                             "height_above_river_m": 96, "special_needs": true, "pet_friendly": false } ]   (`height_above_river_m` only for a river Region)
 ├── high_ground.json      [ { "id", "name", "pos": [lat, lon], "town", "climb_m": 96, "walk_minutes": 7, "source", "checked" } ]: High-ground points; `climb_m` is read from the elevation tiles, `walk_minutes` is from the town's `town_pos` in the Region file
-├── flood_prone.geojson   the Flood-Prone Area: a river Region's corridor, approximate
-├── river.geojson         the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
+├── flood_prone.geojson   the Flood-Prone Area, approximate: a river Region's corridor, or a coast Region's land below `flood_prone_below` traced from the terrain (one MultiPolygon feature)
+├── river.geojson         (river Regions only) the river line: one LineString per reach, with "speed_kmh", "km" (River km at each vertex) and "source"
 ├── basemap/water.geojson      OpenStreetMap lakes, ponds and riverbanks as polygons, `{ "name": str|null }`; an island in a lake is not cut out
 ├── basemap/waterways.geojson  rivers, canals and named streams as lines, `{ "name": str|null, "kind" }`
 ├── basemap/coastline.geojson  the coastline as lines (sea has no polygon; land is the map's ground)

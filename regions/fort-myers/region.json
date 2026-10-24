@@ -1,0 +1,233 @@
+{
+  "name": "fort-myers",
+  "label": "Fort Myers Beach and Estero Bay, Florida",
+  "bbox": [
+    26.3,
+    -82.0,
+    26.67,
+    -81.75
+  ],
+  "time_zone": "America/New_York",
+  "display_units": {
+    "water_level": "ft",
+    "rain_rate": "in/h",
+    "soil_moisture": "%",
+    "air_pressure": "inHg",
+    "distance": "mi"
+  },
+  "official_alert_sources": [
+    {
+      "tag": "nws_tbw",
+      "name": "NWS Tampa Bay",
+      "covers": "Lee County (zones FLZ165, FLZ265)"
+    }
+  ],
+  "water": {
+    "type": "coast",
+    "datum": "NAVD88",
+    "flood_prone_below": {
+      "value": 9,
+      "unit": "ft"
+    }
+  },
+  "rules": {
+    "flood_warning": {
+      "storm_surge": {
+        "elevated_level": {
+          "value": 1,
+          "unit": "ft"
+        },
+        "warning_height": {
+          "value": 3,
+          "unit": "ft"
+        },
+        "high_level": {
+          "value": 6,
+          "unit": "ft"
+        },
+        "rising": {
+          "value": 0.5,
+          "unit": "ft"
+        },
+        "rising_window_s": 900
+      },
+      "rain_elevated": {
+        "value": 0.4,
+        "unit": "in/h"
+      },
+      "rain_high": {
+        "value": 1,
+        "unit": "in/h"
+      },
+      "storm_pressure": {
+        "value": 29.5,
+        "unit": "inHg"
+      },
+      "soil_rising_points": 3
+    }
+  },
+  "shelters": [
+    {
+      "id": "dunbar-high",
+      "name": "Dunbar High School",
+      "pos": [
+        26.63039,
+        -81.83423
+      ],
+      "special_needs": false,
+      "pet_friendly": true,
+      "source": "3800 Edison Avenue, Fort Myers. On Lee County's list of the 14 shelters it opened for Hurricane Ian (City of Bonita Springs notice of 29 Sep 2022 and WGCU of 27 Sep 2022, which both say every one of them took pets; the county names no special-medical-needs shelter, which is a separate one you register for, so special_needs is false). Position: OpenStreetMap way 970767988. Ground: about 18.0 ft above NAVD88 in the Cache Pack's terrain (USGS 3DEP), which is good to a few tenths of a metre, against the 9 ft below which the Flood-Prone Area is traced. Checked 2026-10-23 from maps and data only; not visited. Nobody has confirmed it opens as a shelter for any future storm."
+    },
+    {
+      "id": "south-fort-myers-high",
+      "name": "South Fort Myers High School",
+      "pos": [
+        26.53743,
+        -81.84905
+      ],
+      "special_needs": false,
+      "pet_friendly": true,
+      "source": "14020 Plantation Road, Fort Myers. On Lee County's list of the 14 shelters it opened for Hurricane Ian (City of Bonita Springs notice of 29 Sep 2022 and WGCU of 27 Sep 2022, which both say every one of them took pets; the county names no special-medical-needs shelter, which is a separate one you register for, so special_needs is false). Position: OpenStreetMap way 971261841. Ground: about 16.3 ft above NAVD88 in the Cache Pack's terrain (USGS 3DEP), which is good to a few tenths of a metre, against the 9 ft below which the Flood-Prone Area is traced. Checked 2026-10-23 from maps and data only; not visited. Nobody has confirmed it opens as a shelter for any future storm."
+    },
+    {
+      "id": "estero-recreation-center",
+      "name": "Estero Recreation Center",
+      "pos": [
+        26.42843,
+        -81.80172
+      ],
+      "special_needs": false,
+      "pet_friendly": true,
+      "source": "9200 Corkscrew Palms Blvd, Estero. On Lee County's list of the 14 shelters it opened for Hurricane Ian (City of Bonita Springs notice of 29 Sep 2022 and WGCU of 27 Sep 2022, which both say every one of them took pets; the county names no special-medical-needs shelter, which is a separate one you register for, so special_needs is false). Position: OpenStreetMap way 163849541. Ground: about 16.6 ft above NAVD88 in the Cache Pack's terrain (USGS 3DEP), which is good to a few tenths of a metre, against the 9 ft below which the Flood-Prone Area is traced. Checked 2026-10-23 from maps and data only; not visited. Nobody has confirmed it opens as a shelter for any future storm."
+    },
+    {
+      "id": "hertz-arena",
+      "name": "Hertz Arena",
+      "pos": [
+        26.44046,
+        -81.77884
+      ],
+      "special_needs": false,
+      "pet_friendly": true,
+      "source": "11000 Everblades Parkway, Estero. On Lee County's list of the 14 shelters it opened for Hurricane Ian (City of Bonita Springs notice of 29 Sep 2022 and WGCU of 27 Sep 2022, which both say every one of them took pets; the county names no special-medical-needs shelter, which is a separate one you register for, so special_needs is false). Position: OpenStreetMap way 168318967. Ground: about 19.4 ft above NAVD88 in the Cache Pack's terrain (USGS 3DEP), which is good to a few tenths of a metre, against the 9 ft below which the Flood-Prone Area is traced. Checked 2026-10-23 from maps and data only; not visited. Nobody has confirmed it opens as a shelter for any future storm."
+    },
+    {
+      "id": "treeline-elementary",
+      "name": "Treeline Elementary School",
+      "pos": [
+        26.58609,
+        -81.78497
+      ],
+      "special_needs": false,
+      "pet_friendly": true,
+      "source": "10900 Treeline Avenue, Fort Myers. On Lee County's list of the 14 shelters it opened for Hurricane Ian (City of Bonita Springs notice of 29 Sep 2022 and WGCU of 27 Sep 2022, which both say every one of them took pets; the county names no special-medical-needs shelter, which is a separate one you register for, so special_needs is false). Position: OpenStreetMap way 970767983. Ground: about 20.4 ft above NAVD88 in the Cache Pack's terrain (USGS 3DEP), which is good to a few tenths of a metre, against the 9 ft below which the Flood-Prone Area is traced. Checked 2026-10-23 from maps and data only; not visited. Nobody has confirmed it opens as a shelter for any future storm."
+    }
+  ],
+  "sensor_sites": [
+    {
+      "id": "fort-myers-beach-pier",
+      "label": "Fort Myers Beach Pier",
+      "pos": [
+        26.45239,
+        -81.95666
+      ],
+      "why": "On the Gulf shore where Ian's surge was highest, so it floods first. Starts from USGS Ian deployment site FLLEE03382 (instrument 10768)."
+    },
+    {
+      "id": "matanzas-pass",
+      "label": "Matanzas Pass",
+      "pos": [
+        26.45836,
+        -81.95331
+      ],
+      "why": "Inside the island on the pass, next to the pier: reads the surge as it pushes into the bay. Starts from USGS Ian deployment site FLLEE03284 (instrument 10773)."
+    },
+    {
+      "id": "cape-coral-fishing-pier",
+      "label": "Caloosahatchee River at the Cape Coral Fishing Pier",
+      "pos": [
+        26.5416,
+        -81.95053
+      ],
+      "why": "North shore of the river mouth, away from Estero Bay: shows how the surge reaches Cape Coral. Starts from USGS Ian deployment site FLLEE03374 (instrument 10857 and 10858)."
+    },
+    {
+      "id": "lovers-key-big-carlos-pass",
+      "label": "Big Carlos Pass at Lovers Key",
+      "pos": [
+        26.40377,
+        -81.878
+      ],
+      "why": "The pass between Estero Bay and the Gulf, where the surge enters the bay. Starts from USGS Ian deployment site FLLEE03288 (instrument 10745 and 10747)."
+    },
+    {
+      "id": "mullock-creek-marina",
+      "label": "Mullock Creek at Mullock Creek Marina",
+      "pos": [
+        26.47333,
+        -81.85167
+      ],
+      "why": "A creek that floods from the bay, inland of the beach. Starts from USGS Ian deployment site FLLEE03287 (instrument 10861)."
+    },
+    {
+      "id": "coconut-point-marina",
+      "label": "Estero Bay at Coconut Point Marina",
+      "pos": [
+        26.39993,
+        -81.84036
+      ],
+      "why": "The back of Estero Bay, where water is pushed up after the surge. Starts from USGS Ian deployment site FLLEE03289 (instrument 10855)."
+    },
+    {
+      "id": "estero-river-us41",
+      "label": "Estero River at US 41",
+      "pos": [
+        26.43508,
+        -81.81069
+      ],
+      "why": "A river mouth just above the bay, flooded from the bay and from rain. Starts from USGS Ian deployment site FLLEE03290 (instrument 10859)."
+    },
+    {
+      "id": "spring-creek-us41",
+      "label": "Spring Creek at US 41",
+      "pos": [
+        26.36521,
+        -81.80813
+      ],
+      "why": "Creek above the south end of Estero Bay, on the way to Bonita Springs. Starts from USGS Ian deployment site FLLEE03292 (instrument 10849)."
+    }
+  ],
+  "official_gauges": [
+    {
+      "agency": "NOAA",
+      "station": "8725520",
+      "label": "Fort Myers (NOAA tide gauge)",
+      "pos": [
+        26.64778,
+        -81.87111
+      ],
+      "datum_offset": {
+        "value": 0.28,
+        "unit": "ft"
+      }
+    }
+  ],
+  "sources": {
+    "terrain": {
+      "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+      "credit": "Terrain Tiles (Terrarium) on AWS Open Data; over the United States built from USGS 3DEP"
+    },
+    "roads": {
+      "url": "https://download.geofabrik.de/north-america/us/florida-latest.osm.pbf",
+      "credit": "© OpenStreetMap contributors (ODbL 1.0)"
+    },
+    "basemap": {
+      "url": "https://overpass-api.de/api/interpreter",
+      "credit": "© OpenStreetMap contributors (ODbL 1.0)"
+    },
+    "weather": {
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "credit": "Weather data by Open-Meteo.com (CC BY 4.0)"
+    }
+  }
+}

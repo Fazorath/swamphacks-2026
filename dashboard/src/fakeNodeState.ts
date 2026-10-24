@@ -4,6 +4,7 @@ import type { NodeSnapshot, NodeState, Region } from "./nodeState";
 export const FAKE_REGION: Region = {
   name: "nepal",
   label: "Bhote Koshi valley, Nepal",
+  water_type: "river",
   time_zone: "Asia/Kathmandu",
   display_units: {
     water_level: "cm",
@@ -23,6 +24,7 @@ export const FAKE_REGION: Region = {
 export const FORT_MYERS_REGION: Region = {
   name: "fort-myers",
   label: "Fort Myers Beach and Estero Bay, Florida",
+  water_type: "coast",
   time_zone: "America/New_York",
   display_units: {
     water_level: "ft",

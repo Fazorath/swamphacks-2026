@@ -1,6 +1,13 @@
 import type { Shelter } from "./evacuationPlan";
 
-export const FLOOD_PRONE_CAPTION = "Flood-Prone Area: hand-drawn, approximate";
+const FLOOD_PRONE_CAPTIONS = {
+  river: "Flood-Prone Area: hand-drawn, approximate",
+  coast: "Flood-Prone Area: traced from the terrain, approximate",
+};
+
+export function floodProneCaption(waterType: "river" | "coast"): string {
+  return FLOOD_PRONE_CAPTIONS[waterType];
+}
 
 export function shelterLabel(shelter: Shelter, open: boolean, outOfReach = false): string {
   return [

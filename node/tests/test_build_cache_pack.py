@@ -4,6 +4,7 @@ import hashlib
 import json
 import shutil
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ import httpx
 import pack_routes
 import pack_terrain
 import pytest
-from pack_routes import Roads
+from pack_routes import FloodProneArea, Point, Roads
 from pack_sources import SourceFailed
 from terrarium import terrarium_png
 
@@ -21,6 +22,7 @@ from storm_shield.region import RegionError, region_path
 from storm_shield.weather_grid import grid_points
 
 NEPAL = region_path("nepal").parent
+FORT_MYERS = region_path("fort-myers").parent
 BBOX = (1.0, 1.0, 1.2, 1.2)
 RIVER_LAT = 1.1
 HILLTOP = (1.17, 1.15)
@@ -68,6 +70,22 @@ def _archive_answer() -> list[dict[str, Any]]:
 def _write(path: Path, content: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(content))
+
+
+def _write_terrain(
+    region_dir: Path, height_of_tile: Callable[[Callable[[Point], bool]], int]
+) -> None:
+    """One Terrarium tile per tile of the box at every zoom; `height_of_tile` is given a test for
+    whether the tile holds a point and answers the tile's height in metres."""
+    for zoom, x, y in pack_terrain.tiles_covering(BBOX, pack_terrain.ZOOMS):
+
+        def holds(point: Point, zoom: int = zoom, x: int = x, y: int = y) -> bool:
+            point_x, point_y = pack_terrain.tile_position(*point, zoom)
+            return (x, y) == (int(point_x), int(point_y))
+
+        tile = region_dir / "sources" / "terrain" / str(zoom) / str(x) / f"{y}.png"
+        tile.parent.mkdir(parents=True, exist_ok=True)
+        tile.write_bytes(terrarium_png(height_of_tile(holds)))
 
 
 def _fixture_region(folder: Path, **changes: Any) -> Path:
@@ -150,12 +168,7 @@ def _fixture_region(folder: Path, **changes: Any) -> Path:
     )
     (region_dir / "sources" / "roads.osm.pbf").write_bytes(b"not read: load_roads is replaced")
     # The hilltop's tiles read 200 m and every other tile 10 m, so it climbs 190 m above the river.
-    for zoom, x, y in pack_terrain.tiles_covering(BBOX, pack_terrain.ZOOMS):
-        hill_x, hill_y = pack_terrain.tile_position(*HILLTOP, zoom)
-        height = 200 if (x, y) == (int(hill_x), int(hill_y)) else 10
-        tile = region_dir / "sources" / "terrain" / str(zoom) / str(x) / f"{y}.png"
-        tile.parent.mkdir(parents=True, exist_ok=True)
-        tile.write_bytes(terrarium_png(height))
+    _write_terrain(region_dir, lambda tile_holds: 200 if tile_holds(HILLTOP) else 10)
     shutil.copytree(NEPAL / "events", region_dir / "events")
     return region_dir
 
@@ -316,3 +329,68 @@ def test_a_high_ground_point_far_from_its_town_fails_the_build(tmp_path: Path) -
     (region_dir / "region.json").write_text(json.dumps(region))
     with pytest.raises(ValueError, match="high-ground point ridge is over 2000 m from Hilltop"):
         _build(tmp_path, region_dir)
+
+
+SEA = (1.01, 1.01)
+LOW_GROUND = (1.1, 1.1)
+
+
+def _coast_region(folder: Path, shelter: tuple[float, float] = SHELTER) -> Path:
+    """The fixture box as a coast Region (Fort Myers's water and rules) whose terrain is sea in the
+    south-west tile, 6 m at the Shelter's tile and 1 m everywhere else."""
+    fort_myers = json.loads((FORT_MYERS / "region.json").read_text())
+    gym = {
+        "id": "gym",
+        "name": "Gym",
+        "pos": list(shelter),
+        "special_needs": True,
+        "pet_friendly": False,
+        "source": "a note for reviewers",
+    }
+    region_dir = _fixture_region(
+        folder,
+        water=fort_myers["water"],
+        rules=fort_myers["rules"],
+        shelters=[gym],
+        high_ground=[],
+    )
+    shutil.rmtree(region_dir / "events")
+    _write_terrain(region_dir, lambda holds: 6 if holds(SHELTER) else 0 if holds(SEA) else 1)
+    return region_dir
+
+
+def test_a_coast_pack_traces_its_flood_prone_area_from_the_terrain(tmp_path: Path) -> None:
+    pack = _build(tmp_path, _coast_region(tmp_path))
+
+    traced = _json(pack, "flood_prone.geojson")
+    assert traced["features"][0]["geometry"]["type"] == "MultiPolygon"
+    assert traced["features"][0]["properties"]["approximate"] is True
+    area = FloodProneArea.from_geojson(traced)
+    assert area.contains(LOW_GROUND)
+    assert not area.contains(SHELTER)
+    assert not area.contains(SEA)
+    assert "river.geojson" not in pack.namelist()
+    assert _json(pack, "high_ground.json") == []
+    assert set(_json(pack, "shelters.json")[0]) == {
+        "id",
+        "name",
+        "pos",
+        "special_needs",
+        "pet_friendly",
+    }
+
+
+def test_the_flood_prone_area_stops_at_the_regions_height(tmp_path: Path) -> None:
+    region_dir = _coast_region(tmp_path)
+    region = json.loads((region_dir / "region.json").read_text())
+    region["water"]["flood_prone_below"] = {"value": 2, "unit": "ft"}
+    (region_dir / "region.json").write_text(json.dumps(region))
+
+    area = FloodProneArea.from_geojson(_json(_build(tmp_path, region_dir), "flood_prone.geojson"))
+
+    assert not area.contains(LOW_GROUND)  # 1 m is over 2 ft (0.6 m)
+
+
+def test_a_shelter_inside_the_flood_prone_area_fails_the_build(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Shelters inside the Flood-Prone Area: gym"):
+        _build(tmp_path, _coast_region(tmp_path, shelter=LOW_GROUND))

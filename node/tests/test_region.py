@@ -9,7 +9,14 @@ from meshed_nodes import MeshedNodes
 from storm_shield import region as region_module
 from storm_shield.main import create_app
 from storm_shield.mesh import InMemoryNetwork
-from storm_shield.region import RegionError, load_region, region_path
+from storm_shield.region import (
+    Coast,
+    CoastFloodWarningRules,
+    FloodWarningRules,
+    RegionError,
+    load_region,
+    region_path,
+)
 from storm_shield.replay import load_event
 from storm_shield.settings import Settings
 
@@ -40,6 +47,7 @@ def _surged(client: TestClient) -> list[str]:
 def test_nepals_region_holds_what_the_app_used_to_hard_wire() -> None:
     region = load_region(NEPAL)
     rules = region.rules.flood_warning
+    assert isinstance(rules, FloodWarningRules)
     assert region.hazard == "flash_flood"
     assert region.time_zone == "Asia/Kathmandu"
     assert (rules.flash_flood.surge_rise.cm, rules.flash_flood.surge_window_s) == (300, 60)
@@ -52,7 +60,9 @@ def test_nepals_region_holds_what_the_app_used_to_hard_wire() -> None:
 
 def test_thresholds_are_converted_from_the_units_they_are_written_in(tmp_path: Path) -> None:
     path = _write_region(tmp_path, **_flash_flood(surge_rise={"value": 10, "unit": "ft"}))
-    assert load_region(path).rules.flood_warning.flash_flood.surge_rise.cm == pytest.approx(304.8)
+    rules = load_region(path).rules.flood_warning
+    assert isinstance(rules, FloodWarningRules)
+    assert rules.flash_flood.surge_rise.cm == pytest.approx(304.8)
 
 
 @pytest.mark.parametrize(
@@ -123,3 +133,94 @@ def test_the_regions_surge_rise_decides_when_the_warning_fires(
         meshed_nodes.hear_from("creek", water_cm=220)
     assert _surged(meshed_nodes["nepal-like"]) == []
     assert _surged(meshed_nodes["fixture-like"]) == ["creek"]
+
+
+FORT_MYERS = region_path("fort-myers")
+
+
+def _write_coast_region(folder: Path, **changes: Any) -> Path:
+    """Fort Myers's file with `changes` merged in; its path."""
+    region = json.loads(FORT_MYERS.read_text()) | changes
+    (folder / "coast").mkdir(parents=True)
+    path = folder / "coast" / "region.json"
+    path.write_text(json.dumps(region))
+    return path
+
+
+def test_fort_myers_is_a_coast_region_read_in_feet_and_miles() -> None:
+    region = load_region(FORT_MYERS)
+    rules = region.rules.flood_warning
+    assert isinstance(rules, CoastFloodWarningRules)
+    assert isinstance(region.water, Coast)
+    assert (region.hazard, region.water.datum) == ("storm_surge", "NAVD88")
+    assert region.water.flood_prone_below.cm == pytest.approx(9 * 30.48)
+    assert region.time_zone == "America/New_York"
+    assert (region.display_units.water_level, region.display_units.distance) == ("ft", "mi")
+    assert rules.storm_surge.warning_height.cm == pytest.approx(3 * 30.48)
+    assert [source.tag for source in region.official_alert_sources] == ["nws_tbw"]
+    assert [gauge.station for gauge in region.official_gauges] == ["8725520"]
+    assert all(shelter.height_above_river_m is None for shelter in region.shelters)
+    assert region.high_ground == []
+    assert region.summary().water_type == "coast"
+
+
+@pytest.mark.parametrize(
+    ("changes", "complaint"),
+    [
+        (
+            {"rules": {"flood_warning": json.loads(NEPAL.read_text())["rules"]["flood_warning"]}},
+            "storm_surge",
+        ),
+        (
+            {
+                "shelters": [
+                    {**json.loads(FORT_MYERS.read_text())["shelters"][0], "height_above_river_m": 5}
+                ]
+            },
+            "height_above_river_m",
+        ),
+        ({"high_ground": json.loads(NEPAL.read_text())["high_ground"]}, "high_ground"),
+        (
+            {
+                "water": {
+                    "type": "coast",
+                    "datum": "NGVD29",
+                    "flood_prone_below": {"value": 9, "unit": "ft"},
+                }
+            },
+            "datum",
+        ),
+        (
+            {
+                "official_gauges": [
+                    {**json.loads(FORT_MYERS.read_text())["official_gauges"][0], "pos": [0, 0]}
+                ]
+            },
+            r"official_gauges\[0\]",
+        ),
+    ],
+)
+def test_a_coast_region_file_that_does_not_hang_together_is_refused(
+    tmp_path: Path, changes: dict[str, Any], complaint: str
+) -> None:
+    with pytest.raises(RegionError, match=complaint):
+        load_region(_write_coast_region(tmp_path, **changes))
+
+
+def test_a_river_shelter_needs_its_height_above_the_river(tmp_path: Path) -> None:
+    shelters = json.loads(NEPAL.read_text())["shelters"]
+    del shelters[0]["height_above_river_m"]
+    with pytest.raises(RegionError, match="height_above_river_m"):
+        load_region(_write_region(tmp_path, shelters=shelters))
+
+
+def test_a_node_will_not_start_on_a_coast_region_yet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = tmp_path / "regions"
+    (folder / "fort-myers").mkdir(parents=True)
+    (folder / "fort-myers" / "region.json").write_text(FORT_MYERS.read_text())
+    monkeypatch.setattr(region_module, "REGIONS_DIR", folder)
+    settings = Settings(name="porch", region="fort-myers", dashboard_dir=tmp_path / "none")
+    with pytest.raises(RegionError, match="storm-surge rules"):
+        create_app(settings, InMemoryNetwork().join("porch", "hub"))
