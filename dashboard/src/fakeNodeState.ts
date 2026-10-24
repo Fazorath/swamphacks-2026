@@ -19,6 +19,21 @@ export const FAKE_REGION: Region = {
   ],
 };
 
+// Fort Myers' Region as a Node reports it: Eastern time, feet and miles.
+export const FORT_MYERS_REGION: Region = {
+  name: "fort-myers",
+  label: "Fort Myers Beach and Estero Bay, Florida",
+  time_zone: "America/New_York",
+  display_units: {
+    water_level: "ft",
+    rain_rate: "in/h",
+    soil_moisture: "%",
+    air_pressure: "inHg",
+    distance: "mi",
+  },
+  official_alert_sources: [{ tag: "nws", name: "National Weather Service", covers: "Lee County" }],
+};
+
 // What a Node answers at /api/state on a calm day with no Node heard yet; tests override the rest.
 export function fakeNodeState(overrides: Partial<NodeState> = {}): NodeState {
   return {

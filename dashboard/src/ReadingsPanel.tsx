@@ -94,7 +94,7 @@ export function ReadingsPanel({
             trend={trends[historyKey(node.id, "water_level")]}
             className={node.stale ? "water-level struck" : undefined}
           >
-            {node.waterLevelCm} cm
+            {node.waterLevelShown}
           </ReadingSlot>
         </p>
       )}
@@ -107,7 +107,7 @@ export function ReadingsPanel({
                 value={measurement.value}
                 trend={trends[historyKey(node.id, measurement.kind)]}
               >
-                {kindLabel(measurement.kind)}: {measurement.value} {measurement.unit}
+                {kindLabel(measurement.kind)}: {measurement.shown}
               </ReadingSlot>
             </li>
           ))}

@@ -18,7 +18,7 @@ export function NodeSheet({ node, onClose }: { node: NodeOnMap; onClose: () => v
       <ul>
         {node.measurements.map((measurement) => (
           <li key={measurement.kind}>
-            {kindLabel(measurement.kind)}: {measurement.value} {measurement.unit}
+            {kindLabel(measurement.kind)}: {measurement.shown}
           </li>
         ))}
       </ul>

@@ -20,3 +20,24 @@ export function inDisplayUnit(value: number, kind: Shown, units: DisplayUnits): 
   const unit = units[kind];
   return `${Number((value / PER_DISPLAY_UNIT[unit]).toFixed(DECIMALS[unit]))} ${unit}`;
 }
+
+const MILES_PER_KM = 0.621371;
+
+// "9.7 mi" or "15.6 km" for a distance the Node worked out in kilometres; kilometres until the
+// Region is known.
+export function distanceInDisplayUnit(
+  km: number,
+  units: DisplayUnits | null,
+  decimals = 1,
+): string {
+  return units?.distance === "mi"
+    ? `${(km * MILES_PER_KM).toFixed(decimals)} mi`
+    : `${km.toFixed(decimals)} km`;
+}
+
+// "78 km/h" or "48 mph" for a speed the Node worked out in kilometres per hour.
+export function speedInDisplayUnit(kmh: number, units: DisplayUnits | null): string {
+  return units?.distance === "mi"
+    ? `${Math.round(kmh * MILES_PER_KM)} mph`
+    : `${Math.round(kmh)} km/h`;
+}

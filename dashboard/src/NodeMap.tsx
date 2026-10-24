@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { addBasemap, baseStyle, lineCollection, setOverlay } from "./basemap";
 import { HATCH_IMAGE, hatchImage, readMapColors, type MapColors } from "./mapStyle";
-import { nepalClockTime } from "./EventClockTag";
 import { MapMarker } from "./MapMarker";
+import { useRegion } from "./RegionContext";
+import { regionClockTime } from "./regionTime";
 import {
   estimatedLabelSize,
   placeLabels,
@@ -82,9 +83,15 @@ function atTrueSpot(node: NodeOnMap, sandbox: SandboxNodes | null): NodeOnMap {
   return listed ? { ...node, position: listed.position } : node;
 }
 
-function placeLabelText(name: string, waveStamps: Map<string, number>): string {
+function placeLabelText(
+  name: string,
+  waveStamps: Map<string, number>,
+  timeZone: string | null,
+): string {
   const arrivedAt = waveStamps.get(name);
-  return arrivedAt === undefined ? name : `${name} ${nepalClockTime(arrivedAt)}`;
+  return arrivedAt === undefined || timeZone === null
+    ? name
+    : `${name} ${regionClockTime(arrivedAt, timeZone)}`;
 }
 
 // Every label that competes for room on screen. None is ever drawn over another: the chosen
@@ -99,6 +106,7 @@ function labelsOnScreen(
   nodes: NodeOnMap[],
   selectedId: string | null,
   waveStamps: Map<string, number>,
+  timeZone: string | null,
 ): MapLabel[] {
   const at = (lat: number, lon: number) => map.project([lon, lat]);
   const labels: MapLabel[] = [];
@@ -106,7 +114,7 @@ function labelsOnScreen(
     labels.push({
       id: `place:${place.name}`,
       ...at(place.lat, place.lon),
-      ...estimatedLabelSize(placeLabelText(place.name, waveStamps), 12),
+      ...estimatedLabelSize(placeLabelText(place.name, waveStamps, timeZone), 12),
       rank: 1,
     });
   }
@@ -120,7 +128,7 @@ function labelsOnScreen(
     });
   }
   for (const node of nodes) {
-    const text = node.label + (node.waterLevelCm !== null ? ` · ${node.waterLevelCm} cm` : "");
+    const text = node.label + (node.waterLevelShown !== null ? ` · ${node.waterLevelShown}` : "");
     labels.push({
       id: `node:${node.id}`,
       ...at(node.position[0], node.position[1]),
@@ -496,6 +504,7 @@ export function NodeMap({
     };
   }, [map, placingSensor, picking, blocking, onPickHome, onTapRoad]);
 
+  const timeZone = useRegion()?.time_zone ?? null;
   const waving = river !== null && eventT !== null && warnings.length > 0;
   const wavePassedIds = new Set(waving ? nodesTheWavePassed(river, warnings, nodes, eventT) : []);
   const waveStamps = waving
@@ -526,6 +535,7 @@ export function NodeMap({
           nodes,
           selectedId,
           waveStamps,
+          timeZone,
         )
       : [];
   const nextPlacement = placeLabels(labels, placement);
@@ -597,7 +607,7 @@ export function NodeMap({
                 .join(" ")}
             >
               <span className={`map-label label-${sideOf(`place:${place.name}`)}`}>
-                {placeLabelText(place.name, waveStamps)}
+                {placeLabelText(place.name, waveStamps, timeZone)}
               </span>
             </MapMarker>
           ))}

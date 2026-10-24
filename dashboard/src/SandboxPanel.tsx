@@ -1,4 +1,6 @@
+import { distanceInDisplayUnit } from "./displayUnits";
 import { Panel, type PanelControl } from "./Panel";
+import { useRegion } from "./RegionContext";
 import { ReplayControls } from "./ReplayControls";
 import type { EventClockFeed } from "./useEventClock";
 import type { SandboxNode, SandboxNodes } from "./useSandboxNodes";
@@ -43,6 +45,7 @@ export function SandboxPanel({
   eventClock,
   panel,
 }: Props) {
+  const region = useRegion();
   const rangeKm = sandbox.radio_range_m / 1000;
 
   return (
@@ -59,7 +62,7 @@ export function SandboxPanel({
           value={rangeKm}
           onChange={(event) => void onSetRadioRange(Math.round(Number(event.target.value) * 1000))}
         />
-        <output>{rangeKm.toFixed(1)} km</output>
+        <output>{distanceInDisplayUnit(rangeKm, region?.display_units ?? null)}</output>
       </label>
       <button
         type="button"

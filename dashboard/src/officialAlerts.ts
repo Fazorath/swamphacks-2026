@@ -1,4 +1,4 @@
-import { nepalClockTime } from "./EventClockTag";
+import { regionClockTime } from "./regionTime";
 import type { HouseholdProfile } from "./householdProfile";
 import type { Region } from "./nodeState";
 
@@ -51,12 +51,14 @@ export function appliesToHousehold(
   );
 }
 
-// "Community Warning 08:37 · first Official Alert 09:05"; null until both exist.
+// "Community Warning 08:37 · first Official Alert 09:05" in the Region's zone; null until both
+// exist and the Region is known.
 export function leadTimeLine(
   firstCommunityWarningAt: number | null,
   alerts: OfficialAlert[],
+  timeZone: string | null,
 ): string | null {
-  if (firstCommunityWarningAt === null || alerts.length === 0) return null;
+  if (firstCommunityWarningAt === null || alerts.length === 0 || timeZone === null) return null;
   const firstAlertAt = Math.min(...alerts.map(issuedUnix));
-  return `Community Warning ${nepalClockTime(firstCommunityWarningAt)} · first Official Alert ${nepalClockTime(firstAlertAt)}`;
+  return `Community Warning ${regionClockTime(firstCommunityWarningAt, timeZone)} · first Official Alert ${regionClockTime(firstAlertAt, timeZone)}`;
 }

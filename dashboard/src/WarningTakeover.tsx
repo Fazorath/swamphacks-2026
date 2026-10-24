@@ -6,6 +6,7 @@ import {
   type CommunityWarning,
 } from "./communityWarnings";
 import type { NodeSnapshot, Region } from "./nodeState";
+import { useRegion } from "./RegionContext";
 import { issuedAsGiven, officialTag, sourceName, type OfficialAlert } from "./officialAlerts";
 import type { TakeoverWarning } from "./acknowledgedWarnings";
 import type { WaveArrival } from "./waveEta";
@@ -54,9 +55,11 @@ function CommunityBody({
   eventT: number | null;
   online: boolean;
 }) {
+  const units = useRegion()?.display_units ?? null;
   const measuredLine = measuredSpeedLine(
     warning,
     (id) => nodes.find((node) => node.id === id)?.name ?? id,
+    units,
   );
   return (
     <>
@@ -64,7 +67,7 @@ function CommunityBody({
         <WaveEtaLine arrival={waveArrival} eventT={eventT} />
       </div>
       <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
-      <h2>{warningSentence(warning, nodes, thisNodeId)}</h2>
+      <h2>{warningSentence(warning, nodes, thisNodeId, units)}</h2>
       {measuredLine && <p>{measuredLine}</p>}
       <p>Check official sources for any evacuation decision.</p>
       {online ? (
@@ -146,6 +149,7 @@ export function WarningBanners({
   nodes: NodeSnapshot[];
   thisNodeId: string;
 }) {
+  const units = useRegion()?.display_units ?? null;
   return shown.map((each) => (
     <p key={each.key} role="status" className={`banner warning-banner ${each.kind}`}>
       {each.kind === "official" ? (
@@ -155,7 +159,7 @@ export function WarningBanners({
       ) : (
         <>
           <strong>COMMUNITY WARNING · NOT OFFICIAL</strong>{" "}
-          {warningSentence(each.warning, nodes, thisNodeId)}
+          {warningSentence(each.warning, nodes, thisNodeId, units)}
         </>
       )}
     </p>
