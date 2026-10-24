@@ -35,6 +35,7 @@ import { useContactNotes, useLevelRises } from "./useMarkerEvents";
 import { exampleHousehold } from "./exampleHousehold";
 import { useHouseholdProfile, type StorageProblem } from "./useHouseholdProfile";
 import { PagerBanner } from "./PagerBanner";
+import { RegionContext } from "./RegionContext";
 import { useNodeState } from "./useNodeState";
 import { useSandboxNodes } from "./useSandboxNodes";
 import { usePager } from "./usePager";
@@ -301,221 +302,223 @@ export function App() {
       : null;
   const selectedNode = nodes.find((node) => node.id === selectedId);
   return (
-    <main className={phone ? "phone" : undefined}>
-      <TopBar
-        phone={phone}
-        eventClock={eventClock.clock}
-        floodRisk={floodRisk}
-        region={region}
-        showStormSignal={shows("storm-signal")}
-        warningChip={warningChip}
-        status={state?.status ?? null}
-        householdSaved={profile !== null}
-        onOpenHousehold={openPanel}
-        onOpenNode={onThisNodesOwnMachine() && identity ? openNodePanel : null}
-        onOpenHub={identity?.role === "hub" ? openHubPanel : null}
-      />
-      {unreachable && (
-        <p role="alert" className="banner">
-          Node unreachable. Live readings are hidden until it answers again; the map, Shelters and
-          your household profile are still here.
-        </p>
-      )}
-      {phone && (
-        <WarningBanners shown={acknowledgedWarnings} nodes={allNodes} thisNodeId={thisNodeId} />
-      )}
-      {storageProblem && (
-        <p role="alert" className="banner">
-          {STORAGE_PROBLEM_MESSAGES[storageProblem]}
-        </p>
-      )}
-      {panelOpen && (
-        <HouseholdPanel
-          profile={profile}
-          home={draftHome}
-          hidden={picking}
-          onPickHome={pickHomeOnMap}
-          onSave={save}
-          onDelete={remove}
-          onClose={closePanel}
-        />
-      )}
-      {hubPanelOpen && (
-        <HubPanel
-          eventClock={eventClock}
-          shelters={cachePack?.shelters ?? []}
-          openShelterIds={openShelterIds}
-          onOpenShelterIdsChanged={showOpenShelterIds}
-          onClose={() => setHubPanelOpen(false)}
-        />
-      )}
-      {nodePanelOpen && state && (
-        <NodePanel
-          registration={state.registration}
-          onSignedUp={refresh}
-          onClose={() => setNodePanelOpen(false)}
-        />
-      )}
-      {pager.alert && <PagerBanner alert={pager.alert} onDismiss={pager.dismiss} />}
-      <div className="stage">
-        {!phone && <WarningBand pending={pending} nodes={allNodes} thisNodeId={thisNodeId} />}
-        <NodeMap
-          nodes={shows("nodes") ? nodes : []}
-          rises={rises}
-          stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
-          selectedId={selectedId}
-          onSelect={toggleSelected}
-          home={shownProfile?.home ?? null}
-          shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
-          openShelterIds={openShelterIds}
-          floodProne={shows("flood-prone") ? (cachePack?.floodProne ?? null) : null}
-          basemap={cachePack?.basemap ?? null}
-          places={places}
-          river={river}
-          warnings={communityWarnings}
-          warningFocus={warningFocus}
-          clock={eventClock.clock}
-          shelter={plan.shelter}
-          outOfReachShelter={plan.outOfReachShelter}
-          highGround={plan.highGround}
-          route={shows("route") ? plan.route : null}
-          panelRoom={panelRoom}
-          draftHome={panelOpen ? draftHome : null}
-          picking={picking}
-          onPickHome={setDraftHome}
-          onDonePicking={() => setPicking(false)}
-          blockedRoadLines={blockedLines}
-          canBlockRoads={roadGraph !== null}
-          blocking={blocking}
-          onToggleBlocking={() => setBlocking((on) => !on)}
-          onTapRoad={tapRoad}
-          terrain={terrainShown}
-          onTerrainSlow={() => setTerrainDropped(true)}
-          valleyFlights={valleyFlights}
-          weatherLayer={weather.layer}
-          weather={weatherData}
-          weatherAtMs={weatherAtMs}
-          waterReaches={waterReaches}
-          sandbox={sandbox}
-          placingSensor={
-            placingSensor
-              ? {
-                  onPlace: ({ lat, lon }) => {
-                    setPlacingSensor(false);
-                    void addSensor(lat, lon);
-                  },
-                  onCancel: () => setPlacingSensor(false),
-                }
-              : null
-          }
-          onMoveSensor={moveSensor}
-        />
-        {phone ? (
-          <>
-            {phoneTab === "map" && (
-              <div className="phone-map-overlay">
-                {selectedNode && (
-                  <NodeSheet node={selectedNode} onClose={() => setSelectedId(null)} />
-                )}
-                {latestOfficialAlert && (
-                  <p role="status" className="pinned-alert">
-                    <strong>{officialTag(latestOfficialAlert)}</strong>{" "}
-                    {latestOfficialAlert.headline}
-                  </p>
-                )}
-              </div>
-            )}
-            {phoneTab !== "map" && (
-              <div className="phone-pane">
-                {phoneTab === "readings" && (
-                  <>
-                    {readingsPanel}
-                    {sandboxPanel}
-                  </>
-                )}
-                {phoneTab === "alerts" && alertsPanel}
-                {phoneTab === "plan" && (
-                  <>
-                    <section aria-label="Household Profile" className="panel">
-                      <div className="panel-head">
-                        <h2>Household Profile</h2>
-                      </div>
-                      <div className="panel-body">
-                        <p>{profile ? "Household profile saved" : "No household profile yet"}</p>
-                        <button type="button" onClick={openPanel}>
-                          {profile ? "My household" : "Set up your household"}
-                        </button>
-                      </div>
-                    </section>
-                    {planPanel}
-                  </>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <LayerRail
-              hiddenLayers={hiddenLayers}
-              openPanels={panels.open}
-              registeredNodes={nodes.filter((node) => node.registered).length}
-              openShelters={openShelterCount}
-              onToggleLayer={toggleLayer}
-              onTogglePanel={panels.toggle}
-              weatherLayer={weather.layer}
-              onChooseWeather={weather.choose}
-            />
-            <WeatherLegend
-              layer={weather.layer}
-              weather={weatherData}
-              replaying={replaying}
-              nowMs={forecastTime.nowMs}
-              forecastHours={forecastTime.hours}
-              onForecastHours={forecastTime.setHours}
-            />
-            <MapLegend
-              basemap={cachePack?.basemap ?? null}
-              terrain={terrainShown}
-              onChooseTerrain={chooseTerrain}
-              onFlyToValley={() => setValleyFlights((count) => count + 1)}
-            />
-            <div className="panel-column left">
-              {readingsPanel}
-              {sandboxPanel}
-            </div>
-            <div className="panel-column right">
-              {alertsPanel}
-              {planPanel}
-            </div>
-            <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
-          </>
-        )}
-      </div>
-      <StatusStrip
-        nodes={nodes}
-        contactNotes={contactNotes}
-        identity={identity}
-        connecting={connection === "connecting"}
-        status={state?.status ?? null}
-        cachePackBuilt={cachePack?.built ?? null}
-        cachePackLoaded={cachePack !== null}
-        basemap={cachePack?.basemap ?? null}
-        terrainDropped={terrainDropped}
-        waterDrawn={waterReaches.length > 0}
-      />
-      {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
-      {phone && (
-        <WarningTakeover
-          pending={pending}
+    <RegionContext.Provider value={region}>
+      <main className={phone ? "phone" : undefined}>
+        <TopBar
+          phone={phone}
+          eventClock={eventClock.clock}
+          floodRisk={floodRisk}
           region={region}
-          nodes={allNodes}
-          thisNodeId={thisNodeId}
-          waveArrival={arrival}
-          eventT={eventT}
-          online={state?.status === "online"}
-          onAcknowledge={acknowledge}
+          showStormSignal={shows("storm-signal")}
+          warningChip={warningChip}
+          status={state?.status ?? null}
+          householdSaved={profile !== null}
+          onOpenHousehold={openPanel}
+          onOpenNode={onThisNodesOwnMachine() && identity ? openNodePanel : null}
+          onOpenHub={identity?.role === "hub" ? openHubPanel : null}
         />
-      )}
-    </main>
+        {unreachable && (
+          <p role="alert" className="banner">
+            Node unreachable. Live readings are hidden until it answers again; the map, Shelters and
+            your household profile are still here.
+          </p>
+        )}
+        {phone && (
+          <WarningBanners shown={acknowledgedWarnings} nodes={allNodes} thisNodeId={thisNodeId} />
+        )}
+        {storageProblem && (
+          <p role="alert" className="banner">
+            {STORAGE_PROBLEM_MESSAGES[storageProblem]}
+          </p>
+        )}
+        {panelOpen && (
+          <HouseholdPanel
+            profile={profile}
+            home={draftHome}
+            hidden={picking}
+            onPickHome={pickHomeOnMap}
+            onSave={save}
+            onDelete={remove}
+            onClose={closePanel}
+          />
+        )}
+        {hubPanelOpen && (
+          <HubPanel
+            eventClock={eventClock}
+            shelters={cachePack?.shelters ?? []}
+            openShelterIds={openShelterIds}
+            onOpenShelterIdsChanged={showOpenShelterIds}
+            onClose={() => setHubPanelOpen(false)}
+          />
+        )}
+        {nodePanelOpen && state && (
+          <NodePanel
+            registration={state.registration}
+            onSignedUp={refresh}
+            onClose={() => setNodePanelOpen(false)}
+          />
+        )}
+        {pager.alert && <PagerBanner alert={pager.alert} onDismiss={pager.dismiss} />}
+        <div className="stage">
+          {!phone && <WarningBand pending={pending} nodes={allNodes} thisNodeId={thisNodeId} />}
+          <NodeMap
+            nodes={shows("nodes") ? nodes : []}
+            rises={rises}
+            stormSignalOn={shows("storm-signal") && (floodRisk?.storm_signal.on ?? false)}
+            selectedId={selectedId}
+            onSelect={toggleSelected}
+            home={shownProfile?.home ?? null}
+            shelters={shows("shelters") ? (cachePack?.shelters ?? []) : []}
+            openShelterIds={openShelterIds}
+            floodProne={shows("flood-prone") ? (cachePack?.floodProne ?? null) : null}
+            basemap={cachePack?.basemap ?? null}
+            places={places}
+            river={river}
+            warnings={communityWarnings}
+            warningFocus={warningFocus}
+            clock={eventClock.clock}
+            shelter={plan.shelter}
+            outOfReachShelter={plan.outOfReachShelter}
+            highGround={plan.highGround}
+            route={shows("route") ? plan.route : null}
+            panelRoom={panelRoom}
+            draftHome={panelOpen ? draftHome : null}
+            picking={picking}
+            onPickHome={setDraftHome}
+            onDonePicking={() => setPicking(false)}
+            blockedRoadLines={blockedLines}
+            canBlockRoads={roadGraph !== null}
+            blocking={blocking}
+            onToggleBlocking={() => setBlocking((on) => !on)}
+            onTapRoad={tapRoad}
+            terrain={terrainShown}
+            onTerrainSlow={() => setTerrainDropped(true)}
+            valleyFlights={valleyFlights}
+            weatherLayer={weather.layer}
+            weather={weatherData}
+            weatherAtMs={weatherAtMs}
+            waterReaches={waterReaches}
+            sandbox={sandbox}
+            placingSensor={
+              placingSensor
+                ? {
+                    onPlace: ({ lat, lon }) => {
+                      setPlacingSensor(false);
+                      void addSensor(lat, lon);
+                    },
+                    onCancel: () => setPlacingSensor(false),
+                  }
+                : null
+            }
+            onMoveSensor={moveSensor}
+          />
+          {phone ? (
+            <>
+              {phoneTab === "map" && (
+                <div className="phone-map-overlay">
+                  {selectedNode && (
+                    <NodeSheet node={selectedNode} onClose={() => setSelectedId(null)} />
+                  )}
+                  {latestOfficialAlert && (
+                    <p role="status" className="pinned-alert">
+                      <strong>{officialTag(latestOfficialAlert)}</strong>{" "}
+                      {latestOfficialAlert.headline}
+                    </p>
+                  )}
+                </div>
+              )}
+              {phoneTab !== "map" && (
+                <div className="phone-pane">
+                  {phoneTab === "readings" && (
+                    <>
+                      {readingsPanel}
+                      {sandboxPanel}
+                    </>
+                  )}
+                  {phoneTab === "alerts" && alertsPanel}
+                  {phoneTab === "plan" && (
+                    <>
+                      <section aria-label="Household Profile" className="panel">
+                        <div className="panel-head">
+                          <h2>Household Profile</h2>
+                        </div>
+                        <div className="panel-body">
+                          <p>{profile ? "Household profile saved" : "No household profile yet"}</p>
+                          <button type="button" onClick={openPanel}>
+                            {profile ? "My household" : "Set up your household"}
+                          </button>
+                        </div>
+                      </section>
+                      {planPanel}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <LayerRail
+                hiddenLayers={hiddenLayers}
+                openPanels={panels.open}
+                registeredNodes={nodes.filter((node) => node.registered).length}
+                openShelters={openShelterCount}
+                onToggleLayer={toggleLayer}
+                onTogglePanel={panels.toggle}
+                weatherLayer={weather.layer}
+                onChooseWeather={weather.choose}
+              />
+              <WeatherLegend
+                layer={weather.layer}
+                weather={weatherData}
+                replaying={replaying}
+                nowMs={forecastTime.nowMs}
+                forecastHours={forecastTime.hours}
+                onForecastHours={forecastTime.setHours}
+              />
+              <MapLegend
+                basemap={cachePack?.basemap ?? null}
+                terrain={terrainShown}
+                onChooseTerrain={chooseTerrain}
+                onFlyToValley={() => setValleyFlights((count) => count + 1)}
+              />
+              <div className="panel-column left">
+                {readingsPanel}
+                {sandboxPanel}
+              </div>
+              <div className="panel-column right">
+                {alertsPanel}
+                {planPanel}
+              </div>
+              <WaveEtaCard arrival={arrival} eventT={eventT} home={waveHome} places={places} />
+            </>
+          )}
+        </div>
+        <StatusStrip
+          nodes={nodes}
+          contactNotes={contactNotes}
+          identity={identity}
+          connecting={connection === "connecting"}
+          status={state?.status ?? null}
+          cachePackBuilt={cachePack?.built ?? null}
+          cachePackLoaded={cachePack !== null}
+          basemap={cachePack?.basemap ?? null}
+          terrainDropped={terrainDropped}
+          waterDrawn={waterReaches.length > 0}
+        />
+        {phone && <PhoneTabs tab={phoneTab} onChange={setPhoneTab} />}
+        {phone && (
+          <WarningTakeover
+            pending={pending}
+            region={region}
+            nodes={allNodes}
+            thisNodeId={thisNodeId}
+            waveArrival={arrival}
+            eventT={eventT}
+            online={state?.status === "online"}
+            onAcknowledge={acknowledge}
+          />
+        )}
+      </main>
+    </RegionContext.Provider>
   );
 }

@@ -1,4 +1,5 @@
-import type { NodeSnapshot } from "./nodeState";
+import { distanceInDisplayUnit, speedInDisplayUnit } from "./displayUnits";
+import type { DisplayUnits, NodeSnapshot } from "./nodeState";
 
 type CommunityWarningReason =
   "water_surge" | "water_high" | "water_rising" | "rain_heavy" | "pressure_falling";
@@ -42,13 +43,14 @@ export function firstSurgeAt(warnings: CommunityWarning[]): number | null {
 export function measuredSpeedLine(
   warning: CommunityWarning,
   nameOf: (nodeId: string) => string,
+  units: DisplayUnits | null,
 ): string | null {
   const { measured } = warning;
   if (!measured) return null;
-  const distanceKm = (measured.km - warning.origin_km).toFixed(1);
+  const distance = distanceInDisplayUnit(measured.km - warning.origin_km, units);
   const minutes = Math.round((measured.surge_t - warning.surge_t) / 60);
-  const speed = Math.round(measured.speed_kmh);
-  return `Measured: ${distanceKm} km in ${minutes} min = ${speed} km/h (${nameOf(warning.origin)} to ${nameOf(measured.node)})`;
+  const speed = speedInDisplayUnit(measured.speed_kmh, units);
+  return `Measured: ${distance} in ${minutes} min = ${speed} (${nameOf(warning.origin)} to ${nameOf(measured.node)})`;
 }
 
 export function riverKm(km: number): string {
@@ -61,12 +63,13 @@ export function warningSentence(
   warning: CommunityWarning,
   nodes: NodeSnapshot[],
   thisNodeId: string,
+  units: DisplayUnits | null,
 ): string {
   const origin = nodes.find((node) => node.id === warning.origin);
   const here = nodes.find((node) => node.id === thisNodeId);
   const what = `${reasonsSentence(warning)} at ${origin?.name ?? warning.origin}`;
   const upstreamKm = here?.river_km != null ? here.river_km - warning.origin_km : null;
   return upstreamKm !== null && upstreamKm > 0
-    ? `${what}, ${upstreamKm.toFixed(1)} km upstream of this Node`
+    ? `${what}, ${distanceInDisplayUnit(upstreamKm, units)} upstream of this Node`
     : `${what}, ${riverKm(warning.origin_km)}`;
 }

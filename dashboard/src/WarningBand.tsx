@@ -3,6 +3,7 @@ import { useChimeForWarning } from "./chime";
 import { warningSentence } from "./communityWarnings";
 import type { NodeSnapshot } from "./nodeState";
 import { officialTag } from "./officialAlerts";
+import { useRegion } from "./RegionContext";
 
 // The desktop's answer to a new warning (D-22, D-27): a band under the top bar that leaves the map
 // undimmed. It has no button; the warning's card in the Alerts Panel is acknowledged instead.
@@ -15,6 +16,7 @@ export function WarningBand({
   nodes: NodeSnapshot[];
   thisNodeId: string;
 }) {
+  const region = useRegion();
   const current = pending[0];
   useChimeForWarning(current?.key);
   if (!current) return null;
@@ -23,7 +25,7 @@ export function WarningBand({
   const sentence =
     current.kind === "official"
       ? current.alert.headline
-      : warningSentence(current.warning, nodes, thisNodeId);
+      : warningSentence(current.warning, nodes, thisNodeId, region?.display_units ?? null);
   return (
     // The key restarts the border pulse for each warning.
     <div

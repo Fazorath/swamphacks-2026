@@ -3,10 +3,10 @@ import { BASEMAP_MANIFEST_PARTS } from "./fakeBasemap";
 
 import { App } from "./App";
 import type { CommunityWarning } from "./communityWarnings";
-import { nepalClockTime } from "./EventClockTag";
 import { lastMap, sourceData } from "./fakeMaplibre";
 import { fakeNodeSnapshot, fakeNodeState } from "./fakeNodeState";
 import { setReducedMotion } from "./fakeViewport";
+import { regionClockTime } from "./regionTime";
 
 const SURGE_T = 1_787_716_020;
 // From km -10: 189.5 s at 190 km/h to km 0, then 20 km at 60 km/h to Betrawati at km 20.
@@ -150,7 +150,9 @@ describe("the wave front on the map", () => {
 
     stubNode({ eventT: ARRIVES_AT + 6000 });
     const after = render(<App />);
-    const stamp = await screen.findByText(`Betrawati ${nepalClockTime(ARRIVES_AT)}`);
+    const stamp = await screen.findByText(
+      `Betrawati ${regionClockTime(ARRIVES_AT, "Asia/Kathmandu")}`,
+    );
     expect(stamp.closest(".place-label")).toHaveClass("wave-reached");
     after.unmount();
   });

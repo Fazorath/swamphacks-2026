@@ -24,8 +24,8 @@ test("a kind the dashboard has no label for is carried with its own unit", () =>
   });
   const [node] = nodesOnMap(state);
   expect(node.measurements).toEqual([
-    { kind: "water_level", value: 84, unit: "cm" },
-    { kind: "wind_speed", value: 31, unit: "km/h" },
+    { kind: "water_level", value: 84, unit: "cm", shown: "84 cm" },
+    { kind: "wind_speed", value: 31, unit: "km/h", shown: "31 km/h" },
   ]);
 });
 

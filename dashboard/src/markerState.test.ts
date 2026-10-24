@@ -10,6 +10,7 @@ function node(overrides: Partial<NodeOnMap> = {}): NodeOnMap {
     position: [28, 85],
     riverKm: null,
     waterLevelCm: 100,
+    waterLevelShown: "100 cm",
     simulated: true,
     stale: false,
     registered: true,

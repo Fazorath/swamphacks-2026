@@ -101,7 +101,7 @@ test("Official Alerts show newest first, tagged OFFICIAL · REPLAY with their so
   ]);
   expect(within(cards[0]).getByText("OFFICIAL · REPLAY")).toBeVisible();
   expect(within(cards[0]).getByText("DHM")).toBeVisible();
-  expect(within(cards[0]).getByText("Issued 2026-08-26 09:15 +05:45")).toBeVisible();
+  expect(within(cards[0]).getByText("Issued 26 Aug 2026 · 09:15 NPT")).toBeVisible();
   expect(within(cards[0]).getByRole("link", { name: "Read at the source" })).toHaveAttribute(
     "href",
     RIVERBANK_SMS.url,

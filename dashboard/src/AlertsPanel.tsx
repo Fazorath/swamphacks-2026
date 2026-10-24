@@ -3,7 +3,7 @@ import { Check, TriangleAlert } from "lucide-react";
 import { communityKey, officialKey } from "./acknowledgedWarnings";
 
 import {
-  issuedAsGiven,
+  issuedInRegion,
   issuedUnix,
   leadTimeLine,
   officialTag,
@@ -63,7 +63,8 @@ export function AlertsPanel({
   onAcknowledge: (key: string) => void;
   panel: PanelControl;
 }) {
-  const leadTime = leadTimeLine(firstCommunityWarningAt, alerts);
+  const units = region?.display_units ?? null;
+  const leadTime = leadTimeLine(firstCommunityWarningAt, alerts, region?.time_zone ?? null);
   const newestFirst = [...alerts].sort((a, b) => issuedUnix(b) - issuedUnix(a));
   return (
     <Panel label="Alerts" {...panel}>
@@ -86,7 +87,9 @@ export function AlertsPanel({
             )}
           </p>
           <h3>{alert.headline}</h3>
-          <p className="official-alert-issued">Issued {issuedAsGiven(alert.issued)}</p>
+          <p className="official-alert-issued">
+            Issued {issuedInRegion(alert, region?.time_zone ?? null)}
+          </p>
           {online ? (
             <a href={alert.url} target="_blank" rel="noreferrer">
               Read at the source
@@ -104,12 +107,13 @@ export function AlertsPanel({
         const measuredLine = measuredSpeedLine(
           warning,
           (id) => nodes.find((node) => node.id === id)?.name ?? id,
+          units,
         );
         return (
           <article key={warning.id} className="community-warning" aria-label="Community Warning">
             <WaveEtaLine arrival={waveArrival} eventT={eventT} />
             <p className="community-warning-tag">COMMUNITY WARNING · NOT OFFICIAL</p>
-            <h3>{warningSentence(warning, nodes, thisNodeId)}</h3>
+            <h3>{warningSentence(warning, nodes, thisNodeId, units)}</h3>
             {measuredLine && <p className="measured-speed">{measuredLine}</p>}
             <p>Signed by the Hub · verified</p>
             <p>Check official sources for any evacuation decision.</p>

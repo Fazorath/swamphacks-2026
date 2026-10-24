@@ -1,6 +1,7 @@
 import { Timer } from "lucide-react";
 
-import { nepalClockTime } from "./EventClockTag";
+import { useRegion } from "./RegionContext";
+import { regionClockTime } from "./regionTime";
 import type { Place } from "./placeLabels";
 import type { WaveArrival } from "./waveEta";
 
@@ -36,7 +37,10 @@ export function WaveEtaCard({
   home: { lat: number; lon: number } | null;
   places: Place[];
 }) {
-  if (arrival === null || arrival.kind !== "expected" || eventT === null) return null;
+  const region = useRegion();
+  if (region === null || arrival === null || arrival.kind !== "expected" || eventT === null) {
+    return null;
+  }
   const secondsLeft = arrival.at - eventT;
   const arrived = secondsLeft <= 0;
   const minutesLeft = Math.ceil(secondsLeft / 60);
@@ -48,7 +52,7 @@ export function WaveEtaCard({
         <span>
           <Timer size={12} aria-hidden="true" /> WAVE ETA
         </span>
-        <span>ARRIVES {nepalClockTime(arrival.at)}</span>
+        <span>ARRIVES {regionClockTime(arrival.at, region.time_zone)}</span>
       </span>
       {arrived ? (
         <span className="wave-eta-now">wave expected now</span>

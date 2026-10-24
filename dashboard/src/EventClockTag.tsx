@@ -1,29 +1,17 @@
+import { useRegion } from "./RegionContext";
+import { regionClockTime, regionDate, regionZoneLabel } from "./regionTime";
 import type { EventClock } from "./useEventClock";
 
-// The replay's place is Nepal, so its clock is shown in Nepal time whatever the viewer's zone is.
-const NEPAL_OFFSET_SECONDS = (5 * 60 + 45) * 60;
-
-function asNepalTime(unixSeconds: number): Date {
-  return new Date((unixSeconds + NEPAL_OFFSET_SECONDS) * 1000);
-}
-
-// "08:37" for an Event time in Unix seconds.
-export function nepalClockTime(unixSeconds: number): string {
-  return asNepalTime(unixSeconds).toISOString().slice(11, 16);
-}
-
-function formatEventClock({ event_t, state, rate }: EventClock): string {
-  const date = asNepalTime(event_t).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+// "28 Sep 2022 · 14:06 EDT · REPLAY ×30": the Event's time in the Region's zone, whatever the
+// viewer's zone is.
+function formatEventClock({ event_t, state, rate }: EventClock, timeZone: string): string {
   const tag = state === "playing" ? `REPLAY ×${rate}` : "REPLAY PAUSED";
-  return `${date} · ${nepalClockTime(event_t)} NPT · ${tag}`;
+  const when = `${regionDate(event_t, timeZone)} · ${regionClockTime(event_t, timeZone)}`;
+  return `${when} ${regionZoneLabel(event_t, timeZone)} · ${tag}`;
 }
 
 export function EventClockTag({ clock }: { clock: EventClock | null }) {
-  if (!clock) return null;
-  return <span className="event-clock">{formatEventClock(clock)}</span>;
+  const region = useRegion();
+  if (!clock || !region) return null;
+  return <span className="event-clock">{formatEventClock(clock, region.time_zone)}</span>;
 }

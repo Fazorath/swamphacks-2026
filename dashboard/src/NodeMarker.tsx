@@ -81,10 +81,10 @@ export function NodeMarker({
       </span>
       <span className={`map-label node-label label-${side}${labelHidden ? " label-hidden" : ""}`}>
         <strong>{node.label}</strong>
-        {node.waterLevelCm !== null && (
+        {node.waterLevelShown !== null && (
           <span className={node.stale ? "water-level struck" : "water-level"}>
             {" · "}
-            {node.waterLevelCm} cm
+            {node.waterLevelShown}
           </span>
         )}
         <span className="node-label-extra">
